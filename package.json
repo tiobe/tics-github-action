@@ -1,0 +1,27 @@
+{
+  "name": "tics-github-action",
+  "version": "1.0.0",
+  "description": "The TiCS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiobe/tics-github-action.git"
+  },
+  "keywords": [],
+  "author": "TIOBE",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tiobe/tics-github-action/issues"
+  },
+  "homepage": "https://github.com/tiobe/tics-github-action#readme",
+  "type": "module",
+  "dependencies": {
+    "@octokit/action": "^4.0.4",
+    "@actions/core": "^1.9.0",
+    "@actions/github": "^5.0.3",
+    "util": "^0.12.4"
+  }
+}
