@@ -101,7 +101,7 @@ export class TicsAnalyzer {
     }
 
     getBootstrapCmd = (installTicsUrl) => {
-        if (this.isLinux) {
+        if (this.isLinux()) {
             return `source <(curl -s \\\"${installTicsUrl}\\\")`;
         } else {
             return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
@@ -109,7 +109,7 @@ export class TicsAnalyzer {
     }
 
     runCommand = (bootstrapCmd, ticsAnalysisCmd) => {
-        if (this.isLinux) {
+        if (this.isLinux()) {
             return `bash -c \"${bootstrapCmd} && ${ticsAnalysisCmd}\"`;
         } else {
             return `powershell \"${bootstrapCmd}; if ($LASTEXITCODE -eq 0) { ${ticsAnalysisCmd} }\"`;
