@@ -22,6 +22,10 @@ export class TicsAnalyzer {
                 const tiobeWebBaseUrl = getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration);
                 const ticsInstallApiBaseUrl = this.getInstallTicsApiUrl(tiobeWebBaseUrl, githubConfig.runnerOS.toLowerCase());
                 let installTicsUrl = await this.retrieveInstallTics(ticsInstallApiBaseUrl);
+                if (!installTicsUrl) {
+                    return;
+                }
+
                 installTicsApiFullUrl = tiobeWebBaseUrl + installTicsUrl;
             }
             exitCode = this.runTICSClient(installTicsApiFullUrl).then((exitCode)=> {
@@ -112,7 +116,7 @@ export class TicsAnalyzer {
         if (this.isLinux()) {
             return `bash -c \"${bootstrapCmd} && ${ticsAnalysisCmd}\"`;
         } else {
-            return `powershell \"${bootstrapCmd}; if ($LASTEXITCODE -eq 0) { ${ticsAnalysisCmd} }\"`;
+            return `powershell \"${bootstrapCmd}; ${ticsAnalysisCmd} \"`;
         }
      }
 
