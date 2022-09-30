@@ -26,7 +26,7 @@ export class TicsPublisher {
         return qualitygates;
     }
 
-    getQualityGateUrlAPI = () => {
+    getQualityGateUrlAPI = (explorerUrl) => {
         let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
             qualityGateUrlAPI.searchParams.append('project', ticsConfig.projectName);
             qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
