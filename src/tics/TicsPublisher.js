@@ -15,10 +15,9 @@ export class TicsPublisher {
         let qualitygates = [];
 
         try {
-            const qualityGateUrl = this.getQualityGateAPIBasedOnTicsOutput(explorerUrl);
+            const qualityGateUrl = this.getQualityGateUrlAPI(explorerUrl);
             return this.getQualityGates(qualityGateUrl).then((qualitygates) => {
                 core.info(`\u001b[35m > Retrieved quality gates results`);
-                console.log("qualitygates => " +  qualitygates.gates.length);
                 return qualitygates;
             })
         } catch (error) {
@@ -32,15 +31,9 @@ export class TicsPublisher {
             qualityGateUrlAPI.searchParams.append('project', ticsConfig.projectName);
             qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
             qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
+            qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURI(explorerUrl), "ClientData(", "Project"));
 
         return qualityGateUrlAPI.href;
-    }
-
-    getQualityGateAPIBasedOnTicsOutput = (explorerUrl) => {
-        let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/private/qualitygate/Status?');
-        qualityGateUrlAPI += this.getSubstring(explorerUrl, "axes", "Window");
-
-        return qualityGateUrlAPI;
     }
 
     getQualityGates = async(url) => {
