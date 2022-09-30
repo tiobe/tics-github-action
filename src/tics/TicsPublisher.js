@@ -31,7 +31,7 @@ export class TicsPublisher {
             qualityGateUrlAPI.searchParams.append('project', ticsConfig.projectName);
             qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
             qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
-            qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURI(explorerUrl), "ClientData(", "Project"));
+            qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURIComponent(explorerUrl), "ClientData(", "),Project"));
 
         return qualityGateUrlAPI.href;
     }
@@ -39,7 +39,7 @@ export class TicsPublisher {
     getQualityGates = async(url) => {
         try {
          
-            console.log("\u001b[35m > Trying to retrieve quality gates from ", decodeURI(url));
+            console.log("\u001b[35m > Trying to retrieve quality gates from ", decodeURIComponent(url));
             let qualityGates = await doHttpRequest(url).then((data) => {
                 let response = {
                     statusCode: 200,
