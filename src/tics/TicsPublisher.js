@@ -39,7 +39,7 @@ export class TicsPublisher {
     getQualityGates = async(url) => {
         try {
          
-            console.log("\u001b[35m > Trying to retrieve quality gates from ", url)
+            console.log("\u001b[35m > Trying to retrieve quality gates from ", decodeURI(url));
             let qualityGates = await doHttpRequest(url).then((data) => {
                 let response = {
                     statusCode: 200,
