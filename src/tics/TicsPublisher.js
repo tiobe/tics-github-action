@@ -37,10 +37,10 @@ export class TicsPublisher {
     }
 
     getQualityGateAPIBasedOnTicsOutput = (explorerUrl) => {
-        let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/private/qualitygate/Status?');
-        qgBaseAPI += getSubstring(explorerUrl, "axes", "Window");
+        let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/private/qualitygate/Status');
+        qualityGateUrlAPI.searchParams.append(getSubstring(explorerUrl, "axes", "Window"));
 
-        return qgBaseAPI;
+        return qualityGateUrlAPI.href;
     }
 
     getQualityGates = async(url) => {
