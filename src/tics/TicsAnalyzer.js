@@ -75,7 +75,7 @@ export class TicsAnalyzer {
                     return changeSet;
                 }).then((changeSet) => {
                     const ticsPublisher = new TicsPublisher();
-                    ticsPublisher.run().then((qualitygates) => {
+                    ticsPublisher.run(explorerUrl).then((qualitygates) => {
                         core.info(`\u001b[35m > Retrieved quality gates results`);
 
                         return qualitygates;
@@ -114,9 +114,9 @@ export class TicsAnalyzer {
 
     runCommand = (bootstrapCmd, ticsAnalysisCmd) => {
         if (this.isLinux()) {
-            return `bash -c \"${bootstrapCmd} && ${ticsAnalysisCmd}\"`;
+            return bootstrapCmd ? `bash -c \"${bootstrapCmd} && ${ticsAnalysisCmd}\"` : `bash -c \"${ticsAnalysisCmd}\"`;
         } else {
-            return `powershell \"${bootstrapCmd}; ${ticsAnalysisCmd} \"`;
+            return bootstrapCmd ? `powershell \"${bootstrapCmd}; ${ticsAnalysisCmd} \"` : `powershell \"${ticsAnalysisCmd} \"` ;
         }
      }
 
