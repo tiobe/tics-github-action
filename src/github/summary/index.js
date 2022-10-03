@@ -3,6 +3,8 @@ import { generateLinkMarkdown,
     generateStatusMarkdown,
     generateTableMarkdown,
     generateExpandableAreaMarkdown } from './markdownGenerator.js';
+import { getTiobewebBaseUrlFromGivenUrl } from '../../tics/ApiHelper.js';
+import { ticsConfig } from '../configuration.js';
 
 export const getErrorSummary = (errorList) => {
     let errorMessage = `## TICS Quality Gate\r\n\r\n### :x: Failed \r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n`;
@@ -67,7 +69,7 @@ const getTableCellsDetails = (items) => {
     return items.map((item) => {
         return {
                  name: item.name,
-                 link: core.getInput('ticsViewerUrl') + item.link,
+                 link: getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/' + item.link,
                  score: item.data.actualValue.formattedValue
                };
     });
