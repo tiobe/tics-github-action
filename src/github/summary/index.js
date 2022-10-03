@@ -24,7 +24,7 @@ export const getQualityGateSummary = (qualityGateObj) => {
     let gatesConditionsSummary = '';
 
     qualityGateObj.gates && qualityGateObj.gates.forEach(gate => {
-        gatesConditionsSummary = getQGCondtionsSummary(gate.conditions);
+        gatesConditionsSummary += `## ${gate.name} \n\n ${getQGCondtionsSummary(gate.conditions)}`;
     })
     
     return `## TICS Quality Gate \n\n ### ${generateStatusMarkdown(qualityGateObj.passed, true)} \n\n ${gatesConditionsSummary}\n`;
