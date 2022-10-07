@@ -97,7 +97,7 @@ export class TicsAnalyzer {
         let execString = 'TICS ';
         execString += ticsConfig.calc.includes("GATE") ? '' : '-viewer ';
         execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} -changed `: '-calc GATE -changed ';
-        execString += ticsConfig.projectName ? `-project \"${ticsConfig.projectName}\" ` : '';
+        execString += ticsConfig.projectName ? `-project '${ticsConfig.projectName}' ` : '';
         execString += ticsConfig.clientToken ? `-cdtoken ${ticsConfig.clientToken} ` : '';
         execString += ticsConfig.tmpDir ? `-tmpdir ${ticsConfig.tmpDir} ` : '';
         execString += ticsConfig.branchDir ? `${ticsConfig.branchDir} ` : ' .';
