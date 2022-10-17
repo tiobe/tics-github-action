@@ -6,14 +6,13 @@ import core from '@actions/core';
 import { ticsConfig, githubConfig } from '../github/configuration.js';
 import { getTiobewebBaseUrlFromGivenUrl, doHttpRequest } from "./ApiHelper.js";
 import { postSummary } from "../index.js";
-import { getPRChangedFiles } from '../github/pulls/pulls.js';
 import { TicsPublisher } from '../tics/TicsPublisher.js';
 
 const execWithPromise = util.promisify(exec);
 
 export class TicsAnalyzer {
 
-    run = async()  => {
+    run = async(changeSet, fileListPath)  => {
         let exitCode = 0;
         let installTicsApiFullUrl = "";
 
@@ -28,7 +27,7 @@ export class TicsAnalyzer {
 
                 installTicsApiFullUrl = tiobeWebBaseUrl + installTicsUrl;
             }
-            exitCode = this.runTICSClient(installTicsApiFullUrl).then((exitCode)=> {
+            exitCode = this.runTICSClient(installTicsApiFullUrl, changeSet, fileListPath).then((exitCode)=> {
                 return exitCode;
             });
         } catch (error) {
@@ -37,9 +36,9 @@ export class TicsAnalyzer {
         return exitCode;
     }
 
-    runTICSClient = async(url) => {
+    runTICSClient = async(url, changeSet, fileListPath) => {
         const bootstrapCommand =  ticsConfig.installTics == 'true' ? this.getBootstrapCmd(url) : "";
-        const ticsAnalysisCommand = this.getTicsClientArgs();
+        const ticsAnalysisCommand = this.getTicsClientArgs(fileListPath);
 
         core.info(`Invoking: ${this.runCommand(bootstrapCommand, ticsAnalysisCommand)}`);
         const {stdout, stderr} = await execWithPromise(this.runCommand(bootstrapCommand, ticsAnalysisCommand), (err, stdout, stderr) => {
@@ -69,38 +68,33 @@ export class TicsAnalyzer {
                     return;
                 }
 
-                getPRChangedFiles().then((changeSet) => {
-                    core.info(`\u001b[35m > Retrieving changed files to analyse`);
-                    core.info(`Changed files list retrieved: ${changeSet}`);
-                    return changeSet;
-                }).then((changeSet) => {
-                    const ticsPublisher = new TicsPublisher();
-                    ticsPublisher.run(explorerUrl).then((qualitygates) => {
-                        core.info(`\u001b[35m > Retrieved quality gates results`);
+                const ticsPublisher = new TicsPublisher();
+                ticsPublisher.run(explorerUrl).then((qualitygates) => {
+                    core.info(`\u001b[35m > Retrieved quality gates results`);
 
-                        return qualitygates;
-                    }).then((qualitygates) => {
-                        let results = {
-                            explorerUrl: explorerUrl,
-                            changeSet: changeSet,
-                            qualitygates: qualitygates
-                        };
+                    return qualitygates;
+                }).then((qualitygates) => {
+                    let results = {
+                        explorerUrl: explorerUrl,
+                        changeSet: changeSet,
+                        qualitygates: qualitygates
+                    };
 
-                        postSummary(results, false);
-                    })
-                });
+                    postSummary(results, false);
+                })
             }
         });
     }
 
-    getTicsClientArgs() {
-        let execString = 'TICS ';
+    getTicsClientArgs(fileListPath) {
+        console.log(fileListPath);
+        let execString = 'TICS @' + fileListPath + ' ';
         execString += ticsConfig.calc.includes("GATE") ? '' : '-viewer ';
-        execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} -changed `: '-calc GATE -changed ';
+        execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} `: '-calc GATE ';
         execString += ticsConfig.projectName ? `-project '${ticsConfig.projectName}' ` : '';
         execString += ticsConfig.clientToken ? `-cdtoken ${ticsConfig.clientToken} ` : '';
         execString += ticsConfig.tmpDir ? `-tmpdir ${ticsConfig.tmpDir} ` : '';
-        execString += ticsConfig.branchDir ? `${ticsConfig.branchDir} ` : ' .';
+        execString += ticsConfig.extendTics ? ticsConfig.extendTics : '';
         return execString;
     }
 

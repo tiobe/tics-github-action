@@ -23,5 +23,6 @@ export let ticsConfig = {
     clientToken: core.getInput('clientToken'),
     ticsAuthToken: core.getInput('ticsAuthToken') ? core.get('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
     installTics: core.getInput('installTics'),
-    ticsConfiguration: core.getInput('ticsConfiguration')
+    ticsConfiguration: core.getInput('ticsConfiguration'),
+    extendTics: core.getInput('extendTics')
 }

@@ -3,7 +3,9 @@ import core from '@actions/core';
 import { TicsAnalyzer } from './tics/TicsAnalyzer.js';
 import { ticsConfig, githubConfig } from './github/configuration.js';
 import { createIssueComment } from './github/issues/issues.js';
+import { getPRChangedFiles, changeSetToFileList } from './github/pulls/pulls.js';
 import { getErrorSummary, getQualityGateSummary, getLinkSummary, getFilesSummary } from './github/summary/index.js';
+
 
 if (githubConfig.eventName == 'pull_request') {
     run();
@@ -13,9 +15,17 @@ if (githubConfig.eventName == 'pull_request') {
 
 export async function run() {
     try {
-        core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`)
-        const ticsAnalyzer = new TicsAnalyzer();
-        const exitCode = await ticsAnalyzer.run();
+        getPRChangedFiles().then((changeSet) => {
+            core.info(`\u001b[35m > Retrieving changed files to analyse`);
+            core.info(`Changed files list retrieved: ${changeSet}`);
+            return changeSet;
+        }).then((changeSet) => {
+            let fileListPath = changeSetToFileList(changeSet);
+            
+            core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`);
+            const ticsAnalyzer = new TicsAnalyzer();
+            ticsAnalyzer.run(changeSet, fileListPath);
+        });
 
     } catch (error) {
        core.error("Failed to run TiCS Github Action");

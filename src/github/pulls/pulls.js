@@ -2,6 +2,7 @@ import { Octokit } from "@octokit/action"; //GitHub API client for GitHub Action
 import { githubConfig } from '../configuration.js';
 import core from '@actions/core';
 import fs from 'fs';
+import path from "node:path";
 
 //Octokit client is authenticated
 const octokit = new Octokit();
@@ -45,3 +46,19 @@ export const getPRChangedFiles =  async() => {
 
     return changedFiles;
 };
+
+export function changeSetToFileList(changeSet) {
+    core.info(`\u001b[35m > Creation of file list based on PR changeSet`);
+    let filesChanged = changeSet.split(",");
+    let contents = "";
+    
+    filesChanged && filesChanged.map((item) => {
+        contents += item + "\n";
+    })
+
+    var stream = fs.createWriteStream('changeSet.txt', { mode: 0o777 });
+    stream.write(contents);
+    stream.end();
+
+    return path.resolve('changeSet.txt');
+}
