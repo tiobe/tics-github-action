@@ -45,34 +45,50 @@ export const doHttpRequest = (url) => {
           })
           
           res.on('end', () => {
-              if (res.statusCode === 200) {
-                resolve(JSON.parse(body));
-              } else {
-                core.setFailed("HTTP request failed with status " + res.statusCode + ". Please try again by setting a TICSAUTHTOKEN in your configuration.");
-              }
+              switch (res.statusCode) {
+                  case 200:
+                    resolve(JSON.parse(body));
+                    break;
+                  case 302:
+                    core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+                    break;
+                  case 400:
+                    core.setFailed(`HTTP request failed with status ${res.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+                    break;
+                  case 401:
+                    var baseUrl = this.getTiobeWebBaseUrlFromUrl(tempUrl.href);
+                    core.setFailed(`HTTP request failed with status ${res.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+                    break;
+                  case 404:
+                    core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if the given ticsConfiguration is correct.`);
+                    break;
+                  default:
+                    core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if your configuration is correct.`);
+                    break;
+                }
           })
         });
 
         req.on('error', error => {
-          switch (res.statusCode) {
+          switch (req.statusCode) {
               case 200:
                 resolve(JSON.parse(body));
                 break;
               case 302:
-                core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+                core.setFailed(`HTTP request failed with status ${req.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
                 break;
               case 400:
-                core.setFailed(`HTTP request failed with status ${res.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+                core.setFailed(`HTTP request failed with status ${req.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
                 break;
               case 401:
                 var baseUrl = this.getTiobeWebBaseUrlFromUrl(tempUrl.href);
-                core.setFailed(`HTTP request failed with status ${res.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+                core.setFailed(`HTTP request failed with status ${req.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
                 break;
               case 404:
-                core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if the given ticsConfiguration is correct.`);
+                core.setFailed(`HTTP request failed with status ${req.statusCode}. Please check if the given ticsConfiguration is correct.`);
                 break;
               default:
-                core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if your configuration is correct.`);
+                core.setFailed(`HTTP request failed with status ${req.statusCode}. Please check if your configuration is correct.`);
                 break;
             }
         })
