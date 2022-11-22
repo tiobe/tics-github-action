@@ -30,6 +30,7 @@ export const doHttpRequest = (url) => {
 
         const optionsInit = {
           followAllRedirects: true,
+          rejectUnauthorized: false,
           agent: new ProxyAgent()
         }
 
