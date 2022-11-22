@@ -53,13 +53,11 @@ export const doHttpRequest = (url) => {
           })
         });
 
-        res.on('end', () => {
-              if (res.statusCode === 200) {
-                resolve(JSON.parse(body));
-              } else {
-                core.setFailed("HTTP request failed with status " + res.statusCode + ". Please try again by setting a TICSAUTHTOKEN in your configuration.");
-              }
-          })
+        req.on('error', error => {
+          core.setFailed("HTTP request error: " + error)
+          reject(error.message);
+        })
+
         req.end();
     });
 }
