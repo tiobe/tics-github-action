@@ -74,7 +74,7 @@ export const doHttpRequest = (url) => {
               default:
                 core.setFailed(`HTTP request failed with status ${res.statusCode}. Please check if your configuration is correct.`);
                 break;
-            }
+            })
         req.end();
     });
 }
