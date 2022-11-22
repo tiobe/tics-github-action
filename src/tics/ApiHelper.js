@@ -1,6 +1,7 @@
 import core from '@actions/core';
 import http from 'http';
 import https from 'https';
+import ProxyAgent from "proxy-agent";
 import { ticsConfig, githubConfig } from '../github/configuration.js';
 
 export const getTiobewebBaseUrlFromGivenUrl = (givenUrl) => {
@@ -28,7 +29,8 @@ export const doHttpRequest = (url) => {
         const client = (urlProtocol === 'http') ? http : https;
 
         const optionsInit = {
-          followAllRedirects: true
+          followAllRedirects: true,
+          agent: new ProxyAgent()
         }
 
         let authToken = ticsConfig.ticsAuthToken;
