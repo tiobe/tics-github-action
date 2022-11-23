@@ -38,6 +38,7 @@ export const getPRChangedFiles =  async() => {
             core.debug(`Getting the changed files list ${response.data}`)
 
             response.data && response.data.map((item) => {
+                core.debug(`Adding file to file list: ${item.filename}`);
                 changedFiles += item.filename + " ,"
             })
 
