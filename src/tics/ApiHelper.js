@@ -27,10 +27,11 @@ export const doHttpRequest = (url) => {
         let tempUrl = new URL(url);
         let urlProtocol = tempUrl.protocol.replace(":", "");
         const client = (urlProtocol === 'http') ? http : https;
-
+        const hostnameVerification = (ticsConfig.hostnameVerification === 0) ? false : true;
+        
         const optionsInit = {
           followAllRedirects: true,
-          rejectUnauthorized: false,
+          rejectUnauthorized: hostnameVerification,
           agent: new ProxyAgent()
         }
 
