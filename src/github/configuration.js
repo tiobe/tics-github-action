@@ -25,5 +25,5 @@ export let ticsConfig = {
     installTics: core.getInput('installTics'),
     ticsConfiguration: core.getInput('ticsConfiguration'),
     extendTics: core.getInput('extendTics'),
-    hostnameVerification: processEnv.TICSHOSTNAMEVERIFICATION ? processEnv.TICSHOSTNAMEVERIFICATION : 1
+    hostnameVerification: processEnv.TICSHOSTNAMEVERIFICATION ? processEnv.TICSHOSTNAMEVERIFICATION : true
 }
