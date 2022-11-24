@@ -33,5 +33,5 @@ branding:
   icon: 'flag'
   color: 'blue'
 runs:
-  using: 'node18'
+  using: 'node16'
   main: 'src/index.js'
