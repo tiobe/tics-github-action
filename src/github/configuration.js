@@ -21,7 +21,7 @@ export let ticsConfig = {
     calc: core.getInput('calc'),
     viewerUrl: core.getInput('ticsViewerUrl') ? core.getInput('ticsViewerUrl') : "",
     clientToken: core.getInput('clientToken'),
-    ticsAuthToken: core.getInput('ticsAuthToken') ? core.get('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
+    ticsAuthToken: core.getInput('ticsAuthToken') ? core.getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
     installTics: core.getInput('installTics'),
     ticsConfiguration: core.getInput('ticsConfiguration'),
     extendTics: core.getInput('extendTics'),
