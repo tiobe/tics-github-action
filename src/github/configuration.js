@@ -25,7 +25,7 @@ function getHostnameVerification() {
                 hostnameVerification = true;
         }
     }
-    core.log(`Hostname Verification set to : ${hostnameVerification}`);
+    core.info(`Hostname Verification set to : ${hostnameVerification}`);
     return hostnameVerification
 }
 
