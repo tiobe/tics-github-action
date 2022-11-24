@@ -1,76 +1,82 @@
-import core from '@actions/core';
-import { generateLinkMarkdown,
-    generateStatusMarkdown,
-    generateTableMarkdown,
-    generateExpandableAreaMarkdown } from './markdownGenerator.js';
-import { getTiobewebBaseUrlFromGivenUrl } from '../../tics/ApiHelper.js';
+import {
+  generateLinkMarkdown,
+  generateStatusMarkdown,
+  generateTableMarkdown,
+  generateExpandableAreaMarkdown
+} from './markdownGenerator.js';
+import { getTiobeWebBaseUrlFromUrl } from '../../tics/ApiHelper.js';
 import { ticsConfig } from '../configuration.js';
 
 export const getErrorSummary = (errorList) => {
-    let errorMessage = `## TICS Quality Gate\r\n\r\n### :x: Failed \r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n`;
+  let errorMessage = '## TICS Quality Gate\r\n\r\n### :x: Failed \r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
 
-   if (errorList && Array.isArray(errorList)) {
-       errorList.forEach(item => errorMessage += `> :x: ${item}\r\n`); 
-    } else {
-        errorMessage += `> :x: ${errorList}\r\n`
-    }
+  if (errorList && Array.isArray(errorList)) {
+    errorList.forEach(item => errorMessage += `> :x: ${item}\r\n`);
+  } else {
+    errorMessage += `> :x: ${errorList}\r\n`;
+  }
 
-    return errorMessage;
-}
+  return errorMessage;
+};
 
 export const getQualityGateSummary = (qualityGateObj) => {
-    if (!qualityGateObj) {
-       return "";
-    }
-    
-    let gatesConditionsSummary = '';
+  if (!qualityGateObj) {
+    return '';
+  }
 
-    qualityGateObj.gates && qualityGateObj.gates.forEach(gate => {
-        gatesConditionsSummary += `## ${gate.name} \n\n ${getQGCondtionsSummary(gate.conditions)}`;
-    })
-    
-    return `## TICS Quality Gate \n\n ### ${generateStatusMarkdown(qualityGateObj.passed, true)} \n\n ${gatesConditionsSummary}\n`;
-}
+  let gatesConditionsSummary = '';
+
+  qualityGateObj.gates && qualityGateObj.gates.forEach(gate => {
+    gatesConditionsSummary += `## ${gate.name} \n\n ${getQGCondtionsSummary(gate.conditions)}`;
+  });
+
+  return `## TICS Quality Gate \n\n ### ${generateStatusMarkdown(qualityGateObj.passed, true)} \n\n ${gatesConditionsSummary}\n`;
+};
 
 export const getLinkSummary = (link) => {
-    return generateLinkMarkdown('See the results in the TICS Viewer', link) + `\n\n`;
-}
+  return generateLinkMarkdown('See the results in the TICS Viewer', link) + '\n\n';
+};
 
 export const getFilesSummary = (fileList) => {
-    return `#### The following file(s) have been checked:\n> ${fileList}`;
-}
+  let title = 'The following files have been checked:';
+  let body = '';
+  fileList.map((file) => {
+    body += `- ${file}<br>`;
+  });
+  return generateExpandableAreaMarkdown(title, body);
+};
 
 /**
 * Helper methods to generate markdown
 */
 const getQGCondtionsSummary = (conditions) => {
-    let out = '';
-    
-    conditions.forEach(condition => {
-        if (condition.skipped !== true) {
-            const gateConditionWithIcon = `${generateStatusMarkdown(condition.passed, false)}  ${condition.message}`; 
+  let out = '';
 
-            if (condition.details !== null && condition.details.items.length > 0) {
-                let headers = [];
-                headers.push("File", condition.details.dataKeys.actualValue.title);
-                let cells = getTableCellsDetails(condition.details.items.filter(item => item.itemType === "file"));
+  conditions.forEach(condition => {
+    if (condition.skipped !== true) {
+      const gateConditionWithIcon = `${generateStatusMarkdown(condition.passed, false)}  ${condition.message}`;
 
-                out += generateExpandableAreaMarkdown(gateConditionWithIcon, generateTableMarkdown(headers, cells)) + '\n\n\n';
-            } else {
-                out += gateConditionWithIcon + ' \n\n\n';
-            }
-        }
-    })
-    
-    return out;
-}
+      if (condition.details !== null && condition.details.items.length > 0) {
+        let headers = [];
+        headers.push('File', condition.details.dataKeys.actualValue.title);
+        let cells = getTableCellsDetails(condition.details.items.filter(item => item.itemType === 'file'));
+
+        out += generateExpandableAreaMarkdown(gateConditionWithIcon, generateTableMarkdown(headers, cells)) + '\n\n\n';
+      } else {
+        out += gateConditionWithIcon + ' \n\n\n';
+      }
+    }
+  });
+
+  return out;
+};
 
 const getTableCellsDetails = (items) => {
-    return items.map((item) => {
-        return {
-                 name: item.name,
-                 link: getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/' + item.link,
-                 score: item.data.actualValue.formattedValue
-               };
-    });
-}
+  return items.map((item) => {
+    return {
+      name: item.name,
+      link: getTiobeWebBaseUrlFromUrl(ticsConfig.ticsConfiguration) + '/' + item.link,
+      score: item.data.actualValue.formattedValue
+    };
+  });
+};

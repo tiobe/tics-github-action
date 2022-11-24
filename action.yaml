@@ -26,9 +26,12 @@ inputs:
   ticsConfiguration:
     description: 'A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration'
     required: false
+  showAnnotations:
+    description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
+    required: false
 branding:
   icon: 'flag'
   color: 'blue'
 runs:
-  using: 'node12'
+  using: 'node18'
   main: 'src/index.js'
