@@ -73,5 +73,7 @@ export function isCheckedOutPerformed() {
     // Check if .git directory exists to see if a checkout has been performed
     if (!fs.existsSync('.git')) {
         core.error('No git checkout found')
-    } 
+      return false;
+    }
+    return true;
 }
