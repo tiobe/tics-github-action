@@ -1,5 +1,5 @@
-import util from 'util';
 import core from '@actions/core';
+import util from 'util';
 import { exec } from 'child_process';
 import { ticsConfig, githubConfig } from '../github/configuration.js';
 import { getTiobeWebBaseUrlFromUrl, doHttpRequest } from './ApiHelper.js';

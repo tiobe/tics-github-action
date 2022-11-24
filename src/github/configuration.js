@@ -18,6 +18,21 @@ export let githubConfig = {
   pullRequestNumber: processEnv.PULL_NR ? processEnv.PULL_NR : pullRequestNumber
 };
 
+function getHostnameVerification() {
+  let hostnameVerification;
+  switch (processEnv.TICSHOSTNAMEVERIFICATION) {
+    case '0':
+    case 'false':
+      hostnameVerification = false;
+      core.info('Hostname Verification disabled');
+      break;
+    default:
+      hostnameVerification = true;
+      break;
+  }
+  return hostnameVerification;
+}
+
 export let ticsConfig = {
   projectName: core.getInput('projectName', { required: true }),
   branchName: core.getInput('branchName'),
@@ -30,5 +45,6 @@ export let ticsConfig = {
   installTics: core.getInput('installTics'),
   ticsConfiguration: core.getInput('ticsConfiguration'),
   extendTics: core.getInput('extendTics'),
-  showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : false
+  showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : false,
+  hostnameVerification: getHostnameVerification()
 };

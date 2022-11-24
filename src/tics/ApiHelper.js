@@ -1,6 +1,7 @@
 import core from '@actions/core';
 import http from 'http';
 import https from 'https';
+import ProxyAgent from 'proxy-agent';
 import { ticsConfig } from '../github/configuration.js';
 
 export const getTiobeWebBaseUrlFromUrl = (givenUrl) => {
@@ -32,7 +33,9 @@ export const doHttpRequest = (url) => {
     const client = (urlProtocol === 'http') ? http : https;
 
     const optionsInit = {
-      followAllRedirects: true
+      followAllRedirects: true,
+      rejectUnauthorized: ticsConfig.hostnameVerification,
+      agent: new ProxyAgent()
     };
     let authToken = ticsConfig.ticsAuthToken;
     let options = authToken ? { ...optionsInit, headers: { 'Authorization': `Basic ${authToken}`, 'x-requested-with': 'tics' } } : optionsInit;

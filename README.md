@@ -66,6 +66,7 @@ The following inputs are available for this action:
  | `branchDir` | Location of the files to analyze. | false |
  | `calc` | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default. | false|
  | `clientToken` | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis. | false |
+ | `hostnameVerfication` | Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper). | false |
  | `installTics`| Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job. | false |
  | `showAnnotation` | Show the latest TiCS annotations directly in the GitHub Pull Request review. | false |
  | `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration. | true |

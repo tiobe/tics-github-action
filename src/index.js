@@ -1,4 +1,5 @@
 import core from '@actions/core';
+import fs from 'fs';
 import { TicsAnalyzer } from './tics/TicsAnalyzer.js';
 import { ticsConfig, githubConfig } from './github/configuration.js';
 import { createPRReview, getAllPRReviewComments, deletePRReviewComments } from './github/pulls/reviews.js';
@@ -19,6 +20,11 @@ export async function run() {
   try {
     const changeSet = await getPRChangedFiles();
     const fileListPath = changeSetToFileList(changeSet);
+
+    if (!isCheckedOutPerformed()) {
+      core.setFailed('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+    }
+
     const basePath = fileListPath.replace('changeSet.txt', '');
 
     const ticsAnalyzer = new TicsAnalyzer();
@@ -149,4 +155,13 @@ async function deletePreviousAnnotations() {
     }
   });
   deletePRReviewComments(reviewCommentIds);
+}
+
+export function isCheckedOutPerformed() {
+  // Check if .git directory exists to see if a checkout has been performed
+  if (!fs.existsSync('.git')) {
+    core.debug('No git checkout found');
+    return false;
+  }
+  return true;
 }

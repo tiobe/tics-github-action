@@ -1,11 +1,12 @@
 import github from '@actions/github';
 import core from '@actions/core';
-import { githubConfig } from '../configuration.js';
 import fs from 'fs';
 import path from 'path';
+import ProxyAgent from 'proxy-agent';
+import { githubConfig } from '../configuration.js';
 
 //Octokit client is authenticated
-const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+const octokit = github.getOctokit(process.env.GITHUB_TOKEN, { request: { agent: new ProxyAgent() } });
 
 /* Parameters needed for getting the changed files */
 function getChangedFilesParameters(pageNr) {

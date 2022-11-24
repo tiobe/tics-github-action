@@ -1,9 +1,10 @@
 import core from '@actions/core';
 import github from '@actions/github';
+import ProxyAgent from 'proxy-agent';
 import { githubConfig } from '../configuration.js';
 
 //Octokit client is authenticated
-const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+const octokit = github.getOctokit(process.env.GITHUB_TOKEN, { request: { agent: new ProxyAgent() } });
 
 export async function createPRReview(review) {
   try {
