@@ -47,7 +47,7 @@ export async function run() {
       let locateExplorerUrl = stdout.match(/http.*Explorer.*/g);
       let explorerUrl = '';
 
-      let filesAnalyzed = stdout.match(/\[INFO 30\d{2}\] Analyzing.*/g);
+      let filesAnalyzed = stdout.match(/\[INFO 30.*\] Analyzing.*/g);
       let filteredFiles = [];
       for (let i = 0; i < filesAnalyzed?.length; i++) {
         let file = filesAnalyzed[i].split(basePath)[1];
