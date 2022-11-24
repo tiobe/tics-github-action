@@ -17,17 +17,17 @@ inputs:
   clientToken:
     description: 'A custom client-data token for the purpose of the Client Viewer functionality.'
     required: false
-  tmpDir:
-    description: 'Location to store debug information'
-    required: false
   installTics:
     description: 'Boolean parameter to install TICS command-line tools on a runner before executing the analysis'
+    required: false
+  showAnnotations:
+    description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
     required: false
   ticsConfiguration:
     description: 'A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration'
     required: false
-  showAnnotations:
-    description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
+  tmpDir:
+    description: 'Location to store debug information'
     required: false
 branding:
   icon: 'flag'
