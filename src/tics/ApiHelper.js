@@ -61,7 +61,7 @@ export const doHttpRequest = (url) => {
                     core.setFailed(`HTTP request failed with status ${res.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
                     break;
                   case 401:
-                    var baseUrl = this.getTiobewebBaseUrlFromGivenUrl(tempUrl.href);
+                    var baseUrl = getTiobewebBaseUrlFromGivenUrl(tempUrl.href);
                     core.setFailed(`HTTP request failed with status ${res.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
                     break;
                   case 404:
