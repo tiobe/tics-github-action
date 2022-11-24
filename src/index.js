@@ -3,9 +3,8 @@ import core from '@actions/core';
 import { TicsAnalyzer } from './tics/TicsAnalyzer.js';
 import { ticsConfig, githubConfig } from './github/configuration.js';
 import { createIssueComment } from './github/issues/issues.js';
-import { getPRChangedFiles, changeSetToFileList } from './github/pulls/pulls.js';
+import { getPRChangedFiles, changeSetToFileList, isCheckedOutPerformed } from './github/pulls/pulls.js';
 import { getErrorSummary, getQualityGateSummary, getLinkSummary, getFilesSummary } from './github/summary/index.js';
-
 
 if (githubConfig.eventName == 'pull_request') {
     run();
@@ -23,6 +22,7 @@ export async function run() {
             let fileListPath = changeSetToFileList(changeSet);
             
             core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`);
+            isCheckedOutPerformed();
             const ticsAnalyzer = new TicsAnalyzer();
             ticsAnalyzer.run(changeSet, fileListPath);
         });
