@@ -49,7 +49,7 @@ export async function run() {
 
       let filesAnalyzed = stdout.match(/\[INFO 3012\] Analyzing.*/g);
       let filteredFiles = [];
-      for (let i = 0; i < filesAnalyzed.length; i++) {
+      for (let i = 0; i < filesAnalyzed?.length; i++) {
         let file = filesAnalyzed[i].split(basePath)[1];
         if (!filteredFiles.find(x => x === file)) {
           filteredFiles.push(file);
