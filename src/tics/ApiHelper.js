@@ -5,19 +5,23 @@ import ProxyAgent from "proxy-agent";
 import { ticsConfig, githubConfig } from '../github/configuration.js';
 
 export const getTiobewebBaseUrlFromGivenUrl = (givenUrl) => {
-    let urlLengthWithHost = 3;
-    let urlLengthWithSection = 5;
-    let url = givenUrl.slice(0, -1);
-    let parts = url.split("/");
+    const cfgMarker = 'cfg?name=';
+    const apiMarker = '/api/';
+    let baseUrl = null;
 
-    if (parts.length < urlLengthWithHost) {
-        core.error("Missing host name in TICS Viewer URL");
-    }
-    if (parts.length < urlLengthWithSection) {
-        core.error("Missing section name in TICS Viewer URL");
+    /* 
+    We cannot rely on the basic URL structure <protocol>://<domainname>:<port>/tiobeweb/<section>/api/...
+    However, we always need a configuration via the api, so let's check on those
+    */
+
+    // Check if we got a configuration using the API
+    if (ticsConfiguration.includes(apiMarker + cfgMarker)){
+      baseUrl = ticsConfiguration.split(apiMarker)[0] + '/'
+    } else{
+      core.error("Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.");
     }
 
-    return parts.splice(parts, 5).join('/');
+    return baseUrl;
 }
 
 export const doHttpRequest = (url) => {
