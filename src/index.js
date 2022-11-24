@@ -26,7 +26,7 @@ export async function run() {
                 const ticsAnalyzer = new TicsAnalyzer();
                 ticsAnalyzer.run(changeSet, fileListPath);
             } else {
-                core.setFailed("No checkout found to analyze. Please perform a checkout first.");
+                core.setFailed("No checkout found to analyze. Please perform a checkout before running the TiCS Action.");
             }
         });
 
