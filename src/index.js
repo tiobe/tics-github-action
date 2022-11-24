@@ -25,6 +25,8 @@ export async function run() {
                 core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`);
                 const ticsAnalyzer = new TicsAnalyzer();
                 ticsAnalyzer.run(changeSet, fileListPath);
+            } else {
+                core.setFailed("No checkout found to analyze. Please perform a checkout first.");
             }
         });
 
