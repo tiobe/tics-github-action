@@ -20,11 +20,12 @@ export async function run() {
             return changeSet;
         }).then((changeSet) => {
             let fileListPath = changeSetToFileList(changeSet);
-            
-            core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`);
-            isCheckedOutPerformed();
-            const ticsAnalyzer = new TicsAnalyzer();
-            ticsAnalyzer.run(changeSet, fileListPath);
+                        
+            if (isCheckedOutPerformed()) {
+                core.info(`\u001b[35m > Analysing new pull request for project ${ticsConfig.projectName}.`);
+                const ticsAnalyzer = new TicsAnalyzer();
+                ticsAnalyzer.run(changeSet, fileListPath);
+            }
         });
 
     } catch (error) {
