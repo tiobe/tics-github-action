@@ -15,7 +15,7 @@ export let githubConfig = {
   branchdir: processEnv.GITHUB_WORKSPACE,
   eventName: processEnv.GITHUB_EVENT_NAME,
   runnerOS: processEnv.RUNNER_OS,
-  pullRequestNumber: processEnv.PULL_NR ? processEnv.PULL_NR : pullRequestNumber
+  pullRequestNumber: processEnv.PULL_REQUEST_NUMBER ? processEnv.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 
 function getHostnameVerification() {
