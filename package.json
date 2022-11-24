@@ -6,15 +6,15 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lmtjanssen/tics-github-plugin.git"
+    "url": "git+https://github.com/tiobe/tics-github-action.git"
   },
   "keywords": [],
   "author": "TIOBE",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lmtjanssen/tics-github-plugin/issues"
+    "url": "https://github.com/tiobe/tics-github-action/issues"
   },
-  "homepage": "https://github.com/lmtjanssen/tics-github-plugin#readme",
+  "homepage": "https://github.com/tiobe/tics-github-action#readme",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
