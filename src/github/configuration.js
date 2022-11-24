@@ -21,13 +21,14 @@ function getHostnameVerification() {
             case '0':
             case 'false':
                 hostnameVerification = false;
+                core.info('Hostname Verification disabled');
                 break;
             default:
                 hostnameVerification = true;
                 break;
         }
     }
-    core.info(`Hostname Verification set to : ${hostnameVerification}`);
+    
     return hostnameVerification
 }
 
