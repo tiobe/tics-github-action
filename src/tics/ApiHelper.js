@@ -16,7 +16,7 @@ export const getTiobewebBaseUrlFromGivenUrl = (givenUrl) => {
 
     // Check if we got a configuration using the API
     if (givenUrl.includes(apiMarker + cfgMarker)){
-      baseUrl = givenUrl.split(apiMarker)[0] + '/'
+      baseUrl = givenUrl.split(apiMarker)[0]
     } else{
       core.error("Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.");
     }
