@@ -17,7 +17,6 @@ function getHostnameVerification() {
     let hostnameVerification = true;
 
     if (processEnv.TICSHOSTNAMEVERIFICATION) {
-        core.log(typeof processEnv.TICSHOSTNAMEVERIFICATION);
         switch (processEnv.TICSHOSTNAMEVERIFICATION){
             case '0':
             case 'false':
@@ -26,7 +25,7 @@ function getHostnameVerification() {
                 hostnameVerification = true;
         }
     }
-
+    core.log(`Hostname Verification set to : ${hostnameVerification}`);
     return hostnameVerification
 }
 
