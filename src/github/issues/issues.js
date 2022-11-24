@@ -11,7 +11,7 @@ const octokit = new Octokit({
   },
 });
 const payload = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-const pullRequestNum = payload.pull_request ? payload.pull_request.number : "";
+const pullRequestNum = payload.pull_request ? payload.pull_request.number : "21";
 
 /* Helper functions to construct a checkrun */
 const getParams = (inputparams) => {
