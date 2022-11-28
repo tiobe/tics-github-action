@@ -32,7 +32,9 @@ export class TicsPublisher {
 
         let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
             qualityGateUrlAPI.searchParams.append('project', projectName);
-            qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
+            if (ticsConfig.branchName) {
+                qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
+            }
             qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
             qualityGateUrlAPI.searchParams.append('cdt', clientDataTok);
 
