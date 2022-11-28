@@ -30,7 +30,7 @@ export async function postReviewComments(commitId, comments) {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
-      comment_id: commitId,
+      commit_id: commitId,
       body: comment.body,
       line: comment.line,
       path: comment.path
