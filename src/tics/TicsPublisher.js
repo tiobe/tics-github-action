@@ -40,7 +40,7 @@ export class TicsPublisher {
 
     getProjectFromUrl = (explorerUrl) => {
         console.log(`Getting project from URL ${explorerUrl}`);
-        projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/g);
+        let projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/g);
         console.log(projectName);
         return projectName;
     }
