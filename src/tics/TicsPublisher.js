@@ -79,15 +79,6 @@ export class TicsPublisher {
             core.setFailed("An error occurred when trying to retrieve quality gates " + error);
         }
     }
-
-    getSubstring = (value, del1, del2) => {
-
-      const sub_position_1 = value.indexOf(del1);
-      const sub_position_2 = value.indexOf(del2);
-
-      return value.substring(sub_position_1 + del1.length, sub_position_2);
-    }
-
 }
 
 
