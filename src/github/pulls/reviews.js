@@ -77,10 +77,10 @@ export async function getAllPRReviewComments() {
   }
 }
 
-export function deletePRReviewComments(reviewCommentIds) {
+export async function deletePRReviewComments(reviewCommentIds) {
   try {
     core.info('\u001b[35mDeleting review comments of previous runs');
-    reviewCommentIds.map(async (id) => {
+    await reviewCommentIds.map(async (id) => {
       const params = {
         accept: 'application/vnd.github.v3+json',
         owner: githubConfig.owner,
