@@ -95,7 +95,7 @@ async function postSummary(summary, isError, ticsPublisher) {
     review.event = summary.qualitygates.passed ? 'COMMENT' : 'COMMENT'; // 'APPROVE' : 'REQUEST_CHANGES'; 
     review.body = getQualityGateSummary(summary.qualitygates) + getLinkSummary(summary.explorerUrl) + getFilesSummary(summary.changeSet);
     const comments = ticsConfig.showAnnotations === 'true' ? await getAnnotations(summary.qualitygates, ticsPublisher) : [];
-    const commitId = createPRReview(review);
+    const commitId = await createPRReview(review);
     await postReviewComments(commitId, comments);
     deletePreviousAnnotations();
   }
