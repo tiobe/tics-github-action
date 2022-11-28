@@ -17,7 +17,7 @@ export async function createPRReview(review) {
     };
     const response = await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews', params);
     core.info('\u001b[35mPosted a review for this Pull Request.');
-    return { id: response.data.id, commit_id: response.data.commit_id };
+    return response.data.commit_id;
   } catch (e) {
     core.error(`We cannot post review on this Pull Request: ${e}`);
   }
