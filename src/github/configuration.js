@@ -45,6 +45,6 @@ export let ticsConfig = {
   installTics: core.getInput('installTics'),
   ticsConfiguration: core.getInput('ticsConfiguration'),
   extendTics: core.getInput('extendTics'),
-  showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : false,
+  showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : true,
   hostnameVerification: getHostnameVerification()
 };
