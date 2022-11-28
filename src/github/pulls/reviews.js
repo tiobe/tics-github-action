@@ -13,15 +13,36 @@ export async function createPRReview(review) {
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: review.event,
-      body: review.body,
-      comments: review.comments
+      body: review.body
     };
-
-    await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews', params);
+    const response = await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews', params);
     core.info('\u001b[35mPosted a review for this Pull Request.');
+    return response;
   } catch (e) {
     core.error(`We cannot post review on this Pull Request: ${e}`);
   }
+}
+
+export async function postReviewComments(commitId, comments) {
+  let notPosted = [];
+  await comments.map(async (comment) => {
+    const params = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      comment_id: commitId,
+      body: comment.body,
+      line: comment.line,
+      path: comment.path
+    };
+    try {
+      await octokit.request('/repos/{owner}/{repo}/pulls/{pull_number}/comments', params);
+    } catch {
+      notPosted.push(comment);
+    }
+  });
+  core.info('\u001b[35mPosted the annotations for this review.');
+  return notPosted;
 }
 
 export async function getAllPRReviewComments() {

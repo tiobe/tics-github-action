@@ -2,7 +2,7 @@ import core from '@actions/core';
 import fs from 'fs';
 import { TicsAnalyzer } from './tics/TicsAnalyzer.js';
 import { ticsConfig, githubConfig } from './github/configuration.js';
-import { createPRReview, getAllPRReviewComments, deletePRReviewComments } from './github/pulls/reviews.js';
+import { createPRReview, getAllPRReviewComments, deletePRReviewComments, postReviewComments } from './github/pulls/reviews.js';
 import { getPRChangedFiles, changeSetToFileList } from './github/pulls/pulls.js';
 import { getErrorSummary, getQualityGateSummary, getLinkSummary, getFilesSummary } from './github/summary/index.js';
 import { TicsPublisher } from './tics/TicsPublisher.js';
@@ -94,8 +94,9 @@ async function postSummary(summary, isError, ticsPublisher) {
   } else {
     review.event = summary.qualitygates.passed ? 'COMMENT' : 'COMMENT'; // 'APPROVE' : 'REQUEST_CHANGES'; 
     review.body = getQualityGateSummary(summary.qualitygates) + getLinkSummary(summary.explorerUrl) + getFilesSummary(summary.changeSet);
-    review.comments = ticsConfig.showAnnotations === 'true' ? await getAnnotations(summary.qualitygates, ticsPublisher) : [];
-    createPRReview(review);
+    const comments = ticsConfig.showAnnotations === 'true' ? await getAnnotations(summary.qualitygates, ticsPublisher) : [];
+    const commitId = createPRReview(review);
+    await postReviewComments(commitId, comments);
     deletePreviousAnnotations();
   }
 }
