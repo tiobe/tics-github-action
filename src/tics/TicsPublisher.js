@@ -41,8 +41,8 @@ export class TicsPublisher {
     getProjectFromUrl = (explorerUrl) => {
         let projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/);
 
-        if (projectName) {
-            console.log(`Retrieved project name: ${projectName}`);
+        if (projectName.length >= 2) {
+            console.log(`Retrieved project name: ${projectName[0]}`);
             return projectName
         }
 
