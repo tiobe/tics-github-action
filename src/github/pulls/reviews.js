@@ -36,7 +36,7 @@ export async function postReviewComments(commitId, comments) {
       path: comment.path
     };
     try {
-      await octokit.request('/repos/{owner}/{repo}/pulls/{pull_number}/comments', params);
+      await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', params);
     } catch {
       notPosted.push(comment);
     }
