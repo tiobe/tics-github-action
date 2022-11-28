@@ -27,23 +27,25 @@ export class TicsPublisher {
     }
 
     getQualityGateUrlAPI = (explorerUrl) => {
-        let projectName = (ticsConfig.projectName == 'auto')? this.getProjectFromUrl(explorerUrl) : ticsConfig.projectName
+        let projectName = (ticsConfig.projectName == 'auto')? this.getItemFromUrl(explorerUrl, 'Project') : ticsConfig.projectName;
+        let clientDataTok = this.getItemFromUrl(explorerUrl, 'ClientData');
 
         let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
             qualityGateUrlAPI.searchParams.append('project', projectName);
             qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
             qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
-            qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURIComponent(explorerUrl), "ClientData(", "),Project"));
+            qualityGateUrlAPI.searchParams.append('cdt', clientDataTok);
 
         return qualityGateUrlAPI.href;
     }
 
-    getProjectFromUrl = (explorerUrl) => {
-        let projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/);
+    getItemFromUrl = (explorerUrl, item) => {
+        let regExpr = new RegExp(`${item}\\((.*?)\\)`);
+        let itemValue = decodeURIComponent(explorerUrl).match(regExpr);
 
-        if (projectName.length >= 2) {
-            console.log(`Retrieved project name: ${projectName[1]}`);
-            return projectName[1];
+        if (itemValue.length >= 2) {
+            console.log(`Retrieved ${item} value: ${itemValue[1]}`);
+            return itemValue[1];
         }
 
         return '';
