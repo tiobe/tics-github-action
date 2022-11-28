@@ -36,6 +36,11 @@ export class TicsPublisher {
         return qualityGateUrlAPI.href;
     }
 
+    getProjectFromUrl = (explorerUrl) => {
+        projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/g);
+        console.log(projectName)
+    }
+
     getQualityGates = async(url) => {
         try {
          
