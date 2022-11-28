@@ -27,6 +27,7 @@ export class TicsPublisher {
     }
 
     getQualityGateUrlAPI = (explorerUrl) => {
+        console.log('Getting project from URL');
         getProjectFromUrl(explorerUrl);
 
         let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
