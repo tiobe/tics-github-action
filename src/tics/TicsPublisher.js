@@ -41,7 +41,8 @@ export class TicsPublisher {
 
     getProjectFromUrl = (explorerUrl) => {
         projectName = explorerUrl.match(/Project(?:\(|%28)(.*?)(?:\)|%29)/g);
-        console.log(projectName)
+        console.log(projectName);
+        return projectName;
     }
 
     getQualityGates = async(url) => {
