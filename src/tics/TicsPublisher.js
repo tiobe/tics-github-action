@@ -27,10 +27,10 @@ export class TicsPublisher {
     }
 
     getQualityGateUrlAPI = (explorerUrl) => {
-        this.getProjectFromUrl(explorerUrl);
+        let projectName = (ticsConfig.projectName == 'auto')? this.getProjectFromUrl(explorerUrl) : ticsConfig.projectName
 
         let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
-            qualityGateUrlAPI.searchParams.append('project', ticsConfig.projectName);
+            qualityGateUrlAPI.searchParams.append('project', projectName);
             qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
             qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
             qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURIComponent(explorerUrl), "ClientData(", "),Project"));
