@@ -95,9 +95,9 @@ async function postSummary(summary, isError, ticsPublisher) {
     review.event = summary.qualitygates.passed ? 'COMMENT' : 'COMMENT'; // 'APPROVE' : 'REQUEST_CHANGES'; 
     review.body = getQualityGateSummary(summary.qualitygates) + getLinkSummary(summary.explorerUrl) + getFilesSummary(summary.changeSet);
     const comments = ticsConfig.showAnnotations === 'true' ? await getAnnotations(summary.qualitygates, ticsPublisher) : [];
-    const commitId = await createPRReview(review);
-    await deletePreviousAnnotations();
-    await postReviewComments(commitId, comments);
+    const response = await createPRReview(review);
+    await postReviewComments(response.commit_id, comments);
+    await deletePreviousAnnotations(response.id);
   }
 }
 
@@ -147,11 +147,11 @@ function findAnnotationInArray(array, annotation) {
   });
 }
 
-async function deletePreviousAnnotations() {
+async function deletePreviousAnnotations(reviewId) {
   let pastReviews = await getAllPRReviewComments();
   let reviewCommentIds = [];
   pastReviews.map((reviewComment) => {
-    if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
+    if ((reviewComment.body.substring(0, 17) === ':warning: **TiCS:') && (reviewComment.in_reply_to !== reviewId)) {
       reviewCommentIds.push(reviewComment.id);
     }
   });
