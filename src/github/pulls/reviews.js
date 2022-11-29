@@ -2,6 +2,7 @@ import core from '@actions/core';
 import github from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { githubConfig } from '../configuration.js';
+import { getUnpostedSummary } from '../summary/index.js';
 
 //Octokit client is authenticated
 const octokit = github.getOctokit(process.env.GITHUB_TOKEN, { request: { agent: new ProxyAgent() } });
@@ -17,32 +18,48 @@ export async function createPRReview(review) {
     };
     const response = await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews', params);
     core.info('\u001b[35mPosted a review for this Pull Request.');
-    return response.data.commit_id;
+    return response.data;
   } catch (e) {
-    core.error(`We cannot post review on this Pull Request: ${e}`);
+    core.error(`Could not post review on this Pull Request: ${e}`);
   }
 }
 
-export async function postReviewComments(commitId, comments) {
+export async function postReviewComments(reviewResponse, comments, body) {
   let notPosted = [];
   await comments.map(async (comment) => {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
-      commit_id: commitId,
+      commit_id: reviewResponse.commit_id,
       body: comment.body,
       line: comment.line,
       path: comment.path
     };
     try {
-      await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', params);
-    } catch (error) {
+      await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', params).catch(notPosted.push(comment));
+    } catch {
       notPosted.push(comment);
     }
   });
   core.info('\u001b[35mPosted the annotations for this review.');
-  return notPosted;
+  if (notPosted.length > 0) updateReviewWithUnpostedComments(reviewResponse.id, notPosted, body);
+}
+
+async function updateReviewWithUnpostedComments(reviewId, comments, body) {
+  let newBody = body + getUnpostedSummary(comments);
+  const params = {
+    owner: githubConfig.owner,
+    repo: githubConfig.reponame,
+    pull_number: githubConfig.pullRequestNumber,
+    review_id: reviewId,
+    body: newBody
+  };
+  try {
+    await octokit.request('PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}', params);
+  } catch (error) {
+    core.error(`Could not update review on this Pull Request: ${error}`);
+  }
 }
 
 export async function getAllPRReviewComments() {

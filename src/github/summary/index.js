@@ -46,6 +46,27 @@ export const getFilesSummary = (fileList) => {
   return generateExpandableAreaMarkdown(title, body);
 };
 
+export const getUnpostedSummary = (nonPostedComments) => {
+  let title = 'The following files contain violations, but could not be posted due to being outside the changes made for this pull request:';
+  let body = '';
+  let previousPaths = [];
+  nonPostedComments.sort((a, b) => {
+    if (a.path === b.path) return a.line - b.line;
+    return a.path > b.path ? 1 : -1;
+  });
+  nonPostedComments.map((comment) => {
+    if (!previousPaths.find(x => x === comment.path)) {
+      if (previousPaths.length > 0) {
+        body += '</ul>';
+      }
+      body += `<b>File:</b> ${comment.path}<ul>`;
+      previousPaths.push(comment.path);
+    }
+    body += `<li>${comment.body.replace('\r\n', '<br>').replace('**', '<b>').replace('**', '</b>')}</li>`;
+  });
+  return generateExpandableAreaMarkdown(title, body);
+};
+
 /**
 * Helper methods to generate markdown
 */
