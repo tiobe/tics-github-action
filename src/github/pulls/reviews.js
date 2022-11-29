@@ -36,11 +36,7 @@ export async function postReviewComments(reviewResponse, comments, body) {
       line: comment.line,
       path: comment.path
     };
-    try {
-      await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', params).catch(notPosted.push(comment));
-    } catch {
-      core.error('Something went wrong posting a comment.');
-    }
+    await octokit.rest.pulls.createReviewComment(params).catch(async () => { }).then(notPosted.push(comment));
   });
   core.info('\u001b[35mPosted the annotations for this review.');
   if (notPosted.length > 0) updateReviewWithUnpostedComments(reviewResponse.id, notPosted, body);
