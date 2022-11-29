@@ -47,7 +47,7 @@ export const getFilesSummary = (fileList) => {
 };
 
 export const getUnpostedSummary = (nonPostedComments) => {
-  let title = 'The following files contain violations, but could not be posted due to being outside the changes made for this pull request:';
+  let title = 'Quality findings outside of the changes of this pull request:';
   let body = '';
   let previousPaths = [];
   nonPostedComments.sort((a, b) => {

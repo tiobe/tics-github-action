@@ -26,7 +26,7 @@ export async function createPRReview(review) {
 
 export async function postReviewComments(reviewResponse, comments, body) {
   let notPosted = [];
-  await comments.map(async (comment) => {
+  await Promise.all(comments.map(async (comment) => {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
@@ -36,8 +36,12 @@ export async function postReviewComments(reviewResponse, comments, body) {
       line: comment.line,
       path: comment.path
     };
-    await octokit.rest.pulls.createReviewComment(params).catch(async () => { }).then(notPosted.push(comment));
-  });
+    try {
+      await octokit.rest.pulls.createReviewComment(params);
+    } catch {
+      notPosted.push(comment);
+    }
+  }));
   core.info('\u001b[35mPosted the annotations for this review.');
   if (notPosted.length > 0) updateReviewWithUnpostedComments(reviewResponse.id, notPosted, body);
 }
