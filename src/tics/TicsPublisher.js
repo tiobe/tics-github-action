@@ -20,13 +20,39 @@ export class TicsPublisher {
   };
 
   getQualityGateUrlAPI = (explorerUrl) => {
+    let projectName = (ticsConfig.projectName == 'auto')? this.getItemFromUrl(explorerUrl, 'Project') : ticsConfig.projectName;
+    let clientDataTok = this.getItemFromUrl(explorerUrl, 'ClientData');
     let qualityGateUrlAPI = new URL(getTiobeWebBaseUrlFromUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
-    qualityGateUrlAPI.searchParams.append('project', ticsConfig.projectName);
-    qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
+    
+    qualityGateUrlAPI.searchParams.append('project', projectName);
+    
+    // Branchname is optional, to check if it is set
+    if (ticsConfig.branchName) {
+      qualityGateUrlAPI.searchParams.append('branch', ticsConfig.branchName);
+    }
+    
     qualityGateUrlAPI.searchParams.append('fields', 'details,annotationsApiV1Links');
-    qualityGateUrlAPI.searchParams.append('cdt', this.getSubstring(decodeURIComponent(explorerUrl), 'ClientData(', '),Project'));
+    qualityGateUrlAPI.searchParams.append('cdt', clientDataTok);
 
     return qualityGateUrlAPI.href;
+  };
+  
+  /**
+  * Gets item form URL
+  * @param explorerURL, e.g. https://testlab.tiobe.com/tiobeweb/testlab/Explorer.html#axes=ClientData%2807dZd7R5GmI0xI9lhN18Yg%29%2CProject%28c-demo%29%2CBranch%28main%
+  * @param item, e.g. Project
+  * @returns item value, e.g. c-demo
+  **/
+  getItemFromUrl = (explorerUrl, item) => {
+    let regExpr = new RegExp(`${item}\\((.*?)\\)`);
+    let itemValue = decodeURIComponent(explorerUrl).match(regExpr);
+
+    if (itemValue.length >= 2) {
+      console.log(`Retrieved ${item} value: ${itemValue[1]}`);
+      return itemValue[1];
+    }
+
+    return '';
   };
 
   getQualityGates = async (url) => {
