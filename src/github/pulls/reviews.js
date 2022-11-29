@@ -39,7 +39,7 @@ export async function postReviewComments(reviewResponse, comments, body) {
     try {
       await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', params).catch(notPosted.push(comment));
     } catch {
-      notPosted.push(comment);
+      core.error('Something went wrong posting a comment.');
     }
   });
   core.info('\u001b[35mPosted the annotations for this review.');
