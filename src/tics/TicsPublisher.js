@@ -37,12 +37,12 @@ export class TicsPublisher {
     return qualityGateUrlAPI.href;
   };
   
-  /* 
-    Gets item form URL. Example:
-    Input 0 : https://testlab.tiobe.com/tiobeweb/testlab/Explorer.html#axes=ClientData%2807dZd7R5GmI0xI9lhN18Yg%29%2CProject%28c-demo%29%2CBranch%28main%
-    Input 1 : Project
-    Output : c-demo
-  */
+  /**
+  * Gets item form URL
+  * @param explorerURL, e.g. https://testlab.tiobe.com/tiobeweb/testlab/Explorer.html#axes=ClientData%2807dZd7R5GmI0xI9lhN18Yg%29%2CProject%28c-demo%29%2CBranch%28main%
+  * @param item, e.g. Project
+  * @returns item value, e.g. c-demo
+  **/
   getItemFromUrl = (explorerUrl, item) => {
     let regExpr = new RegExp(`${item}\\((.*?)\\)`);
     let itemValue = decodeURIComponent(explorerUrl).match(regExpr);
