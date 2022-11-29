@@ -22,7 +22,7 @@ export class TicsPublisher {
   getQualityGateUrlAPI = (explorerUrl) => {
     let projectName = (ticsConfig.projectName == 'auto')? this.getItemFromUrl(explorerUrl, 'Project') : ticsConfig.projectName;
     let clientDataTok = this.getItemFromUrl(explorerUrl, 'ClientData');
-    let qualityGateUrlAPI = new URL(getTiobewebBaseUrlFromGivenUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
+    let qualityGateUrlAPI = new URL(getTiobeWebBaseUrlFromUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
     
     qualityGateUrlAPI.searchParams.append('project', projectName);
     
