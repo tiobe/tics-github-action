@@ -2,13 +2,24 @@
   "name": "tics-github-plugin",
   "version": "1.0.0",
   "description": "The TiCS Github action integrates TiCS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
-  "main": "scr/index.js",
-  "type": "module",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write src/**/*.ts",
+    "format-check": "prettier --check src/**/*.ts",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build",
+    "all": "npm run build && npm run package"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tiobe/tics-github-action.git"
   },
-  "keywords": [],
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
   "author": "TIOBE",
   "license": "MIT",
   "bugs": {
@@ -21,6 +32,12 @@
     "proxy-agent": "^5.0.0"
   },
   "devDependencies": {
-    "eslint": "^8.27.0"
+    "@types/node": "^18.11.9",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vercel/ncc": "^0.31.1",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "2.5.1",
+    "typescript": "^4.9.3"
   }
 }

@@ -1,0 +1,21 @@
+on: [pull_request]
+
+jobs:
+  TiCS:
+    name: TiCS
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: TICS Action Run
+        uses: ./
+        env: 
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
+        with:
+          projectName: 'js-test-project'
+          ticsConfiguration: 'http://localhost/tiobeweb/TiCS/api/cfg?name=default'
+          installTics: true
+          clientToken: 'myclienttoken'
+          branchName: 'main'
+          tmpDir: /home/lmtjanssen/test
