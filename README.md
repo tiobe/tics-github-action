@@ -70,6 +70,7 @@ The following inputs are available for this action:
 | Input                 | Description                                                                                                                                                                            | Required |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `projectName`         | Name of the TiCS project present in the TICS Viewer.                                                                                                                                   | true     |
+| `ticsConfiguration`   | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                      | true     |
 | `branchName`          | Name of the branch in TiCS.                                                                                                                                                            | false    |
 | `branchDir`           | Location of the files to analyze.                                                                                                                                                      | false    |
 | `calc`                | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.                    | false    |
@@ -77,7 +78,7 @@ The following inputs are available for this action:
 | `hostnameVerfication` | Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).             | false    |
 | `installTics`         | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job. | false    |
 | `showAnnotation`      | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                           | false    |
-| `ticsConfiguration`   | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                      | true     |
+| `showLogging`         | Show verbose logging during the action. Defaults to true.                                                                                                                              | false    |
 | `tmpDir`              | Location to store debug information.                                                                                                                                                   | false    |
 
 # Developer notes
