@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { ticsConfig } from '../github/configuration';
 
 export default class Logger {
   private static _instance: Logger;
@@ -24,8 +25,10 @@ export default class Logger {
    * @param {string} string
    */
   info(string: string) {
-    core.info(string);
-    this.called = 'info';
+    if (ticsConfig.showLogging) {
+      core.info(string);
+      this.called = 'info';
+    }
   }
 
   /**
@@ -34,7 +37,7 @@ export default class Logger {
    * @param {string} string
    */
   debug(string: string) {
-    core.info(string);
+    core.debug(string);
     this.called = 'debug';
   }
 

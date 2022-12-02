@@ -58,7 +58,7 @@ exports.ticsConfig = {
     extendTics: (0, core_1.getInput)('extendTics'),
     showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification(),
-    showLogging: (0, core_1.getInput)('showLogging') ? (0, core_1.getInput)('showLogging') : true
+    showLogging: (0, core_1.getInput)('installTics') === 'false' ? false : true
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 
@@ -229,6 +229,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
+const configuration_1 = __nccwpck_require__(6868);
 class Logger {
     static _instance;
     called = '';
@@ -250,8 +251,10 @@ class Logger {
      * @param {string} string
      */
     info(string) {
-        core.info(string);
-        this.called = 'info';
+        if (configuration_1.ticsConfig.showLogging) {
+            core.info(string);
+            this.called = 'info';
+        }
     }
     /**
      * Uses core.debug to print to the console.
@@ -259,7 +262,7 @@ class Logger {
      * @param {string} string
      */
     debug(string) {
-        core.info(string);
+        core.debug(string);
         this.called = 'debug';
     }
     /**
