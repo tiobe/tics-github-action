@@ -25,7 +25,7 @@ export default class Logger {
    * @param {string} string
    */
   info(string: string) {
-    if (ticsConfig.showLogging === 'true') {
+    if (ticsConfig.logLevel !== 'none') {
       core.info(string);
       this.called = 'info';
     }

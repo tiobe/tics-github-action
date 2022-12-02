@@ -58,7 +58,7 @@ exports.ticsConfig = {
     extendTics: (0, core_1.getInput)('extendTics'),
     showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification(),
-    showLogging: (0, core_1.getInput)('showLogging') ? (0, core_1.getInput)('showLogging') : 'true'
+    logLevel: (0, core_1.getInput)('showLogging') ? (0, core_1.getInput)('showLogging') : 'default'
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 
@@ -251,7 +251,7 @@ class Logger {
      * @param {string} string
      */
     info(string) {
-        if (configuration_1.ticsConfig.showLogging === 'true') {
+        if (configuration_1.ticsConfig.logLevel !== 'none') {
             core.info(string);
             this.called = 'info';
         }
@@ -337,6 +337,7 @@ const pulls_1 = __nccwpck_require__(4229);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
 const summary_1 = __nccwpck_require__(6649);
+const api_helper_1 = __nccwpck_require__(3823);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -352,10 +353,9 @@ async function run() {
         if (analysis.statusCode === -1) {
             postError(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action');
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+            (0, api_helper_1.cliSummary)(analysis);
         }
-        analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+        (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
         logger_1.default.Instance.error('Failed to run TiCS Github Action');
@@ -393,7 +393,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getOptions = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
+exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
 const http_client_1 = __nccwpck_require__(6255);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -466,20 +466,19 @@ function getTiCSWebBaseUrlFromUrl(url) {
     return baseUrl;
 }
 exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
-function getOptions() {
-    return {
-        silent: true,
-        listeners: {
-            stdout(data) {
-                logger_1.default.Instance.info(data.toString());
-            },
-            stderr(data) {
-                logger_1.default.Instance.info(data.toString());
-            }
-        }
-    };
+function cliSummary(analysis) {
+    switch (configuration_1.ticsConfig.logLevel) {
+        case 'debug':
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+            break;
+        case 'default':
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+        case 'none':
+            break;
+    }
 }
-exports.getOptions = getOptions;
+exports.cliSummary = cliSummary;
 
 
 /***/ }),

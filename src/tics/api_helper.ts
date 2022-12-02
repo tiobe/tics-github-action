@@ -5,6 +5,7 @@ import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
 import { ticsConfig } from '../github/configuration';
+import { Analysis } from '../helper/models';
 
 /**
  * Executes a GET request to the given url.
@@ -83,16 +84,15 @@ export function getTiCSWebBaseUrlFromUrl(url: string) {
   return baseUrl;
 }
 
-export function getOptions(): ExecOptions {
-  return {
-    silent: true,
-    listeners: {
-      stdout(data: Buffer) {
-        Logger.Instance.info(data.toString());
-      },
-      stderr(data: Buffer) {
-        Logger.Instance.info(data.toString());
-      }
-    }
-  };
+export function cliSummary(analysis: Analysis) {
+  switch (ticsConfig.logLevel) {
+    case 'debug':
+      analysis.errorList.forEach(error => Logger.Instance.error(error));
+      analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
+      break;
+    case 'default':
+      analysis.errorList.forEach(error => Logger.Instance.error(error));
+    case 'none':
+      break;
+  }
 }

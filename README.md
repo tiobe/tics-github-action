@@ -77,8 +77,8 @@ The following inputs are available for this action:
 | `clientToken`         | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                         | false    |
 | `hostnameVerfication` | Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).             | false    |
 | `installTics`         | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job. | false    |
+| `logLevel`            | Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`                                                                        | false    |
 | `showAnnotation`      | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                           | false    |
-| `showLogging`         | Show verbose logging during the action. Defaults to true.                                                                                                                              | false    |
 | `tmpDir`              | Location to store debug information.                                                                                                                                                   | false    |
 
 # Developer notes
