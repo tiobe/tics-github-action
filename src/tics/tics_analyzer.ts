@@ -72,10 +72,10 @@ async function getInstallTiCS() {
  */
 function findWarningOrError(data: string) {
   let error = data.toString().match(/\[ERROR.*/g);
-  if (error) errorList.push(error.toString());
+  if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
 
   let warning = data.toString().match(/\[WARNING.*/g);
-  if (warning) warningList.push(warning.toString());
+  if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
 }
 
 /**
