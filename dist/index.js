@@ -467,6 +467,7 @@ function getTiCSWebBaseUrlFromUrl(url) {
 }
 exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
 function cliSummary(analysis) {
+    console.log(configuration_1.ticsConfig.logLevel);
     switch (configuration_1.ticsConfig.logLevel) {
         case 'debug':
             analysis.errorList.forEach(error => logger_1.default.Instance.error(error));

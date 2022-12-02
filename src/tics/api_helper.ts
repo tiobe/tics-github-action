@@ -85,6 +85,7 @@ export function getTiCSWebBaseUrlFromUrl(url: string) {
 }
 
 export function cliSummary(analysis: Analysis) {
+  console.log(ticsConfig.logLevel);
   switch (ticsConfig.logLevel) {
     case 'debug':
       analysis.errorList.forEach(error => Logger.Instance.error(error));
