@@ -17,6 +17,9 @@ inputs:
   clientToken:
     description: 'A custom client-data token for the purpose of the Client Viewer functionality.'
     required: false
+  extendTics:
+    description: "Options to extend TiCS, see the documentation."
+    required: false
   hostnameVerification:
     description: 'Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper)'
     required: false

@@ -9,13 +9,13 @@ jobs:
         uses: actions/checkout@v3
       - name: TICS Action Run
         uses: ./
-        env: 
+        env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
         with:
           projectName: 'js-test-project'
-          ticsConfiguration: 'http://localhost/tiobeweb/TiCS/api/cfg?name=default'
+          ticsConfiguration: http://localhost/tiobeweb/TiCS/api/cfg?name=default
           installTics: true
           clientToken: 'myclienttoken'
-          branchName: 'main'
+          branchName: main
           tmpDir: /home/lmtjanssen/test

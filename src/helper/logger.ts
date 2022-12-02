@@ -39,6 +39,16 @@ export default class Logger {
   }
 
   /**
+   * Uses core.warning to print to the console.
+   *
+   * @param {string} string
+   */
+  warning(string: string) {
+    core.warning(`\u001b[33m${string}`);
+    this.called = 'warning';
+  }
+
+  /**
    * Uses core.error to print to the console with a red color.
    *
    * @param {any} error

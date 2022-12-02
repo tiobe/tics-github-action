@@ -28,7 +28,9 @@
   "homepage": "https://github.com/tiobe/tics-github-action#readme",
   "dependencies": {
     "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
+    "@actions/http-client": "^2.0.1",
     "proxy-agent": "^5.0.0"
   },
   "devDependencies": {

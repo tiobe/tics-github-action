@@ -47,11 +47,11 @@ export async function getChangedFiles(): Promise<string[]> {
 
 /**
  * Creates a file containing all the changed files based on the given changeSet.
- * @param {string[]} changeSet List of changed files.
- * @returns {string} Location of the written file.
+ * @param changeSet List of changed files.
+ * @returns Location of the written file.
  */
 export function changeSetToFile(changeSet: string[]): string {
-  logger.Instance.header('Writing changeSet to file...');
+  logger.Instance.header('Writing changeSet to file');
 
   let contents = '';
   changeSet &&
@@ -62,7 +62,7 @@ export function changeSetToFile(changeSet: string[]): string {
   const fileListPath = path.resolve('changeSet.txt');
   fs.writeFileSync(fileListPath, contents);
 
-  logger.Instance.info(`Content written to ${fileListPath}`);
+  logger.Instance.info(`Content written to: ${fileListPath}`);
 
   return fileListPath;
 }

@@ -1,20 +1,15 @@
-import logger from './helper/logger';
-import { githubConfig } from './github/configuration';
-import { changeSetToFile, getChangedFiles } from './github/pulls/pulls';
+import { changeSetToFile } from './github/pulls/pulls';
+import Logger from './helper/logger';
+import { runTiCSAnalyzer } from './tics/tics_analyzer';
 
-if (githubConfig.eventName === 'pull_request') {
-  run();
-} else {
-  logger.Instance.setFailed('This action can only run on pull requests.');
-}
+run();
 
 async function run() {
   try {
-    const changeSet: string[] = await getChangedFiles();
-    const changeSetFilePath = changeSetToFile(changeSet);
-    logger.Instance.info(changeSetFilePath);
+    const changeSetFilePath = changeSetToFile(['hello']);
+    await runTiCSAnalyzer(changeSetFilePath);
   } catch (error: any) {
-    logger.Instance.error('Failed to run TiCS Github Action');
-    logger.Instance.setFailed(error.message);
+    Logger.Instance.error('Failed to run TiCS Github Action');
+    Logger.Instance.setFailed(error.message);
   }
 }

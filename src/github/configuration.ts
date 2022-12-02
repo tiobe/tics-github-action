@@ -42,7 +42,7 @@ export let ticsConfig = {
   viewerUrl: core.getInput('ticsViewerUrl') ? core.getInput('ticsViewerUrl') : '',
   clientToken: core.getInput('clientToken'),
   ticsAuthToken: core.getInput('ticsAuthToken') ? core.getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
-  installTics: core.getInput('installTics'),
+  installTics: core.getInput('installTics') === 'true' ? true : false,
   ticsConfiguration: core.getInput('ticsConfiguration'),
   extendTics: core.getInput('extendTics'),
   showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : true,
