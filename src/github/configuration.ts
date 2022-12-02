@@ -49,7 +49,7 @@ export let ticsConfig = {
   extendTics: getInput('extendTics'),
   showAnnotations: getInput('showAnnotations') ? getInput('showAnnotations') : true,
   hostnameVerification: getHostnameVerification(),
-  logLevel: getInput('showLogging') ? getInput('showLogging') : 'default'
+  logLevel: getInput('logLevel') ? getInput('logLevel') : 'default'
 };
 
 export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });

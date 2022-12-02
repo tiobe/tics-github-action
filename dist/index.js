@@ -58,7 +58,7 @@ exports.ticsConfig = {
     extendTics: (0, core_1.getInput)('extendTics'),
     showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification(),
-    logLevel: (0, core_1.getInput)('showLogging') ? (0, core_1.getInput)('showLogging') : 'default'
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel') : 'default'
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 
@@ -467,7 +467,6 @@ function getTiCSWebBaseUrlFromUrl(url) {
 }
 exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
 function cliSummary(analysis) {
-    console.log(configuration_1.ticsConfig.logLevel);
     switch (configuration_1.ticsConfig.logLevel) {
         case 'debug':
             analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
