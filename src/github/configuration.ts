@@ -48,7 +48,8 @@ export let ticsConfig = {
   ticsConfiguration: getInput('ticsConfiguration'),
   extendTics: getInput('extendTics'),
   showAnnotations: getInput('showAnnotations') ? getInput('showAnnotations') : true,
-  hostnameVerification: getHostnameVerification()
+  hostnameVerification: getHostnameVerification(),
+  showLogging: getInput('showLogging') ? getInput('showLogging') : true
 };
 
 export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });

@@ -18,7 +18,7 @@ inputs:
     description: 'A custom client-data token for the purpose of the Client Viewer functionality.'
     required: false
   extendTics:
-    description: "Options to extend TiCS, see the documentation."
+    description: 'Options to extend TiCS, see the documentation.'
     required: false
   hostnameVerification:
     description: 'Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper)'
@@ -29,11 +29,14 @@ inputs:
   showAnnotations:
     description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
     required: false
+  showLogging:
+    description: 'Show verbose logging during the action. Defaults to true.'
+    required: false
   ticsConfiguration:
     description: 'A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration'
     required: false
   tmpDir:
-    description: 'Location to store debug information'
+    description: 'Location to store debug information.'
     required: false
 branding:
   icon: 'flag'

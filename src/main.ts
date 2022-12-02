@@ -23,10 +23,10 @@ async function run() {
     const analysis = await runTiCSAnalyzer(changeSetFilePath);
 
     if (analysis.statusCode === -1) {
+      postError(analysis);
       Logger.Instance.setFailed('Failed to run TiCS Github Action');
       analysis.errorList.forEach(error => Logger.Instance.error(error));
       analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
-      postError(analysis);
     }
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');

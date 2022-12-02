@@ -57,7 +57,8 @@ exports.ticsConfig = {
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration'),
     extendTics: (0, core_1.getInput)('extendTics'),
     showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
-    hostnameVerification: getHostnameVerification()
+    hostnameVerification: getHostnameVerification(),
+    showLogging: (0, core_1.getInput)('showLogging') ? (0, core_1.getInput)('showLogging') : true
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 
@@ -346,10 +347,10 @@ async function run() {
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
         if (analysis.statusCode === -1) {
+            postError(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action');
             analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
             analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
-            postError(analysis);
         }
     }
     catch (error) {
