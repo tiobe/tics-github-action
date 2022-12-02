@@ -6,6 +6,7 @@ import Logger from './helper/logger';
 import { Analysis } from './helper/models';
 import { runTiCSAnalyzer } from './tics/tics_analyzer';
 import { createErrorSummary } from './github/posting/summary';
+import { warning } from '@actions/core';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -21,7 +22,12 @@ async function run() {
     const changeSetFilePath = changeSetToFile(changeSet);
     const analysis = await runTiCSAnalyzer(changeSetFilePath);
 
-    if (analysis.statusCode === -1) postError(analysis);
+    if (analysis.statusCode === -1) {
+      Logger.Instance.setFailed('Failed to run TiCS Github Action');
+      analysis.errorList.forEach(error => Logger.Instance.error(error));
+      analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
+      postError(analysis);
+    }
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
     Logger.Instance.exit(error.message);

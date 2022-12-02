@@ -345,8 +345,12 @@ async function run() {
             logger_1.default.Instance.exit('No changed files found to analyze.');
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
-        if (analysis.statusCode === -1)
+        if (analysis.statusCode === -1) {
+            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action');
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
             postError(analysis);
+        }
     }
     catch (error) {
         logger_1.default.Instance.error('Failed to run TiCS Github Action');
