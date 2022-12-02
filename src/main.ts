@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { createComment } from './github/posting/comment';
+import { createErrorComment } from './github/posting/comment';
 import { githubConfig } from './github/configuration';
 import { changeSetToFile, getChangedFiles } from './github/pulls/pulls';
 import Logger from './helper/logger';
@@ -39,7 +39,7 @@ async function run() {
  * @param analysis output from the runTiCSAnalyzer.
  */
 function postError(analysis: Analysis) {
-  createComment(createErrorSummary(analysis.errorList, analysis.warningList));
+  createErrorComment(createErrorSummary(analysis.errorList, analysis.warningList));
 }
 
 /**

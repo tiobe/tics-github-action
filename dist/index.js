@@ -73,10 +73,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createComment = void 0;
+exports.createErrorComment = void 0;
 const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-async function createComment(body) {
+async function createErrorComment(body) {
     try {
         const parameters = {
             accept: 'application/vnd.github.v3+json',
@@ -85,14 +85,14 @@ async function createComment(body) {
             issue_number: configuration_1.githubConfig.pullRequestNumber,
             body: body
         };
-        logger_1.default.Instance.info('\u001b[35mPosting comment in pull request.');
+        logger_1.default.Instance.info('\u001b[35mPosting error summary in pull request comment.');
         await configuration_1.octokit.rest.issues.createComment(parameters);
     }
     catch (error) {
         logger_1.default.Instance.error(`Create issue comment failed: ${error.message}`);
     }
 }
-exports.createComment = createComment;
+exports.createErrorComment = createErrorComment;
 
 
 /***/ }),
@@ -362,7 +362,7 @@ async function run() {
  * @param analysis output from the runTiCSAnalyzer.
  */
 function postError(analysis) {
-    (0, comment_1.createComment)((0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList));
+    (0, comment_1.createErrorComment)((0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList));
 }
 /**
  * Checks if a .git directory exists to see if a checkout has been performed.
