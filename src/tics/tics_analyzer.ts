@@ -41,10 +41,17 @@ export async function runTiCSAnalyzer(fileListPath: string) {
       warningList: warningList
     };
   } catch (error: any) {
+    new Error();
     Logger.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
     if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
     if (warningList.length > 0) warningList.forEach(w => Logger.Instance.warning(w));
-    return error.statusCode;
+    return {
+      statusCode: -1,
+      explorerUrl: explorerUrl,
+      filesAnalyzed: filesAnalyzed,
+      errorList: errorList,
+      warningList: warningList
+    };
   }
 }
 

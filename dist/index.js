@@ -502,12 +502,19 @@ async function runTiCSAnalyzer(fileListPath) {
         };
     }
     catch (error) {
+        new Error();
         logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
         if (errorList.length > 0)
             errorList.forEach(e => logger_1.default.Instance.error(e));
         if (warningList.length > 0)
             warningList.forEach(w => logger_1.default.Instance.warning(w));
-        return error.statusCode;
+        return {
+            statusCode: -1,
+            explorerUrl: explorerUrl,
+            filesAnalyzed: filesAnalyzed,
+            errorList: errorList,
+            warningList: warningList
+        };
     }
 }
 exports.runTiCSAnalyzer = runTiCSAnalyzer;
