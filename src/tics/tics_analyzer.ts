@@ -6,6 +6,10 @@ import { getInstallTiCSApiUrl, getTiCSWebBaseUrlFromUrl, httpRequest } from './a
 let errorList: string[] = [];
 let warningList: string[] = [];
 
+/**
+ * Runs TiCS based on the configuration set in a workflow.
+ * @param fileListPath Path to changeSet.txt.
+ */
 export async function runTiCSAnalyzer(fileListPath: string) {
   Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}.`);
 

@@ -474,6 +474,10 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
+/**
+ * Runs TiCS based on the configuration set in a workflow.
+ * @param fileListPath Path to changeSet.txt.
+ */
 async function runTiCSAnalyzer(fileListPath) {
     logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}.`);
     const command = await buildRunCommand(fileListPath);
