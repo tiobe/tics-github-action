@@ -502,12 +502,12 @@ async function runTiCSAnalyzer(fileListPath) {
         };
     }
     catch (error) {
-        console.log(error);
         logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
         if (errorList.length > 0)
             errorList.forEach(e => logger_1.default.Instance.error(e));
         if (warningList.length > 0)
             warningList.forEach(w => logger_1.default.Instance.warning(w));
+        return error.statusCode;
     }
 }
 exports.runTiCSAnalyzer = runTiCSAnalyzer;
