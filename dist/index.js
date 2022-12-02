@@ -151,17 +151,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createErrorComment = void 0;
+exports.postErrorComment = void 0;
 const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-async function createErrorComment(body) {
+const summary_1 = __nccwpck_require__(6649);
+/**
+ * Create error comment on the pull request from the analysis given.
+ * @param analysis Analysis object returned from TiCS analysis.
+ */
+async function postErrorComment(analysis) {
     try {
         const parameters = {
             accept: 'application/vnd.github.v3+json',
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             issue_number: configuration_1.githubConfig.pullRequestNumber,
-            body: body
+            body: (0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList)
         };
         logger_1.default.Instance.info('\u001b[35mPosting error summary in pull request comment.');
         await configuration_1.octokit.rest.issues.createComment(parameters);
@@ -170,7 +175,7 @@ async function createErrorComment(body) {
         logger_1.default.Instance.error(`Create issue comment failed: ${error.message}`);
     }
 }
-exports.createErrorComment = createErrorComment;
+exports.postErrorComment = postErrorComment;
 
 
 /***/ }),
@@ -336,15 +341,14 @@ const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(5857);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
-const summary_1 = __nccwpck_require__(6649);
 const api_helper_1 = __nccwpck_require__(3823);
 const tics_publisher_1 = __nccwpck_require__(5470);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
     logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
-run();
-async function run() {
+main();
+async function main() {
     try {
         const changeSet = await (0, pulls_1.getChangedFiles)();
         if (changeSet.length <= 0)
@@ -352,7 +356,7 @@ async function run() {
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
         if (analysis.statusCode === -1) {
-            postError(analysis);
+            (0, comment_1.postErrorComment)(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
             (0, api_helper_1.cliSummary)(analysis);
             return;
@@ -364,19 +368,13 @@ async function run() {
             return;
         }
         const published = await (0, tics_publisher_1.runTiCSPublisher)(analysis.explorerUrl);
+        postReview(analysis, published);
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
         logger_1.default.Instance.error('Failed to run TiCS Github Action');
         logger_1.default.Instance.exit(error.message);
     }
-}
-/**
- * Creates a comment on the pull request to show what errors were given.
- * @param analysis output from the runTiCSAnalyzer.
- */
-function postError(analysis) {
-    (0, comment_1.createErrorComment)((0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList));
 }
 /**
  * Checks if a .git directory exists to see if a checkout has been performed.
@@ -388,6 +386,9 @@ function isCheckedOut() {
         return false;
     }
     return true;
+}
+function postReview(analysis, published) {
+    throw new Error('Function not implemented.');
 }
 
 
@@ -637,7 +638,9 @@ function getTiCSCommand(fileListPath) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runTiCSPublisher = void 0;
-async function runTiCSPublisher(url) { }
+async function runTiCSPublisher(url) {
+    return {};
+}
 exports.runTiCSPublisher = runTiCSPublisher;
 
 

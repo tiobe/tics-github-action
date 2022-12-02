@@ -1,11 +1,10 @@
 import { existsSync } from 'fs';
-import { createErrorComment } from './github/posting/comment';
+import { postErrorComment } from './github/posting/comment';
 import { githubConfig } from './github/configuration';
 import { changeSetToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
-import { Analysis } from './helper/models';
+import { Analysis, Published } from './helper/models';
 import { runTiCSAnalyzer } from './tics/tics_analyzer';
-import { createErrorSummary } from './github/posting/summary';
 import { cliSummary } from './tics/api_helper';
 import { runTiCSPublisher } from './tics/tics_publisher';
 
@@ -13,9 +12,9 @@ if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action
 
 if (!isCheckedOut()) Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
 
-run();
+main();
 
-async function run() {
+async function main() {
   try {
     const changeSet = await getChangedFiles();
     if (changeSet.length <= 0) Logger.Instance.exit('No changed files found to analyze.');
@@ -24,7 +23,7 @@ async function run() {
     const analysis = await runTiCSAnalyzer(changeSetFilePath);
 
     if (analysis.statusCode === -1) {
-      postError(analysis);
+      postErrorComment(analysis);
       Logger.Instance.setFailed('Failed to run TiCS Github Action.');
       cliSummary(analysis);
       return;
@@ -37,20 +36,13 @@ async function run() {
     }
 
     const published = await runTiCSPublisher(analysis.explorerUrl);
+    postReview(analysis, published);
 
     cliSummary(analysis);
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
     Logger.Instance.exit(error.message);
   }
-}
-
-/**
- * Creates a comment on the pull request to show what errors were given.
- * @param analysis output from the runTiCSAnalyzer.
- */
-function postError(analysis: Analysis) {
-  createErrorComment(createErrorSummary(analysis.errorList, analysis.warningList));
 }
 
 /**
@@ -63,4 +55,10 @@ function isCheckedOut() {
     return false;
   }
   return true;
+}
+function postReview(
+  analysis: { statusCode: number; explorerUrl: string | undefined; filesAnalyzed: string[]; errorList: string[]; warningList: string[] },
+  published: Published
+) {
+  throw new Error('Function not implemented.');
 }

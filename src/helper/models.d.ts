@@ -5,3 +5,5 @@ export interface Analysis {
   explorerUrl?: string;
   filesAnalyzed?: string[];
 }
+
+export interface Published {}
