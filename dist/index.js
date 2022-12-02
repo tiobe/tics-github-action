@@ -493,16 +493,16 @@ async function runTiCSAnalyzer(fileListPath) {
                 }
             }
         });
-        const response = {
+        return {
             statusCode: statusCode,
             explorerUrl: explorerUrl,
             filesAnalyzed: filesAnalyzed,
             errorList: errorList,
             warningList: warningList
         };
-        return response;
     }
     catch (error) {
+        console.log(error);
         logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
         if (errorList.length > 0)
             errorList.forEach(e => logger_1.default.Instance.error(e));
