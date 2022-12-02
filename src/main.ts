@@ -28,6 +28,7 @@ async function run() {
       analysis.errorList.forEach(error => Logger.Instance.error(error));
       analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
     }
+    analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
     Logger.Instance.exit(error.message);
