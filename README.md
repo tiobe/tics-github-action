@@ -69,7 +69,7 @@ The following inputs are available for this action:
 
 | Input                 | Description                                                                                                                                                                            | Required |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `projectName`         | Name of the TiCS project present in the TICS Viewer.                                                                                                                                   | true     |
+| `projectName`         | Name of the TiCS project present in the TiCS Viewer.                                                                                                                                   | true     |
 | `ticsConfiguration`   | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                      | true     |
 | `branchName`          | Name of the branch in TiCS.                                                                                                                                                            | false    |
 | `branchDir`           | Location of the files to analyze.                                                                                                                                                      | false    |

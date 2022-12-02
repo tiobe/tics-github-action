@@ -1,13 +1,13 @@
 import { existsSync } from 'fs';
 import { createErrorComment } from './github/posting/comment';
-import { githubConfig, ticsConfig } from './github/configuration';
-import { changeSetToFile, getChangedFiles } from './github/pulls/pulls';
+import { githubConfig } from './github/configuration';
+import { changeSetToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { Analysis } from './helper/models';
 import { runTiCSAnalyzer } from './tics/tics_analyzer';
 import { createErrorSummary } from './github/posting/summary';
-import { warning } from '@actions/core';
 import { cliSummary } from './tics/api_helper';
+import { runTiCSPublisher } from './tics/tics_publisher';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -25,9 +25,18 @@ async function run() {
 
     if (analysis.statusCode === -1) {
       postError(analysis);
-      Logger.Instance.setFailed('Failed to run TiCS Github Action');
+      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
       cliSummary(analysis);
+      return;
     }
+    if (!analysis.explorerUrl) {
+      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+      analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+      cliSummary(analysis);
+      return;
+    }
+
+    const published = await runTiCSPublisher(analysis.explorerUrl);
 
     cliSummary(analysis);
   } catch (error: any) {

@@ -1,6 +1,83 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 5857:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.changeSetToFile = exports.getChangedFiles = void 0;
+const fs_1 = __nccwpck_require__(5747);
+const path_1 = __nccwpck_require__(5622);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const configuration_1 = __nccwpck_require__(6868);
+/**
+ * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
+ * @returns List of changed files within the GitHub Pull request.
+ */
+async function getChangedFiles() {
+    logger_1.default.Instance.header('Retrieving changed files to analyse...');
+    let changedFiles = [];
+    let noMoreFiles = false;
+    try {
+        for (let i = 1; i <= 30; i++) {
+            const params = {
+                accept: 'application/vnd.github.v3+json',
+                branch: configuration_1.githubConfig.branchname,
+                owner: configuration_1.githubConfig.owner,
+                repo: configuration_1.githubConfig.reponame,
+                pull_number: configuration_1.githubConfig.pullRequestNumber,
+                per_page: 100,
+                page: i
+            };
+            await configuration_1.octokit.rest.pulls.listFiles(params).then(response => {
+                if (response.data.length > 0) {
+                    response.data.map(item => {
+                        changedFiles.push(item.filename);
+                        logger_1.default.Instance.info(item.filename);
+                    });
+                }
+                else {
+                    noMoreFiles = true;
+                }
+            });
+            if (noMoreFiles) {
+                break;
+            }
+        }
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
+    }
+    return changedFiles;
+}
+exports.getChangedFiles = getChangedFiles;
+/**
+ * Creates a file containing all the changed files based on the given changeSet.
+ * @param changeSet List of changed files.
+ * @returns Location of the written file.
+ */
+function changeSetToFile(changeSet) {
+    logger_1.default.Instance.header('Writing changeSet to file');
+    let contents = '';
+    changeSet &&
+        changeSet.map(item => {
+            contents += item + '\n';
+        });
+    const fileListPath = (0, path_1.resolve)('changeSet.txt');
+    (0, fs_1.writeFileSync)(fileListPath, contents);
+    logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
+    return fileListPath;
+}
+exports.changeSetToFile = changeSetToFile;
+
+
+/***/ }),
+
 /***/ 6868:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -118,83 +195,6 @@ function createErrorSummary(errorList, warningList) {
     return summary;
 }
 exports.createErrorSummary = createErrorSummary;
-
-
-/***/ }),
-
-/***/ 4229:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.changeSetToFile = exports.getChangedFiles = void 0;
-const fs_1 = __nccwpck_require__(5747);
-const path_1 = __nccwpck_require__(5622);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
-/**
- * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
- * @returns List of changed files within the GitHub Pull request.
- */
-async function getChangedFiles() {
-    logger_1.default.Instance.header('Retrieving changed files to analyse...');
-    let changedFiles = [];
-    let noMoreFiles = false;
-    try {
-        for (let i = 1; i <= 30; i++) {
-            const params = {
-                accept: 'application/vnd.github.v3+json',
-                branch: configuration_1.githubConfig.branchname,
-                owner: configuration_1.githubConfig.owner,
-                repo: configuration_1.githubConfig.reponame,
-                pull_number: configuration_1.githubConfig.pullRequestNumber,
-                per_page: 100,
-                page: i
-            };
-            await configuration_1.octokit.rest.pulls.listFiles(params).then(response => {
-                if (response.data.length > 0) {
-                    response.data.map(item => {
-                        changedFiles.push(item.filename);
-                        logger_1.default.Instance.info(item.filename);
-                    });
-                }
-                else {
-                    noMoreFiles = true;
-                }
-            });
-            if (noMoreFiles) {
-                break;
-            }
-        }
-    }
-    catch (error) {
-        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
-    }
-    return changedFiles;
-}
-exports.getChangedFiles = getChangedFiles;
-/**
- * Creates a file containing all the changed files based on the given changeSet.
- * @param changeSet List of changed files.
- * @returns Location of the written file.
- */
-function changeSetToFile(changeSet) {
-    logger_1.default.Instance.header('Writing changeSet to file');
-    let contents = '';
-    changeSet &&
-        changeSet.map(item => {
-            contents += item + '\n';
-        });
-    const fileListPath = (0, path_1.resolve)('changeSet.txt');
-    (0, fs_1.writeFileSync)(fileListPath, contents);
-    logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
-    return fileListPath;
-}
-exports.changeSetToFile = changeSetToFile;
 
 
 /***/ }),
@@ -333,11 +333,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __nccwpck_require__(5747);
 const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(6868);
-const pulls_1 = __nccwpck_require__(4229);
+const pulls_1 = __nccwpck_require__(5857);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
 const summary_1 = __nccwpck_require__(6649);
 const api_helper_1 = __nccwpck_require__(3823);
+const tics_publisher_1 = __nccwpck_require__(5470);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -352,9 +353,17 @@ async function run() {
         const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
         if (analysis.statusCode === -1) {
             postError(analysis);
-            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action');
+            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
             (0, api_helper_1.cliSummary)(analysis);
+            return;
         }
+        if (!analysis.explorerUrl) {
+            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+            analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+            (0, api_helper_1.cliSummary)(analysis);
+            return;
+        }
+        const published = await (0, tics_publisher_1.runTiCSPublisher)(analysis.explorerUrl);
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
@@ -617,6 +626,19 @@ function getTiCSCommand(fileListPath) {
     execString += configuration_1.ticsConfig.extendTics ? configuration_1.ticsConfig.extendTics : '';
     return execString;
 }
+
+
+/***/ }),
+
+/***/ 5470:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.runTiCSPublisher = void 0;
+async function runTiCSPublisher(url) { }
+exports.runTiCSPublisher = runTiCSPublisher;
 
 
 /***/ }),
