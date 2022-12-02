@@ -40,7 +40,7 @@ export async function getChangedFiles(): Promise<string[]> {
       }
     }
   } catch (error: any) {
-    logger.Instance.exit(`Could not retrieve the changed files: ${error.message}`);
+    logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
   }
   return changedFiles;
 }

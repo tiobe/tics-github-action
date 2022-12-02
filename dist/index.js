@@ -159,7 +159,7 @@ async function getChangedFiles() {
         }
     }
     catch (error) {
-        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error.message}`);
+        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
     }
     return changedFiles;
 }
@@ -314,13 +314,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(4229);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
-run();
+if (configuration_1.githubConfig.eventName === 'pull_request') {
+    run();
+}
+else {
+    logger_1.default.Instance.setFailed('This action can only run on pull requests.');
+}
 async function run() {
     try {
-        const changeSetFilePath = (0, pulls_1.changeSetToFile)(['hello']);
+        const changeSet = await (0, pulls_1.getChangedFiles)();
+        const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
     }
     catch (error) {
@@ -337,38 +344,15 @@ async function run() {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOptions = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
-const http = __importStar(__nccwpck_require__(6255));
+const http_client_1 = __nccwpck_require__(6255);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
-const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
+const configuration_1 = __nccwpck_require__(6868);
 /**
  * Executes a GET request to the given url.
  * @param url api url to perform a GET request for.
@@ -383,7 +367,7 @@ async function httpRequest(url) {
         Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
         XRequestedWith: 'tics'
     };
-    const response = await new http.HttpClient('http-client', [], options).get(url, headers);
+    const response = await new http_client_1.HttpClient('http-client', [], options).get(url, headers);
     switch (response.message.statusCode) {
         case 200:
             return JSON.parse(await response.readBody());
@@ -406,7 +390,6 @@ async function httpRequest(url) {
     }
 }
 exports.httpRequest = httpRequest;
-;
 /**
  * Creates the TiCS install data from the TiCS Viewer.
  * @param ticsWebBaseUrl url given in the ticsConfiguration.
@@ -420,7 +403,6 @@ function getInstallTiCSApiUrl(ticsWebBaseUrl, os) {
     return installTICSAPI.href;
 }
 exports.getInstallTiCSApiUrl = getInstallTiCSApiUrl;
-;
 /**
  * Returns the TIOBE web base url.
  * @param url url given in the ticsConfiguration.
@@ -439,7 +421,6 @@ function getTiCSWebBaseUrlFromUrl(url) {
     return baseUrl;
 }
 exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
-;
 function getOptions() {
     return {
         silent: true,
@@ -482,23 +463,32 @@ async function runTiCSAnalyzer(fileListPath) {
     logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}.`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
-    await (0, exec_1.exec)(command, [], {
-        silent: true,
-        listeners: {
-            stdout(data) {
-                logger_1.default.Instance.info(data.toString());
-                findWarningOrError(data.toString());
-            },
-            stderr(data) {
-                logger_1.default.Instance.info(data.toString());
-                findWarningOrError(data.toString());
+    try {
+        await (0, exec_1.exec)(command, [], {
+            silent: true,
+            listeners: {
+                stdout(data) {
+                    logger_1.default.Instance.info(data.toString());
+                    findWarningOrError(data.toString());
+                },
+                stderr(data) {
+                    logger_1.default.Instance.info(data.toString());
+                    findWarningOrError(data.toString());
+                }
             }
-        }
-    });
-    if (errorList.length > 0)
-        errorList.forEach(e => logger_1.default.Instance.error(e));
-    if (warningList.length > 0)
-        warningList.forEach(w => logger_1.default.Instance.warning(w));
+        });
+        if (errorList.length > 0)
+            errorList.forEach(e => logger_1.default.Instance.error(e));
+        if (warningList.length > 0)
+            warningList.forEach(w => logger_1.default.Instance.warning(w));
+    }
+    catch (error) {
+        logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
+        if (errorList.length > 0)
+            errorList.forEach(e => logger_1.default.Instance.error(e));
+        if (warningList.length > 0)
+            warningList.forEach(w => logger_1.default.Instance.warning(w));
+    }
 }
 exports.runTiCSAnalyzer = runTiCSAnalyzer;
 /**

@@ -16,22 +16,28 @@ export async function runTiCSAnalyzer(fileListPath: string) {
   const command = await buildRunCommand(fileListPath);
 
   Logger.Instance.header('Running TiCS');
-  await exec(command, [], {
-    silent: true,
-    listeners: {
-      stdout(data: Buffer) {
-        Logger.Instance.info(data.toString());
-        findWarningOrError(data.toString());
-      },
-      stderr(data: Buffer) {
-        Logger.Instance.info(data.toString());
-        findWarningOrError(data.toString());
+  try {
+    await exec(command, [], {
+      silent: true,
+      listeners: {
+        stdout(data: Buffer) {
+          Logger.Instance.info(data.toString());
+          findWarningOrError(data.toString());
+        },
+        stderr(data: Buffer) {
+          Logger.Instance.info(data.toString());
+          findWarningOrError(data.toString());
+        }
       }
-    }
-  });
+    });
 
-  if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
-  if (warningList.length > 0) warningList.forEach(w => Logger.Instance.warning(w));
+    if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
+    if (warningList.length > 0) warningList.forEach(w => Logger.Instance.warning(w));
+  } catch (error: any) {
+    Logger.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
+    if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
+    if (warningList.length > 0) warningList.forEach(w => Logger.Instance.warning(w));
+  }
 }
 
 /**

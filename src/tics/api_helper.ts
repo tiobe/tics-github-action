@@ -1,39 +1,45 @@
-import * as http from '@actions/http-client';
-import ProxyAgent from 'proxy-agent';
-import { RequestOptions } from 'https';
-import { OutgoingHttpHeaders } from 'http';
-import { ticsConfig } from '../github/configuration';
-import Logger from '../helper/logger';
 import { ExecOptions } from '@actions/exec';
+import { HttpClient } from '@actions/http-client';
+import { OutgoingHttpHeaders } from 'http';
+import { RequestOptions } from 'https';
+import ProxyAgent from 'proxy-agent';
+import Logger from '../helper/logger';
+import { ticsConfig } from '../github/configuration';
 
 /**
  * Executes a GET request to the given url.
- * @param url api url to perform a GET request for.  
+ * @param url api url to perform a GET request for.
  * @returns Promise of the data retrieved from the response.
  */
 export async function httpRequest(url: string): Promise<any> {
   const options: RequestOptions = {
     rejectUnauthorized: ticsConfig.hostnameVerification,
     agent: new ProxyAgent()
-  }
+  };
   const headers: OutgoingHttpHeaders = {
     Authorization: ticsConfig.ticsAuthToken ? `Basic ${ticsConfig.ticsAuthToken}` : undefined,
     XRequestedWith: 'tics'
-  }
-  const response = await new http.HttpClient('http-client', [], options).get(url, headers);
+  };
+  const response = await new HttpClient('http-client', [], options).get(url, headers);
 
   switch (response.message.statusCode) {
     case 200:
       return JSON.parse(await response.readBody());
     case 302:
-      Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+      Logger.Instance.exit(
+        `HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
+      );
       break;
     case 400:
-      Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
+      Logger.Instance.exit(
+        `HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`
+      );
       break;
     case 401:
       var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
-      Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+      Logger.Instance.exit(
+        `HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`
+      );
       break;
     case 404:
       Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
@@ -42,7 +48,7 @@ export async function httpRequest(url: string): Promise<any> {
       Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
       break;
   }
-};
+}
 
 /**
  * Creates the TiCS install data from the TiCS Viewer.
@@ -56,14 +62,14 @@ export function getInstallTiCSApiUrl(ticsWebBaseUrl: string, os: string): string
   installTICSAPI.searchParams.append('url', ticsWebBaseUrl);
 
   return installTICSAPI.href;
-};
+}
 
 /**
  * Returns the TIOBE web base url.
  * @param url url given in the ticsConfiguration.
- * @returns TIOBE web base url. 
+ * @returns TIOBE web base url.
  */
- export function getTiCSWebBaseUrlFromUrl(url: string) {
+export function getTiCSWebBaseUrlFromUrl(url: string) {
   const cfgMarker = 'cfg?name=';
   const apiMarker = '/api/';
   let baseUrl = '';
@@ -75,9 +81,9 @@ export function getInstallTiCSApiUrl(ticsWebBaseUrl: string, os: string): string
   }
 
   return baseUrl;
-};
+}
 
-export function getOptions(): ExecOptions  {
+export function getOptions(): ExecOptions {
   return {
     silent: true,
     listeners: {
