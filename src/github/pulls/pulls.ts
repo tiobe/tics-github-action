@@ -1,10 +1,7 @@
-import * as fs from 'fs';
-import * as github from '@actions/github';
-import * as path from 'path';
+import { writeFileSync } from 'fs';
+import { resolve } from 'path';
 import logger from '../../helper/logger';
-import { githubConfig } from '../configuration';
-
-const octokit = github.getOctokit(githubConfig.githubToken);
+import { githubConfig, octokit } from '../configuration';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -59,8 +56,8 @@ export function changeSetToFile(changeSet: string[]): string {
       contents += item + '\n';
     });
 
-  const fileListPath = path.resolve('changeSet.txt');
-  fs.writeFileSync(fileListPath, contents);
+  const fileListPath = resolve('changeSet.txt');
+  writeFileSync(fileListPath, contents);
 
   logger.Instance.info(`Content written to: ${fileListPath}`);
 

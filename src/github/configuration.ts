@@ -1,8 +1,10 @@
-import * as core from '@actions/core';
-import fs from 'fs';
+import { getInput, info } from '@actions/core';
+import { getOctokit } from '@actions/github';
+import { readFileSync } from 'fs';
+import ProxyAgent from 'proxy-agent';
 
 let processEnv = process.env;
-const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse(fs.readFileSync(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
+const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 
 export let githubConfig = {
@@ -24,7 +26,7 @@ function getHostnameVerification() {
     case '0':
     case 'false':
       hostnameVerification = false;
-      core.info('Hostname Verification disabled');
+      info('Hostname Verification disabled');
       break;
     default:
       hostnameVerification = true;
@@ -34,17 +36,19 @@ function getHostnameVerification() {
 }
 
 export let ticsConfig = {
-  projectName: core.getInput('projectName', { required: true }),
-  branchDir: core.getInput('branchDir'),
-  branchName: core.getInput('branchName'),
-  tmpDir: core.getInput('tmpDir'),
-  calc: core.getInput('calc'),
-  viewerUrl: core.getInput('ticsViewerUrl') ? core.getInput('ticsViewerUrl') : '',
-  clientToken: core.getInput('clientToken'),
-  ticsAuthToken: core.getInput('ticsAuthToken') ? core.getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
-  installTics: core.getInput('installTics') === 'true' ? true : false,
-  ticsConfiguration: core.getInput('ticsConfiguration'),
-  extendTics: core.getInput('extendTics'),
-  showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : true,
+  projectName: getInput('projectName', { required: true }),
+  branchDir: getInput('branchDir'),
+  branchName: getInput('branchName'),
+  tmpDir: getInput('tmpDir'),
+  calc: getInput('calc'),
+  viewerUrl: getInput('ticsViewerUrl') ? getInput('ticsViewerUrl') : '',
+  clientToken: getInput('clientToken'),
+  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
+  installTics: getInput('installTics') === 'true' ? true : false,
+  ticsConfiguration: getInput('ticsConfiguration'),
+  extendTics: getInput('extendTics'),
+  showAnnotations: getInput('showAnnotations') ? getInput('showAnnotations') : true,
   hostnameVerification: getHostnameVerification()
 };
+
+export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });

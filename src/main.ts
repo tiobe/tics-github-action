@@ -1,8 +1,11 @@
 import { existsSync } from 'fs';
+import { createComment } from './github/posting/comment';
 import { githubConfig } from './github/configuration';
 import { changeSetToFile, getChangedFiles } from './github/pulls/pulls';
 import Logger from './helper/logger';
+import { Analysis } from './helper/models';
 import { runTiCSAnalyzer } from './tics/tics_analyzer';
+import { createErrorSummary } from './github/posting/summary';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -17,11 +20,20 @@ async function run() {
 
     const changeSetFilePath = changeSetToFile(changeSet);
     const analysis = await runTiCSAnalyzer(changeSetFilePath);
-    console.log(analysis);
+
+    if (analysis.statusCode === -1) postError(analysis);
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
     Logger.Instance.exit(error.message);
   }
+}
+
+/**
+ * Creates a comment on the pull request to show what errors were given.
+ * @param analysis output from the runTiCSAnalyzer.
+ */
+function postError(analysis: Analysis) {
+  createComment(createErrorSummary(analysis.errorList, analysis.warningList));
 }
 
 /**

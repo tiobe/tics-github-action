@@ -6,38 +6,17 @@
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ticsConfig = exports.githubConfig = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const fs_1 = __importDefault(__nccwpck_require__(5747));
+exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const fs_1 = __nccwpck_require__(5747);
+const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 let processEnv = process.env;
-const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse(fs_1.default.readFileSync(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
+const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 exports.githubConfig = {
     repo: processEnv.GITHUB_REPOSITORY ? processEnv.GITHUB_REPOSITORY : '',
@@ -57,7 +36,7 @@ function getHostnameVerification() {
         case '0':
         case 'false':
             hostnameVerification = false;
-            core.info('Hostname Verification disabled');
+            (0, core_1.info)('Hostname Verification disabled');
             break;
         default:
             hostnameVerification = true;
@@ -66,20 +45,78 @@ function getHostnameVerification() {
     return hostnameVerification;
 }
 exports.ticsConfig = {
-    projectName: core.getInput('projectName', { required: true }),
-    branchDir: core.getInput('branchDir'),
-    branchName: core.getInput('branchName'),
-    tmpDir: core.getInput('tmpDir'),
-    calc: core.getInput('calc'),
-    viewerUrl: core.getInput('ticsViewerUrl') ? core.getInput('ticsViewerUrl') : '',
-    clientToken: core.getInput('clientToken'),
-    ticsAuthToken: core.getInput('ticsAuthToken') ? core.getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
-    installTics: core.getInput('installTics') === 'true' ? true : false,
-    ticsConfiguration: core.getInput('ticsConfiguration'),
-    extendTics: core.getInput('extendTics'),
-    showAnnotations: core.getInput('showAnnotations') ? core.getInput('showAnnotations') : true,
+    projectName: (0, core_1.getInput)('projectName', { required: true }),
+    branchDir: (0, core_1.getInput)('branchDir'),
+    branchName: (0, core_1.getInput)('branchName'),
+    tmpDir: (0, core_1.getInput)('tmpDir'),
+    calc: (0, core_1.getInput)('calc'),
+    viewerUrl: (0, core_1.getInput)('ticsViewerUrl') ? (0, core_1.getInput)('ticsViewerUrl') : '',
+    clientToken: (0, core_1.getInput)('clientToken'),
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
+    installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration'),
+    extendTics: (0, core_1.getInput)('extendTics'),
+    showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification()
 };
+exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
+
+
+/***/ }),
+
+/***/ 5436:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createComment = void 0;
+const configuration_1 = __nccwpck_require__(6868);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+async function createComment(body) {
+    try {
+        const parameters = {
+            accept: 'application/vnd.github.v3+json',
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            issue_number: configuration_1.githubConfig.pullRequestNumber,
+            body: body
+        };
+        logger_1.default.Instance.info('\u001b[35mPosting comment in pull request.');
+        await configuration_1.octokit.rest.issues.createComment(parameters);
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Create issue comment failed: ${error.message}`);
+    }
+}
+exports.createComment = createComment;
+
+
+/***/ }),
+
+/***/ 6649:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createErrorSummary = void 0;
+function createErrorSummary(errorList, warningList) {
+    let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+    if (errorList.length > 0) {
+        summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
+        errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
+    }
+    if (warningList.length > 0) {
+        summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
+        warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
+    }
+    return summary;
+}
+exports.createErrorSummary = createErrorSummary;
 
 
 /***/ }),
@@ -89,40 +126,15 @@ exports.ticsConfig = {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.changeSetToFile = exports.getChangedFiles = void 0;
-const fs = __importStar(__nccwpck_require__(5747));
-const github = __importStar(__nccwpck_require__(5438));
-const path = __importStar(__nccwpck_require__(5622));
+const fs_1 = __nccwpck_require__(5747);
+const path_1 = __nccwpck_require__(5622);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
-const octokit = github.getOctokit(configuration_1.githubConfig.githubToken);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
@@ -142,7 +154,7 @@ async function getChangedFiles() {
                 per_page: 100,
                 page: i
             };
-            await octokit.rest.pulls.listFiles(params).then(response => {
+            await configuration_1.octokit.rest.pulls.listFiles(params).then(response => {
                 if (response.data.length > 0) {
                     response.data.map(item => {
                         changedFiles.push(item.filename);
@@ -176,8 +188,8 @@ function changeSetToFile(changeSet) {
         changeSet.map(item => {
             contents += item + '\n';
         });
-    const fileListPath = path.resolve('changeSet.txt');
-    fs.writeFileSync(fileListPath, contents);
+    const fileListPath = (0, path_1.resolve)('changeSet.txt');
+    (0, fs_1.writeFileSync)(fileListPath, contents);
     logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
     return fileListPath;
 }
@@ -315,10 +327,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __nccwpck_require__(5747);
+const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(4229);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
+const summary_1 = __nccwpck_require__(6649);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -331,12 +345,20 @@ async function run() {
             logger_1.default.Instance.exit('No changed files found to analyze.');
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
-        console.log(analysis);
+        if (analysis.statusCode === -1)
+            postError(analysis);
     }
     catch (error) {
         logger_1.default.Instance.error('Failed to run TiCS Github Action');
         logger_1.default.Instance.exit(error.message);
     }
+}
+/**
+ * Creates a comment on the pull request to show what errors were given.
+ * @param analysis output from the runTiCSAnalyzer.
+ */
+function postError(analysis) {
+    (0, comment_1.createComment)((0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList));
 }
 /**
  * Checks if a .git directory exists to see if a checkout has been performed.
@@ -502,16 +524,8 @@ async function runTiCSAnalyzer(fileListPath) {
         };
     }
     catch (error) {
-        new Error();
-        logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
-        if (errorList.length > 0)
-            errorList.forEach(e => logger_1.default.Instance.error(e));
-        if (warningList.length > 0)
-            warningList.forEach(w => logger_1.default.Instance.warning(w));
         return {
             statusCode: -1,
-            explorerUrl: explorerUrl,
-            filesAnalyzed: filesAnalyzed,
             errorList: errorList,
             warningList: warningList
         };
