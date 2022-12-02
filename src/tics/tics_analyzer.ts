@@ -5,6 +5,8 @@ import { getInstallTiCSApiUrl, getTiCSWebBaseUrlFromUrl, httpRequest } from './a
 
 let errorList: string[] = [];
 let warningList: string[] = [];
+let filesAnalyzed: string[] = [];
+let explorerUrl: string | undefined;
 
 /**
  * Runs TiCS based on the configuration set in a workflow.
@@ -17,22 +19,28 @@ export async function runTiCSAnalyzer(fileListPath: string) {
 
   Logger.Instance.header('Running TiCS');
   try {
-    await exec(command, [], {
+    const statusCode = await exec(command, [], {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
           Logger.Instance.info(data.toString());
-          findWarningOrError(data.toString());
+          findInStdOutOrErr(data.toString(), fileListPath);
         },
         stderr(data: Buffer) {
           Logger.Instance.info(data.toString());
-          findWarningOrError(data.toString());
+          findInStdOutOrErr(data.toString(), fileListPath);
         }
       }
     });
 
-    if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
-    if (warningList.length > 0) warningList.forEach(w => Logger.Instance.warning(w));
+    const response = {
+      statusCode: statusCode,
+      explorerUrl: explorerUrl,
+      filesAnalyzed: filesAnalyzed,
+      errorList: errorList,
+      warningList: warningList
+    };
+    return response;
   } catch (error: any) {
     Logger.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
     if (errorList.length > 0) errorList.forEach(e => Logger.Instance.error(e));
@@ -70,12 +78,21 @@ async function getInstallTiCS() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findWarningOrError(data: string) {
-  let error = data.toString().match(/\[ERROR.*/g);
+function findInStdOutOrErr(data: string, fileListPath: string) {
+  const error = data.toString().match(/\[ERROR.*/g);
   if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
 
-  let warning = data.toString().match(/\[WARNING.*/g);
+  const warning = data.toString().match(/\[WARNING.*/g);
   if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
+
+  const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
+  if (fileAnalyzed) {
+    const file = fileListPath.replace('changeSet.txt', '')[1];
+    if (!filesAnalyzed.find(f => f === file)) filesAnalyzed.push(file);
+  }
+
+  const findExplorerUrl = data.match(/http.*Explorer.*/g);
+  if (!explorerUrl && findExplorerUrl) explorerUrl = findExplorerUrl.slice(-1).pop();
 }
 
 /**

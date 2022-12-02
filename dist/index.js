@@ -314,26 +314,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const fs_1 = __nccwpck_require__(5747);
 const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(4229);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
-if (configuration_1.githubConfig.eventName === 'pull_request') {
-    run();
-}
-else {
-    logger_1.default.Instance.setFailed('This action can only run on pull requests.');
-}
+if (configuration_1.githubConfig.eventName !== 'pull_request')
+    logger_1.default.Instance.exit('This action can only run on pull requests.');
+if (!isCheckedOut())
+    logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+run();
 async function run() {
     try {
         const changeSet = await (0, pulls_1.getChangedFiles)();
+        if (changeSet.length <= 0)
+            logger_1.default.Instance.exit('No changed files found to analyze.');
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
-        await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
+        const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
+        console.log(analysis);
     }
     catch (error) {
         logger_1.default.Instance.error('Failed to run TiCS Github Action');
-        logger_1.default.Instance.setFailed(error.message);
+        logger_1.default.Instance.exit(error.message);
     }
+}
+/**
+ * Checks if a .git directory exists to see if a checkout has been performed.
+ * @returns boolean
+ */
+function isCheckedOut() {
+    if (!(0, fs_1.existsSync)('.git')) {
+        logger_1.default.Instance.error('No git checkout found');
+        return false;
+    }
+    return true;
 }
 
 
@@ -455,6 +469,8 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
+let filesAnalyzed = [];
+let explorerUrl;
 /**
  * Runs TiCS based on the configuration set in a workflow.
  * @param fileListPath Path to changeSet.txt.
@@ -464,23 +480,27 @@ async function runTiCSAnalyzer(fileListPath) {
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     try {
-        await (0, exec_1.exec)(command, [], {
+        const statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
                 stdout(data) {
                     logger_1.default.Instance.info(data.toString());
-                    findWarningOrError(data.toString());
+                    findInStdOutOrErr(data.toString(), fileListPath);
                 },
                 stderr(data) {
                     logger_1.default.Instance.info(data.toString());
-                    findWarningOrError(data.toString());
+                    findInStdOutOrErr(data.toString(), fileListPath);
                 }
             }
         });
-        if (errorList.length > 0)
-            errorList.forEach(e => logger_1.default.Instance.error(e));
-        if (warningList.length > 0)
-            warningList.forEach(w => logger_1.default.Instance.warning(w));
+        const response = {
+            statusCode: statusCode,
+            explorerUrl: explorerUrl,
+            filesAnalyzed: filesAnalyzed,
+            errorList: errorList,
+            warningList: warningList
+        };
+        return response;
     }
     catch (error) {
         logger_1.default.Instance.setFailed(`Failed to run TiCS: ${error.message}`);
@@ -518,13 +538,22 @@ async function getInstallTiCS() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findWarningOrError(data) {
-    let error = data.toString().match(/\[ERROR.*/g);
+function findInStdOutOrErr(data, fileListPath) {
+    const error = data.toString().match(/\[ERROR.*/g);
     if (error && !errorList.find(e => e === error?.toString()))
         errorList.push(error.toString());
-    let warning = data.toString().match(/\[WARNING.*/g);
+    const warning = data.toString().match(/\[WARNING.*/g);
     if (warning && !warningList.find(w => w === warning?.toString()))
         warningList.push(warning.toString());
+    const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
+    if (fileAnalyzed) {
+        const file = fileListPath.replace('changeSet.txt', '')[1];
+        if (!filesAnalyzed.find(f => f === file))
+            filesAnalyzed.push(file);
+    }
+    const findExplorerUrl = data.match(/http.*Explorer.*/g);
+    if (!explorerUrl && findExplorerUrl)
+        explorerUrl = findExplorerUrl.slice(-1).pop();
 }
 /**
  * Retrieves the the TiCS install url from the ticsConfiguration.
