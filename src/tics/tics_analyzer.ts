@@ -87,7 +87,7 @@ function findInStdOutOrErr(data: string, fileListPath: string) {
 
   const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
   if (fileAnalyzed) {
-    const file = fileListPath.replace('changeSet.txt', '')[1];
+    const file = fileAnalyzed.split(fileListPath.replace('changeSet.txt', ''))[1];
     if (!filesAnalyzed.find(f => f === file)) filesAnalyzed.push(file);
   }
 
