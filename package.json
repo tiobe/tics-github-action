@@ -9,7 +9,8 @@
     "format-check": "prettier --check src/**/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
-    "all": "npm run build && npm run package"
+    "all": "npm run build && npm run package",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -39,13 +40,7 @@
     "@vercel/ncc": "^0.31.1",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
-    "husky": "^8.0.2",
     "prettier": "2.5.1",
     "typescript": "^4.9.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run all && git add ."
-    }
   }
 }
