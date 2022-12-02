@@ -32,7 +32,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ticsConfig = exports.githubConfig = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -43,7 +42,7 @@ const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '
 exports.githubConfig = {
     repo: processEnv.GITHUB_REPOSITORY ? processEnv.GITHUB_REPOSITORY : '',
     owner: processEnv.GITHUB_REPOSITORY ? processEnv.GITHUB_REPOSITORY.split('/')[0] : '',
-    reponame: processEnv.GITHUB_REPOSITORY ? (_a = processEnv.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split('/')[1] : '',
+    reponame: processEnv.GITHUB_REPOSITORY ? processEnv.GITHUB_REPOSITORY?.split('/')[1] : '',
     branchname: processEnv.GITHUB_HEAD_REF ? processEnv.GITHUB_HEAD_REF : '',
     basebranchname: processEnv.GITHUB_BASE_REF ? processEnv.GITHUB_BASE_REF : '',
     branchdir: processEnv.GITHUB_WORKSPACE ? processEnv.GITHUB_WORKSPACE : '',
@@ -113,15 +112,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -137,43 +127,41 @@ const octokit = github.getOctokit(configuration_1.githubConfig.githubToken);
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
-function getChangedFiles() {
-    return __awaiter(this, void 0, void 0, function* () {
-        logger_1.default.Instance.header('Retrieving changed files to analyse...');
-        let changedFiles = [];
-        let noMoreFiles = false;
-        try {
-            for (let i = 1; i <= 30; i++) {
-                const params = {
-                    accept: 'application/vnd.github.v3+json',
-                    branch: configuration_1.githubConfig.branchname,
-                    owner: configuration_1.githubConfig.owner,
-                    repo: configuration_1.githubConfig.reponame,
-                    pull_number: configuration_1.githubConfig.pullRequestNumber,
-                    per_page: 100,
-                    page: i
-                };
-                yield octokit.rest.pulls.listFiles(params).then(response => {
-                    if (response.data.length > 0) {
-                        response.data.map(item => {
-                            changedFiles.push(item.filename);
-                            logger_1.default.Instance.info(item.filename);
-                        });
-                    }
-                    else {
-                        noMoreFiles = true;
-                    }
-                });
-                if (noMoreFiles) {
-                    break;
+async function getChangedFiles() {
+    logger_1.default.Instance.header('Retrieving changed files to analyse...');
+    let changedFiles = [];
+    let noMoreFiles = false;
+    try {
+        for (let i = 1; i <= 30; i++) {
+            const params = {
+                accept: 'application/vnd.github.v3+json',
+                branch: configuration_1.githubConfig.branchname,
+                owner: configuration_1.githubConfig.owner,
+                repo: configuration_1.githubConfig.reponame,
+                pull_number: configuration_1.githubConfig.pullRequestNumber,
+                per_page: 100,
+                page: i
+            };
+            await octokit.rest.pulls.listFiles(params).then(response => {
+                if (response.data.length > 0) {
+                    response.data.map(item => {
+                        changedFiles.push(item.filename);
+                        logger_1.default.Instance.info(item.filename);
+                    });
                 }
+                else {
+                    noMoreFiles = true;
+                }
+            });
+            if (noMoreFiles) {
+                break;
             }
         }
-        catch (error) {
-            logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error.message}`);
-        }
-        return changedFiles;
-    });
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error.message}`);
+    }
+    return changedFiles;
 }
 exports.getChangedFiles = getChangedFiles;
 /**
@@ -229,9 +217,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 class Logger {
-    constructor() {
-        this.called = '';
-    }
+    static _instance;
+    called = '';
     static get Instance() {
         return this._instance || (this._instance = new this());
     }
@@ -323,15 +310,6 @@ exports.default = Logger;
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -340,17 +318,15 @@ const pulls_1 = __nccwpck_require__(4229);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const tics_analyzer_1 = __nccwpck_require__(6015);
 run();
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const changeSetFilePath = (0, pulls_1.changeSetToFile)(['hello']);
-            yield (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
-        }
-        catch (error) {
-            logger_1.default.Instance.error('Failed to run TiCS Github Action');
-            logger_1.default.Instance.setFailed(error.message);
-        }
-    });
+async function run() {
+    try {
+        const changeSetFilePath = (0, pulls_1.changeSetToFile)(['hello']);
+        await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
+    }
+    catch (error) {
+        logger_1.default.Instance.error('Failed to run TiCS Github Action');
+        logger_1.default.Instance.setFailed(error.message);
+    }
 }
 
 
@@ -384,15 +360,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -407,38 +374,36 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
  * @param url api url to perform a GET request for.
  * @returns Promise of the data retrieved from the response.
  */
-function httpRequest(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const options = {
-            rejectUnauthorized: configuration_1.ticsConfig.hostnameVerification,
-            agent: new proxy_agent_1.default()
-        };
-        const headers = {
-            Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
-            XRequestedWith: 'tics'
-        };
-        const response = yield new http.HttpClient('http-client', [], options).get(url, headers);
-        switch (response.message.statusCode) {
-            case 200:
-                return JSON.parse(yield response.readBody());
-            case 302:
-                logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-                break;
-            case 400:
-                logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(yield response.readBody()).alertMessages[0].header}`);
-                break;
-            case 401:
-                var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
-                logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
-                break;
-            case 404:
-                logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
-                break;
-            default:
-                logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
-                break;
-        }
-    });
+async function httpRequest(url) {
+    const options = {
+        rejectUnauthorized: configuration_1.ticsConfig.hostnameVerification,
+        agent: new proxy_agent_1.default()
+    };
+    const headers = {
+        Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
+        XRequestedWith: 'tics'
+    };
+    const response = await new http.HttpClient('http-client', [], options).get(url, headers);
+    switch (response.message.statusCode) {
+        case 200:
+            return JSON.parse(await response.readBody());
+        case 302:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+            break;
+        case 400:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
+            break;
+        case 401:
+            var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+            break;
+        case 404:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
+            break;
+        default:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
+            break;
+    }
 }
 exports.httpRequest = httpRequest;
 ;
@@ -498,15 +463,6 @@ exports.getOptions = getOptions;
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -518,29 +474,27 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
-function runTiCSAnalyzer(fileListPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}.`);
-        const command = yield buildRunCommand(fileListPath);
-        logger_1.default.Instance.header('Running TiCS');
-        yield (0, exec_1.exec)(command, [], {
-            silent: true,
-            listeners: {
-                stdout(data) {
-                    logger_1.default.Instance.info(data.toString());
-                    findWarningOrError(data.toString());
-                },
-                stderr(data) {
-                    logger_1.default.Instance.info(data.toString());
-                    findWarningOrError(data.toString());
-                }
+async function runTiCSAnalyzer(fileListPath) {
+    logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}.`);
+    const command = await buildRunCommand(fileListPath);
+    logger_1.default.Instance.header('Running TiCS');
+    await (0, exec_1.exec)(command, [], {
+        silent: true,
+        listeners: {
+            stdout(data) {
+                logger_1.default.Instance.info(data.toString());
+                findWarningOrError(data.toString());
+            },
+            stderr(data) {
+                logger_1.default.Instance.info(data.toString());
+                findWarningOrError(data.toString());
             }
-        });
-        if (errorList.length > 0)
-            errorList.forEach(e => logger_1.default.Instance.error(e));
-        if (warningList.length > 0)
-            warningList.forEach(w => logger_1.default.Instance.warning(w));
+        }
     });
+    if (errorList.length > 0)
+        errorList.forEach(e => logger_1.default.Instance.error(e));
+    if (warningList.length > 0)
+        warningList.forEach(w => logger_1.default.Instance.warning(w));
 }
 exports.runTiCSAnalyzer = runTiCSAnalyzer;
 /**
@@ -548,27 +502,23 @@ exports.runTiCSAnalyzer = runTiCSAnalyzer;
  * @param fileListPath Path to changeSet.txt.
  * @returns Command to run.
  */
-function buildRunCommand(fileListPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (configuration_1.githubConfig.runnerOS === 'Linux') {
-            return `/bin/bash -c "${yield getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
-        }
-        return `powershell "${yield getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
-    });
+async function buildRunCommand(fileListPath) {
+    if (configuration_1.githubConfig.runnerOS === 'Linux') {
+        return `/bin/bash -c "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
+    }
+    return `powershell "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
 }
 /**
  * Get the command to install TiCS with.
  */
-function getInstallTiCS() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!configuration_1.ticsConfig.installTics)
-            return '';
-        const installTicsUrl = yield retrieveInstallTics(configuration_1.ticsConfig.ticsConfiguration, configuration_1.githubConfig.runnerOS.toLowerCase());
-        if (configuration_1.githubConfig.runnerOS === 'Linux') {
-            return `source <(curl -s '${installTicsUrl}') &&`;
-        }
-        return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString("${installTicsUrl}")) &&`;
-    });
+async function getInstallTiCS() {
+    if (!configuration_1.ticsConfig.installTics)
+        return '';
+    const installTicsUrl = await retrieveInstallTics(configuration_1.ticsConfig.ticsConfiguration, configuration_1.githubConfig.runnerOS.toLowerCase());
+    if (configuration_1.githubConfig.runnerOS === 'Linux') {
+        return `source <(curl -s '${installTicsUrl}') &&`;
+    }
+    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString("${installTicsUrl}")) &&`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.
@@ -588,19 +538,17 @@ function findWarningOrError(data) {
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-function retrieveInstallTics(url, os) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
-            const ticsWebBaseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(url);
-            const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTiCSApiUrl)(ticsWebBaseUrl, os);
-            const data = yield (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
-            return ticsWebBaseUrl + data.links.installTics;
-        }
-        catch (error) {
-            logger_1.default.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
-        }
-    });
+async function retrieveInstallTics(url, os) {
+    try {
+        logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
+        const ticsWebBaseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(url);
+        const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTiCSApiUrl)(ticsWebBaseUrl, os);
+        const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
+        return ticsWebBaseUrl + data.links.installTics;
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
+    }
 }
 /**
  * Builds the TiCS calculate command based on the fileListPath and the ticsConfig set.
