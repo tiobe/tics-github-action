@@ -20,6 +20,6 @@ export async function postErrorComment(analysis: Analysis) {
     Logger.Instance.info('\u001b[35mPosting error summary in pull request comment.');
     await octokit.rest.issues.createComment(parameters);
   } catch (error: any) {
-    Logger.Instance.error(`Create issue comment failed: ${error.message}`);
+    Logger.Instance.error(`Posting the comment failed: ${error.message}`);
   }
 }

@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
-import { githubConfig } from './github/configuration';
+import { githubConfig, ticsConfig } from './github/configuration';
 import { changeSetToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
@@ -36,12 +36,15 @@ async function main() {
     }
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
-    console.log(qualityGate);
     if (!qualityGate.passed) {
       Logger.Instance.setFailed(qualityGate.message);
     }
+
     postReview(analysis, qualityGate);
-    console.log(await getAnnotations(qualityGate.annotationsApiV1Links));
+
+    if (ticsConfig.showAnnotations) {
+      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+    }
 
     cliSummary(analysis);
   } catch (error: any) {

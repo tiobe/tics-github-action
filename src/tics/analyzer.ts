@@ -1,7 +1,7 @@
 import { exec } from '@actions/exec';
-import { githubConfig, ticsConfig } from '../github/configuration';
+import { baseUrl, githubConfig, ticsConfig } from '../github/configuration';
 import Logger from '../helper/logger';
-import { getInstallTiCSApiUrl, getTiCSWebBaseUrlFromUrl, httpRequest } from './api_helper';
+import { getInstallTiCSApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -67,7 +67,7 @@ async function buildRunCommand(fileListPath: string) {
 async function getInstallTiCS() {
   if (!ticsConfig.installTics) return '';
 
-  const installTicsUrl = await retrieveInstallTics(ticsConfig.ticsConfiguration, githubConfig.runnerOS.toLowerCase());
+  const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
 
   if (githubConfig.runnerOS === 'Linux') {
     return `source <(curl -s '${installTicsUrl}') &&`;
@@ -98,20 +98,18 @@ function findInStdOutOrErr(data: string, fileListPath: string) {
 
 /**
  * Retrieves the the TiCS install url from the ticsConfiguration.
- * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-async function retrieveInstallTics(url: string, os: string) {
+async function retrieveInstallTics(os: string) {
   try {
     Logger.Instance.info('Trying to retrieve configuration information from TiCS.');
 
-    const ticsWebBaseUrl = getTiCSWebBaseUrlFromUrl(url);
-    const ticsInstallApiBaseUrl = getInstallTiCSApiUrl(ticsWebBaseUrl, os);
+    const ticsInstallApiBaseUrl = getInstallTiCSApiUrl(baseUrl, os);
 
     const data = await httpRequest(ticsInstallApiBaseUrl);
 
-    return ticsWebBaseUrl + data.links.installTics;
+    return baseUrl + data.links.installTics;
   } catch (error: any) {
     Logger.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
   }

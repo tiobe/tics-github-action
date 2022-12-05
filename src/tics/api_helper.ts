@@ -3,7 +3,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
-import { ticsConfig } from '../github/configuration';
+import { baseUrl, ticsConfig } from '../github/configuration';
 import { Analysis } from '../helper/models';
 
 /**
@@ -36,7 +36,6 @@ export async function httpRequest(url: string): Promise<any> {
       );
       break;
     case 401:
-      var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
       Logger.Instance.exit(
         `HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`
       );
@@ -52,14 +51,14 @@ export async function httpRequest(url: string): Promise<any> {
 
 /**
  * Creates the TiCS install data from the TiCS Viewer.
- * @param ticsWebBaseUrl url given in the ticsConfiguration.
+ * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-export function getInstallTiCSApiUrl(ticsWebBaseUrl: string, os: string): string {
+export function getInstallTiCSApiUrl(url: string, os: string): string {
   const installTICSAPI = new URL(ticsConfig.ticsConfiguration);
   installTICSAPI.searchParams.append('platform', os);
-  installTICSAPI.searchParams.append('url', ticsWebBaseUrl);
+  installTICSAPI.searchParams.append('url', url);
 
   return installTICSAPI.href;
 }
@@ -111,7 +110,7 @@ export function getItemFromUrl(url: string, query: string) {
   let itemValue = decodeURIComponent(url).match(regExpr);
 
   if (itemValue && itemValue.length >= 2) {
-    console.log(`Retrieved ${query} value: ${itemValue[1]}`);
+    Logger.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);
     return itemValue[1];
   }
 

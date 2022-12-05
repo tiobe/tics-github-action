@@ -87,11 +87,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.baseUrl = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const fs_1 = __nccwpck_require__(5747);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
+const api_helper_1 = __nccwpck_require__(3823);
 let processEnv = process.env;
 const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
@@ -138,6 +139,7 @@ exports.ticsConfig = {
     logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default'
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
+exports.baseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 
 
 /***/ }),
@@ -172,7 +174,7 @@ async function postErrorComment(analysis) {
         await configuration_1.octokit.rest.issues.createComment(parameters);
     }
     catch (error) {
-        logger_1.default.Instance.error(`Create issue comment failed: ${error.message}`);
+        logger_1.default.Instance.error(`Posting the comment failed: ${error.message}`);
     }
 }
 exports.postErrorComment = postErrorComment;
@@ -181,13 +183,42 @@ exports.postErrorComment = postErrorComment;
 /***/ }),
 
 /***/ 8973:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReview = void 0;
-function postReview(analysis, published) { }
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const models_1 = __nccwpck_require__(8811);
+const configuration_1 = __nccwpck_require__(6868);
+const summary_1 = __nccwpck_require__(6649);
+/**
+ * Create review on the pull request from the analysis given.
+ * @param analysis Analysis object returned from TiCS analysis.
+ */
+async function postReview(analysis, qualityGate) {
+    let body = (0, summary_1.createQualityGateSummary)(qualityGate);
+    body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
+    body += analysis.filesAnalyzed ? (0, summary_1.createFilesSummary)(analysis.filesAnalyzed) : '';
+    const parameters = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        pull_number: configuration_1.githubConfig.pullRequestNumber,
+        event: models_1.Events.COMMENT,
+        body: body
+    };
+    try {
+        logger_1.default.Instance.header('Posting error summary in pull request comment.');
+        await configuration_1.octokit.rest.pulls.createReview(parameters);
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
+    }
+}
 exports.postReview = postReview;
 
 
@@ -199,7 +230,9 @@ exports.postReview = postReview;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createErrorSummary = void 0;
+exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+const markdown_1 = __nccwpck_require__(5300);
+const models_1 = __nccwpck_require__(8811);
 const configuration_1 = __nccwpck_require__(6868);
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -220,6 +253,68 @@ function createErrorSummary(errorList, warningList) {
     return summary;
 }
 exports.createErrorSummary = createErrorSummary;
+/**
+ * Creates a markdown link summary.
+ * @param url Url to the TiCS viewer analysis.
+ * @returns Clickable link to the viewer analysis.
+ */
+function createLinkSummary(url) {
+    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TICS Viewer', url)}\n\n`;
+}
+exports.createLinkSummary = createLinkSummary;
+/**
+ * Creates a list of all the files analyzed.
+ * @param fileList list of files.
+ * @returns Dropdown with all the files analyzed.
+ */
+function createFilesSummary(fileList) {
+    let header = 'The following files have been checked:';
+    let body = '';
+    fileList.forEach(file => {
+        body += `- ${file}<br>`;
+    });
+    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+}
+exports.createFilesSummary = createFilesSummary;
+/**
+ * Creates a quality gate summary for the TiCS analysis.
+ * @param qualityGate quality gate retrieved from the TiCS viewer.
+ * @returns Quality gate summary.
+ */
+function createQualityGateSummary(qualityGate) {
+    let qualityGateSummary = '';
+    qualityGate.gates.forEach(gate => {
+        qualityGateSummary += `## ${gate.name}\n\n`;
+    });
+    return `## TICS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(models_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+}
+exports.createQualityGateSummary = createQualityGateSummary;
+/**
+ * Creates a table containing a summary for all conditions.
+ * @param conditions Conditions of the quality gate
+ * @returns Table containing a summary for all conditions
+ */
+function createConditionsTable(conditions) {
+    let conditionsTable = '';
+    conditions.forEach(condition => {
+        if (condition.skipped)
+            return;
+        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(models_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
+        if (condition.details && condition.details.items.length > 0) {
+            const headers = ['File', condition.details.dataKeys.actualValue.title];
+            const cells = condition.details.items
+                .filter((item) => item.itemType === 'file')
+                .map((item) => {
+                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.baseUrl + '/' + item.link), item.data.actualValue.formattedValue];
+            });
+            conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
+        }
+        else {
+            conditionsTable += `${conditionStatus}\n\n\n`;
+        }
+    });
+    return conditionsTable;
+}
 
 
 /***/ }),
@@ -348,6 +443,69 @@ exports.default = Logger;
 
 /***/ }),
 
+/***/ 5300:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generateTableMarkdown = exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
+const models_1 = __nccwpck_require__(5281);
+const markdown_table_1 = __nccwpck_require__(2798);
+/**
+ * Generates a link with text in markdown.
+ * @param text Text for the link.
+ * @param link The actual link to.
+ * @returns Annotated link in markdown.
+ */
+function generateLinkMarkdown(text, link) {
+    return `[${text}](${link})`;
+}
+exports.generateLinkMarkdown = generateLinkMarkdown;
+/**
+ * Generates a status symbol with optional suffix.
+ * @param status The status. (Either 'passed', 'failed', 'skipped' or 'warning').
+ * @param hasSuffix if the status needs a suffix for the issue. (Default is false).
+ * @returns Status symbol in markdown.
+ */
+function generateStatusMarkdown(status, hasSuffix = false) {
+    switch (status) {
+        case models_1.Status[0]:
+            return ':x: ' + (hasSuffix ? 'Failed ' : '');
+        case models_1.Status[1]:
+            return ':heavy_check_mark: ' + (hasSuffix ? 'Passed ' : '');
+        case models_1.Status[2]:
+        case models_1.Status[3]:
+            return ':warning: ' + (hasSuffix ? 'Skipped ' : '');
+        default:
+            return '';
+    }
+}
+exports.generateStatusMarkdown = generateStatusMarkdown;
+/**
+ * Generates a dropdown item in markdown.
+ * @param header Text to show the dropdown for.
+ * @param body The body of the dropdown.
+ * @returns Dropdown item in markdown.
+ */
+function generateExpandableAreaMarkdown(header, body) {
+    return `<details><summary>${header}</summary>\n${body}</details>\n`;
+}
+exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
+/**
+ * Generates a table in markdown.
+ * @param headers headers of the table.
+ * @param cells cells of the table.
+ * @returns Table in markdown.
+ */
+function generateTableMarkdown(headers, cells) {
+    return (0, markdown_table_1.markdownTable)([...headers, ...cells]);
+}
+exports.generateTableMarkdown = generateTableMarkdown;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -391,12 +549,13 @@ async function main() {
             return;
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        console.log(qualityGate);
         if (!qualityGate.passed) {
             logger_1.default.Instance.setFailed(qualityGate.message);
         }
         (0, review_1.postReview)(analysis, qualityGate);
-        console.log(await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links));
+        if (configuration_1.ticsConfig.showAnnotations) {
+            const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+        }
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
@@ -493,7 +652,7 @@ async function buildRunCommand(fileListPath) {
 async function getInstallTiCS() {
     if (!configuration_1.ticsConfig.installTics)
         return '';
-    const installTicsUrl = await retrieveInstallTics(configuration_1.ticsConfig.ticsConfiguration, configuration_1.githubConfig.runnerOS.toLowerCase());
+    const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
@@ -522,17 +681,15 @@ function findInStdOutOrErr(data, fileListPath) {
 }
 /**
  * Retrieves the the TiCS install url from the ticsConfiguration.
- * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-async function retrieveInstallTics(url, os) {
+async function retrieveInstallTics(os) {
     try {
         logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
-        const ticsWebBaseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(url);
-        const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTiCSApiUrl)(ticsWebBaseUrl, os);
+        const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTiCSApiUrl)(configuration_1.baseUrl, os);
         const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
-        return ticsWebBaseUrl + data.links.installTics;
+        return configuration_1.baseUrl + data.links.installTics;
     }
     catch (error) {
         logger_1.default.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
@@ -596,8 +753,7 @@ async function httpRequest(url) {
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
             break;
         case 401:
-            var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${configuration_1.baseUrl}/Administration.html#page=authToken`);
             break;
         case 404:
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
@@ -610,14 +766,14 @@ async function httpRequest(url) {
 exports.httpRequest = httpRequest;
 /**
  * Creates the TiCS install data from the TiCS Viewer.
- * @param ticsWebBaseUrl url given in the ticsConfiguration.
+ * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-function getInstallTiCSApiUrl(ticsWebBaseUrl, os) {
+function getInstallTiCSApiUrl(url, os) {
     const installTICSAPI = new URL(configuration_1.ticsConfig.ticsConfiguration);
     installTICSAPI.searchParams.append('platform', os);
-    installTICSAPI.searchParams.append('url', ticsWebBaseUrl);
+    installTICSAPI.searchParams.append('url', url);
     return installTICSAPI.href;
 }
 exports.getInstallTiCSApiUrl = getInstallTiCSApiUrl;
@@ -666,7 +822,7 @@ function getItemFromUrl(url, query) {
     let regExpr = new RegExp(`${query}\\((.*?)\\)`);
     let itemValue = decodeURIComponent(url).match(regExpr);
     if (itemValue && itemValue.length >= 2) {
-        console.log(`Retrieved ${query} value: ${itemValue[1]}`);
+        logger_1.default.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);
         return itemValue[1];
     }
     return '';
@@ -714,7 +870,7 @@ exports.getQualityGate = getQualityGate;
 function getQualityGateUrl(url) {
     let projectName = configuration_1.ticsConfig.projectName == 'auto' ? (0, api_helper_1.getItemFromUrl)(url, 'Project') : configuration_1.ticsConfig.projectName;
     let clientDataTok = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
-    let qualityGateUrl = new URL((0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
+    let qualityGateUrl = new URL(configuration_1.baseUrl + '/api/public/v1/QualityGateStatus');
     qualityGateUrl.searchParams.append('project', projectName);
     // Branchname is optional, to check if it is set
     if (configuration_1.ticsConfig.branchName) {
@@ -734,7 +890,7 @@ async function getAnnotations(apiLinks) {
     try {
         let annotations = [];
         await Promise.all(apiLinks.map(async (link) => {
-            const annotationsUrl = `${(0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration)}/${link.url}`;
+            const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
             response.data.map((annotation) => {
@@ -39490,6 +39646,398 @@ module.exports = LRUCache
 
 /***/ }),
 
+/***/ 2798:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "markdownTable": () => (/* binding */ markdownTable)
+/* harmony export */ });
+/**
+ * @typedef Options
+ *   Configuration (optional).
+ * @property {string|null|ReadonlyArray<string|null|undefined>} [align]
+ *   One style for all columns, or styles for their respective columns.
+ *   Each style is either `'l'` (left), `'r'` (right), or `'c'` (center).
+ *   Other values are treated as `''`, which doesn’t place the colon in the
+ *   alignment row but does align left.
+ *   *Only the lowercased first character is used, so `Right` is fine.*
+ * @property {boolean} [padding=true]
+ *   Whether to add a space of padding between delimiters and cells.
+ *
+ *   When `true`, there is padding:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there is no padding:
+ *
+ *   ```markdown
+ *   |Alpha|B    |
+ *   |-----|-----|
+ *   |C    |Delta|
+ *   ```
+ * @property {boolean} [delimiterStart=true]
+ *   Whether to begin each row with the delimiter.
+ *
+ *   > 👉 **Note**: please don’t use this: it could create fragile structures
+ *   > that aren’t understandable to some markdown parsers.
+ *
+ *   When `true`, there are starting delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there are no starting delimiters:
+ *
+ *   ```markdown
+ *   Alpha | B     |
+ *   ----- | ----- |
+ *   C     | Delta |
+ *   ```
+ * @property {boolean} [delimiterEnd=true]
+ *   Whether to end each row with the delimiter.
+ *
+ *   > 👉 **Note**: please don’t use this: it could create fragile structures
+ *   > that aren’t understandable to some markdown parsers.
+ *
+ *   When `true`, there are ending delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there are no ending delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B
+ *   | ----- | -----
+ *   | C     | Delta
+ *   ```
+ * @property {boolean} [alignDelimiters=true]
+ *   Whether to align the delimiters.
+ *   By default, they are aligned:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   Pass `false` to make them staggered:
+ *
+ *   ```markdown
+ *   | Alpha | B |
+ *   | - | - |
+ *   | C | Delta |
+ *   ```
+ * @property {(value: string) => number} [stringLength]
+ *   Function to detect the length of table cell content.
+ *   This is used when aligning the delimiters (`|`) between table cells.
+ *   Full-width characters and emoji mess up delimiter alignment when viewing
+ *   the markdown source.
+ *   To fix this, you can pass this function, which receives the cell content
+ *   and returns its “visible” size.
+ *   Note that what is and isn’t visible depends on where the text is displayed.
+ *
+ *   Without such a function, the following:
+ *
+ *   ```js
+ *   markdownTable([
+ *     ['Alpha', 'Bravo'],
+ *     ['中文', 'Charlie'],
+ *     ['👩‍❤️‍👩', 'Delta']
+ *   ])
+ *   ```
+ *
+ *   Yields:
+ *
+ *   ```markdown
+ *   | Alpha | Bravo |
+ *   | - | - |
+ *   | 中文 | Charlie |
+ *   | 👩‍❤️‍👩 | Delta |
+ *   ```
+ *
+ *   With [`string-width`](https://github.com/sindresorhus/string-width):
+ *
+ *   ```js
+ *   import stringWidth from 'string-width'
+ *
+ *   markdownTable(
+ *     [
+ *       ['Alpha', 'Bravo'],
+ *       ['中文', 'Charlie'],
+ *       ['👩‍❤️‍👩', 'Delta']
+ *     ],
+ *     {stringLength: stringWidth}
+ *   )
+ *   ```
+ *
+ *   Yields:
+ *
+ *   ```markdown
+ *   | Alpha | Bravo   |
+ *   | ----- | ------- |
+ *   | 中文  | Charlie |
+ *   | 👩‍❤️‍👩    | Delta   |
+ *   ```
+ */
+
+/**
+ * @typedef {Options} MarkdownTableOptions
+ * @todo
+ *   Remove next major.
+ */
+
+/**
+ * Generate a markdown ([GFM](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables)) table..
+ *
+ * @param {ReadonlyArray<ReadonlyArray<string|null|undefined>>} table
+ *   Table data (matrix of strings).
+ * @param {Options} [options]
+ *   Configuration (optional).
+ * @returns {string}
+ */
+function markdownTable(table, options = {}) {
+  const align = (options.align || []).concat()
+  const stringLength = options.stringLength || defaultStringLength
+  /** @type {Array<number>} Character codes as symbols for alignment per column. */
+  const alignments = []
+  /** @type {Array<Array<string>>} Cells per row. */
+  const cellMatrix = []
+  /** @type {Array<Array<number>>} Sizes of each cell per row. */
+  const sizeMatrix = []
+  /** @type {Array<number>} */
+  const longestCellByColumn = []
+  let mostCellsPerRow = 0
+  let rowIndex = -1
+
+  // This is a superfluous loop if we don’t align delimiters, but otherwise we’d
+  // do superfluous work when aligning, so optimize for aligning.
+  while (++rowIndex < table.length) {
+    /** @type {Array<string>} */
+    const row = []
+    /** @type {Array<number>} */
+    const sizes = []
+    let columnIndex = -1
+
+    if (table[rowIndex].length > mostCellsPerRow) {
+      mostCellsPerRow = table[rowIndex].length
+    }
+
+    while (++columnIndex < table[rowIndex].length) {
+      const cell = serialize(table[rowIndex][columnIndex])
+
+      if (options.alignDelimiters !== false) {
+        const size = stringLength(cell)
+        sizes[columnIndex] = size
+
+        if (
+          longestCellByColumn[columnIndex] === undefined ||
+          size > longestCellByColumn[columnIndex]
+        ) {
+          longestCellByColumn[columnIndex] = size
+        }
+      }
+
+      row.push(cell)
+    }
+
+    cellMatrix[rowIndex] = row
+    sizeMatrix[rowIndex] = sizes
+  }
+
+  // Figure out which alignments to use.
+  let columnIndex = -1
+
+  if (typeof align === 'object' && 'length' in align) {
+    while (++columnIndex < mostCellsPerRow) {
+      alignments[columnIndex] = toAlignment(align[columnIndex])
+    }
+  } else {
+    const code = toAlignment(align)
+
+    while (++columnIndex < mostCellsPerRow) {
+      alignments[columnIndex] = code
+    }
+  }
+
+  // Inject the alignment row.
+  columnIndex = -1
+  /** @type {Array<string>} */
+  const row = []
+  /** @type {Array<number>} */
+  const sizes = []
+
+  while (++columnIndex < mostCellsPerRow) {
+    const code = alignments[columnIndex]
+    let before = ''
+    let after = ''
+
+    if (code === 99 /* `c` */) {
+      before = ':'
+      after = ':'
+    } else if (code === 108 /* `l` */) {
+      before = ':'
+    } else if (code === 114 /* `r` */) {
+      after = ':'
+    }
+
+    // There *must* be at least one hyphen-minus in each alignment cell.
+    let size =
+      options.alignDelimiters === false
+        ? 1
+        : Math.max(
+            1,
+            longestCellByColumn[columnIndex] - before.length - after.length
+          )
+
+    const cell = before + '-'.repeat(size) + after
+
+    if (options.alignDelimiters !== false) {
+      size = before.length + size + after.length
+
+      if (size > longestCellByColumn[columnIndex]) {
+        longestCellByColumn[columnIndex] = size
+      }
+
+      sizes[columnIndex] = size
+    }
+
+    row[columnIndex] = cell
+  }
+
+  // Inject the alignment row.
+  cellMatrix.splice(1, 0, row)
+  sizeMatrix.splice(1, 0, sizes)
+
+  rowIndex = -1
+  /** @type {Array<string>} */
+  const lines = []
+
+  while (++rowIndex < cellMatrix.length) {
+    const row = cellMatrix[rowIndex]
+    const sizes = sizeMatrix[rowIndex]
+    columnIndex = -1
+    /** @type {Array<string>} */
+    const line = []
+
+    while (++columnIndex < mostCellsPerRow) {
+      const cell = row[columnIndex] || ''
+      let before = ''
+      let after = ''
+
+      if (options.alignDelimiters !== false) {
+        const size =
+          longestCellByColumn[columnIndex] - (sizes[columnIndex] || 0)
+        const code = alignments[columnIndex]
+
+        if (code === 114 /* `r` */) {
+          before = ' '.repeat(size)
+        } else if (code === 99 /* `c` */) {
+          if (size % 2) {
+            before = ' '.repeat(size / 2 + 0.5)
+            after = ' '.repeat(size / 2 - 0.5)
+          } else {
+            before = ' '.repeat(size / 2)
+            after = before
+          }
+        } else {
+          after = ' '.repeat(size)
+        }
+      }
+
+      if (options.delimiterStart !== false && !columnIndex) {
+        line.push('|')
+      }
+
+      if (
+        options.padding !== false &&
+        // Don’t add the opening space if we’re not aligning and the cell is
+        // empty: there will be a closing space.
+        !(options.alignDelimiters === false && cell === '') &&
+        (options.delimiterStart !== false || columnIndex)
+      ) {
+        line.push(' ')
+      }
+
+      if (options.alignDelimiters !== false) {
+        line.push(before)
+      }
+
+      line.push(cell)
+
+      if (options.alignDelimiters !== false) {
+        line.push(after)
+      }
+
+      if (options.padding !== false) {
+        line.push(' ')
+      }
+
+      if (
+        options.delimiterEnd !== false ||
+        columnIndex !== mostCellsPerRow - 1
+      ) {
+        line.push('|')
+      }
+    }
+
+    lines.push(
+      options.delimiterEnd === false
+        ? line.join('').replace(/ +$/, '')
+        : line.join('')
+    )
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * @param {string|null|undefined} [value]
+ * @returns {string}
+ */
+function serialize(value) {
+  return value === null || value === undefined ? '' : String(value)
+}
+
+/**
+ * @param {string} value
+ * @returns {number}
+ */
+function defaultStringLength(value) {
+  return value.length
+}
+
+/**
+ * @param {string|null|undefined} value
+ * @returns {number}
+ */
+function toAlignment(value) {
+  const code = typeof value === 'string' ? value.codePointAt(0) : 0
+
+  return code === 67 /* `C` */ || code === 99 /* `c` */
+    ? 99 /* `c` */
+    : code === 76 /* `L` */ || code === 108 /* `l` */
+    ? 108 /* `l` */
+    : code === 82 /* `R` */ || code === 114 /* `r` */
+    ? 114 /* `r` */
+    : 0
+}
+
+
+/***/ }),
+
 /***/ 900:
 /***/ ((module) => {
 
@@ -62622,6 +63170,22 @@ try {
 
 /***/ }),
 
+/***/ 8811:
+/***/ ((module) => {
+
+module.exports = eval("require")("../../helper/models");
+
+
+/***/ }),
+
+/***/ 5281:
+/***/ ((module) => {
+
+module.exports = eval("require")("./models");
+
+
+/***/ }),
+
 /***/ 8188:
 /***/ ((module) => {
 
@@ -62967,6 +63531,34 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

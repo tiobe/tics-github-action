@@ -2,6 +2,7 @@ import { getInput, info } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import { readFileSync } from 'fs';
 import ProxyAgent from 'proxy-agent';
+import { getTiCSWebBaseUrlFromUrl } from '../tics/api_helper';
 
 let processEnv = process.env;
 const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
@@ -53,3 +54,4 @@ export let ticsConfig = {
 };
 
 export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });
+export const baseUrl = getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);

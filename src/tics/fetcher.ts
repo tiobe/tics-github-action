@@ -1,6 +1,6 @@
-import { ticsConfig } from '../github/configuration';
+import { baseUrl, ticsConfig } from '../github/configuration';
 import Logger from '../helper/logger';
-import { getItemFromUrl, getTiCSWebBaseUrlFromUrl, httpRequest } from './api_helper';
+import { getItemFromUrl, httpRequest } from './api_helper';
 
 /**
  * Retrieves the TiCS quality gate from the TiCS viewer.
@@ -26,7 +26,7 @@ export async function getQualityGate(url: string): Promise<any> {
 function getQualityGateUrl(url: string) {
   let projectName = ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
   let clientDataTok = getItemFromUrl(url, 'ClientData');
-  let qualityGateUrl = new URL(getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
+  let qualityGateUrl = new URL(baseUrl + '/api/public/v1/QualityGateStatus');
 
   qualityGateUrl.searchParams.append('project', projectName);
 
@@ -52,7 +52,7 @@ export async function getAnnotations(apiLinks: any[]) {
     let annotations: any[] = [];
     await Promise.all(
       apiLinks.map(async link => {
-        const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${link.url}`;
+        const annotationsUrl = `${baseUrl}/${link.url}`;
         Logger.Instance.debug(`From: ${annotationsUrl}`);
         const response = await httpRequest(annotationsUrl);
         response.data.map((annotation: any) => {
