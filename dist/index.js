@@ -565,12 +565,12 @@ async function main() {
             return;
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        if (!qualityGate.passed) {
-            logger_1.default.Instance.setFailed(qualityGate.message);
-        }
         (0, review_1.postReview)(analysis, qualityGate);
         if (configuration_1.ticsConfig.showAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+        }
+        if (!qualityGate.passed) {
+            logger_1.default.Instance.setFailed(qualityGate.message);
         }
         (0, api_helper_1.cliSummary)(analysis);
     }

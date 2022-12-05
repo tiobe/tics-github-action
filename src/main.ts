@@ -36,9 +36,6 @@ async function main() {
     }
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
-    if (!qualityGate.passed) {
-      Logger.Instance.setFailed(qualityGate.message);
-    }
 
     postReview(analysis, qualityGate);
 
@@ -46,6 +43,9 @@ async function main() {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
     }
 
+    if (!qualityGate.passed) {
+      Logger.Instance.setFailed(qualityGate.message);
+    }
     cliSummary(analysis);
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
