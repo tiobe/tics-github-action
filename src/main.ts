@@ -41,7 +41,7 @@ async function main() {
       Logger.Instance.setFailed(qualityGate.message);
     }
     postReview(analysis, qualityGate);
-    console.log(getAnnotations(qualityGate.annotationsApiV1Links));
+    console.log(await getAnnotations(qualityGate.annotationsApiV1Links));
 
     cliSummary(analysis);
   } catch (error: any) {

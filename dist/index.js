@@ -396,7 +396,7 @@ async function main() {
             logger_1.default.Instance.setFailed(qualityGate.message);
         }
         (0, review_1.postReview)(analysis, qualityGate);
-        console.log((0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links));
+        console.log(await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links));
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
