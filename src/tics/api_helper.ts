@@ -1,4 +1,3 @@
-import { ExecOptions } from '@actions/exec';
 import { HttpClient } from '@actions/http-client';
 import { OutgoingHttpHeaders } from 'http';
 import { RequestOptions } from 'https';
@@ -84,6 +83,10 @@ export function getTiCSWebBaseUrlFromUrl(url: string) {
   return baseUrl;
 }
 
+/**
+ * Creates a cli summary of all errors and bugs based on the logLevel.
+ * @param analysis the output of the TiCS analysis run.
+ */
 export function cliSummary(analysis: Analysis) {
   switch (ticsConfig.logLevel) {
     case 'debug':
@@ -95,4 +98,22 @@ export function cliSummary(analysis: Analysis) {
     case 'none':
       break;
   }
+}
+
+/**
+ * Gets query value form a url
+ * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
+ * @param query the query (e.g. Project)
+ * @returns query value (e.g. c-demo)
+ **/
+export function getItemFromUrl(url: string, query: string) {
+  let regExpr = new RegExp(`${query}\\((.*?)\\)`);
+  let itemValue = decodeURIComponent(url).match(regExpr);
+
+  if (itemValue && itemValue.length >= 2) {
+    console.log(`Retrieved ${query} value: ${itemValue[1]}`);
+    return itemValue[1];
+  }
+
+  return '';
 }

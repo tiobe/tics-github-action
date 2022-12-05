@@ -20,7 +20,7 @@ const configuration_1 = __nccwpck_require__(6868);
  * @returns List of changed files within the GitHub Pull request.
  */
 async function getChangedFiles() {
-    logger_1.default.Instance.header('Retrieving changed files to analyse...');
+    logger_1.default.Instance.header('Retrieving changed files to analyse');
     let changedFiles = [];
     let noMoreFiles = false;
     try {
@@ -135,7 +135,7 @@ exports.ticsConfig = {
     extendTics: (0, core_1.getInput)('extendTics'),
     showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification(),
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel') : 'default'
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default'
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 
@@ -180,20 +180,40 @@ exports.postErrorComment = postErrorComment;
 
 /***/ }),
 
-/***/ 6649:
+/***/ 8973:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.postReview = void 0;
+function postReview(analysis, published) { }
+exports.postReview = postReview;
+
+
+/***/ }),
+
+/***/ 6649:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createErrorSummary = void 0;
+const configuration_1 = __nccwpck_require__(6868);
+/**
+ * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
+ * @param errorList list containing all the errors found in the TiCS run.
+ * @param warningList list containing all the warnings found in the TiCS run.
+ * @returns string containing the error summary.
+ */
 function createErrorSummary(errorList, warningList) {
     let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
     if (errorList.length > 0) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
     }
-    if (warningList.length > 0) {
+    if (warningList.length > 0 && configuration_1.ticsConfig.logLevel === 'debug') {
         summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
         warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
     }
@@ -340,9 +360,10 @@ const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(5857);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const tics_analyzer_1 = __nccwpck_require__(6015);
+const analyzer_1 = __nccwpck_require__(9099);
 const api_helper_1 = __nccwpck_require__(3823);
-const tics_publisher_1 = __nccwpck_require__(5470);
+const fetcher_1 = __nccwpck_require__(1559);
+const review_1 = __nccwpck_require__(8973);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -354,7 +375,7 @@ async function main() {
         if (changeSet.length <= 0)
             logger_1.default.Instance.exit('No changed files found to analyze.');
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
-        const analysis = await (0, tics_analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
+        const analysis = await (0, analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
         if (analysis.statusCode === -1) {
             (0, comment_1.postErrorComment)(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
@@ -367,8 +388,11 @@ async function main() {
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
-        const published = await (0, tics_publisher_1.runTiCSPublisher)(analysis.explorerUrl);
-        postReview(analysis, published);
+        const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
+        if (qualityGate.passed === 'false') {
+            logger_1.default.Instance.setFailed('TiCS quality gate failed.');
+        }
+        (0, review_1.postReview)(analysis, qualityGate);
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
@@ -387,113 +411,11 @@ function isCheckedOut() {
     }
     return true;
 }
-function postReview(analysis, published) {
-    throw new Error('Function not implemented.');
-}
 
 
 /***/ }),
 
-/***/ 3823:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
-const http_client_1 = __nccwpck_require__(6255);
-const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
-const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
-/**
- * Executes a GET request to the given url.
- * @param url api url to perform a GET request for.
- * @returns Promise of the data retrieved from the response.
- */
-async function httpRequest(url) {
-    const options = {
-        rejectUnauthorized: configuration_1.ticsConfig.hostnameVerification,
-        agent: new proxy_agent_1.default()
-    };
-    const headers = {
-        Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
-        XRequestedWith: 'tics'
-    };
-    const response = await new http_client_1.HttpClient('http-client', [], options).get(url, headers);
-    switch (response.message.statusCode) {
-        case 200:
-            return JSON.parse(await response.readBody());
-        case 302:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-            break;
-        case 400:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
-            break;
-        case 401:
-            var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
-            break;
-        case 404:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
-            break;
-        default:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
-            break;
-    }
-}
-exports.httpRequest = httpRequest;
-/**
- * Creates the TiCS install data from the TiCS Viewer.
- * @param ticsWebBaseUrl url given in the ticsConfiguration.
- * @param os the OS the runner runs on.
- * @returns the TiCS install url.
- */
-function getInstallTiCSApiUrl(ticsWebBaseUrl, os) {
-    const installTICSAPI = new URL(configuration_1.ticsConfig.ticsConfiguration);
-    installTICSAPI.searchParams.append('platform', os);
-    installTICSAPI.searchParams.append('url', ticsWebBaseUrl);
-    return installTICSAPI.href;
-}
-exports.getInstallTiCSApiUrl = getInstallTiCSApiUrl;
-/**
- * Returns the TIOBE web base url.
- * @param url url given in the ticsConfiguration.
- * @returns TIOBE web base url.
- */
-function getTiCSWebBaseUrlFromUrl(url) {
-    const cfgMarker = 'cfg?name=';
-    const apiMarker = '/api/';
-    let baseUrl = '';
-    if (url.includes(apiMarker + cfgMarker)) {
-        baseUrl = url.split(apiMarker)[0];
-    }
-    else {
-        logger_1.default.Instance.exit('Missing configuration api in the TiCS Viewer URL. Please check your workflow configuration.');
-    }
-    return baseUrl;
-}
-exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
-function cliSummary(analysis) {
-    switch (configuration_1.ticsConfig.logLevel) {
-        case 'debug':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
-            break;
-        case 'default':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-        case 'none':
-            break;
-    }
-}
-exports.cliSummary = cliSummary;
-
-
-/***/ }),
-
-/***/ 6015:
+/***/ 9099:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -516,7 +438,7 @@ let explorerUrl;
  * @param fileListPath Path to changeSet.txt.
  */
 async function runTiCSAnalyzer(fileListPath) {
-    logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}.`);
+    logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     try {
@@ -631,17 +553,188 @@ function getTiCSCommand(fileListPath) {
 
 /***/ }),
 
-/***/ 5470:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 3823:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.runTiCSPublisher = void 0;
-async function runTiCSPublisher(url) {
-    return {};
+exports.getItemFromUrl = exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
+const http_client_1 = __nccwpck_require__(6255);
+const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const configuration_1 = __nccwpck_require__(6868);
+/**
+ * Executes a GET request to the given url.
+ * @param url api url to perform a GET request for.
+ * @returns Promise of the data retrieved from the response.
+ */
+async function httpRequest(url) {
+    const options = {
+        rejectUnauthorized: configuration_1.ticsConfig.hostnameVerification,
+        agent: new proxy_agent_1.default()
+    };
+    const headers = {
+        Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
+        XRequestedWith: 'tics'
+    };
+    const response = await new http_client_1.HttpClient('http-client', [], options).get(url, headers);
+    switch (response.message.statusCode) {
+        case 200:
+            return JSON.parse(await response.readBody());
+        case 302:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+            break;
+        case 400:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
+            break;
+        case 401:
+            var baseUrl = getTiCSWebBaseUrlFromUrl(new URL(url).href);
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`);
+            break;
+        case 404:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
+            break;
+        default:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
+            break;
+    }
 }
-exports.runTiCSPublisher = runTiCSPublisher;
+exports.httpRequest = httpRequest;
+/**
+ * Creates the TiCS install data from the TiCS Viewer.
+ * @param ticsWebBaseUrl url given in the ticsConfiguration.
+ * @param os the OS the runner runs on.
+ * @returns the TiCS install url.
+ */
+function getInstallTiCSApiUrl(ticsWebBaseUrl, os) {
+    const installTICSAPI = new URL(configuration_1.ticsConfig.ticsConfiguration);
+    installTICSAPI.searchParams.append('platform', os);
+    installTICSAPI.searchParams.append('url', ticsWebBaseUrl);
+    return installTICSAPI.href;
+}
+exports.getInstallTiCSApiUrl = getInstallTiCSApiUrl;
+/**
+ * Returns the TIOBE web base url.
+ * @param url url given in the ticsConfiguration.
+ * @returns TIOBE web base url.
+ */
+function getTiCSWebBaseUrlFromUrl(url) {
+    const cfgMarker = 'cfg?name=';
+    const apiMarker = '/api/';
+    let baseUrl = '';
+    if (url.includes(apiMarker + cfgMarker)) {
+        baseUrl = url.split(apiMarker)[0];
+    }
+    else {
+        logger_1.default.Instance.exit('Missing configuration api in the TiCS Viewer URL. Please check your workflow configuration.');
+    }
+    return baseUrl;
+}
+exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
+/**
+ * Creates a cli summary of all errors and bugs based on the logLevel.
+ * @param analysis the output of the TiCS analysis run.
+ */
+function cliSummary(analysis) {
+    switch (configuration_1.ticsConfig.logLevel) {
+        case 'debug':
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+            break;
+        case 'default':
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+        case 'none':
+            break;
+    }
+}
+exports.cliSummary = cliSummary;
+/**
+ * Gets query value form a url
+ * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
+ * @param query the query (e.g. Project)
+ * @returns query value (e.g. c-demo)
+ **/
+function getItemFromUrl(url, query) {
+    let regExpr = new RegExp(`${query}\\((.*?)\\)`);
+    let itemValue = decodeURIComponent(url).match(regExpr);
+    if (itemValue && itemValue.length >= 2) {
+        console.log(`Retrieved ${query} value: ${itemValue[1]}`);
+        return itemValue[1];
+    }
+    return '';
+}
+exports.getItemFromUrl = getItemFromUrl;
+
+
+/***/ }),
+
+/***/ 1559:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getQualityGate = void 0;
+const configuration_1 = __nccwpck_require__(6868);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const api_helper_1 = __nccwpck_require__(3823);
+/**
+ * Retrieves the TiCS quality gate from the TiCS viewer.
+ * @param url The TiCS explorer url.
+ * @returns the quality gates
+ */
+async function getQualityGate(url) {
+    logger_1.default.Instance.header('Retrieving the quality gates');
+    const qualityGateUrl = getQualityGateUrl(url);
+    try {
+        return await (0, api_helper_1.httpRequest)(qualityGateUrl);
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
+    }
+}
+exports.getQualityGate = getQualityGate;
+/**
+ * Builds the quality gate url from the explorer url.
+ * @param url The TiCS Explorer url.
+ * @returns The url to get the quality gate analysis.
+ */
+function getQualityGateUrl(url) {
+    let projectName = configuration_1.ticsConfig.projectName == 'auto' ? (0, api_helper_1.getItemFromUrl)(url, 'Project') : configuration_1.ticsConfig.projectName;
+    let clientDataTok = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
+    let qualityGateUrl = new URL((0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration) + '/api/public/v1/QualityGateStatus');
+    qualityGateUrl.searchParams.append('project', projectName);
+    // Branchname is optional, to check if it is set
+    if (configuration_1.ticsConfig.branchName) {
+        qualityGateUrl.searchParams.append('branch', configuration_1.ticsConfig.branchName);
+    }
+    qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
+    qualityGateUrl.searchParams.append('cdt', clientDataTok);
+    return qualityGateUrl.href;
+}
+/**
+ * Gets the annotations from the TiCS viewer.
+ * @param url annotationsApiLinks url.
+ * @returns TiCS annotations
+ */
+async function getAnnotations(url) {
+    logger_1.default.Instance.header('Retrieving annotations');
+    const annotationsUrl = `${(0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration)}/${url[0].url}`;
+    logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
+    try {
+        return await (0, api_helper_1.httpRequest)(annotationsUrl);
+    }
+    catch (error) {
+        logger_1.default.Instance.exit('An error occured when trying to retrieve annotations ' + error);
+    }
+}
 
 
 /***/ }),

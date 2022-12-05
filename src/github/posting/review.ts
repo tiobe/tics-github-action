@@ -1,3 +1,3 @@
-import { Analysis, Published } from '../../helper/models';
+import { Analysis } from '../../helper/models';
 
-function postReview(analysis: Analysis, published: Published) {}
+export function postReview(analysis: Analysis, published: object) {}

@@ -8,7 +8,7 @@ import { githubConfig, octokit } from '../configuration';
  * @returns List of changed files within the GitHub Pull request.
  */
 export async function getChangedFiles(): Promise<string[]> {
-  logger.Instance.header('Retrieving changed files to analyse...');
+  logger.Instance.header('Retrieving changed files to analyse');
   let changedFiles: string[] = [];
   let noMoreFiles: boolean = false;
   try {

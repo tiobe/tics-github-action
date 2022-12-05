@@ -13,7 +13,7 @@ let explorerUrl: string | undefined;
  * @param fileListPath Path to changeSet.txt.
  */
 export async function runTiCSAnalyzer(fileListPath: string) {
-  Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}.`);
+  Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
 
