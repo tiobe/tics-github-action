@@ -47,6 +47,6 @@ export function generateExpandableAreaMarkdown(header: any, body: any): string {
  * @param cells cells of the table.
  * @returns Table in markdown.
  */
-export function generateTableMarkdown(headers: any[], cells: any) {
+export function generateTableMarkdown(headers: any[], cells: any[]) {
   return markdownTable([...headers, ...cells]);
 }
