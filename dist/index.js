@@ -390,7 +390,7 @@ async function main() {
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         console.log(qualityGate);
-        if (qualityGate.passed === 'false') {
+        if (!qualityGate.passed) {
             logger_1.default.Instance.setFailed('TiCS quality gate failed.');
         }
         (0, review_1.postReview)(analysis, qualityGate);
