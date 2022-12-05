@@ -53,7 +53,7 @@ export async function getAnnotations(apiLinks: any[]) {
     apiLinks.map(async link => {
       const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${link.url}`;
       Logger.Instance.debug(`From: ${annotationsUrl}`);
-      annotations.push(await httpRequest(annotationsUrl));
+      console.log(await httpRequest(annotationsUrl));
     });
     return annotations;
   } catch (error) {

@@ -736,7 +736,7 @@ async function getAnnotations(apiLinks) {
         apiLinks.map(async (link) => {
             const annotationsUrl = `${(0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration)}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
-            annotations.push(await (0, api_helper_1.httpRequest)(annotationsUrl));
+            console.log(await (0, api_helper_1.httpRequest)(annotationsUrl));
         });
         return annotations;
     }
