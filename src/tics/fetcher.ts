@@ -50,11 +50,16 @@ export async function getAnnotations(apiLinks: any[]) {
   Logger.Instance.header('Retrieving annotations');
   try {
     let annotations: any[] = [];
-    apiLinks.map(async link => {
-      const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${link.url}`;
-      Logger.Instance.debug(`From: ${annotationsUrl}`);
-      console.log(await httpRequest(annotationsUrl));
-    });
+    await Promise.all(
+      apiLinks.map(async link => {
+        const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${link.url}`;
+        Logger.Instance.debug(`From: ${annotationsUrl}`);
+        const response = await httpRequest(annotationsUrl);
+        response.data.map((annotation: any) => {
+          annotations.push(annotation);
+        });
+      })
+    );
     return annotations;
   } catch (error) {
     Logger.Instance.exit('An error occured when trying to retrieve annotations ' + error);
