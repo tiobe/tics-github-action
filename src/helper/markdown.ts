@@ -38,7 +38,7 @@ export function generateStatusMarkdown(status: string, hasSuffix: boolean = fals
  * @returns Dropdown item in markdown.
  */
 export function generateExpandableAreaMarkdown(header: any, body: any): string {
-  return `<details><summary>${header}</summary>\n${body}</details>\n`;
+  return `<details><summary>${header}</summary>\n${body}</details>\n\n`;
 }
 
 /**

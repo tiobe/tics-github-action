@@ -505,7 +505,7 @@ exports.generateStatusMarkdown = generateStatusMarkdown;
  * @returns Dropdown item in markdown.
  */
 function generateExpandableAreaMarkdown(header, body) {
-    return `<details><summary>${header}</summary>\n${body}</details>\n`;
+    return `<details><summary>${header}</summary>\n${body}</details>\n\n`;
 }
 exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
 /**
