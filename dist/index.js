@@ -389,6 +389,7 @@ async function main() {
             return;
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
+        console.log(qualityGate);
         if (qualityGate.passed === 'false') {
             logger_1.default.Instance.setFailed('TiCS quality gate failed.');
         }
@@ -693,6 +694,7 @@ const api_helper_1 = __nccwpck_require__(3823);
 async function getQualityGate(url) {
     logger_1.default.Instance.header('Retrieving the quality gates');
     const qualityGateUrl = getQualityGateUrl(url);
+    logger_1.default.Instance.debug(`From: ${qualityGateUrl}`);
     try {
         return await (0, api_helper_1.httpRequest)(qualityGateUrl);
     }

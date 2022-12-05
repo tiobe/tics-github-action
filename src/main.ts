@@ -36,6 +36,7 @@ async function main() {
     }
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
+    console.log(qualityGate);
     if (qualityGate.passed === 'false') {
       Logger.Instance.setFailed('TiCS quality gate failed.');
     }

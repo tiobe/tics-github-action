@@ -10,6 +10,7 @@ import { getItemFromUrl, getTiCSWebBaseUrlFromUrl, httpRequest } from './api_hel
 export async function getQualityGate(url: string): Promise<any> {
   Logger.Instance.header('Retrieving the quality gates');
   const qualityGateUrl = getQualityGateUrl(url);
+  Logger.Instance.debug(`From: ${qualityGateUrl}`);
   try {
     return await httpRequest(qualityGateUrl);
   } catch (error: any) {
