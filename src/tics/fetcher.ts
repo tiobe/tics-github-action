@@ -43,17 +43,19 @@ function getQualityGateUrl(url: string) {
 
 /**
  * Gets the annotations from the TiCS viewer.
- * @param url annotationsApiLinks url.
+ * @param apiLinks annotationsApiLinks url.
  * @returns TiCS annotations
  */
-async function getAnnotations(url: any) {
+export async function getAnnotations(apiLinks: any[]) {
   Logger.Instance.header('Retrieving annotations');
-
-  const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${url[0].url}`;
-  Logger.Instance.debug(`From: ${annotationsUrl}`);
-
   try {
-    return await httpRequest(annotationsUrl);
+    let annotations: any[] = [];
+    apiLinks.map(async link => {
+      const annotationsUrl = `${getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration)}/${link.url}`;
+      Logger.Instance.debug(`From: ${annotationsUrl}`);
+      annotations.push(await httpRequest(annotationsUrl));
+    });
+    return annotations;
   } catch (error) {
     Logger.Instance.exit('An error occured when trying to retrieve annotations ' + error);
   }

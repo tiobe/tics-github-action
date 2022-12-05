@@ -287,8 +287,10 @@ class Logger {
      * @param {string} string
      */
     debug(string) {
-        core.debug(string);
-        this.called = 'debug';
+        if (configuration_1.ticsConfig.logLevel === 'debug') {
+            core.debug(string);
+            this.called = 'debug';
+        }
     }
     /**
      * Uses core.warning to print to the console.
@@ -391,9 +393,10 @@ async function main() {
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         console.log(qualityGate);
         if (!qualityGate.passed) {
-            logger_1.default.Instance.setFailed('TiCS quality gate failed.');
+            logger_1.default.Instance.setFailed(qualityGate.message);
         }
         (0, review_1.postReview)(analysis, qualityGate);
+        console.log((0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links));
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
@@ -682,7 +685,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getQualityGate = void 0;
+exports.getAnnotations = exports.getQualityGate = void 0;
 const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
@@ -723,20 +726,25 @@ function getQualityGateUrl(url) {
 }
 /**
  * Gets the annotations from the TiCS viewer.
- * @param url annotationsApiLinks url.
+ * @param apiLinks annotationsApiLinks url.
  * @returns TiCS annotations
  */
-async function getAnnotations(url) {
+async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations');
-    const annotationsUrl = `${(0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration)}/${url[0].url}`;
-    logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
     try {
-        return await (0, api_helper_1.httpRequest)(annotationsUrl);
+        let annotations = [];
+        apiLinks.map(async (link) => {
+            const annotationsUrl = `${(0, api_helper_1.getTiCSWebBaseUrlFromUrl)(configuration_1.ticsConfig.ticsConfiguration)}/${link.url}`;
+            logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
+            annotations.push(await (0, api_helper_1.httpRequest)(annotationsUrl));
+        });
+        return annotations;
     }
     catch (error) {
         logger_1.default.Instance.exit('An error occured when trying to retrieve annotations ' + error);
     }
 }
+exports.getAnnotations = getAnnotations;
 
 
 /***/ }),

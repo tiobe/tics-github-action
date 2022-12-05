@@ -37,8 +37,10 @@ export default class Logger {
    * @param {string} string
    */
   debug(string: string) {
-    core.debug(string);
-    this.called = 'debug';
+    if (ticsConfig.logLevel === 'debug') {
+      core.debug(string);
+      this.called = 'debug';
+    }
   }
 
   /**

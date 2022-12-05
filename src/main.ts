@@ -5,7 +5,7 @@ import { changeSetToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getQualityGate } from './tics/fetcher';
+import { getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
@@ -38,9 +38,10 @@ async function main() {
     const qualityGate = await getQualityGate(analysis.explorerUrl);
     console.log(qualityGate);
     if (!qualityGate.passed) {
-      Logger.Instance.setFailed('TiCS quality gate failed.');
+      Logger.Instance.setFailed(qualityGate.message);
     }
     postReview(analysis, qualityGate);
+    console.log(getAnnotations(qualityGate.annotationsApiV1Links));
 
     cliSummary(analysis);
   } catch (error: any) {
