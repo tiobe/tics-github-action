@@ -1,6 +1,6 @@
 import { githubConfig, octokit } from '../configuration';
 import Logger from '../../helper/logger';
-import { Analysis } from '../../helper/models';
+import { Analysis } from '../../helper/interfaces';
 import { createErrorSummary } from './summary';
 
 /**

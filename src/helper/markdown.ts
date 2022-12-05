@@ -1,4 +1,4 @@
-import { Status } from './models';
+import { Status } from './enums';
 import { markdownTable } from 'markdown-table';
 
 /**

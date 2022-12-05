@@ -192,9 +192,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const models_1 = __nccwpck_require__(8811);
 const configuration_1 = __nccwpck_require__(6868);
 const summary_1 = __nccwpck_require__(6649);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
@@ -207,7 +207,7 @@ async function postReview(analysis, qualityGate) {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: models_1.Events.COMMENT,
+        event: enums_1.Events.COMMENT,
         body: body
     };
     try {
@@ -231,8 +231,8 @@ exports.postReview = postReview;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
-const models_1 = __nccwpck_require__(8811);
 const configuration_1 = __nccwpck_require__(6868);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
  * @param errorList list containing all the errors found in the TiCS run.
@@ -285,7 +285,7 @@ function createQualityGateSummary(qualityGate) {
     qualityGate.gates.forEach(gate => {
         qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
     });
-    return `## TICS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(models_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+    return `## TICS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
 }
 exports.createQualityGateSummary = createQualityGateSummary;
 /**
@@ -298,7 +298,7 @@ function createConditionsTable(conditions) {
     conditions.forEach(condition => {
         if (condition.skipped)
             return;
-        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(models_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
+        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
         if (condition.details && condition.details.items.length > 0) {
             const headers = ['File', condition.details.dataKeys.actualValue.title];
             const cells = condition.details.items
@@ -314,6 +314,31 @@ function createConditionsTable(conditions) {
     });
     return conditionsTable;
 }
+
+
+/***/ }),
+
+/***/ 1655:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Status = exports.Events = void 0;
+var Events;
+(function (Events) {
+    Events[Events["APPROVE"] = 0] = "APPROVE";
+    Events[Events["REQUEST_CHANGES"] = 1] = "REQUEST_CHANGES";
+    Events[Events["COMMENT"] = 2] = "COMMENT";
+    Events[Events["undefined"] = 3] = "undefined";
+})(Events = exports.Events || (exports.Events = {}));
+var Status;
+(function (Status) {
+    Status[Status["FAILED"] = 0] = "FAILED";
+    Status[Status["PASSED"] = 1] = "PASSED";
+    Status[Status["WARNING"] = 2] = "WARNING";
+    Status[Status["SKIPPED"] = 2] = "SKIPPED";
+})(Status = exports.Status || (exports.Status = {}));
 
 
 /***/ }),
@@ -449,7 +474,7 @@ exports.default = Logger;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateTableMarkdown = exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
-const models_1 = __nccwpck_require__(5281);
+const enums_1 = __nccwpck_require__(1655);
 const markdown_table_1 = __nccwpck_require__(2798);
 /**
  * Generates a link with text in markdown.
@@ -469,12 +494,12 @@ exports.generateLinkMarkdown = generateLinkMarkdown;
  */
 function generateStatusMarkdown(status, hasSuffix = false) {
     switch (status) {
-        case models_1.Status[0]:
+        case enums_1.Status[0]:
             return ':x: ' + (hasSuffix ? 'Failed ' : '');
-        case models_1.Status[1]:
+        case enums_1.Status[1]:
             return ':heavy_check_mark: ' + (hasSuffix ? 'Passed ' : '');
-        case models_1.Status[2]:
-        case models_1.Status[3]:
+        case enums_1.Status[2]:
+        case enums_1.Status[3]:
             return ':warning: ' + (hasSuffix ? 'Skipped ' : '');
         default:
             return '';
@@ -63165,22 +63190,6 @@ try {
   // add if support for Symbol.iterator is present
   __nccwpck_require__(4091)(Yallist)
 } catch (er) {}
-
-
-/***/ }),
-
-/***/ 8811:
-/***/ ((module) => {
-
-module.exports = eval("require")("../../helper/models");
-
-
-/***/ }),
-
-/***/ 5281:
-/***/ ((module) => {
-
-module.exports = eval("require")("./models");
 
 
 /***/ }),

@@ -1,7 +1,8 @@
 import Logger from '../../helper/logger';
-import { Analysis, Events, QualityGate } from '../../helper/models';
+import { Analysis, QualityGate } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../configuration';
 import { createFilesSummary, createLinkSummary, createQualityGateSummary } from './summary';
+import { Events } from '../../helper/enums';
 
 /**
  * Create review on the pull request from the analysis given.

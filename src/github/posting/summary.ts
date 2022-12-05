@@ -1,6 +1,7 @@
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../helper/markdown';
-import { QualityGate, Status } from '../../helper/models';
+import { QualityGate } from '../../helper/interfaces';
 import { baseUrl, ticsConfig } from '../configuration';
+import { Status } from '../../helper/enums';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.

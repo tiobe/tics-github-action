@@ -4,7 +4,7 @@ import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
 import { baseUrl, ticsConfig } from '../github/configuration';
-import { Analysis } from '../helper/models';
+import { Analysis } from '../helper/interfaces';
 
 /**
  * Executes a GET request to the given url.
