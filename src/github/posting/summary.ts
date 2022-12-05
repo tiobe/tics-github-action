@@ -55,7 +55,7 @@ export function createQualityGateSummary(qualityGate: QualityGate): string {
   let qualityGateSummary = '';
 
   qualityGate.gates.forEach(gate => {
-    qualityGateSummary += `## ${gate.name}\n\n`;
+    qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
   });
   return `## TICS Quality Gate\n\n### ${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
 }

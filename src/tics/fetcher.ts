@@ -55,7 +55,7 @@ export async function getAnnotations(apiLinks: any[]) {
         const annotationsUrl = `${baseUrl}/${link.url}`;
         Logger.Instance.debug(`From: ${annotationsUrl}`);
         const response = await httpRequest(annotationsUrl);
-        response.data.map((annotation: any) => {
+        response.data.forEach((annotation: any) => {
           annotations.push(annotation);
         });
       })

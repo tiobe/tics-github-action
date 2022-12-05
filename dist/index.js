@@ -36,7 +36,7 @@ async function getChangedFiles() {
             };
             await configuration_1.octokit.rest.pulls.listFiles(params).then(response => {
                 if (response.data.length > 0) {
-                    response.data.map(item => {
+                    response.data.forEach(item => {
                         changedFiles.push(item.filename);
                         logger_1.default.Instance.info(item.filename);
                     });
@@ -64,10 +64,9 @@ exports.getChangedFiles = getChangedFiles;
 function changeSetToFile(changeSet) {
     logger_1.default.Instance.header('Writing changeSet to file');
     let contents = '';
-    changeSet &&
-        changeSet.map(item => {
-            contents += item + '\n';
-        });
+    changeSet.forEach(item => {
+        contents += item + '\n';
+    });
     const fileListPath = (0, path_1.resolve)('changeSet.txt');
     (0, fs_1.writeFileSync)(fileListPath, contents);
     logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
@@ -284,7 +283,7 @@ exports.createFilesSummary = createFilesSummary;
 function createQualityGateSummary(qualityGate) {
     let qualityGateSummary = '';
     qualityGate.gates.forEach(gate => {
-        qualityGateSummary += `## ${gate.name}\n\n`;
+        qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
     });
     return `## TICS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(models_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
 }
@@ -893,7 +892,7 @@ async function getAnnotations(apiLinks) {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
-            response.data.map((annotation) => {
+            response.data.forEach((annotation) => {
                 annotations.push(annotation);
             });
         }));

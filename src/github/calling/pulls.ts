@@ -24,7 +24,7 @@ export async function getChangedFiles(): Promise<string[]> {
       };
       await octokit.rest.pulls.listFiles(params).then(response => {
         if (response.data.length > 0) {
-          response.data.map(item => {
+          response.data.forEach(item => {
             changedFiles.push(item.filename);
             logger.Instance.info(item.filename);
           });
@@ -51,10 +51,9 @@ export function changeSetToFile(changeSet: string[]): string {
   logger.Instance.header('Writing changeSet to file');
 
   let contents = '';
-  changeSet &&
-    changeSet.map(item => {
-      contents += item + '\n';
-    });
+  changeSet.forEach(item => {
+    contents += item + '\n';
+  });
 
   const fileListPath = resolve('changeSet.txt');
   writeFileSync(fileListPath, contents);
