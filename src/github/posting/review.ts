@@ -2,7 +2,6 @@ import Logger from '../../helper/logger';
 import { Analysis, QualityGate } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../configuration';
 import { createFilesSummary, createLinkSummary, createQualityGateSummary } from './summary';
-import { Events } from '../../helper/enums';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -17,7 +16,7 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
-    event: Events.COMMENT, // qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
+    event: 'COMMENT', // qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body
   };
 

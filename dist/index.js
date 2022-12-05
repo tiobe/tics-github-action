@@ -194,7 +194,6 @@ exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 const summary_1 = __nccwpck_require__(6649);
-const enums_1 = __nccwpck_require__(1655);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
@@ -207,7 +206,7 @@ async function postReview(analysis, qualityGate) {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: enums_1.Events.COMMENT,
+        event: 'COMMENT',
         body: body
     };
     try {
@@ -324,14 +323,7 @@ function createConditionsTable(conditions) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Status = exports.Events = void 0;
-var Events;
-(function (Events) {
-    Events[Events["APPROVE"] = 0] = "APPROVE";
-    Events[Events["REQUEST_CHANGES"] = 1] = "REQUEST_CHANGES";
-    Events[Events["COMMENT"] = 2] = "COMMENT";
-    Events[Events["undefined"] = 3] = "undefined";
-})(Events = exports.Events || (exports.Events = {}));
+exports.Status = void 0;
 var Status;
 (function (Status) {
     Status[Status["FAILED"] = 0] = "FAILED";
