@@ -12,7 +12,7 @@ export async function postReviewComments(review: any, comments: any[]) {
         owner: githubConfig.owner,
         repo: githubConfig.reponame,
         pull_number: githubConfig.pullRequestNumber,
-        commit_id: review.commit_id,
+        commit_id: review.data.commit_id,
         body: comment.body,
         line: comment.line,
         path: comment.path

@@ -148,7 +148,7 @@ async function postReviewComments(review, comments) {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             pull_number: configuration_1.githubConfig.pullRequestNumber,
-            commit_id: review.commit_id,
+            commit_id: review.data.commit_id,
             body: comment.body,
             line: comment.line,
             path: comment.path
@@ -632,9 +632,8 @@ async function main() {
                 console.log(nonPostedReviewComments);
             }
         }
-        if (!qualityGate.passed) {
+        if (!qualityGate.passed)
             logger_1.default.Instance.setFailed(qualityGate.message);
-        }
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
