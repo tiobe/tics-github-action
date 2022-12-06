@@ -220,7 +220,7 @@ async function createReviewComments(annotations, changeSet) {
             groupedAnnotations.push(annotation);
         }
         else {
-            annotation[index].count += annotation.count;
+            annotations[index].count += annotation.count;
         }
     });
     console.log(groupedAnnotations);

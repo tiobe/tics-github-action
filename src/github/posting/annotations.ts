@@ -82,7 +82,7 @@ async function createReviewComments(annotations: any[], changeSet: string[]) {
     if (index === -1) {
       groupedAnnotations.push(annotation);
     } else {
-      annotation[index].count += annotation.count;
+      annotations[index].count += annotation.count;
     }
   });
 
