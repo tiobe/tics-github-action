@@ -431,10 +431,10 @@ async function createReviewComments(annotations, changedFiles) {
     });
     let groupedAnnotations = [];
     annotations.forEach(annotation => {
-        console.log(annotation);
         if (!changedFiles.find(c => annotation.fullPath.includes(c)))
             return;
         const index = findAnnotationInList(groupedAnnotations, annotation);
+        console.log(index);
         if (index === -1) {
             groupedAnnotations.push(annotation);
         }
