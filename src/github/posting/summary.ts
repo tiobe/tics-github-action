@@ -108,11 +108,11 @@ export async function createReviewComments(annotations: any[], changedFiles: str
       groupedAnnotations.push(annotation);
     } else {
       annotations[index].count += annotation.count;
-      console.log(annotations[index].count);
     }
   });
 
   return groupedAnnotations.map(annotation => {
+    console.log(annotation);
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     return {
       body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
