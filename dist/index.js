@@ -906,6 +906,7 @@ function getTiCSCommand(fileListPath) {
     execString += configuration_1.ticsConfig.clientToken ? `-cdtoken ${configuration_1.ticsConfig.clientToken} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir ${configuration_1.ticsConfig.tmpDir} ` : '';
     execString += configuration_1.ticsConfig.extendTics ? configuration_1.ticsConfig.extendTics : '';
+    execString += configuration_1.ticsConfig.logLevel === 'debug' ? ' -log9' : '';
     return execString;
 }
 
