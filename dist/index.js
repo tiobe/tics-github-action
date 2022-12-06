@@ -138,10 +138,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
-async function postReviewComments(review, comments) {
+async function postReviewComments(review, annotations) {
     const postedReviewComments = await getPostedReviewComments();
     if (postedReviewComments)
         deletePreviousAnnotations(postedReviewComments);
+    const comments = await createReviewComments(annotations);
     let nonPostedReviewComments = [];
     await Promise.all(comments.map(async (comment) => {
         const params = {
@@ -193,6 +194,21 @@ async function deletePreviousAnnotations(postedReviewComments) {
                 logger_1.default.Instance.error(`Could not delete review comment: ${error.message}`);
             }
         }
+    });
+}
+async function createReviewComments(annotations) {
+    console.log(annotations);
+    return [];
+}
+function findAnnotationInArray(array, annotation) {
+    return array.findIndex(a => {
+        return (a.fullPath === annotation.fullPath &&
+            a.type === annotation.type &&
+            a.line === annotation.line &&
+            a.rule === annotation.rule &&
+            a.level === annotation.level &&
+            a.category === annotation.category &&
+            a.message === annotation.message);
     });
 }
 
@@ -624,7 +640,7 @@ async function main() {
             return;
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        const review = (0, review_1.postReview)(analysis, qualityGate);
+        const review = await (0, review_1.postReview)(analysis, qualityGate);
         if (configuration_1.ticsConfig.showAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
             if (annotations) {

@@ -38,7 +38,7 @@ async function main() {
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
 
-    const review = postReview(analysis, qualityGate);
+    const review = await postReview(analysis, qualityGate);
 
     if (ticsConfig.showAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);

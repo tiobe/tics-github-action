@@ -1,13 +1,14 @@
 import Logger from '../../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 
-export async function postReviewComments(review: any, comments: any[]) {
+export async function postReviewComments(review: any, annotations: any[]) {
   const postedReviewComments = await getPostedReviewComments();
   if (postedReviewComments) deletePreviousAnnotations(postedReviewComments);
 
+  const comments = await createReviewComments(annotations);
   let nonPostedReviewComments: any[] = [];
   await Promise.all(
-    comments.map(async comment => {
+    comments.map(async (comment: any) => {
       const params = {
         owner: githubConfig.owner,
         repo: githubConfig.reponame,
@@ -56,5 +57,24 @@ async function deletePreviousAnnotations(postedReviewComments: any[]) {
         Logger.Instance.error(`Could not delete review comment: ${error.message}`);
       }
     }
+  });
+}
+
+async function createReviewComments(annotations: any[]) {
+  console.log(annotations);
+  return [];
+}
+
+function findAnnotationInArray(array: any[], annotation: any) {
+  return array.findIndex(a => {
+    return (
+      a.fullPath === annotation.fullPath &&
+      a.type === annotation.type &&
+      a.line === annotation.line &&
+      a.rule === annotation.rule &&
+      a.level === annotation.level &&
+      a.category === annotation.category &&
+      a.message === annotation.message
+    );
   });
 }
