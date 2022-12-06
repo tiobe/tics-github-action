@@ -27,19 +27,19 @@ export async function getChangedFiles() {
 }
 
 /**
- * Creates a file containing all the changed files based on the given changeSet.
- * @param changeSet List of changed files.
+ * Creates a file containing all the changed files based on the given changedFiles.
+ * @param changedFiles List of changed files.
  * @returns Location of the written file.
  */
-export function changeSetToFile(changeSet: string[]): string {
-  logger.Instance.header('Writing changeSet to file');
+export function changedFilesToFile(changedFiles: string[]): string {
+  logger.Instance.header('Writing changedFiles to file');
 
   let contents = '';
-  changeSet.forEach(item => {
+  changedFiles.forEach(item => {
     contents += item + '\n';
   });
 
-  const fileListPath = resolve('changeSet.txt');
+  const fileListPath = resolve('changedFiles.txt');
   writeFileSync(fileListPath, contents);
 
   logger.Instance.info(`Content written to: ${fileListPath}`);

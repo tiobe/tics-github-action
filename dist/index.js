@@ -10,7 +10,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.changeSetToFile = exports.getChangedFiles = void 0;
+exports.changedFilesToFile = exports.getChangedFiles = void 0;
 const fs_1 = __nccwpck_require__(5747);
 const path_1 = __nccwpck_require__(5622);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -40,22 +40,22 @@ async function getChangedFiles() {
 }
 exports.getChangedFiles = getChangedFiles;
 /**
- * Creates a file containing all the changed files based on the given changeSet.
- * @param changeSet List of changed files.
+ * Creates a file containing all the changed files based on the given changedFiles.
+ * @param changedFiles List of changed files.
  * @returns Location of the written file.
  */
-function changeSetToFile(changeSet) {
-    logger_1.default.Instance.header('Writing changeSet to file');
+function changedFilesToFile(changedFiles) {
+    logger_1.default.Instance.header('Writing changedFiles to file');
     let contents = '';
-    changeSet.forEach(item => {
+    changedFiles.forEach(item => {
         contents += item + '\n';
     });
-    const fileListPath = (0, path_1.resolve)('changeSet.txt');
+    const fileListPath = (0, path_1.resolve)('changedFiles.txt');
     (0, fs_1.writeFileSync)(fileListPath, contents);
     logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
     return fileListPath;
 }
-exports.changeSetToFile = changeSetToFile;
+exports.changedFilesToFile = changedFilesToFile;
 
 
 /***/ }),
@@ -138,12 +138,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
-async function postReviewComments(review, annotations, changeSet) {
+/**
+ * Posts review comments based on the annotations from TiCS.
+ * @param review Response from posting the review.
+ * @param annotations Annotations retrieved from TiCS viewer.
+ * @param changedFiles Changed files for this pull request.
+ * @returns The issues that could not be posted.
+ */
+async function postReviewComments(review, annotations, changedFiles) {
     const postedReviewComments = await getPostedReviewComments();
     if (postedReviewComments)
         deletePreviousReviewComments(postedReviewComments);
-    const comments = await createReviewComments(annotations, changeSet);
-    let nonPostedReviewComments = [];
+    const comments = await createReviewComments(annotations, changedFiles);
+    let unpostedReviewComments = [];
     await Promise.all(comments.map(async (comment) => {
         const params = {
             owner: configuration_1.githubConfig.owner,
@@ -158,11 +165,11 @@ async function postReviewComments(review, annotations, changeSet) {
             await configuration_1.octokit.rest.pulls.createReviewComment(params);
         }
         catch (error) {
-            nonPostedReviewComments.push(comment);
+            unpostedReviewComments.push(comment);
             logger_1.default.Instance.debug(`Could not post review comment: ${error.message}`);
         }
     }));
-    return nonPostedReviewComments;
+    return unpostedReviewComments;
 }
 exports.postReviewComments = postReviewComments;
 /**
@@ -208,13 +215,13 @@ async function deletePreviousReviewComments(postedReviewComments) {
 /**
  * Groups the annotations and creates review comments for them.
  * @param annotations Annotations retrieved from the viewer.
- * @param changeSet List of files changed in the pull request.
+ * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-async function createReviewComments(annotations, changeSet) {
+async function createReviewComments(annotations, changedFiles) {
     let groupedAnnotations = [];
     annotations.forEach(annotation => {
-        if (!changeSet.find(c => annotation.fullPath.includes(c)))
+        if (!changedFiles.find(c => annotation.fullPath.includes(c)))
             return;
         const index = findAnnotationInList(groupedAnnotations, annotation);
         if (index === -1) {
@@ -224,7 +231,12 @@ async function createReviewComments(annotations, changeSet) {
             annotations[index].count += annotation.count;
         }
     });
-    console.log(groupedAnnotations);
+    // sort the annotations based on the filename and linenumber.
+    groupedAnnotations.sort((a, b) => {
+        if (a.fullPath === b.fullPath)
+            return a.line - b.line;
+        return a.fullPath > b.fullPath ? 1 : -1;
+    });
     return groupedAnnotations.map(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         return {
@@ -302,7 +314,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postReview = void 0;
+exports.updateReviewWithUnpostedComments = exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 const summary_1 = __nccwpck_require__(6649);
@@ -332,6 +344,28 @@ async function postReview(analysis, qualityGate) {
     }
 }
 exports.postReview = postReview;
+/**
+ * Updates the review to include review comments that could not be posted.
+ * @param review Response from posting the review.
+ * @param unpostedReviewComments Review comments that could not be posted.
+ */
+async function updateReviewWithUnpostedComments(review, unpostedReviewComments) {
+    let body = review.body + (0, summary_1.createUnpostedReviewCommentsSummary)(unpostedReviewComments);
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        pull_number: configuration_1.githubConfig.pullRequestNumber,
+        review_id: review.data.id,
+        body: body
+    };
+    try {
+        await configuration_1.octokit.rest.pulls.updateReview(params);
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
+    }
+}
+exports.updateReviewWithUnpostedComments = updateReviewWithUnpostedComments;
 
 
 /***/ }),
@@ -342,7 +376,7 @@ exports.postReview = postReview;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+exports.createUnpostedReviewCommentsSummary = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(6868);
 const enums_1 = __nccwpck_require__(1655);
@@ -427,6 +461,28 @@ function createConditionsTable(conditions) {
     });
     return conditionsTable;
 }
+/**
+ * Creates a summary of all the review comments that could not be posted
+ * @param unpostedReviewComments Review comments that could not be posted.
+ * @returns Summary of all the review comments that could not be posted.
+ */
+function createUnpostedReviewCommentsSummary(unpostedReviewComments) {
+    let header = 'Quality findings outside of the changes of this pull request:';
+    let body = '';
+    let previousPaths = [];
+    unpostedReviewComments.map(comment => {
+        if (!previousPaths.find(x => x === comment.path)) {
+            if (previousPaths.length > 0) {
+                body += '</ul>';
+            }
+            body += `<b>File:</b> ${comment.path}<ul>`;
+            previousPaths.push(comment.path);
+        }
+        body += `<li>${comment.body.replace('\r\n', '<br>').replace('**', '<b>').replace('**', '</b>')}</li>`;
+    });
+    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+}
+exports.createUnpostedReviewCommentsSummary = createUnpostedReviewCommentsSummary;
 
 
 /***/ }),
@@ -662,11 +718,11 @@ if (!isCheckedOut())
 main();
 async function main() {
     try {
-        const changeSet = await (0, pulls_1.getChangedFiles)();
-        if (!changeSet || changeSet.length <= 0)
+        const changedFiles = await (0, pulls_1.getChangedFiles)();
+        if (!changedFiles || changedFiles.length <= 0)
             return logger_1.default.Instance.exit('No changed files found to analyze.');
-        const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
-        const analysis = await (0, analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
+        const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+        const analysis = await (0, analyzer_1.runTiCSAnalyzer)(changedFilesFilePath);
         if (analysis.statusCode === -1) {
             (0, comment_1.postErrorComment)(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
@@ -684,8 +740,9 @@ async function main() {
         if (configuration_1.ticsConfig.showAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
             if (annotations) {
-                const nonPostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changeSet);
-                console.log(nonPostedReviewComments);
+                const unpostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changedFiles);
+                if (unpostedReviewComments.length > 0)
+                    await (0, review_1.updateReviewWithUnpostedComments)(review, unpostedReviewComments);
             }
         }
         if (!qualityGate.passed)
@@ -732,7 +789,7 @@ let filesAnalyzed = [];
 let explorerUrl;
 /**
  * Runs TiCS based on the configuration set in a workflow.
- * @param fileListPath Path to changeSet.txt.
+ * @param fileListPath Path to changedFiles.txt.
  */
 async function runTiCSAnalyzer(fileListPath) {
     logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
@@ -771,7 +828,7 @@ async function runTiCSAnalyzer(fileListPath) {
 exports.runTiCSAnalyzer = runTiCSAnalyzer;
 /**
  * Build the command to run (and optionally install) TiCS.
- * @param fileListPath Path to changeSet.txt.
+ * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
 async function buildRunCommand(fileListPath) {
@@ -805,7 +862,7 @@ function findInStdOutOrErr(data, fileListPath) {
         warningList.push(warning.toString());
     const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
     if (fileAnalyzed) {
-        const file = fileAnalyzed.split(fileListPath.replace('changeSet.txt', ''))[1];
+        const file = fileAnalyzed.split(fileListPath.replace('changedFiles.txt', ''))[1];
         if (!filesAnalyzed.find(f => f === file))
             filesAnalyzed.push(file);
     }

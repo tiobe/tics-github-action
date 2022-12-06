@@ -1,12 +1,19 @@
 import Logger from '../../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../configuration';
 
-export async function postReviewComments(review: any, annotations: any[], changeSet: string[]) {
+/**
+ * Posts review comments based on the annotations from TiCS.
+ * @param review Response from posting the review.
+ * @param annotations Annotations retrieved from TiCS viewer.
+ * @param changedFiles Changed files for this pull request.
+ * @returns The issues that could not be posted.
+ */
+export async function postReviewComments(review: any, annotations: any[], changedFiles: string[]) {
   const postedReviewComments = await getPostedReviewComments();
   if (postedReviewComments) deletePreviousReviewComments(postedReviewComments);
 
-  const comments = await createReviewComments(annotations, changeSet);
-  let nonPostedReviewComments: any[] = [];
+  const comments = await createReviewComments(annotations, changedFiles);
+  let unpostedReviewComments: any[] = [];
   await Promise.all(
     comments.map(async (comment: any) => {
       const params = {
@@ -21,12 +28,12 @@ export async function postReviewComments(review: any, annotations: any[], change
       try {
         await octokit.rest.pulls.createReviewComment(params);
       } catch (error: any) {
-        nonPostedReviewComments.push(comment);
+        unpostedReviewComments.push(comment);
         Logger.Instance.debug(`Could not post review comment: ${error.message}`);
       }
     })
   );
-  return nonPostedReviewComments;
+  return unpostedReviewComments;
 }
 
 /**
@@ -72,13 +79,13 @@ async function deletePreviousReviewComments(postedReviewComments: any[]) {
 /**
  * Groups the annotations and creates review comments for them.
  * @param annotations Annotations retrieved from the viewer.
- * @param changeSet List of files changed in the pull request.
+ * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-async function createReviewComments(annotations: any[], changeSet: string[]) {
+async function createReviewComments(annotations: any[], changedFiles: string[]) {
   let groupedAnnotations: any[] = [];
   annotations.forEach(annotation => {
-    if (!changeSet.find(c => annotation.fullPath.includes(c))) return;
+    if (!changedFiles.find(c => annotation.fullPath.includes(c))) return;
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
       groupedAnnotations.push(annotation);
@@ -87,7 +94,12 @@ async function createReviewComments(annotations: any[], changeSet: string[]) {
     }
   });
 
-  console.log(groupedAnnotations);
+  // sort the annotations based on the filename and linenumber.
+  groupedAnnotations.sort((a, b) => {
+    if (a.fullPath === b.fullPath) return a.line - b.line;
+    return a.fullPath > b.fullPath ? 1 : -1;
+  });
+
   return groupedAnnotations.map(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     return {

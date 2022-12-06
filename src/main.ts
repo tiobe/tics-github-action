@@ -1,12 +1,12 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './github/configuration';
-import { changeSetToFile, getChangedFiles } from './github/calling/pulls';
+import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnnotations, getQualityGate } from './tics/fetcher';
-import { postReview } from './github/posting/review';
+import { postReview, updateReviewWithUnpostedComments } from './github/posting/review';
 import { postReviewComments } from './github/posting/annotations';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
@@ -17,11 +17,11 @@ main();
 
 async function main() {
   try {
-    const changeSet = await getChangedFiles();
-    if (!changeSet || changeSet.length <= 0) return Logger.Instance.exit('No changed files found to analyze.');
+    const changedFiles = await getChangedFiles();
+    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.exit('No changed files found to analyze.');
 
-    const changeSetFilePath = changeSetToFile(changeSet);
-    const analysis = await runTiCSAnalyzer(changeSetFilePath);
+    const changedFilesFilePath = changedFilesToFile(changedFiles);
+    const analysis = await runTiCSAnalyzer(changedFilesFilePath);
 
     if (analysis.statusCode === -1) {
       postErrorComment(analysis);
@@ -43,8 +43,8 @@ async function main() {
     if (ticsConfig.showAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
-        const nonPostedReviewComments = await postReviewComments(review, annotations, changeSet);
-        console.log(nonPostedReviewComments);
+        const unpostedReviewComments = await postReviewComments(review, annotations, changedFiles);
+        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedComments(review, unpostedReviewComments);
       }
     }
 

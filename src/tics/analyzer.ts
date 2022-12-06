@@ -10,7 +10,7 @@ let explorerUrl: string | undefined;
 
 /**
  * Runs TiCS based on the configuration set in a workflow.
- * @param fileListPath Path to changeSet.txt.
+ * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTiCSAnalyzer(fileListPath: string) {
   Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}`);
@@ -51,7 +51,7 @@ export async function runTiCSAnalyzer(fileListPath: string) {
 
 /**
  * Build the command to run (and optionally install) TiCS.
- * @param fileListPath Path to changeSet.txt.
+ * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
 async function buildRunCommand(fileListPath: string) {
@@ -88,7 +88,7 @@ function findInStdOutOrErr(data: string, fileListPath: string) {
 
   const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
   if (fileAnalyzed) {
-    const file = fileAnalyzed.split(fileListPath.replace('changeSet.txt', ''))[1];
+    const file = fileAnalyzed.split(fileListPath.replace('changedFiles.txt', ''))[1];
     if (!filesAnalyzed.find(f => f === file)) filesAnalyzed.push(file);
   }
 

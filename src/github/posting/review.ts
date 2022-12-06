@@ -1,7 +1,7 @@
 import Logger from '../../helper/logger';
 import { Analysis, QualityGate } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../configuration';
-import { createFilesSummary, createLinkSummary, createQualityGateSummary } from './summary';
+import { createFilesSummary, createLinkSummary, createUnpostedReviewCommentsSummary, createQualityGateSummary } from './summary';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -27,5 +27,26 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
     return { data: response.data, body: body };
   } catch (error: any) {
     Logger.Instance.error(`Posting the review failed: ${error.message}`);
+  }
+}
+
+/**
+ * Updates the review to include review comments that could not be posted.
+ * @param review Response from posting the review.
+ * @param unpostedReviewComments Review comments that could not be posted.
+ */
+export async function updateReviewWithUnpostedComments(review: any, unpostedReviewComments: any[]) {
+  let body = review.body + createUnpostedReviewCommentsSummary(unpostedReviewComments);
+  const params = {
+    owner: githubConfig.owner,
+    repo: githubConfig.reponame,
+    pull_number: githubConfig.pullRequestNumber,
+    review_id: review.data.id,
+    body: body
+  };
+  try {
+    await octokit.rest.pulls.updateReview(params);
+  } catch (error: any) {
+    Logger.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
   }
 }

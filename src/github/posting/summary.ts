@@ -86,3 +86,26 @@ function createConditionsTable(conditions: any[]) {
   });
   return conditionsTable;
 }
+
+/**
+ * Creates a summary of all the review comments that could not be posted
+ * @param unpostedReviewComments Review comments that could not be posted.
+ * @returns Summary of all the review comments that could not be posted.
+ */
+export function createUnpostedReviewCommentsSummary(unpostedReviewComments: any[]) {
+  let header = 'Quality findings outside of the changes of this pull request:';
+  let body = '';
+  let previousPaths: any[] = [];
+
+  unpostedReviewComments.map(comment => {
+    if (!previousPaths.find(x => x === comment.path)) {
+      if (previousPaths.length > 0) {
+        body += '</ul>';
+      }
+      body += `<b>File:</b> ${comment.path}<ul>`;
+      previousPaths.push(comment.path);
+    }
+    body += `<li>${comment.body.replace('\r\n', '<br>').replace('**', '<b>').replace('**', '</b>')}</li>`;
+  });
+  return generateExpandableAreaMarkdown(header, body);
+}
