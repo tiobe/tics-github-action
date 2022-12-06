@@ -8,11 +8,13 @@ import { getItemFromUrl, httpRequest } from './api_helper';
  * @returns the quality gates
  */
 export async function getQualityGate(url: string): Promise<any> {
-  Logger.Instance.header('Retrieving the quality gates');
+  Logger.Instance.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   Logger.Instance.debug(`From: ${qualityGateUrl}`);
   try {
-    return await httpRequest(qualityGateUrl);
+    const response = await httpRequest(qualityGateUrl);
+    Logger.Instance.info('Retrieved the quality gates.');
+    return response;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
   }
@@ -47,7 +49,7 @@ function getQualityGateUrl(url: string) {
  * @returns TiCS annotations
  */
 export async function getAnnotations(apiLinks: any[]) {
-  Logger.Instance.header('Retrieving annotations');
+  Logger.Instance.header('Retrieving annotations.');
   try {
     let annotations: any[] = [];
     await Promise.all(
@@ -60,8 +62,9 @@ export async function getAnnotations(apiLinks: any[]) {
         });
       })
     );
+    Logger.Instance.info('Retrieved all annotations.');
     return annotations;
-  } catch (error) {
-    Logger.Instance.exit('An error occured when trying to retrieve annotations ' + error);
+  } catch (error: any) {
+    Logger.Instance.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
   }
 }

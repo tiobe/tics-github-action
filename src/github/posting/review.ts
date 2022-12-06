@@ -21,8 +21,10 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
   };
 
   try {
-    Logger.Instance.header('Posting error summary in pull request comment.');
-    await octokit.rest.pulls.createReview(parameters);
+    Logger.Instance.header('Posting a review for this pull request.');
+    const response = await octokit.rest.pulls.createReview(parameters);
+    Logger.Instance.info('Posted review for this pull request.');
+    return response.data;
   } catch (error: any) {
     Logger.Instance.error(`Posting the review failed: ${error.message}`);
   }

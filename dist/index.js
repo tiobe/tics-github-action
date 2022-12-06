@@ -20,7 +20,7 @@ const configuration_1 = __nccwpck_require__(6868);
  * @returns List of changed files within the GitHub Pull request.
  */
 async function getChangedFiles() {
-    logger_1.default.Instance.header('Retrieving changed files to analyse');
+    logger_1.default.Instance.header('Retrieving changed files of this pull request.');
     let changedFiles = [];
     let noMoreFiles = false;
     try {
@@ -169,8 +169,9 @@ async function postErrorComment(analysis) {
             issue_number: configuration_1.githubConfig.pullRequestNumber,
             body: (0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList)
         };
-        logger_1.default.Instance.info('\u001b[35mPosting error summary in pull request comment.');
+        logger_1.default.Instance.header('Posting error summary in pull request.');
         await configuration_1.octokit.rest.issues.createComment(parameters);
+        logger_1.default.Instance.info('Posted the error summary in pull request.');
     }
     catch (error) {
         logger_1.default.Instance.error(`Posting the comment failed: ${error.message}`);
@@ -210,8 +211,10 @@ async function postReview(analysis, qualityGate) {
         body: body
     };
     try {
-        logger_1.default.Instance.header('Posting error summary in pull request comment.');
-        await configuration_1.octokit.rest.pulls.createReview(parameters);
+        logger_1.default.Instance.header('Posting a review for this pull request.');
+        const response = await configuration_1.octokit.rest.pulls.createReview(parameters);
+        logger_1.default.Instance.info('Posted review for this pull request.');
+        return response.data;
     }
     catch (error) {
         logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
@@ -867,11 +870,13 @@ const api_helper_1 = __nccwpck_require__(3823);
  * @returns the quality gates
  */
 async function getQualityGate(url) {
-    logger_1.default.Instance.header('Retrieving the quality gates');
+    logger_1.default.Instance.header('Retrieving the quality gates.');
     const qualityGateUrl = getQualityGateUrl(url);
     logger_1.default.Instance.debug(`From: ${qualityGateUrl}`);
     try {
-        return await (0, api_helper_1.httpRequest)(qualityGateUrl);
+        const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
+        logger_1.default.Instance.info('Retrieved the quality gates.');
+        return response;
     }
     catch (error) {
         logger_1.default.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
@@ -902,7 +907,7 @@ function getQualityGateUrl(url) {
  * @returns TiCS annotations
  */
 async function getAnnotations(apiLinks) {
-    logger_1.default.Instance.header('Retrieving annotations');
+    logger_1.default.Instance.header('Retrieving annotations.');
     try {
         let annotations = [];
         await Promise.all(apiLinks.map(async (link) => {
@@ -913,10 +918,11 @@ async function getAnnotations(apiLinks) {
                 annotations.push(annotation);
             });
         }));
+        logger_1.default.Instance.info('Retrieved all annotations.');
         return annotations;
     }
     catch (error) {
-        logger_1.default.Instance.exit('An error occured when trying to retrieve annotations ' + error);
+        logger_1.default.Instance.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
     }
 }
 exports.getAnnotations = getAnnotations;
