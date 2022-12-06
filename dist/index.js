@@ -138,6 +138,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
+const summary_1 = __nccwpck_require__(6649);
 /**
  * Posts review comments based on the annotations from TiCS.
  * @param review Response from posting the review.
@@ -149,7 +150,7 @@ async function postReviewComments(review, annotations, changedFiles) {
     const postedReviewComments = await getPostedReviewComments();
     if (postedReviewComments)
         deletePreviousReviewComments(postedReviewComments);
-    const comments = await createReviewComments(annotations, changedFiles);
+    const comments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
     let unpostedReviewComments = [];
     logger_1.default.Instance.header('Posting review comments.');
     await Promise.all(comments.map(async (comment) => {
@@ -214,57 +215,6 @@ async function deletePreviousReviewComments(postedReviewComments) {
         }
     });
     logger_1.default.Instance.info('Deleted review comments of previous runs.');
-}
-/**
- * Groups the annotations and creates review comments for them.
- * @param annotations Annotations retrieved from the viewer.
- * @param changedFiles List of files changed in the pull request.
- * @returns List of the review comments.
- */
-async function createReviewComments(annotations, changedFiles) {
-    let groupedAnnotations = [];
-    annotations.forEach(annotation => {
-        if (!changedFiles.find(c => annotation.fullPath.includes(c)))
-            return;
-        const index = findAnnotationInList(groupedAnnotations, annotation);
-        if (index === -1) {
-            groupedAnnotations.push(annotation);
-        }
-        else {
-            annotations[index].count += annotation.count;
-        }
-    });
-    // sort the annotations based on the filename and linenumber.
-    groupedAnnotations.sort((a, b) => {
-        if (a.fullPath === b.fullPath)
-            return a.line - b.line;
-        return a.fullPath > b.fullPath ? 1 : -1;
-    });
-    return groupedAnnotations.map(annotation => {
-        const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        return {
-            body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-            path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
-            line: annotation.line
-        };
-    });
-}
-/**
- * Finds an annotation in a list and returns the index.
- * @param list List to find the annotation in.
- * @param annotation Annotation to find.
- * @returns The index of the annotation found or -1
- */
-function findAnnotationInList(list, annotation) {
-    return list.findIndex(a => {
-        return (a.fullPath === annotation.fullPath &&
-            a.type === annotation.type &&
-            a.line === annotation.line &&
-            a.rule === annotation.rule &&
-            a.level === annotation.level &&
-            a.category === annotation.category &&
-            a.message === annotation.message);
-    });
 }
 
 
@@ -381,7 +331,7 @@ exports.updateReviewWithUnpostedReviewComments = updateReviewWithUnpostedReviewC
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createUnpostedReviewCommentsSummary = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+exports.createUnpostedReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(6868);
 const enums_1 = __nccwpck_require__(1655);
@@ -465,6 +415,57 @@ function createConditionsTable(conditions) {
         }
     });
     return conditionsTable;
+}
+/**
+ * Groups the annotations and creates review comments for them.
+ * @param annotations Annotations retrieved from the viewer.
+ * @param changedFiles List of files changed in the pull request.
+ * @returns List of the review comments.
+ */
+async function createReviewComments(annotations, changedFiles) {
+    let groupedAnnotations = [];
+    annotations.forEach(annotation => {
+        // if (!changedFiles.find(c => annotation.fullPath.includes(c))) return;
+        const index = findAnnotationInList(groupedAnnotations, annotation);
+        if (index === -1) {
+            groupedAnnotations.push(annotation);
+        }
+        else {
+            annotations[index].count += annotation.count;
+        }
+    });
+    // sort the annotations based on the filename and linenumber.
+    groupedAnnotations.sort((a, b) => {
+        if (a.fullPath === b.fullPath)
+            return a.line - b.line;
+        return a.fullPath > b.fullPath ? 1 : -1;
+    });
+    return groupedAnnotations.map(annotation => {
+        const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
+        return {
+            body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
+            path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
+            line: annotation.line
+        };
+    });
+}
+exports.createReviewComments = createReviewComments;
+/**
+ * Finds an annotation in a list and returns the index.
+ * @param list List to find the annotation in.
+ * @param annotation Annotation to find.
+ * @returns The index of the annotation found or -1
+ */
+function findAnnotationInList(list, annotation) {
+    return list.findIndex(a => {
+        return (a.fullPath === annotation.fullPath &&
+            a.type === annotation.type &&
+            a.line === annotation.line &&
+            a.rule === annotation.rule &&
+            a.level === annotation.level &&
+            a.category === annotation.category &&
+            a.message === annotation.message);
+    });
 }
 /**
  * Creates a summary of all the review comments that could not be posted
