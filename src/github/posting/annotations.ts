@@ -14,6 +14,7 @@ export async function postReviewComments(review: any, annotations: any[], change
 
   const comments = await createReviewComments(annotations, changedFiles);
   let unpostedReviewComments: any[] = [];
+  Logger.Instance.header('Posting review comments.');
   await Promise.all(
     comments.map(async (comment: any) => {
       const params = {
@@ -33,6 +34,7 @@ export async function postReviewComments(review: any, annotations: any[], change
       }
     })
   );
+  Logger.Instance.info('Posted review comments.');
   return unpostedReviewComments;
 }
 
@@ -59,7 +61,7 @@ async function getPostedReviewComments() {
  * @param postedReviewComments Previously posted review comments.
  */
 async function deletePreviousReviewComments(postedReviewComments: any[]) {
-  Logger.Instance.info('Deleting review comments of previous runs.');
+  Logger.Instance.header('Deleting review comments of previous runs.');
   postedReviewComments.map(async reviewComment => {
     if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
       try {
@@ -74,6 +76,7 @@ async function deletePreviousReviewComments(postedReviewComments: any[]) {
       }
     }
   });
+  Logger.Instance.info('Deleted review comments of previous runs.');
 }
 
 /**

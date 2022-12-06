@@ -151,6 +151,7 @@ async function postReviewComments(review, annotations, changedFiles) {
         deletePreviousReviewComments(postedReviewComments);
     const comments = await createReviewComments(annotations, changedFiles);
     let unpostedReviewComments = [];
+    logger_1.default.Instance.header('Posting review comments.');
     await Promise.all(comments.map(async (comment) => {
         const params = {
             owner: configuration_1.githubConfig.owner,
@@ -169,6 +170,7 @@ async function postReviewComments(review, annotations, changedFiles) {
             logger_1.default.Instance.debug(`Could not post review comment: ${error.message}`);
         }
     }));
+    logger_1.default.Instance.info('Posted review comments.');
     return unpostedReviewComments;
 }
 exports.postReviewComments = postReviewComments;
@@ -195,7 +197,7 @@ async function getPostedReviewComments() {
  * @param postedReviewComments Previously posted review comments.
  */
 async function deletePreviousReviewComments(postedReviewComments) {
-    logger_1.default.Instance.info('Deleting review comments of previous runs.');
+    logger_1.default.Instance.header('Deleting review comments of previous runs.');
     postedReviewComments.map(async (reviewComment) => {
         if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
             try {
@@ -211,6 +213,7 @@ async function deletePreviousReviewComments(postedReviewComments) {
             }
         }
     });
+    logger_1.default.Instance.info('Deleted review comments of previous runs.');
 }
 /**
  * Groups the annotations and creates review comments for them.
@@ -314,7 +317,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateReviewWithUnpostedComments = exports.postReview = void 0;
+exports.updateReviewWithUnpostedReviewComments = exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 const summary_1 = __nccwpck_require__(6649);
@@ -349,7 +352,7 @@ exports.postReview = postReview;
  * @param review Response from posting the review.
  * @param unpostedReviewComments Review comments that could not be posted.
  */
-async function updateReviewWithUnpostedComments(review, unpostedReviewComments) {
+async function updateReviewWithUnpostedReviewComments(review, unpostedReviewComments) {
     let body = review.body + (0, summary_1.createUnpostedReviewCommentsSummary)(unpostedReviewComments);
     const params = {
         owner: configuration_1.githubConfig.owner,
@@ -359,13 +362,15 @@ async function updateReviewWithUnpostedComments(review, unpostedReviewComments) 
         body: body
     };
     try {
+        logger_1.default.Instance.header('Updating review to include unposted review comments.');
         await configuration_1.octokit.rest.pulls.updateReview(params);
+        logger_1.default.Instance.info('Updated review to include unposted review comments.');
     }
     catch (error) {
         logger_1.default.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
     }
 }
-exports.updateReviewWithUnpostedComments = updateReviewWithUnpostedComments;
+exports.updateReviewWithUnpostedReviewComments = updateReviewWithUnpostedReviewComments;
 
 
 /***/ }),
@@ -742,7 +747,7 @@ async function main() {
             if (annotations) {
                 const unpostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changedFiles);
                 if (unpostedReviewComments.length > 0)
-                    await (0, review_1.updateReviewWithUnpostedComments)(review, unpostedReviewComments);
+                    await (0, review_1.updateReviewWithUnpostedReviewComments)(review, unpostedReviewComments);
             }
         }
         if (!qualityGate.passed)

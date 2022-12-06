@@ -6,7 +6,7 @@ import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnnotations, getQualityGate } from './tics/fetcher';
-import { postReview, updateReviewWithUnpostedComments } from './github/posting/review';
+import { postReview, updateReviewWithUnpostedReviewComments } from './github/posting/review';
 import { postReviewComments } from './github/posting/annotations';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
@@ -44,7 +44,7 @@ async function main() {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
         const unpostedReviewComments = await postReviewComments(review, annotations, changedFiles);
-        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedComments(review, unpostedReviewComments);
+        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
       }
     }
 
