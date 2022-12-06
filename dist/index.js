@@ -138,11 +138,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
-async function postReviewComments(review, annotations) {
+async function postReviewComments(review, annotations, changeSet) {
     const postedReviewComments = await getPostedReviewComments();
     if (postedReviewComments)
-        deletePreviousAnnotations(postedReviewComments);
-    const comments = await createReviewComments(annotations);
+        deletePreviousReviewComments(postedReviewComments);
+    const comments = await createReviewComments(annotations, changeSet);
     let nonPostedReviewComments = [];
     await Promise.all(comments.map(async (comment) => {
         const params = {
@@ -164,6 +164,10 @@ async function postReviewComments(review, annotations) {
     return nonPostedReviewComments;
 }
 exports.postReviewComments = postReviewComments;
+/**
+ * Gets a list of all reviews posted on the pull request.
+ * @returns List of reviews posted on the pull request.
+ */
 async function getPostedReviewComments() {
     try {
         logger_1.default.Instance.info('Retrieving posted review comments.');
@@ -178,7 +182,11 @@ async function getPostedReviewComments() {
         logger_1.default.Instance.error(`Could not retrieve the review comments: ${error.message}`);
     }
 }
-async function deletePreviousAnnotations(postedReviewComments) {
+/**
+ * Deletes the review comments of previous runs.
+ * @param postedReviewComments Previously posted review comments.
+ */
+async function deletePreviousReviewComments(postedReviewComments) {
     logger_1.default.Instance.info('Deleting review comments of previous runs.');
     postedReviewComments.map(async (reviewComment) => {
         if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
@@ -196,12 +204,42 @@ async function deletePreviousAnnotations(postedReviewComments) {
         }
     });
 }
-async function createReviewComments(annotations) {
-    console.log(annotations);
-    return [];
+/**
+ * Groups the annotations and creates review comments for them.
+ * @param annotations Annotations retrieved from the viewer.
+ * @param changeSet List of files changed in the pull request.
+ * @returns List of the review comments.
+ */
+async function createReviewComments(annotations, changeSet) {
+    let groupedAnnotations = [];
+    annotations.forEach(annotation => {
+        if (!changeSet.find(c => annotation.fullPath.includes(c)))
+            return;
+        const index = findAnnotationInList(groupedAnnotations, annotation);
+        if (index === -1) {
+            groupedAnnotations.push(annotation);
+        }
+        else {
+            annotation[index].count += annotation.count;
+        }
+    });
+    return groupedAnnotations.map(annotation => {
+        const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
+        return {
+            body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
+            path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
+            line: annotation.line
+        };
+    });
 }
-function findAnnotationInArray(array, annotation) {
-    return array.findIndex(a => {
+/**
+ * Finds an annotation in a list and returns the index.
+ * @param list List to find the annotation in.
+ * @param annotation Annotation to find.
+ * @returns The index of the annotation found or -1
+ */
+function findAnnotationInList(list, annotation) {
+    return list.findIndex(a => {
         return (a.fullPath === annotation.fullPath &&
             a.type === annotation.type &&
             a.line === annotation.line &&
@@ -644,7 +682,7 @@ async function main() {
         if (configuration_1.ticsConfig.showAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
             if (annotations) {
-                const nonPostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations);
+                const nonPostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changeSet);
                 console.log(nonPostedReviewComments);
             }
         }

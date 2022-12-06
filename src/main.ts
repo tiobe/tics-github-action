@@ -43,7 +43,7 @@ async function main() {
     if (ticsConfig.showAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
-        const nonPostedReviewComments = await postReviewComments(review, annotations);
+        const nonPostedReviewComments = await postReviewComments(review, annotations, changeSet);
         console.log(nonPostedReviewComments);
       }
     }
