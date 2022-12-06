@@ -1,6 +1,5 @@
 import { getInput, info } from '@actions/core';
 import { getOctokit } from '@actions/github';
-import { retry } from '@octokit/plugin-retry';
 import { readFileSync } from 'fs';
 import ProxyAgent from 'proxy-agent';
 import { getTiCSWebBaseUrlFromUrl } from '../tics/api_helper';
@@ -54,5 +53,5 @@ export let ticsConfig = {
   logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default'
 };
 
-export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } }, retry);
+export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });
 export const baseUrl = getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
