@@ -94,6 +94,12 @@ function createConditionsTable(conditions: any[]) {
  * @returns List of the review comments.
  */
 export async function createReviewComments(annotations: any[], changedFiles: string[]) {
+  // sort the annotations based on the filename and linenumber.
+  annotations.sort((a, b) => {
+    if (a.fullPath === b.fullPath) return a.line - b.line;
+    return a.fullPath > b.fullPath ? 1 : -1;
+  });
+
   let groupedAnnotations: any[] = [];
   annotations.forEach(annotation => {
     console.log(annotation);
@@ -104,12 +110,6 @@ export async function createReviewComments(annotations: any[], changedFiles: str
     } else {
       annotations[index].count += annotation.count;
     }
-  });
-
-  // sort the annotations based on the filename and linenumber.
-  groupedAnnotations.sort((a, b) => {
-    if (a.fullPath === b.fullPath) return a.line - b.line;
-    return a.fullPath > b.fullPath ? 1 : -1;
   });
 
   return groupedAnnotations.map(annotation => {
