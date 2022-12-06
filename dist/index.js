@@ -157,8 +157,9 @@ async function postReviewComments(review, annotations, changeSet) {
         try {
             await configuration_1.octokit.rest.pulls.createReviewComment(params);
         }
-        catch {
+        catch (error) {
             nonPostedReviewComments.push(comment);
+            logger_1.default.Instance.debug(`Could not post review comment: ${error.message}`);
         }
     }));
     return nonPostedReviewComments;

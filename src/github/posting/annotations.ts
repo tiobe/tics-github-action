@@ -20,8 +20,9 @@ export async function postReviewComments(review: any, annotations: any[], change
       };
       try {
         await octokit.rest.pulls.createReviewComment(params);
-      } catch {
+      } catch (error: any) {
         nonPostedReviewComments.push(comment);
+        Logger.Instance.debug(`Could not post review comment: ${error.message}`);
       }
     })
   );
