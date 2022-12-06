@@ -299,7 +299,7 @@ function createConditionsTable(conditions) {
             return;
         const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
         if (condition.details && condition.details.items.length > 0) {
-            const headers = ['File', condition.details.dataKeys.actualValue.title];
+            const headers = [['File', condition.details.dataKeys.actualValue.title]];
             const cells = condition.details.items
                 .filter((item) => item.itemType === 'file')
                 .map((item) => {

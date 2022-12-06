@@ -73,7 +73,7 @@ function createConditionsTable(conditions: any[]) {
     const conditionStatus = `${generateStatusMarkdown(Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
 
     if (condition.details && condition.details.items.length > 0) {
-      const headers = ['File', condition.details.dataKeys.actualValue.title];
+      const headers = [['File', condition.details.dataKeys.actualValue.title]];
       const cells = condition.details.items
         .filter((item: any) => item.itemType === 'file')
         .map((item: any) => {
