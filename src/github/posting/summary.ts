@@ -104,11 +104,11 @@ export async function createReviewComments(annotations: any[], changedFiles: str
   annotations.forEach(annotation => {
     if (!changedFiles.find(c => annotation.fullPath.includes(c))) return;
     const index = findAnnotationInList(groupedAnnotations, annotation);
-    console.log(index);
     if (index === -1) {
       groupedAnnotations.push(annotation);
     } else {
       annotations[index].count += annotation.count;
+      console.log(annotations[index].count);
     }
   });
 
