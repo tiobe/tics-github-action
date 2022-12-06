@@ -515,7 +515,7 @@ exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
  * @returns Table in markdown.
  */
 function generateTableMarkdown(headers, cells) {
-    return `\n${(0, markdown_table_1.markdownTable)([...headers, ...cells])}\n`;
+    return `\n\n${(0, markdown_table_1.markdownTable)([...headers, ...cells])}\n\n\n`;
 }
 exports.generateTableMarkdown = generateTableMarkdown;
 
