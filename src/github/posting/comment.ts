@@ -10,7 +10,6 @@ import { createErrorSummary } from './summary';
 export async function postErrorComment(analysis: Analysis) {
   try {
     const parameters = {
-      accept: 'application/vnd.github.v3+json',
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       issue_number: githubConfig.pullRequestNumber,

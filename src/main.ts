@@ -7,6 +7,7 @@ import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
+import { postReviewComments } from './github/posting/annotations';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -17,7 +18,7 @@ main();
 async function main() {
   try {
     const changeSet = await getChangedFiles();
-    if (changeSet.length <= 0) Logger.Instance.exit('No changed files found to analyze.');
+    if (!changeSet || changeSet.length <= 0) return Logger.Instance.exit('No changed files found to analyze.');
 
     const changeSetFilePath = changeSetToFile(changeSet);
     const analysis = await runTiCSAnalyzer(changeSetFilePath);
@@ -37,10 +38,14 @@ async function main() {
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
 
-    postReview(analysis, qualityGate);
+    const review = postReview(analysis, qualityGate);
 
     if (ticsConfig.showAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+      if (annotations) {
+        const nonPostedReviewComments = await postReviewComments(review, annotations);
+        console.log(nonPostedReviewComments);
+      }
     }
 
     if (!qualityGate.passed) {

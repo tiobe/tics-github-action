@@ -12,7 +12,7 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
   body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
   body += analysis.filesAnalyzed ? createFilesSummary(analysis.filesAnalyzed) : '';
 
-  const parameters: any = {
+  const params: any = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
@@ -22,9 +22,9 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
 
   try {
     Logger.Instance.header('Posting a review for this pull request.');
-    const response = await octokit.rest.pulls.createReview(parameters);
+    const response = await octokit.rest.pulls.createReview(params);
     Logger.Instance.info('Posted review for this pull request.');
-    return response.data;
+    return { data: response.data, body: body };
   } catch (error: any) {
     Logger.Instance.error(`Posting the review failed: ${error.message}`);
   }

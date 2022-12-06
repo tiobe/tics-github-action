@@ -21,39 +21,22 @@ const configuration_1 = __nccwpck_require__(6868);
  */
 async function getChangedFiles() {
     logger_1.default.Instance.header('Retrieving changed files of this pull request.');
-    let changedFiles = [];
-    let noMoreFiles = false;
     try {
-        for (let i = 1; i <= 30; i++) {
-            const params = {
-                accept: 'application/vnd.github.v3+json',
-                branch: configuration_1.githubConfig.branchname,
-                owner: configuration_1.githubConfig.owner,
-                repo: configuration_1.githubConfig.reponame,
-                pull_number: configuration_1.githubConfig.pullRequestNumber,
-                per_page: 100,
-                page: i
-            };
-            await configuration_1.octokit.rest.pulls.listFiles(params).then(response => {
-                if (response.data.length > 0) {
-                    response.data.forEach(item => {
-                        changedFiles.push(item.filename);
-                        logger_1.default.Instance.info(item.filename);
-                    });
-                }
-                else {
-                    noMoreFiles = true;
-                }
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            pull_number: configuration_1.githubConfig.pullRequestNumber
+        };
+        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
+            return response.data.map(data => {
+                logger_1.default.Instance.info(data.filename);
+                return data.filename;
             });
-            if (noMoreFiles) {
-                break;
-            }
-        }
+        });
     }
     catch (error) {
         logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
     }
-    return changedFiles;
 }
 exports.getChangedFiles = getChangedFiles;
 /**
@@ -143,6 +126,79 @@ exports.baseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(exports.ticsConfig.
 
 /***/ }),
 
+/***/ 9757:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.postReviewComments = void 0;
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const configuration_1 = __nccwpck_require__(6868);
+async function postReviewComments(review, comments) {
+    const postedReviewComments = await getPostedReviewComments();
+    if (postedReviewComments)
+        deletePreviousAnnotations(postedReviewComments);
+    let nonPostedReviewComments = [];
+    await Promise.all(comments.map(async (comment) => {
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            pull_number: configuration_1.githubConfig.pullRequestNumber,
+            commit_id: review.commit_id,
+            body: comment.body,
+            line: comment.line,
+            path: comment.path
+        };
+        try {
+            await configuration_1.octokit.rest.pulls.createReviewComment(params);
+        }
+        catch {
+            nonPostedReviewComments.push(comment);
+        }
+    }));
+    return nonPostedReviewComments;
+}
+exports.postReviewComments = postReviewComments;
+async function getPostedReviewComments() {
+    try {
+        logger_1.default.Instance.info('Retrieving posted review comments.');
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            pull_number: configuration_1.githubConfig.pullRequestNumber
+        };
+        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Could not retrieve the review comments: ${error.message}`);
+    }
+}
+async function deletePreviousAnnotations(postedReviewComments) {
+    logger_1.default.Instance.info('Deleting review comments of previous runs.');
+    postedReviewComments.map(async (reviewComment) => {
+        if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
+            try {
+                const params = {
+                    owner: configuration_1.githubConfig.owner,
+                    repo: configuration_1.githubConfig.reponame,
+                    comment_id: reviewComment.id
+                };
+                await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
+            }
+            catch (error) {
+                logger_1.default.Instance.error(`Could not delete review comment: ${error.message}`);
+            }
+        }
+    });
+}
+
+
+/***/ }),
+
 /***/ 5436:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -163,7 +219,6 @@ const summary_1 = __nccwpck_require__(6649);
 async function postErrorComment(analysis) {
     try {
         const parameters = {
-            accept: 'application/vnd.github.v3+json',
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             issue_number: configuration_1.githubConfig.pullRequestNumber,
@@ -203,7 +258,7 @@ async function postReview(analysis, qualityGate) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
     body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
     body += analysis.filesAnalyzed ? (0, summary_1.createFilesSummary)(analysis.filesAnalyzed) : '';
-    const parameters = {
+    const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
@@ -212,9 +267,9 @@ async function postReview(analysis, qualityGate) {
     };
     try {
         logger_1.default.Instance.header('Posting a review for this pull request.');
-        const response = await configuration_1.octokit.rest.pulls.createReview(parameters);
+        const response = await configuration_1.octokit.rest.pulls.createReview(params);
         logger_1.default.Instance.info('Posted review for this pull request.');
-        return response.data;
+        return { data: response.data, body: body };
     }
     catch (error) {
         logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
@@ -543,6 +598,7 @@ const analyzer_1 = __nccwpck_require__(9099);
 const api_helper_1 = __nccwpck_require__(3823);
 const fetcher_1 = __nccwpck_require__(1559);
 const review_1 = __nccwpck_require__(8973);
+const annotations_1 = __nccwpck_require__(9757);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -551,8 +607,8 @@ main();
 async function main() {
     try {
         const changeSet = await (0, pulls_1.getChangedFiles)();
-        if (changeSet.length <= 0)
-            logger_1.default.Instance.exit('No changed files found to analyze.');
+        if (!changeSet || changeSet.length <= 0)
+            return logger_1.default.Instance.exit('No changed files found to analyze.');
         const changeSetFilePath = (0, pulls_1.changeSetToFile)(changeSet);
         const analysis = await (0, analyzer_1.runTiCSAnalyzer)(changeSetFilePath);
         if (analysis.statusCode === -1) {
@@ -568,9 +624,13 @@ async function main() {
             return;
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        (0, review_1.postReview)(analysis, qualityGate);
+        const review = (0, review_1.postReview)(analysis, qualityGate);
         if (configuration_1.ticsConfig.showAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+            if (annotations) {
+                const nonPostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations);
+                console.log(nonPostedReviewComments);
+            }
         }
         if (!qualityGate.passed) {
             logger_1.default.Instance.setFailed(qualityGate.message);
