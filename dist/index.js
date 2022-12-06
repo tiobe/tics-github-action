@@ -425,7 +425,9 @@ function createConditionsTable(conditions) {
 async function createReviewComments(annotations, changedFiles) {
     let groupedAnnotations = [];
     annotations.forEach(annotation => {
-        // if (!changedFiles.find(c => annotation.fullPath.includes(c))) return;
+        console.log(annotation);
+        if (!changedFiles.find(c => annotation.fullPath.includes(c)))
+            return;
         const index = findAnnotationInList(groupedAnnotations, annotation);
         if (index === -1) {
             groupedAnnotations.push(annotation);
