@@ -86,6 +86,7 @@ async function createReviewComments(annotations: any[], changeSet: string[]) {
     }
   });
 
+  console.log(groupedAnnotations);
   return groupedAnnotations.map(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     return {

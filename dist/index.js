@@ -223,6 +223,7 @@ async function createReviewComments(annotations, changeSet) {
             annotation[index].count += annotation.count;
         }
     });
+    console.log(groupedAnnotations);
     return groupedAnnotations.map(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         return {
@@ -272,14 +273,14 @@ const summary_1 = __nccwpck_require__(6649);
  */
 async function postErrorComment(analysis) {
     try {
-        const parameters = {
+        const params = {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             issue_number: configuration_1.githubConfig.pullRequestNumber,
             body: (0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList)
         };
         logger_1.default.Instance.header('Posting error summary in pull request.');
-        await configuration_1.octokit.rest.issues.createComment(parameters);
+        await configuration_1.octokit.rest.issues.createComment(params);
         logger_1.default.Instance.info('Posted the error summary in pull request.');
     }
     catch (error) {
