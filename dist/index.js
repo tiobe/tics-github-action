@@ -286,7 +286,6 @@ async function postReview(analysis, qualityGate) {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: 'COMMENT',
         body: body
     };
     try {
@@ -312,11 +311,12 @@ async function updateReviewWithUnpostedReviewComments(review, unpostedReviewComm
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
         review_id: review.data.id,
+        event: 'COMMENT',
         body: body
     };
     try {
         logger_1.default.Instance.header('Updating review to include unposted review comments.');
-        await configuration_1.octokit.rest.pulls.updateReview(params);
+        await configuration_1.octokit.rest.pulls.submitReview(params);
         logger_1.default.Instance.info('Updated review to include unposted review comments.');
     }
     catch (error) {
@@ -909,7 +909,6 @@ function getTiCSCommand(fileListPath) {
     execString += configuration_1.ticsConfig.clientToken ? `-cdtoken ${configuration_1.ticsConfig.clientToken} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir ${configuration_1.ticsConfig.tmpDir} ` : '';
     execString += configuration_1.ticsConfig.extendTics ? configuration_1.ticsConfig.extendTics : '';
-    execString += configuration_1.ticsConfig.logLevel === 'debug' ? ' -log 9' : '';
     return execString;
 }
 

@@ -16,7 +16,6 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
-    event: 'COMMENT', // qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body
   };
 
@@ -37,16 +36,17 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
  */
 export async function updateReviewWithUnpostedReviewComments(review: any, unpostedReviewComments: any[]) {
   let body = review.body + createUnpostedReviewCommentsSummary(unpostedReviewComments);
-  const params = {
+  const params: any = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
     review_id: review.data.id,
+    event: 'COMMENT', // qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body
   };
   try {
     Logger.Instance.header('Updating review to include unposted review comments.');
-    await octokit.rest.pulls.updateReview(params);
+    await octokit.rest.pulls.submitReview(params);
     Logger.Instance.info('Updated review to include unposted review comments.');
   } catch (error: any) {
     Logger.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
