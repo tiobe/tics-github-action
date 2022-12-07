@@ -415,12 +415,12 @@ exports.createReviewComments = createReviewComments;
 function fetchDiffLines(file) {
     const regex = /\+(\d+),(\d+)+/g;
     let diffLines = [];
-    let match = regex.exec(file);
+    let match = regex.exec(file.patch);
     while (match !== null) {
         const startLine = parseInt(match[1]);
         const amountOfLines = parseInt(match[2]);
         diffLines = diffLines.concat((0, underscore_1.range)(startLine, startLine + amountOfLines));
-        match = regex.exec(file);
+        match = regex.exec(file.patch);
     }
     return diffLines;
 }
