@@ -1,5 +1,5 @@
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../helper/markdown';
-import { QualityGate } from '../../helper/interfaces';
+import { QualityGate, ReviewComment, ReviewComments } from '../../helper/interfaces';
 import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
 import { range } from 'underscore';
@@ -95,7 +95,7 @@ function createConditionsTable(conditions: any[]) {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export async function createReviewComments(annotations: any[], changedFiles: any[]) {
+export async function createReviewComments(annotations: any[], changedFiles: any[]): Promise<ReviewComments> {
   Logger.Instance.debug('Creating review comments from annotations.');
   // sort the annotations based on the filename and linenumber.
   annotations.sort((a, b) => {
@@ -116,15 +116,17 @@ export async function createReviewComments(annotations: any[], changedFiles: any
     }
   });
 
-  let unpostable: any[] = [];
-  const postable = groupedAnnotations.map(annotation => {
+  let unpostable: ReviewComment[] = [];
+  let postable: ReviewComment[] = [];
+
+  groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.find((d: number) => d === annotation.line)) {
-      return {
+      postable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
         line: annotation.line
-      };
+      });
     } else {
       unpostable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,

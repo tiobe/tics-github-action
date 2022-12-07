@@ -13,3 +13,14 @@ export interface QualityGate {
   gates: any[];
   annotationsApiV1Links: any[];
 }
+
+export interface ReviewComment {
+  body: string;
+  path: any;
+  line: any;
+}
+
+export interface ReviewComments {
+  postable: ReviewComment[];
+  unpostable: ReviewComment[];
+}

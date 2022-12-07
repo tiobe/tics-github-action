@@ -248,7 +248,8 @@ async function postReview(analysis, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
     body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
     body += analysis.filesAnalyzed ? (0, summary_1.createFilesSummary)(analysis.filesAnalyzed) : '';
-    body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostedReviewCommentsSummary)(reviewComments.unpostable) : '';
+    if (reviewComments)
+        body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostedReviewCommentsSummary)(reviewComments.unpostable) : '';
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
@@ -396,14 +397,15 @@ async function createReviewComments(annotations, changedFiles) {
         }
     });
     let unpostable = [];
-    const postable = groupedAnnotations.map(annotation => {
+    let postable = [];
+    groupedAnnotations.forEach(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         if (annotation.diffLines.find((d) => d === annotation.line)) {
-            return {
+            postable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
                 path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
                 line: annotation.line
-            };
+            });
         }
         else {
             unpostable.push({
