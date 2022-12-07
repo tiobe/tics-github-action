@@ -20,19 +20,21 @@ const configuration_1 = __nccwpck_require__(6868);
  * @returns List of changed files within the GitHub Pull request.
  */
 async function getChangedFiles() {
-    logger_1.default.Instance.header('Retrieving changed files of this pull request.');
+    logger_1.default.Instance.header('Retrieving changed files.');
     try {
         const params = {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             pull_number: configuration_1.githubConfig.pullRequestNumber
         };
-        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
+        const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data.map(data => {
-                logger_1.default.Instance.info(data.filename);
+                logger_1.default.Instance.debug(data.filename);
                 return data.filename;
             });
         });
+        logger_1.default.Instance.info('Retrieved changed files.');
+        return response;
     }
     catch (error) {
         logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
@@ -69,7 +71,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.baseUrl = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const fs_1 = __nccwpck_require__(5747);
@@ -106,22 +108,23 @@ function getHostnameVerification() {
 }
 exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
-    branchDir: (0, core_1.getInput)('branchDir'),
     branchName: (0, core_1.getInput)('branchName'),
-    tmpDir: (0, core_1.getInput)('tmpDir'),
+    branchDir: (0, core_1.getInput)('branchDir'),
     calc: (0, core_1.getInput)('calc'),
-    viewerUrl: (0, core_1.getInput)('ticsViewerUrl') ? (0, core_1.getInput)('ticsViewerUrl') : '',
     clientToken: (0, core_1.getInput)('clientToken'),
-    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
-    installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
-    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration'),
     extendTics: (0, core_1.getInput)('extendTics'),
-    showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
     hostnameVerification: getHostnameVerification(),
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default'
+    installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
+    showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
+    tmpDir: (0, core_1.getInput)('tmpDir'),
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 exports.baseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
+exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
 
 /***/ }),
@@ -406,7 +409,7 @@ function createConditionsTable(conditions) {
             const cells = condition.details.items
                 .filter((item) => item.itemType === 'file')
                 .map((item) => {
-                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.baseUrl + '/' + item.link), item.data.actualValue.formattedValue];
+                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
             });
             conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
         }
@@ -873,9 +876,9 @@ function findInStdOutOrErr(data, fileListPath) {
         if (!filesAnalyzed.find(f => f === file))
             filesAnalyzed.push(file);
     }
-    const findExplorerUrl = data.match(/http.*Explorer.*/g);
+    const findExplorerUrl = data.match(/\/Explorer.*/g);
     if (!explorerUrl && findExplorerUrl)
-        explorerUrl = findExplorerUrl.slice(-1).pop();
+        explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
 }
 /**
  * Retrieves the the TiCS install url from the ticsConfiguration.
@@ -952,7 +955,7 @@ async function httpRequest(url) {
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
             break;
         case 401:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${configuration_1.baseUrl}/Administration.html#page=authToken`);
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
             break;
         case 404:
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);

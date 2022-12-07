@@ -3,7 +3,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
-import { baseUrl, ticsConfig } from '../github/configuration';
+import { baseUrl, ticsConfig, viewerUrl } from '../github/configuration';
 import { Analysis } from '../helper/interfaces';
 
 /**
@@ -37,7 +37,7 @@ export async function httpRequest(url: string): Promise<any> {
       break;
     case 401:
       Logger.Instance.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${baseUrl}/Administration.html#page=authToken`
+        `HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
       break;
     case 404:

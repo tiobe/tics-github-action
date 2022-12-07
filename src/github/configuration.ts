@@ -38,20 +38,21 @@ function getHostnameVerification() {
 
 export let ticsConfig = {
   projectName: getInput('projectName', { required: true }),
-  branchDir: getInput('branchDir'),
   branchName: getInput('branchName'),
-  tmpDir: getInput('tmpDir'),
+  branchDir: getInput('branchDir'),
   calc: getInput('calc'),
-  viewerUrl: getInput('ticsViewerUrl') ? getInput('ticsViewerUrl') : '',
   clientToken: getInput('clientToken'),
-  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
-  installTics: getInput('installTics') === 'true' ? true : false,
-  ticsConfiguration: getInput('ticsConfiguration'),
   extendTics: getInput('extendTics'),
-  showAnnotations: getInput('showAnnotations') ? getInput('showAnnotations') : true,
   hostnameVerification: getHostnameVerification(),
-  logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default'
+  installTics: getInput('installTics') === 'true' ? true : false,
+  logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default',
+  showAnnotations: getInput('showAnnotations') ? getInput('showAnnotations') : true,
+  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
+  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
+  tmpDir: getInput('tmpDir'),
+  viewerUrl: getInput('viewerUrl')
 };
 
 export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });
 export const baseUrl = getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
+export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

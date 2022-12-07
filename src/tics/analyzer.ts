@@ -1,5 +1,5 @@
 import { exec } from '@actions/exec';
-import { baseUrl, githubConfig, ticsConfig } from '../github/configuration';
+import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../github/configuration';
 import Logger from '../helper/logger';
 import { getInstallTiCSApiUrl, httpRequest } from './api_helper';
 
@@ -92,8 +92,8 @@ function findInStdOutOrErr(data: string, fileListPath: string) {
     if (!filesAnalyzed.find(f => f === file)) filesAnalyzed.push(file);
   }
 
-  const findExplorerUrl = data.match(/http.*Explorer.*/g);
-  if (!explorerUrl && findExplorerUrl) explorerUrl = findExplorerUrl.slice(-1).pop();
+  const findExplorerUrl = data.match(/\/Explorer.*/g);
+  if (!explorerUrl && findExplorerUrl) explorerUrl = viewerUrl + findExplorerUrl.slice(-1).pop();
 }
 
 /**

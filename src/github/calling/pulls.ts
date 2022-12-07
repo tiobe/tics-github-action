@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
-import logger from '../../helper/logger';
+import Logger from '../../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 
 /**
@@ -8,21 +8,23 @@ import { githubConfig, octokit } from '../configuration';
  * @returns List of changed files within the GitHub Pull request.
  */
 export async function getChangedFiles() {
-  logger.Instance.header('Retrieving changed files of this pull request.');
+  Logger.Instance.header('Retrieving changed files.');
   try {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber
     };
-    return await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
+    const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data.map(data => {
-        logger.Instance.info(data.filename);
+        Logger.Instance.debug(data.filename);
         return data.filename;
       });
     });
+    Logger.Instance.info('Retrieved changed files.');
+    return response;
   } catch (error: any) {
-    logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
+    Logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
   }
 }
 
@@ -32,7 +34,7 @@ export async function getChangedFiles() {
  * @returns Location of the written file.
  */
 export function changedFilesToFile(changedFiles: string[]): string {
-  logger.Instance.header('Writing changedFiles to file');
+  Logger.Instance.header('Writing changedFiles to file');
 
   let contents = '';
   changedFiles.forEach(item => {
@@ -42,7 +44,7 @@ export function changedFilesToFile(changedFiles: string[]): string {
   const fileListPath = resolve('changedFiles.txt');
   writeFileSync(fileListPath, contents);
 
-  logger.Instance.info(`Content written to: ${fileListPath}`);
+  Logger.Instance.info(`Content written to: ${fileListPath}`);
 
   return fileListPath;
 }

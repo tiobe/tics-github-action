@@ -75,11 +75,14 @@ The following inputs are available for this action:
 | `branchDir`           | Location of the files to analyze.                                                                                                                                                      | false    |
 | `calc`                | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.                    | false    |
 | `clientToken`         | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                         | false    |
+| `extendedTics`        | Options to extend TiCS, see the documentation.                                                                                                                                         | false    |
 | `hostnameVerfication` | Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).             | false    |
 | `installTics`         | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job. | false    |
 | `logLevel`            | Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`                                                                        | false    |
 | `showAnnotation`      | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                           | false    |
+| `ticsAuthToken`       | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                      | false    |
 | `tmpDir`              | Location to store debug information.                                                                                                                                                   | false    |
+| `viewerUrl`           | The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)                                                           | false    |
 
 # Developer notes
 

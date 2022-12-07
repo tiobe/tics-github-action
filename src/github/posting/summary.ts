@@ -1,6 +1,6 @@
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../helper/markdown';
 import { QualityGate } from '../../helper/interfaces';
-import { baseUrl, ticsConfig } from '../configuration';
+import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
 
 /**
@@ -77,7 +77,7 @@ function createConditionsTable(conditions: any[]) {
       const cells = condition.details.items
         .filter((item: any) => item.itemType === 'file')
         .map((item: any) => {
-          return [generateLinkMarkdown(item.name, baseUrl + '/' + item.link), item.data.actualValue.formattedValue];
+          return [generateLinkMarkdown(item.name, viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
         });
       conditionsTable = generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
     } else {
