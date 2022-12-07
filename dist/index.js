@@ -255,7 +255,7 @@ async function postReview(analysis, qualityGate, reviewComments) {
         pull_number: configuration_1.githubConfig.pullRequestNumber,
         event: qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES,
         body: body,
-        comments: reviewComments.postable
+        comments: reviewComments ? reviewComments.postable : undefined
     };
     try {
         logger_1.default.Instance.header('Posting a review for this pull request.');
@@ -397,7 +397,6 @@ async function createReviewComments(annotations, changedFiles) {
     });
     let unpostable = [];
     const postable = groupedAnnotations.map(annotation => {
-        console.log(annotation);
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         if (annotation.diffLines.find((d) => d === annotation.line)) {
             return {
@@ -418,6 +417,11 @@ async function createReviewComments(annotations, changedFiles) {
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
+/**
+ * Finds all lines that are shown in GitHub diff chunk.
+ * @param file file to search the lines changed chunk for.
+ * @returns List of all the lines in the diff chunk.
+ */
 function fetchDiffLines(file) {
     const regex = /\+(\d+),(\d+)+/g;
     let diffLines = [];

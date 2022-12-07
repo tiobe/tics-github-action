@@ -118,7 +118,6 @@ export async function createReviewComments(annotations: any[], changedFiles: any
 
   let unpostable: any[] = [];
   const postable = groupedAnnotations.map(annotation => {
-    console.log(annotation);
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.find((d: number) => d === annotation.line)) {
       return {
@@ -138,6 +137,11 @@ export async function createReviewComments(annotations: any[], changedFiles: any
   return { postable: postable, unpostable: unpostable };
 }
 
+/**
+ * Finds all lines that are shown in GitHub diff chunk.
+ * @param file file to search the lines changed chunk for.
+ * @returns List of all the lines in the diff chunk.
+ */
 function fetchDiffLines(file: any) {
   const regex = /\+(\d+),(\d+)+/g;
   let diffLines: number[] = [];

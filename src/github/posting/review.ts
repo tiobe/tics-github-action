@@ -20,7 +20,7 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate, r
     pull_number: githubConfig.pullRequestNumber,
     event: qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body,
-    comments: reviewComments.postable
+    comments: reviewComments ? reviewComments.postable : undefined
   };
 
   try {
