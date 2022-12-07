@@ -113,6 +113,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       groupedAnnotations[index].count += annotation.count;
     }
   });
+  console.log(groupedAnnotations);
 
   let unpostable: any[] = [];
   const postable = groupedAnnotations.map(annotation => {
