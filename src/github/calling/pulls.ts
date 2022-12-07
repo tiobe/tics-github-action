@@ -11,7 +11,6 @@ export async function getChangedFiles() {
   Logger.Instance.header('Retrieving changed files.');
   try {
     const params = {
-      accept: 'application/vnd.github.v3.diff',
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber
