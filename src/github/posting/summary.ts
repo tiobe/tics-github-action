@@ -3,6 +3,7 @@ import { QualityGate } from '../../helper/interfaces';
 import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
 import { range } from 'underscore';
+import Logger from '../../helper/logger';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -95,6 +96,7 @@ function createConditionsTable(conditions: any[]) {
  * @returns List of the review comments.
  */
 export async function createReviewComments(annotations: any[], changedFiles: any[]) {
+  Logger.Instance.debug('Creating review comments from annotations.');
   // sort the annotations based on the filename and linenumber.
   annotations.sort((a, b) => {
     if (a.fullPath === b.fullPath) return a.line - b.line;
@@ -113,7 +115,6 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       groupedAnnotations[index].count += annotation.count;
     }
   });
-  console.log(groupedAnnotations);
 
   let unpostable: any[] = [];
   const postable = groupedAnnotations.map(annotation => {
@@ -132,6 +133,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       });
     }
   });
+  Logger.Instance.debug('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }
 

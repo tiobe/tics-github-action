@@ -272,16 +272,20 @@ exports.postReview = postReview;
 /***/ }),
 
 /***/ 6649:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createUnpostedReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(6868);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(3571);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
  * @param errorList list containing all the errors found in the TiCS run.
@@ -370,6 +374,7 @@ function createConditionsTable(conditions) {
  * @returns List of the review comments.
  */
 async function createReviewComments(annotations, changedFiles) {
+    logger_1.default.Instance.debug('Creating review comments from annotations.');
     // sort the annotations based on the filename and linenumber.
     annotations.sort((a, b) => {
         if (a.fullPath === b.fullPath)
@@ -390,7 +395,6 @@ async function createReviewComments(annotations, changedFiles) {
             groupedAnnotations[index].count += annotation.count;
         }
     });
-    console.log(groupedAnnotations);
     let unpostable = [];
     const postable = groupedAnnotations.map(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
@@ -409,6 +413,7 @@ async function createReviewComments(annotations, changedFiles) {
             });
         }
     });
+    logger_1.default.Instance.debug('Created review comments from annotations.');
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
