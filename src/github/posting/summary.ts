@@ -2,6 +2,7 @@ import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMar
 import { QualityGate } from '../../helper/interfaces';
 import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
+import { range } from 'underscore';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -102,23 +103,50 @@ export async function createReviewComments(annotations: any[], changedFiles: any
 
   let groupedAnnotations: any[] = [];
   annotations.forEach(annotation => {
-    if (!changedFiles.find(c => annotation.fullPath.includes(c.filename))) return;
+    const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
+    if (!file) return;
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
+      annotation.diffLines = fetchDiffLines(file);
       groupedAnnotations.push(annotation);
     } else {
       groupedAnnotations[index].count += annotation.count;
     }
   });
 
-  return groupedAnnotations.map(annotation => {
+  let unpostable: any[] = [];
+  const postable = groupedAnnotations.map(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-    return {
-      body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-      path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
-      line: annotation.line
-    };
+    if (annotation.diffLines.find(annotation.line)) {
+      return {
+        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
+        path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
+        line: annotation.line
+      };
+    } else {
+      unpostable.push({
+        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
+        path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
+        line: annotation.line
+      });
+    }
   });
+  return { postable: postable, unpostable: unpostable };
+}
+
+function fetchDiffLines(file: any) {
+  const regex = /\+(\d+),(\d+)+/g;
+  let diffLines: number[] = [];
+
+  let match = regex.exec(file);
+  while (match !== null) {
+    const startLine = parseInt(match[1]);
+    const amountOfLines = parseInt(match[2]);
+    diffLines = diffLines.concat(range(startLine, startLine + amountOfLines));
+    match = regex.exec(file);
+  }
+
+  return diffLines;
 }
 
 /**

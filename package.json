@@ -33,10 +33,12 @@
     "@actions/github": "^5.1.1",
     "@actions/http-client": "^2.0.1",
     "markdown-table": "^3.0.3",
-    "proxy-agent": "^5.0.0"
+    "proxy-agent": "^5.0.0",
+    "underscore": "^1.13.6"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "@types/underscore": "^1.11.4",
     "@typescript-eslint/parser": "^5.45.0",
     "@vercel/ncc": "^0.31.1",
     "eslint": "^8.27.0",

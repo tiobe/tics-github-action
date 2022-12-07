@@ -8,48 +8,26 @@ import { Events } from '../../helper/enums';
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
  */
-export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
+export async function postReview(analysis: Analysis, qualityGate: QualityGate, reviewComments: any) {
   let body = createQualityGateSummary(qualityGate);
   body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
   body += analysis.filesAnalyzed ? createFilesSummary(analysis.filesAnalyzed) : '';
+  body += reviewComments.unpostable.length > 0 ? createUnpostedReviewCommentsSummary(reviewComments.unpostable) : '';
 
   const params: any = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
     event: qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
-    body: body
+    body: body,
+    comments: reviewComments.postable
   };
 
   try {
     Logger.Instance.header('Posting a review for this pull request.');
-    const response = await octokit.rest.pulls.createReview(params);
+    await octokit.rest.pulls.createReview(params);
     Logger.Instance.info('Posted review for this pull request.');
-    return { data: response.data, body: body };
   } catch (error: any) {
     Logger.Instance.error(`Posting the review failed: ${error.message}`);
-  }
-}
-
-/**
- * Updates the review to include review comments that could not be posted.
- * @param review Response from posting the review.
- * @param unpostedReviewComments Review comments that could not be posted.
- */
-export async function updateReviewWithUnpostedReviewComments(review: any, unpostedReviewComments: any[]) {
-  let body = review.body + createUnpostedReviewCommentsSummary(unpostedReviewComments);
-  const params: any = {
-    owner: githubConfig.owner,
-    repo: githubConfig.reponame,
-    pull_number: githubConfig.pullRequestNumber,
-    review_id: review.data.id,
-    body: body
-  };
-  try {
-    Logger.Instance.header('Updating review to include unposted review comments.');
-    await octokit.rest.pulls.updateReview(params);
-    Logger.Instance.info('Updated review to include unposted review comments.');
-  } catch (error: any) {
-    Logger.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
   }
 }

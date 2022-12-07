@@ -6,8 +6,9 @@ import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnnotations, getQualityGate } from './tics/fetcher';
-import { postReview, updateReviewWithUnpostedReviewComments } from './github/posting/review';
-import { postReviewComments } from './github/posting/annotations';
+import { postReview } from './github/posting/review';
+import { createReviewComments } from './github/posting/summary';
+import { getPostedReviewComments as getPreviousReviewComments, deletePreviousReviewComments } from './github/posting/annotations';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -37,17 +38,18 @@ async function main() {
     }
 
     const qualityGate = await getQualityGate(analysis.explorerUrl);
-
-    const review = await postReview(analysis, qualityGate);
+    let reviewComments;
 
     if (ticsConfig.postAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
-        const unpostedReviewComments = await postReviewComments(review, annotations, changedFiles);
-        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
+        reviewComments = await createReviewComments(annotations, changedFiles);
       }
+      const previousReviewComments = await getPreviousReviewComments();
+      if (previousReviewComments) await deletePreviousReviewComments(previousReviewComments);
     }
-    console.log(changedFiles.slice(-10));
+
+    await postReview(analysis, qualityGate, reviewComments);
 
     if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
     cliSummary(analysis);
