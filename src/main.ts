@@ -47,6 +47,7 @@ async function main() {
         // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
       }
     }
+    console.log(changedFiles);
 
     if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
     cliSummary(analysis);

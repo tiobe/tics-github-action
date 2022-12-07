@@ -9,7 +9,7 @@ import { createReviewComments } from './summary';
  * @param changedFiles Changed files for this pull request.
  * @returns The issues that could not be posted.
  */
-export async function postReviewComments(review: any, annotations: any[], changedFiles: string[]) {
+export async function postReviewComments(review: any, annotations: any[], changedFiles: any[]) {
   const postedReviewComments = await getPostedReviewComments();
   if (postedReviewComments) deletePreviousReviewComments(postedReviewComments);
 

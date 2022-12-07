@@ -18,7 +18,7 @@ export async function getChangedFiles() {
     const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data.map(data => {
         Logger.Instance.debug(data.filename);
-        return data.filename;
+        return data;
       });
     });
     Logger.Instance.info('Retrieved changed files.');
@@ -33,12 +33,12 @@ export async function getChangedFiles() {
  * @param changedFiles List of changed files.
  * @returns Location of the written file.
  */
-export function changedFilesToFile(changedFiles: string[]): string {
+export function changedFilesToFile(changedFiles: any[]): string {
   Logger.Instance.header('Writing changedFiles to file');
 
   let contents = '';
   changedFiles.forEach(item => {
-    contents += item + '\n';
+    contents += item.filename + '\n';
   });
 
   const fileListPath = resolve('changedFiles.txt');

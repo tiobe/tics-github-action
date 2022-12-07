@@ -30,7 +30,7 @@ async function getChangedFiles() {
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data.map(data => {
                 logger_1.default.Instance.debug(data.filename);
-                return data.filename;
+                return data;
             });
         });
         logger_1.default.Instance.info('Retrieved changed files.');
@@ -50,7 +50,7 @@ function changedFilesToFile(changedFiles) {
     logger_1.default.Instance.header('Writing changedFiles to file');
     let contents = '';
     changedFiles.forEach(item => {
-        contents += item + '\n';
+        contents += item.filename + '\n';
     });
     const fileListPath = (0, path_1.resolve)('changedFiles.txt');
     (0, fs_1.writeFileSync)(fileListPath, contents);
@@ -435,7 +435,7 @@ async function createReviewComments(annotations, changedFiles) {
     });
     let groupedAnnotations = [];
     annotations.forEach(annotation => {
-        if (!changedFiles.find(c => annotation.fullPath.includes(c)))
+        if (!changedFiles.find(c => annotation.fullPath.includes(c.filename)))
             return;
         const index = findAnnotationInList(groupedAnnotations, annotation);
         if (index === -1) {
@@ -761,6 +761,7 @@ async function main() {
                 // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
             }
         }
+        console.log(changedFiles);
         if (!qualityGate.passed)
             logger_1.default.Instance.setFailed(qualityGate.message);
         (0, api_helper_1.cliSummary)(analysis);

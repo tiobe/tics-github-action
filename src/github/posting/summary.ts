@@ -93,7 +93,7 @@ function createConditionsTable(conditions: any[]) {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export async function createReviewComments(annotations: any[], changedFiles: string[]) {
+export async function createReviewComments(annotations: any[], changedFiles: any[]) {
   // sort the annotations based on the filename and linenumber.
   annotations.sort((a, b) => {
     if (a.fullPath === b.fullPath) return a.line - b.line;
@@ -102,7 +102,7 @@ export async function createReviewComments(annotations: any[], changedFiles: str
 
   let groupedAnnotations: any[] = [];
   annotations.forEach(annotation => {
-    if (!changedFiles.find(c => annotation.fullPath.includes(c))) return;
+    if (!changedFiles.find(c => annotation.fullPath.includes(c.filename))) return;
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
       groupedAnnotations.push(annotation);
