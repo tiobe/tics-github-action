@@ -171,7 +171,7 @@ async function postReviewComments(review, annotations, changedFiles) {
         }
         catch (error) {
             unpostedReviewComments.push(comment);
-            logger_1.default.Instance.debug(`Could not post review comment: ${error.message}`);
+            logger_1.default.Instance.error(`Could not post review comment: ${error.message}`);
         }
     }));
     logger_1.default.Instance.info('Posted review comments.');
@@ -274,6 +274,7 @@ exports.updateReviewWithUnpostedReviewComments = exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 const summary_1 = __nccwpck_require__(6649);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
@@ -286,6 +287,7 @@ async function postReview(analysis, qualityGate) {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
+        event: qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES,
         body: body
     };
     try {
@@ -311,12 +313,11 @@ async function updateReviewWithUnpostedReviewComments(review, unpostedReviewComm
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
         review_id: review.data.id,
-        event: 'COMMENT',
         body: body
     };
     try {
         logger_1.default.Instance.header('Updating review to include unposted review comments.');
-        await configuration_1.octokit.rest.pulls.submitReview(params);
+        await configuration_1.octokit.rest.pulls.updateReview(params);
         logger_1.default.Instance.info('Updated review to include unposted review comments.');
     }
     catch (error) {
@@ -503,7 +504,7 @@ exports.createUnpostedReviewCommentsSummary = createUnpostedReviewCommentsSummar
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Status = void 0;
+exports.Events = exports.Status = void 0;
 var Status;
 (function (Status) {
     Status[Status["FAILED"] = 0] = "FAILED";
@@ -511,6 +512,12 @@ var Status;
     Status[Status["WARNING"] = 2] = "WARNING";
     Status[Status["SKIPPED"] = 2] = "SKIPPED";
 })(Status = exports.Status || (exports.Status = {}));
+var Events;
+(function (Events) {
+    Events["APPROVE"] = "APPROVE";
+    Events["COMMENT"] = "COMMENT";
+    Events["REQUEST_CHANGES"] = "REQUEST_CHANGES";
+})(Events = exports.Events || (exports.Events = {}));
 
 
 /***/ }),

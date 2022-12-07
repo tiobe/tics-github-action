@@ -31,7 +31,7 @@ export async function postReviewComments(review: any, annotations: any[], change
         await octokit.rest.pulls.createReviewComment(params);
       } catch (error: any) {
         unpostedReviewComments.push(comment);
-        Logger.Instance.debug(`Could not post review comment: ${error.message}`);
+        Logger.Instance.error(`Could not post review comment: ${error.message}`);
       }
     })
   );

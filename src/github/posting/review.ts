@@ -2,6 +2,7 @@ import Logger from '../../helper/logger';
 import { Analysis, QualityGate } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../configuration';
 import { createFilesSummary, createLinkSummary, createUnpostedReviewCommentsSummary, createQualityGateSummary } from './summary';
+import { Events } from '../../helper/enums';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -16,6 +17,7 @@ export async function postReview(analysis: Analysis, qualityGate: QualityGate) {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
+    event: qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body
   };
 
@@ -41,12 +43,11 @@ export async function updateReviewWithUnpostedReviewComments(review: any, unpost
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
     review_id: review.data.id,
-    event: 'COMMENT', // qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
     body: body
   };
   try {
     Logger.Instance.header('Updating review to include unposted review comments.');
-    await octokit.rest.pulls.submitReview(params);
+    await octokit.rest.pulls.updateReview(params);
     Logger.Instance.info('Updated review to include unposted review comments.');
   } catch (error: any) {
     Logger.Instance.error(`Could not update review on this Pull Request: ${error.message}`);
