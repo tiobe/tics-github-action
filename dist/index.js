@@ -751,8 +751,7 @@ async function main() {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
             if (annotations) {
                 const unpostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changedFiles);
-                if (unpostedReviewComments.length > 0)
-                    await (0, review_1.updateReviewWithUnpostedReviewComments)(review, unpostedReviewComments);
+                // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
             }
         }
         if (!qualityGate.passed)

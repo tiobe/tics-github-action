@@ -44,7 +44,7 @@ async function main() {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
         const unpostedReviewComments = await postReviewComments(review, annotations, changedFiles);
-        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
+        // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
       }
     }
 
