@@ -23,6 +23,7 @@ async function getChangedFiles() {
     logger_1.default.Instance.header('Retrieving changed files.');
     try {
         const params = {
+            accept: 'application/vnd.github.v3.diff',
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
             pull_number: configuration_1.githubConfig.pullRequestNumber
@@ -116,7 +117,7 @@ exports.ticsConfig = {
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
     logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
-    showAnnotations: (0, core_1.getInput)('showAnnotations') ? (0, core_1.getInput)('showAnnotations') : true,
+    postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getInput)('postAnnotations') : true,
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
@@ -754,11 +755,12 @@ async function main() {
         }
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         const review = await (0, review_1.postReview)(analysis, qualityGate);
-        if (configuration_1.ticsConfig.showAnnotations) {
+        if (configuration_1.ticsConfig.postAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
             if (annotations) {
                 const unpostedReviewComments = await (0, annotations_1.postReviewComments)(review, annotations, changedFiles);
-                // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
+                if (unpostedReviewComments.length > 0)
+                    await (0, review_1.updateReviewWithUnpostedReviewComments)(review, unpostedReviewComments);
             }
         }
         console.log(changedFiles);

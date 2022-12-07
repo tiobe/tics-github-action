@@ -29,7 +29,7 @@ inputs:
   logLevel:
     description: 'Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`'
     required: false
-  showAnnotations:
+  postAnnotations:
     description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
     required: false
   ticsAuthToken:

@@ -40,11 +40,11 @@ async function main() {
 
     const review = await postReview(analysis, qualityGate);
 
-    if (ticsConfig.showAnnotations) {
+    if (ticsConfig.postAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations) {
         const unpostedReviewComments = await postReviewComments(review, annotations, changedFiles);
-        // if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
+        if (unpostedReviewComments.length > 0) await updateReviewWithUnpostedReviewComments(review, unpostedReviewComments);
       }
     }
     console.log(changedFiles);
