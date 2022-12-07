@@ -121,14 +121,12 @@ export async function createReviewComments(annotations: any[], changedFiles: any
     console.log(annotation);
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.find((d: number) => d === annotation.line)) {
-      console.log('true');
       return {
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
         line: annotation.line
       };
     } else {
-      console.log('false');
       unpostable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
