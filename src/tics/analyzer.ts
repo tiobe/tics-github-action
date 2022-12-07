@@ -128,6 +128,6 @@ function getTiCSCommand(fileListPath: string) {
   execString += ticsConfig.clientToken ? `-cdtoken ${ticsConfig.clientToken} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir ${ticsConfig.tmpDir} ` : '';
   execString += ticsConfig.extendTics ? ticsConfig.extendTics : '';
-  execString += ticsConfig.logLevel === 'debug' ? ' -log9' : '';
+  execString += ticsConfig.logLevel === 'debug' ? ' -log 9' : '';
   return execString;
 }
