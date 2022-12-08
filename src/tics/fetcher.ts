@@ -14,9 +14,12 @@ export async function getAnalyzedFiles(url: string): Promise<any> {
 
   try {
     const response = await httpRequest(analyzedFilesUrl);
-    Logger.Instance.debug(response);
+    const analyzedFiles = response.data.map((file: any) => {
+      Logger.Instance.debug(file.formattedValue);
+      return file.formattedValue;
+    });
     Logger.Instance.info('Retrieved the analyzed files.');
-    return response;
+    return analyzedFiles;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
   }

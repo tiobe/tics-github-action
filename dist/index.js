@@ -1051,9 +1051,12 @@ async function getAnalyzedFiles(url) {
     logger_1.default.Instance.debug(`From: ${analyzedFilesUrl}`);
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
-        logger_1.default.Instance.debug(response);
+        const analyzedFiles = response.data.map((file) => {
+            logger_1.default.Instance.debug(file.formattedValue);
+            return file.formattedValue;
+        });
         logger_1.default.Instance.info('Retrieved the analyzed files.');
-        return response;
+        return analyzedFiles;
     }
     catch (error) {
         logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
