@@ -1,7 +1,7 @@
 import github from '@actions/github';
 import core from '@actions/core';
 import fs from 'fs';
-import path from 'path';
+import path from 'canonical-path';
 import ProxyAgent from 'proxy-agent';
 import { githubConfig } from '../configuration.js';
 
