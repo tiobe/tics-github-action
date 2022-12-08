@@ -1051,6 +1051,7 @@ async function getAnalyzedFiles(url) {
     logger_1.default.Instance.debug(`From: ${analyzedFilesUrl}`);
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
+        logger_1.default.Instance.debug(response);
         logger_1.default.Instance.info('Retrieved the analyzed files.');
         return response;
     }
