@@ -6,7 +6,9 @@ import ProxyAgent from 'proxy-agent';
 import { githubConfig } from '../configuration.js';
 
 //Octokit client is authenticated
-const octokit = github.getOctokit(process.env.GITHUB_TOKEN, { request: { agent: new ProxyAgent() } });
+const octokit = github.getOctokit(process.env.GITHUB_TOKEN, {
+  request: { agent: new ProxyAgent() },
+});
 
 /* Parameters needed for getting the changed files */
 function getChangedFilesParameters(pageNr) {
@@ -17,7 +19,7 @@ function getChangedFilesParameters(pageNr) {
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
     per_page: 100,
-    page: pageNr
+    page: pageNr,
   };
 }
 
@@ -27,15 +29,21 @@ export const getPRChangedFiles = async () => {
     var noMoreFiles;
     core.info('\u001b[35mRetrieving changed files to analyse');
     for (var i = 1; i <= 30; i++) {
-      await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}/files', getChangedFilesParameters(i)).then((response) => {
-        if (response.data.length > 0) {
-          response.data.map((item) => {
-            changedFiles += item.filename + ',';
-          });
-        } else {
-          noMoreFiles = true;
-        }
-      });
+      await octokit
+        .request(
+          'GET /repos/{owner}/{repo}/pulls/{pull_number}/files',
+          getChangedFilesParameters(i)
+        )
+        .then((response) => {
+          if (response.data.length > 0) {
+            response.data.map((item) => {
+              changedFiles += item.filename + ',';
+              core.info(item.filename);
+            });
+          } else {
+            noMoreFiles = true;
+          }
+        });
       if (noMoreFiles) {
         break;
       }
@@ -51,13 +59,17 @@ export function changeSetToFileList(changeSet) {
   let filesChanged = changeSet.split(',');
   let contents = '';
 
-  filesChanged && filesChanged.map((item) => {
-    contents += item + '\n';
-  });
+  filesChanged &&
+    filesChanged.map((item) => {
+      contents += item + '\n';
+    });
 
-  var stream = fs.createWriteStream('changeSet.txt', { mode: 0o777 });
+  const path = path.resolve('changeSet.txt');
+  var stream = fs.createWriteStream(path, { mode: 0o777 });
   stream.write(contents);
   stream.end();
 
-  return path.resolve('changeSet.txt');
+  core.info(`File written to: ${path}`);
+
+  return path;
 }
