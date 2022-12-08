@@ -1,5 +1,5 @@
 import { writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolve } from 'canonical-path';
 import Logger from '../../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 

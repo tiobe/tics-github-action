@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.changedFilesToFile = exports.getChangedFiles = void 0;
 const fs_1 = __nccwpck_require__(5747);
-const path_1 = __nccwpck_require__(5622);
+const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 /**
@@ -52,7 +52,7 @@ function changedFilesToFile(changedFiles) {
     changedFiles.forEach(item => {
         contents += item.filename + '\n';
     });
-    const fileListPath = (0, path_1.resolve)('changedFiles.txt');
+    const fileListPath = (0, canonical_path_1.resolve)('changedFiles.txt');
     (0, fs_1.writeFileSync)(fileListPath, contents);
     logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
     return fileListPath;
@@ -17490,6 +17490,38 @@ function parse(val) {
   return Math.floor(map[unit] * floatValue);
 }
 
+
+/***/ }),
+
+/***/ 5806:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var path = __nccwpck_require__(5622);
+var slashRegex = /\\/g;
+
+function canonical(p) {
+  return p.replace(slashRegex, '/');
+}
+
+function wrapWithCanonical(fn) {
+  return function() {
+    return canonical(fn.apply(path, arguments));
+  };
+}
+
+// Wrap the functions that return a path
+var toChange = ['normalize', 'join', 'resolve', 'relative', 'dirname', 'format'];
+toChange.forEach(function(fn) {
+  module.exports[fn] = wrapWithCanonical(path[fn]);
+});
+// and leave the rest alone
+var toLeave = ['basename', 'delimiter', 'extname', 'isAbsolute', 'parse', 'sep'];
+toLeave.forEach(function(prop) {
+  module.exports[prop] = path[prop];
+});
+
+module.exports.original = path;
+module.exports.canonical = canonical;
 
 /***/ }),
 
