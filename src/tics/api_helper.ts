@@ -116,3 +116,12 @@ export function getItemFromUrl(url: string, query: string) {
 
   return '';
 }
+
+/**
+ * In case of project auto this returns the project name from the explorer url.
+ * @param url the TiCS explorer url.
+ * @returns project name.
+ */
+export function getProjectName(url: string) {
+  return ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
+}

@@ -8,10 +8,10 @@ import { Events } from '../../helper/enums';
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
  */
-export async function postReview(analysis: Analysis, qualityGate: QualityGate, reviewComments: ReviewComments | undefined) {
+export async function postReview(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments: ReviewComments | undefined) {
   let body = createQualityGateSummary(qualityGate);
   body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
-  body += analysis.filesAnalyzed ? createFilesSummary(analysis.filesAnalyzed) : '';
+  body += createFilesSummary(filesAnalyzed);
 
   if (reviewComments) body += reviewComments.unpostable.length > 0 ? createUnpostedReviewCommentsSummary(reviewComments.unpostable) : '';
 

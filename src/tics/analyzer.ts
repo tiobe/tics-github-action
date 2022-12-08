@@ -5,7 +5,6 @@ import { getInstallTiCSApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
-let filesAnalyzed: string[] = [];
 let explorerUrl: string | undefined;
 
 /**
@@ -36,7 +35,6 @@ export async function runTiCSAnalyzer(fileListPath: string) {
     return {
       statusCode: statusCode,
       explorerUrl: explorerUrl,
-      filesAnalyzed: filesAnalyzed,
       errorList: errorList,
       warningList: warningList
     };
@@ -85,12 +83,6 @@ function findInStdOutOrErr(data: string, fileListPath: string) {
 
   const warning = data.toString().match(/\[WARNING.*/g);
   if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
-
-  const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
-  if (fileAnalyzed) {
-    const file = fileAnalyzed.split(fileListPath.replace('changedFiles.txt', ''))[1];
-    if (!filesAnalyzed.find(f => f === file)) filesAnalyzed.push(file);
-  }
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
   if (!explorerUrl && findExplorerUrl) explorerUrl = viewerUrl + findExplorerUrl.slice(-1).pop();

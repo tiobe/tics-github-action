@@ -245,10 +245,10 @@ const enums_1 = __nccwpck_require__(1655);
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
  */
-async function postReview(analysis, qualityGate, reviewComments) {
+async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
     body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
-    body += analysis.filesAnalyzed ? (0, summary_1.createFilesSummary)(analysis.filesAnalyzed) : '';
+    body += (0, summary_1.createFilesSummary)(filesAnalyzed);
     if (reviewComments)
         body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostedReviewCommentsSummary)(reviewComments.unpostable) : '';
     const params = {
@@ -735,6 +735,7 @@ async function main() {
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
+        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         let reviewComments;
         if (configuration_1.ticsConfig.postAnnotations) {
@@ -746,7 +747,7 @@ async function main() {
             if (previousReviewComments)
                 await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
         }
-        await (0, review_1.postReview)(analysis, qualityGate, reviewComments);
+        await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
         if (!qualityGate.passed)
             logger_1.default.Instance.setFailed(qualityGate.message);
         (0, api_helper_1.cliSummary)(analysis);

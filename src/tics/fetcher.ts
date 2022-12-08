@@ -1,6 +1,35 @@
 import { baseUrl, ticsConfig } from '../github/configuration';
 import Logger from '../helper/logger';
-import { getItemFromUrl, httpRequest } from './api_helper';
+import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
+
+/**
+ * Retrieves the files TiCS analyzed from the TiCS viewer.
+ * @param url The TiCS explorer url.
+ * @returns the analyzed files.
+ */
+export async function getAnalyzedFiles(url: string): Promise<any> {
+  Logger.Instance.header('Retrieving analyzed files.');
+  const analyzedFilesUrl = getAnalyzedFilesUrl(url);
+  Logger.Instance.debug(`From: ${analyzedFilesUrl}`);
+
+  try {
+    const response = await httpRequest(analyzedFilesUrl);
+    Logger.Instance.info('Retrieved the analyzed files.');
+    return response;
+  } catch (error: any) {
+    Logger.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
+  }
+}
+
+function getAnalyzedFilesUrl(url: string) {
+  let getAnalyzedFilesUrl = new URL(baseUrl + 'api/public/v1/Measure?metrics=filePath');
+
+  const clientData = getItemFromUrl(url, 'ClientData');
+  const projectName = getProjectName(url);
+  getAnalyzedFilesUrl.searchParams.append('filters', `ClientData(${clientData}),Project(${projectName}),Window(-1),File()`);
+
+  return getAnalyzedFilesUrl.href;
+}
 
 /**
  * Retrieves the TiCS quality gate from the TiCS viewer.
@@ -11,6 +40,7 @@ export async function getQualityGate(url: string): Promise<any> {
   Logger.Instance.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   Logger.Instance.debug(`From: ${qualityGateUrl}`);
+
   try {
     const response = await httpRequest(qualityGateUrl);
     Logger.Instance.info('Retrieved the quality gates.');
@@ -26,10 +56,9 @@ export async function getQualityGate(url: string): Promise<any> {
  * @returns The url to get the quality gate analysis.
  */
 function getQualityGateUrl(url: string) {
-  let projectName = ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
-  let clientDataTok = getItemFromUrl(url, 'ClientData');
   let qualityGateUrl = new URL(baseUrl + '/api/public/v1/QualityGateStatus');
 
+  const projectName = getProjectName(url);
   qualityGateUrl.searchParams.append('project', projectName);
 
   // Branchname is optional, to check if it is set
@@ -38,7 +67,9 @@ function getQualityGateUrl(url: string) {
   }
 
   qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
-  qualityGateUrl.searchParams.append('cdt', clientDataTok);
+
+  const clientData = getItemFromUrl(url, 'ClientData');
+  qualityGateUrl.searchParams.append('cdt', clientData);
 
   return qualityGateUrl.href;
 }
@@ -46,7 +77,7 @@ function getQualityGateUrl(url: string) {
 /**
  * Gets the annotations from the TiCS viewer.
  * @param apiLinks annotationsApiLinks url.
- * @returns TiCS annotations
+ * @returns TiCS annotations.
  */
 export async function getAnnotations(apiLinks: any[]) {
   Logger.Instance.header('Retrieving annotations.');

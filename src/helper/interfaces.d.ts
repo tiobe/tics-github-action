@@ -3,7 +3,6 @@ export interface Analysis {
   errorList: string[];
   warningList: string[];
   explorerUrl?: string;
-  filesAnalyzed?: string[];
 }
 
 export interface QualityGate {

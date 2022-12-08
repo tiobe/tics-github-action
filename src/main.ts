@@ -5,7 +5,7 @@ import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTiCSAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnnotations, getQualityGate } from './tics/fetcher';
+import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
 import { createReviewComments } from './github/posting/summary';
 import { getPostedReviewComments as getPreviousReviewComments, deletePreviousReviewComments } from './github/posting/annotations';
@@ -37,6 +37,7 @@ async function main() {
       return;
     }
 
+    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
     const qualityGate = await getQualityGate(analysis.explorerUrl);
     let reviewComments;
 
@@ -49,7 +50,7 @@ async function main() {
       if (previousReviewComments) await deletePreviousReviewComments(previousReviewComments);
     }
 
-    await postReview(analysis, qualityGate, reviewComments);
+    await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
 
     if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
     cliSummary(analysis);
