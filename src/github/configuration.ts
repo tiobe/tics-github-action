@@ -1,5 +1,5 @@
 import { getInput, info } from '@actions/core';
-import { getOctokit } from '@actions/github';
+import { Octokit } from '@octokit/rest';
 import { readFileSync } from 'fs';
 import ProxyAgent from 'proxy-agent';
 import { getTiCSWebBaseUrlFromUrl } from '../tics/api_helper';
@@ -53,6 +53,6 @@ export let ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });
+export const octokit = new Octokit({ auth: githubConfig.githubToken, request: { agent: new ProxyAgent() } });
 export const baseUrl = getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

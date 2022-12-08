@@ -9,6 +9,7 @@
     "format-check": "prettier --check src/**/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
+    "test": "jest",
     "all": "npm run build && npm run package",
     "prepare": "husky install"
   },
@@ -30,8 +31,8 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1",
     "@actions/http-client": "^2.0.1",
+    "@octokit/rest": "^19.0.5",
     "markdown-table": "^3.0.3",
     "proxy-agent": "^5.0.0",
     "underscore": "^1.13.6"
@@ -44,7 +45,9 @@
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.2",
+    "jest": "^27.5.1",
     "prettier": "2.5.1",
+    "ts-jest": "^27.1.2",
     "typescript": "^4.9.3"
   }
 }
