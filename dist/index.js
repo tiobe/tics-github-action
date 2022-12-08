@@ -787,7 +787,6 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
-let filesAnalyzed = [];
 let explorerUrl;
 /**
  * Runs TiCS based on the configuration set in a workflow.
@@ -814,7 +813,6 @@ async function runTiCSAnalyzer(fileListPath) {
         return {
             statusCode: statusCode,
             explorerUrl: explorerUrl,
-            filesAnalyzed: filesAnalyzed,
             errorList: errorList,
             warningList: warningList
         };
@@ -849,7 +847,7 @@ async function getInstallTiCS() {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString("${installTicsUrl}")) &&`;
+    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}')) &&`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.
@@ -862,12 +860,6 @@ function findInStdOutOrErr(data, fileListPath) {
     const warning = data.toString().match(/\[WARNING.*/g);
     if (warning && !warningList.find(w => w === warning?.toString()))
         warningList.push(warning.toString());
-    const fileAnalyzed = data.match(/\[INFO 30\d{2}\] Analyzing.*/g)?.toString();
-    if (fileAnalyzed) {
-        const file = fileAnalyzed.split(fileListPath.replace('changedFiles.txt', ''))[1];
-        if (!filesAnalyzed.find(f => f === file))
-            filesAnalyzed.push(file);
-    }
     const findExplorerUrl = data.match(/\/Explorer.*/g);
     if (!explorerUrl && findExplorerUrl)
         explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
@@ -916,7 +908,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getItemFromUrl = exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
+exports.getProjectName = exports.getItemFromUrl = exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
 const http_client_1 = __nccwpck_require__(6255);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -1021,6 +1013,15 @@ function getItemFromUrl(url, query) {
     return '';
 }
 exports.getItemFromUrl = getItemFromUrl;
+/**
+ * In case of project auto this returns the project name from the explorer url.
+ * @param url the TiCS explorer url.
+ * @returns project name.
+ */
+function getProjectName(url) {
+    return configuration_1.ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : configuration_1.ticsConfig.projectName;
+}
+exports.getProjectName = getProjectName;
 
 
 /***/ }),
@@ -1034,10 +1035,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getAnnotations = exports.getQualityGate = void 0;
+exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
 const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
+/**
+ * Retrieves the files TiCS analyzed from the TiCS viewer.
+ * @param url The TiCS explorer url.
+ * @returns the analyzed files.
+ */
+async function getAnalyzedFiles(url) {
+    logger_1.default.Instance.header('Retrieving analyzed files.');
+    const analyzedFilesUrl = getAnalyzedFilesUrl(url);
+    logger_1.default.Instance.debug(`From: ${analyzedFilesUrl}`);
+    try {
+        const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
+        logger_1.default.Instance.info('Retrieved the analyzed files.');
+        return response;
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
+    }
+}
+exports.getAnalyzedFiles = getAnalyzedFiles;
+function getAnalyzedFilesUrl(url) {
+    let getAnalyzedFilesUrl = new URL(configuration_1.baseUrl + 'api/public/v1/Measure?metrics=filePath');
+    const clientData = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
+    const projectName = (0, api_helper_1.getProjectName)(url);
+    getAnalyzedFilesUrl.searchParams.append('filters', `ClientData(${clientData}),Project(${projectName}),Window(-1),File()`);
+    return getAnalyzedFilesUrl.href;
+}
 /**
  * Retrieves the TiCS quality gate from the TiCS viewer.
  * @param url The TiCS explorer url.
@@ -1063,22 +1090,22 @@ exports.getQualityGate = getQualityGate;
  * @returns The url to get the quality gate analysis.
  */
 function getQualityGateUrl(url) {
-    let projectName = configuration_1.ticsConfig.projectName == 'auto' ? (0, api_helper_1.getItemFromUrl)(url, 'Project') : configuration_1.ticsConfig.projectName;
-    let clientDataTok = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
     let qualityGateUrl = new URL(configuration_1.baseUrl + '/api/public/v1/QualityGateStatus');
+    const projectName = (0, api_helper_1.getProjectName)(url);
     qualityGateUrl.searchParams.append('project', projectName);
     // Branchname is optional, to check if it is set
     if (configuration_1.ticsConfig.branchName) {
         qualityGateUrl.searchParams.append('branch', configuration_1.ticsConfig.branchName);
     }
     qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
-    qualityGateUrl.searchParams.append('cdt', clientDataTok);
+    const clientData = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
+    qualityGateUrl.searchParams.append('cdt', clientData);
     return qualityGateUrl.href;
 }
 /**
  * Gets the annotations from the TiCS viewer.
  * @param apiLinks annotationsApiLinks url.
- * @returns TiCS annotations
+ * @returns TiCS annotations.
  */
 async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations.');
