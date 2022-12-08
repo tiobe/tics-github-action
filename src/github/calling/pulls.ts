@@ -1,5 +1,5 @@
 import { writeFileSync } from 'fs';
-import { resolve } from 'canonical-path';
+import { normalize, resolve } from 'canonical-path';
 import Logger from '../../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 
@@ -17,6 +17,7 @@ export async function getChangedFiles() {
     };
     const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data.map(data => {
+        data.filename = normalize(data.filename);
         Logger.Instance.debug(data.filename);
         return data;
       });

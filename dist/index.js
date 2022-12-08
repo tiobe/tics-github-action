@@ -29,6 +29,7 @@ async function getChangedFiles() {
         };
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data.map(data => {
+                data.filename = (0, canonical_path_1.normalize)(data.filename);
                 logger_1.default.Instance.debug(data.filename);
                 return data;
             });

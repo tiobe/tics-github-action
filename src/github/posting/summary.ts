@@ -4,6 +4,7 @@ import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
 import { range } from 'underscore';
 import Logger from '../../helper/logger';
+import { normalize } from 'canonical-path';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
