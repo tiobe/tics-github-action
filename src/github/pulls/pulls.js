@@ -64,12 +64,12 @@ export function changeSetToFileList(changeSet) {
       contents += item + '\n';
     });
 
-  const path = path.resolve('changeSet.txt');
-  var stream = fs.createWriteStream(path, { mode: 0o777 });
+  const changeSetPath = path.resolve('changeSet.txt');
+  var stream = fs.createWriteStream(changeSetPath, { mode: 0o777 });
   stream.write(contents);
   stream.end();
 
-  core.info(`File written to: ${path}`);
+  core.info(`File written to: ${changeSetPath}`);
 
-  return path;
+  return changeSetPath;
 }
