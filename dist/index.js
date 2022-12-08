@@ -1061,7 +1061,7 @@ async function getAnalyzedFiles(url) {
 }
 exports.getAnalyzedFiles = getAnalyzedFiles;
 function getAnalyzedFilesUrl(url) {
-    let getAnalyzedFilesUrl = new URL(configuration_1.baseUrl + 'api/public/v1/Measure?metrics=filePath');
+    let getAnalyzedFilesUrl = new URL(configuration_1.baseUrl + '/api/public/v1/Measure?metrics=filePath');
     const clientData = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');
     const projectName = (0, api_helper_1.getProjectName)(url);
     getAnalyzedFilesUrl.searchParams.append('filters', `ClientData(${clientData}),Project(${projectName}),Window(-1),File()`);

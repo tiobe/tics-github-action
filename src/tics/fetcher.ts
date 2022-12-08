@@ -23,7 +23,7 @@ export async function getAnalyzedFiles(url: string): Promise<any> {
 }
 
 function getAnalyzedFilesUrl(url: string) {
-  let getAnalyzedFilesUrl = new URL(baseUrl + 'api/public/v1/Measure?metrics=filePath');
+  let getAnalyzedFilesUrl = new URL(baseUrl + '/api/public/v1/Measure?metrics=filePath');
 
   const clientData = getItemFromUrl(url, 'ClientData');
   const projectName = getProjectName(url);
