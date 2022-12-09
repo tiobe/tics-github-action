@@ -250,7 +250,7 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
     body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
     body += (0, summary_1.createFilesSummary)(filesAnalyzed);
     if (reviewComments)
-        body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostedReviewCommentsSummary)(reviewComments.unpostable) : '';
+        body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostableReviewCommentsSummary)(reviewComments.unpostable) : '';
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
@@ -282,7 +282,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createUnpostedReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(6868);
 const enums_1 = __nccwpck_require__(1655);
@@ -412,11 +412,8 @@ async function createReviewComments(annotations, changedFiles) {
         }
         else {
             logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-            unpostable.push({
-                body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-                path: annotation.path,
-                line: annotation.line
-            });
+            annotation.displayCount = displayCount;
+            unpostable.push(annotation);
         }
     });
     logger_1.default.Instance.info('Created review comments from annotations.');
@@ -459,26 +456,27 @@ function findAnnotationInList(list, annotation) {
 }
 /**
  * Creates a summary of all the review comments that could not be posted
- * @param unpostedReviewComments Review comments that could not be posted.
+ * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-function createUnpostedReviewCommentsSummary(unpostedReviewComments) {
+function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
     let header = 'Quality findings outside of the changes of this pull request:';
     let body = '';
-    let previousPaths = [];
-    unpostedReviewComments.map(comment => {
-        if (!previousPaths.find(x => x === comment.path)) {
-            if (previousPaths.length > 0) {
-                body += '</ul>';
-            }
-            body += `<b>File:</b> ${comment.path}<ul>`;
-            previousPaths.push(comment.path);
+    let previousPath = '';
+    unpostableReviewComments.forEach(reviewComment => {
+        if (previousPath === '') {
+            body += `<table><tr><td rowspan="2">:warning:</td><th>${reviewComment.path}</th></tr>`;
         }
-        body += `<li>${comment.body.replace('\r\n', '<br>').replace('**', '<b>').replace('**', '</b>')}</li>`;
+        else if (previousPath !== reviewComment.path) {
+            body += `</table><table><tr><td rowspan="2">:warning:</td><th>${reviewComment.path}</th></tr>`;
+        }
+        else {
+            body += `<tr><td><b>TiCS: ${reviewComment.type} violation: ${reviewComment.msg}</b><br>${reviewComment.displayCount}Line: ${reviewComment.line}, Rule: ${reviewComment.rule}, Level: ${reviewComment.level}, Category: ${reviewComment.category}</td></tr>`;
+        }
     });
     return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
 }
-exports.createUnpostedReviewCommentsSummary = createUnpostedReviewCommentsSummary;
+exports.createUnpostableReviewCommentsSummary = createUnpostableReviewCommentsSummary;
 
 
 /***/ }),

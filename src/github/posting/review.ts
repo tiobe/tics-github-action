@@ -1,7 +1,7 @@
 import Logger from '../../helper/logger';
 import { Analysis, QualityGate, ReviewComments } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../configuration';
-import { createFilesSummary, createLinkSummary, createUnpostedReviewCommentsSummary, createQualityGateSummary } from './summary';
+import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from './summary';
 import { Events } from '../../helper/enums';
 
 /**
@@ -13,7 +13,7 @@ export async function postReview(analysis: Analysis, filesAnalyzed: string[], qu
   body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
   body += createFilesSummary(filesAnalyzed);
 
-  if (reviewComments) body += reviewComments.unpostable.length > 0 ? createUnpostedReviewCommentsSummary(reviewComments.unpostable) : '';
+  if (reviewComments) body += reviewComments.unpostable.length > 0 ? createUnpostableReviewCommentsSummary(reviewComments.unpostable) : '';
 
   const params: any = {
     owner: githubConfig.owner,

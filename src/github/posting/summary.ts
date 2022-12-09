@@ -131,11 +131,8 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       });
     } else {
       Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-      unpostable.push({
-        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-        path: annotation.path,
-        line: annotation.line
-      });
+      annotation.displayCount = displayCount;
+      unpostable.push(annotation);
     }
   });
   Logger.Instance.info('Created review comments from annotations.');
@@ -184,23 +181,22 @@ function findAnnotationInList(list: any[], annotation: any) {
 
 /**
  * Creates a summary of all the review comments that could not be posted
- * @param unpostedReviewComments Review comments that could not be posted.
+ * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-export function createUnpostedReviewCommentsSummary(unpostedReviewComments: any[]) {
+export function createUnpostableReviewCommentsSummary(unpostableReviewComments: any[]) {
   let header = 'Quality findings outside of the changes of this pull request:';
   let body = '';
-  let previousPaths: any[] = [];
+  let previousPath = '';
 
-  unpostedReviewComments.map(comment => {
-    if (!previousPaths.find(x => x === comment.path)) {
-      if (previousPaths.length > 0) {
-        body += '</ul>';
-      }
-      body += `<b>File:</b> ${comment.path}<ul>`;
-      previousPaths.push(comment.path);
+  unpostableReviewComments.forEach(reviewComment => {
+    if (previousPath === '') {
+      body += `<table><tr><td rowspan="2">:warning:</td><th>${reviewComment.path}</th></tr>`;
+    } else if (previousPath !== reviewComment.path) {
+      body += `</table><table><tr><td rowspan="2">:warning:</td><th>${reviewComment.path}</th></tr>`;
+    } else {
+      body += `<tr><td><b>TiCS: ${reviewComment.type} violation: ${reviewComment.msg}</b><br>${reviewComment.displayCount}Line: ${reviewComment.line}, Rule: ${reviewComment.rule}, Level: ${reviewComment.level}, Category: ${reviewComment.category}</td></tr>`;
     }
-    body += `<li>${comment.body.replace('\r\n', '<br>').replace('**', '<b>').replace('**', '</b>')}</li>`;
   });
   return generateExpandableAreaMarkdown(header, body);
 }
