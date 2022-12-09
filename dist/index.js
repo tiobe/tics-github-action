@@ -460,7 +460,7 @@ function findAnnotationInList(list, annotation) {
  * @returns Summary of all the review comments that could not be posted.
  */
 function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
-    let header = 'Quality findings outside of the changes of this pull request:';
+    let header = 'Quality gate failures that cannot be annotated in "Files Changed":';
     let body = '';
     let previousPath = '';
     unpostableReviewComments.forEach(reviewComment => {
@@ -471,7 +471,7 @@ function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
             body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
         }
         else {
-            body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type}:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+            body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
         }
         previousPath = reviewComment.path;
     });

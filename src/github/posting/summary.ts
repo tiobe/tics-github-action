@@ -185,7 +185,7 @@ function findAnnotationInList(list: any[], annotation: any) {
  * @returns Summary of all the review comments that could not be posted.
  */
 export function createUnpostableReviewCommentsSummary(unpostableReviewComments: any[]) {
-  let header = 'Quality findings outside of the changes of this pull request:';
+  let header = 'Quality gate failures that cannot be annotated in "Files Changed":';
   let body = '';
   let previousPath = '';
 
@@ -195,7 +195,7 @@ export function createUnpostableReviewCommentsSummary(unpostableReviewComments: 
     } else if (previousPath !== reviewComment.path) {
       body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
     } else {
-      body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type}:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+      body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     }
     previousPath = reviewComment.path;
   });
