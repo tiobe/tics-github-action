@@ -10,8 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
     "test": "jest",
-    "all": "npm run build && npm run package",
-    "prepare": "husky install"
+    "all": "npm run build && npm run package"
   },
   "repository": {
     "type": "git",
@@ -45,7 +44,6 @@
     "@vercel/ncc": "^0.31.1",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
-    "husky": "^8.0.2",
     "jest": "^27.5.1",
     "jest-mock": "^29.3.1",
     "prettier": "2.5.1",
