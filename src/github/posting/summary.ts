@@ -42,10 +42,11 @@ export function createLinkSummary(url: string): string {
  */
 export function createFilesSummary(fileList: string[]): string {
   let header = 'The following files have been checked:';
-  let body = '';
+  let body = '<ul>';
   fileList.forEach(file => {
-    body += `- ${file}<br>`;
+    body += `<li>${file}</li>`;
   });
+  body += '</ul>';
   return generateExpandableAreaMarkdown(header, body);
 }
 

@@ -322,10 +322,11 @@ exports.createLinkSummary = createLinkSummary;
  */
 function createFilesSummary(fileList) {
     let header = 'The following files have been checked:';
-    let body = '';
+    let body = '<ul>';
     fileList.forEach(file => {
-        body += `- ${file}<br>`;
+        body += `<li>${file}</li>`;
     });
+    body += '</ul>';
     return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
 }
 exports.createFilesSummary = createFilesSummary;
