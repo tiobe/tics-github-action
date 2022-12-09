@@ -126,7 +126,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       postable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
-        line: annotation.line
+        line: 6
       });
     } else {
       Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
