@@ -3,7 +3,7 @@ import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './github/configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
-import { runTiCSAnalyzer } from './tics/analyzer';
+import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
@@ -22,7 +22,7 @@ async function main() {
     if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.exit('No changed files found to analyze.');
 
     const changedFilesFilePath = changedFilesToFile(changedFiles);
-    const analysis = await runTiCSAnalyzer(changedFilesFilePath);
+    const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
     if (analysis.statusCode === -1) {
       postErrorComment(analysis);

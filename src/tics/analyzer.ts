@@ -1,7 +1,7 @@
 import { exec } from '@actions/exec';
 import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../github/configuration';
 import Logger from '../helper/logger';
-import { getInstallTiCSApiUrl, httpRequest } from './api_helper';
+import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -11,7 +11,7 @@ let explorerUrl: string | undefined;
  * Runs TiCS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
-export async function runTiCSAnalyzer(fileListPath: string) {
+export async function runTicsAnalyzer(fileListPath: string) {
   Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
@@ -54,15 +54,15 @@ export async function runTiCSAnalyzer(fileListPath: string) {
  */
 async function buildRunCommand(fileListPath: string) {
   if (githubConfig.runnerOS === 'Linux') {
-    return `/bin/bash -c "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
+    return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
   }
-  return `powershell "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
+  return `powershell "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
 }
 
 /**
  * Get the command to install TiCS with.
  */
-async function getInstallTiCS() {
+async function getInstallTics() {
   if (!ticsConfig.installTics) return '';
 
   const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
@@ -97,7 +97,7 @@ async function retrieveInstallTics(os: string) {
   try {
     Logger.Instance.info('Trying to retrieve configuration information from TiCS.');
 
-    const ticsInstallApiBaseUrl = getInstallTiCSApiUrl(baseUrl, os);
+    const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
 
     const data = await httpRequest(ticsInstallApiBaseUrl);
 
@@ -112,7 +112,7 @@ async function retrieveInstallTics(os: string) {
  * @param fileListPath
  * @returns string of the command to run TiCS.
  */
-function getTiCSCommand(fileListPath: string) {
+function getTicsCommand(fileListPath: string) {
   let execString = 'TICS @' + fileListPath + ' ';
   execString += ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
   execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} ` : '-recalc GATE ';

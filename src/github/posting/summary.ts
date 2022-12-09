@@ -12,7 +12,7 @@ import Logger from '../../helper/logger';
  * @returns string containing the error summary.
  */
 export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+  let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
 
   if (errorList.length > 0) {
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
@@ -32,7 +32,7 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
  * @returns Clickable link to the viewer analysis.
  */
 export function createLinkSummary(url: string): string {
-  return `${generateLinkMarkdown('See the results in the TICS Viewer', url)}\n\n`;
+  return `${generateLinkMarkdown('See the results in the TiCS Viewer', url)}\n\n`;
 }
 
 /**
@@ -60,7 +60,7 @@ export function createQualityGateSummary(qualityGate: QualityGate): string {
   qualityGate.gates.forEach(gate => {
     qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
   });
-  return `## TICS Quality Gate\n\n### ${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+  return `## TiCS Quality Gate\n\n### ${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
 }
 
 /**

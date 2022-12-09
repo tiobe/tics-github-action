@@ -2,7 +2,7 @@ import { getInput, info } from '@actions/core';
 import { Octokit } from '@octokit/rest';
 import { readFileSync } from 'fs';
 import ProxyAgent from 'proxy-agent';
-import { getTiCSWebBaseUrlFromUrl } from '../tics/api_helper';
+import { getTicsWebBaseUrlFromUrl } from '../tics/api_helper';
 
 let processEnv = process.env;
 const payload = processEnv.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(processEnv.GITHUB_EVENT_PATH, 'utf8')) : '';
@@ -40,7 +40,7 @@ export let ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   branchName: getInput('branchName'),
   branchDir: getInput('branchDir'),
-  calc: getInput('calc'),
+  calc: getInput('calc') ? getInput('calc') : 'GATE',
   clientToken: getInput('clientToken'),
   extendTics: getInput('extendTics'),
   hostnameVerification: getHostnameVerification(),
@@ -54,5 +54,5 @@ export let ticsConfig = {
 };
 
 export const octokit = new Octokit({ auth: githubConfig.githubToken, request: { agent: new ProxyAgent() } });
-export const baseUrl = getTiCSWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
+export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

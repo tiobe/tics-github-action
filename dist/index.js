@@ -111,7 +111,7 @@ exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
     branchName: (0, core_1.getInput)('branchName'),
     branchDir: (0, core_1.getInput)('branchDir'),
-    calc: (0, core_1.getInput)('calc'),
+    calc: (0, core_1.getInput)('calc') ? (0, core_1.getInput)('calc') : 'GATE',
     clientToken: (0, core_1.getInput)('clientToken'),
     extendTics: (0, core_1.getInput)('extendTics'),
     hostnameVerification: getHostnameVerification(),
@@ -124,7 +124,7 @@ exports.ticsConfig = {
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = new rest_1.Octokit({ auth: exports.githubConfig.githubToken, request: { agent: new proxy_agent_1.default() } });
-exports.baseUrl = (0, api_helper_1.getTiCSWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
+exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
 
@@ -295,7 +295,7 @@ const logger_1 = __importDefault(__nccwpck_require__(6440));
  * @returns string containing the error summary.
  */
 function createErrorSummary(errorList, warningList) {
-    let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+    let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
     if (errorList.length > 0) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
@@ -313,7 +313,7 @@ exports.createErrorSummary = createErrorSummary;
  * @returns Clickable link to the viewer analysis.
  */
 function createLinkSummary(url) {
-    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TICS Viewer', url)}\n\n`;
+    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TiCS Viewer', url)}\n\n`;
 }
 exports.createLinkSummary = createLinkSummary;
 /**
@@ -340,7 +340,7 @@ function createQualityGateSummary(qualityGate) {
     qualityGate.gates.forEach(gate => {
         qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
     });
-    return `## TICS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+    return `## TiCS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
 }
 exports.createQualityGateSummary = createQualityGateSummary;
 /**
@@ -723,7 +723,7 @@ async function main() {
         if (!changedFiles || changedFiles.length <= 0)
             return logger_1.default.Instance.exit('No changed files found to analyze.');
         const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
-        const analysis = await (0, analyzer_1.runTiCSAnalyzer)(changedFilesFilePath);
+        const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
         if (analysis.statusCode === -1) {
             (0, comment_1.postErrorComment)(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
@@ -782,7 +782,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.runTiCSAnalyzer = void 0;
+exports.runTicsAnalyzer = void 0;
 const exec_1 = __nccwpck_require__(1514);
 const configuration_1 = __nccwpck_require__(6868);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -794,7 +794,7 @@ let explorerUrl;
  * Runs TiCS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
-async function runTiCSAnalyzer(fileListPath) {
+async function runTicsAnalyzer(fileListPath) {
     logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
@@ -827,7 +827,7 @@ async function runTiCSAnalyzer(fileListPath) {
         };
     }
 }
-exports.runTiCSAnalyzer = runTiCSAnalyzer;
+exports.runTicsAnalyzer = runTicsAnalyzer;
 /**
  * Build the command to run (and optionally install) TiCS.
  * @param fileListPath Path to changedFiles.txt.
@@ -835,14 +835,14 @@ exports.runTiCSAnalyzer = runTiCSAnalyzer;
  */
 async function buildRunCommand(fileListPath) {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
-        return `/bin/bash -c "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
+        return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
     }
-    return `powershell "${await getInstallTiCS()} ${getTiCSCommand(fileListPath)}"`;
+    return `powershell "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
 }
 /**
  * Get the command to install TiCS with.
  */
-async function getInstallTiCS() {
+async function getInstallTics() {
     if (!configuration_1.ticsConfig.installTics)
         return '';
     const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
@@ -874,7 +874,7 @@ function findInStdOutOrErr(data, fileListPath) {
 async function retrieveInstallTics(os) {
     try {
         logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
-        const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTiCSApiUrl)(configuration_1.baseUrl, os);
+        const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTicsApiUrl)(configuration_1.baseUrl, os);
         const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
         return configuration_1.baseUrl + data.links.installTics;
     }
@@ -887,7 +887,7 @@ async function retrieveInstallTics(os) {
  * @param fileListPath
  * @returns string of the command to run TiCS.
  */
-function getTiCSCommand(fileListPath) {
+function getTicsCommand(fileListPath) {
     let execString = 'TICS @' + fileListPath + ' ';
     execString += configuration_1.ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
     execString += configuration_1.ticsConfig.calc ? `-calc ${configuration_1.ticsConfig.calc} ` : '-recalc GATE ';
@@ -910,7 +910,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getProjectName = exports.getItemFromUrl = exports.cliSummary = exports.getTiCSWebBaseUrlFromUrl = exports.getInstallTiCSApiUrl = exports.httpRequest = void 0;
+exports.getProjectName = exports.getItemFromUrl = exports.cliSummary = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.httpRequest = void 0;
 const http_client_1 = __nccwpck_require__(6255);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -957,19 +957,19 @@ exports.httpRequest = httpRequest;
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-function getInstallTiCSApiUrl(url, os) {
-    const installTICSAPI = new URL(configuration_1.ticsConfig.ticsConfiguration);
-    installTICSAPI.searchParams.append('platform', os);
-    installTICSAPI.searchParams.append('url', url);
-    return installTICSAPI.href;
+function getInstallTicsApiUrl(url, os) {
+    const installTicsApi = new URL(configuration_1.ticsConfig.ticsConfiguration);
+    installTicsApi.searchParams.append('platform', os);
+    installTicsApi.searchParams.append('url', url);
+    return installTicsApi.href;
 }
-exports.getInstallTiCSApiUrl = getInstallTiCSApiUrl;
+exports.getInstallTicsApiUrl = getInstallTicsApiUrl;
 /**
  * Returns the TIOBE web base url.
  * @param url url given in the ticsConfiguration.
  * @returns TIOBE web base url.
  */
-function getTiCSWebBaseUrlFromUrl(url) {
+function getTicsWebBaseUrlFromUrl(url) {
     const cfgMarker = 'cfg?name=';
     const apiMarker = '/api/';
     let baseUrl = '';
@@ -981,7 +981,7 @@ function getTiCSWebBaseUrlFromUrl(url) {
     }
     return baseUrl;
 }
-exports.getTiCSWebBaseUrlFromUrl = getTiCSWebBaseUrlFromUrl;
+exports.getTicsWebBaseUrlFromUrl = getTicsWebBaseUrlFromUrl;
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.
  * @param analysis the output of the TiCS analysis run.

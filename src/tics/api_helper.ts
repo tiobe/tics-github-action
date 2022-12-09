@@ -3,7 +3,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
-import { baseUrl, ticsConfig, viewerUrl } from '../github/configuration';
+import { ticsConfig, viewerUrl } from '../github/configuration';
 import { Analysis } from '../helper/interfaces';
 
 /**
@@ -55,12 +55,12 @@ export async function httpRequest(url: string): Promise<any> {
  * @param os the OS the runner runs on.
  * @returns the TiCS install url.
  */
-export function getInstallTiCSApiUrl(url: string, os: string): string {
-  const installTICSAPI = new URL(ticsConfig.ticsConfiguration);
-  installTICSAPI.searchParams.append('platform', os);
-  installTICSAPI.searchParams.append('url', url);
+export function getInstallTicsApiUrl(url: string, os: string): string {
+  const installTicsApi = new URL(ticsConfig.ticsConfiguration);
+  installTicsApi.searchParams.append('platform', os);
+  installTicsApi.searchParams.append('url', url);
 
-  return installTICSAPI.href;
+  return installTicsApi.href;
 }
 
 /**
@@ -68,7 +68,7 @@ export function getInstallTiCSApiUrl(url: string, os: string): string {
  * @param url url given in the ticsConfiguration.
  * @returns TIOBE web base url.
  */
-export function getTiCSWebBaseUrlFromUrl(url: string) {
+export function getTicsWebBaseUrlFromUrl(url: string) {
   const cfgMarker = 'cfg?name=';
   const apiMarker = '/api/';
   let baseUrl = '';
