@@ -257,7 +257,7 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
         pull_number: configuration_1.githubConfig.pullRequestNumber,
         event: qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES,
         body: body,
-        comments: reviewComments ? reviewComments.postable : undefined
+        comments: [] // reviewComments ? reviewComments.postable : undefined
     };
     try {
         logger_1.default.Instance.header('Posting a review for this pull request.');
