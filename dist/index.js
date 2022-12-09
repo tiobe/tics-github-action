@@ -467,7 +467,7 @@ function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
         if (previousPath === '') {
             body += `<table><tr><th colspan='2'>${reviewComment.path}</th></tr>`;
         }
-        if (previousPath !== reviewComment.path) {
+        else if (previousPath !== reviewComment.path) {
             body += `<table><tr><th colspan='2'>${reviewComment.path}</th></tr>`;
         }
         else {
