@@ -193,7 +193,7 @@ export function createUnpostableReviewCommentsSummary(unpostableReviewComments: 
     if (previousPath === '') {
       body += `<table><tr><th colspan='2'>${reviewComment.path}</th></tr>`;
     } else if (previousPath !== reviewComment.path) {
-      body += `<table><tr><th colspan='2'>${reviewComment.path}</th></tr>`;
+      body += `</table><table><tr><th colspan='2'>${reviewComment.path}</th></tr>`;
     } else {
       body += `<tr><td>:warning:</td><td><b>TiCS: ${reviewComment.type} violation: ${reviewComment.msg}</b><br>${reviewComment.displayCount}Line: ${reviewComment.line}, Rule: ${reviewComment.rule}, Level: ${reviewComment.level}, Category: ${reviewComment.category}</td></tr>`;
     }
