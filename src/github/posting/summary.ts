@@ -4,7 +4,6 @@ import { ticsConfig, viewerUrl } from '../configuration';
 import { Status } from '../../helper/enums';
 import { range } from 'underscore';
 import Logger from '../../helper/logger';
-import { normalize } from 'canonical-path';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -97,7 +96,7 @@ function createConditionsTable(conditions: any[]) {
  * @returns List of the review comments.
  */
 export async function createReviewComments(annotations: any[], changedFiles: any[]): Promise<ReviewComments> {
-  Logger.Instance.debug('Creating review comments from annotations.');
+  Logger.Instance.info('Creating review comments from annotations.');
   // sort the annotations based on the filename and linenumber.
   annotations.sort((a, b) => {
     if (a.fullPath === b.fullPath) return a.line - b.line;
@@ -121,6 +120,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
   let postable: ReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
+    Logger.Instance.debug(JSON.stringify(annotation));
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.find((d: number) => d === annotation.line)) {
       postable.push({
@@ -136,7 +136,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       });
     }
   });
-  Logger.Instance.debug('Created review comments from annotations.');
+  Logger.Instance.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }
 

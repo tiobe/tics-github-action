@@ -376,7 +376,7 @@ function createConditionsTable(conditions) {
  * @returns List of the review comments.
  */
 async function createReviewComments(annotations, changedFiles) {
-    logger_1.default.Instance.debug('Creating review comments from annotations.');
+    logger_1.default.Instance.info('Creating review comments from annotations.');
     // sort the annotations based on the filename and linenumber.
     annotations.sort((a, b) => {
         if (a.fullPath === b.fullPath)
@@ -400,6 +400,7 @@ async function createReviewComments(annotations, changedFiles) {
     let unpostable = [];
     let postable = [];
     groupedAnnotations.forEach(annotation => {
+        logger_1.default.Instance.debug(JSON.stringify(annotation));
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         if (annotation.diffLines.find((d) => d === annotation.line)) {
             postable.push({
@@ -416,7 +417,7 @@ async function createReviewComments(annotations, changedFiles) {
             });
         }
     });
-    logger_1.default.Instance.debug('Created review comments from annotations.');
+    logger_1.default.Instance.info('Created review comments from annotations.');
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
