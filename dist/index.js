@@ -402,7 +402,7 @@ async function createReviewComments(annotations, changedFiles) {
     groupedAnnotations.forEach(annotation => {
         logger_1.default.Instance.debug(JSON.stringify(annotation));
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        if (annotation.diffLines.find((d) => d === annotation.line)) {
+        if (annotation.diffLines.find((d) => d === 1)) {
             postable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
                 path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
