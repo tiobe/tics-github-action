@@ -110,6 +110,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
       annotation.diffLines = fetchDiffLines(file);
+      annotation.path = file.filename;
       groupedAnnotations.push(annotation);
     } else {
       groupedAnnotations[index].count += annotation.count;
@@ -125,14 +126,14 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       Logger.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-        path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
-        line: 6
+        path: annotation.path,
+        line: annotation.line
       });
     } else {
       Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       unpostable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-        path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
+        path: annotation.path,
         line: annotation.line
       });
     }

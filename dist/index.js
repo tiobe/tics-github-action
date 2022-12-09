@@ -116,7 +116,7 @@ exports.ticsConfig = {
     extendTics: (0, core_1.getInput)('extendTics'),
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'debug',
     postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getInput)('postAnnotations') : true,
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
@@ -391,6 +391,7 @@ async function createReviewComments(annotations, changedFiles) {
         const index = findAnnotationInList(groupedAnnotations, annotation);
         if (index === -1) {
             annotation.diffLines = fetchDiffLines(file);
+            annotation.path = file.filename;
             groupedAnnotations.push(annotation);
         }
         else {
@@ -405,15 +406,15 @@ async function createReviewComments(annotations, changedFiles) {
             logger_1.default.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-                path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
-                line: 6
+                path: annotation.path,
+                line: annotation.line
             });
         }
         else {
             logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
             unpostable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-                path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
+                path: annotation.path,
                 line: annotation.line
             });
         }
@@ -570,10 +571,8 @@ class Logger {
      * @param {string} string
      */
     debug(string) {
-        if (configuration_1.ticsConfig.logLevel === 'debug') {
-            core.debug(string);
-            this.called = 'debug';
-        }
+        core.debug(string);
+        this.called = 'debug';
     }
     /**
      * Uses core.warning to print to the console.
