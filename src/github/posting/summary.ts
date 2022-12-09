@@ -185,7 +185,7 @@ function findAnnotationInList(list: any[], annotation: any) {
  * @returns Summary of all the review comments that could not be posted.
  */
 export function createUnpostableReviewCommentsSummary(unpostableReviewComments: any[]) {
-  let header = 'Quality gate failures that cannot be annotated in "Files Changed":';
+  let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
   let body = '';
   let previousPath = '';
 
