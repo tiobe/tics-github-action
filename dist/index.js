@@ -257,7 +257,7 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
         pull_number: configuration_1.githubConfig.pullRequestNumber,
         event: qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES,
         body: body,
-        comments: [] // reviewComments ? reviewComments.postable : undefined
+        comments: reviewComments ? reviewComments.postable : undefined
     };
     try {
         logger_1.default.Instance.header('Posting a review for this pull request.');
@@ -406,7 +406,7 @@ async function createReviewComments(annotations, changedFiles) {
             postable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
                 path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
-                line: annotation.line
+                line: 6
             });
         }
         else {
