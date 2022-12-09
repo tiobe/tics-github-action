@@ -11,9 +11,8 @@ import { Events } from '../../helper/enums';
 export async function postReview(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments: ReviewComments | undefined) {
   let body = createQualityGateSummary(qualityGate);
   body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
+  body += reviewComments && reviewComments.unpostable.length > 0 ? createUnpostableReviewCommentsSummary(reviewComments.unpostable) : '';
   body += createFilesSummary(filesAnalyzed);
-
-  if (reviewComments) body += reviewComments.unpostable.length > 0 ? createUnpostableReviewCommentsSummary(reviewComments.unpostable) : '';
 
   const params: any = {
     owner: githubConfig.owner,

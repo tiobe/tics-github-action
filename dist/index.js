@@ -248,9 +248,8 @@ const enums_1 = __nccwpck_require__(1655);
 async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
     body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
+    body += reviewComments && reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostableReviewCommentsSummary)(reviewComments.unpostable) : '';
     body += (0, summary_1.createFilesSummary)(filesAnalyzed);
-    if (reviewComments)
-        body += reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostableReviewCommentsSummary)(reviewComments.unpostable) : '';
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
