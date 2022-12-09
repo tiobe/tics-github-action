@@ -323,6 +323,7 @@ exports.createLinkSummary = createLinkSummary;
 function createFilesSummary(fileList) {
     let header = 'The following files have been checked:';
     let body = '<ul>';
+    fileList.sort();
     fileList.forEach(file => {
         body += `<li>${file}</li>`;
     });
