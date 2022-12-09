@@ -138,7 +138,6 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       });
     }
   });
-  Logger.Instance.debug(JSON.stringify(postable));
   Logger.Instance.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }

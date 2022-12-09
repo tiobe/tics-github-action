@@ -419,7 +419,6 @@ async function createReviewComments(annotations, changedFiles) {
             });
         }
     });
-    logger_1.default.Instance.debug(JSON.stringify(postable));
     logger_1.default.Instance.info('Created review comments from annotations.');
     return { postable: postable, unpostable: unpostable };
 }
