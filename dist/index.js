@@ -473,7 +473,7 @@ function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
         else {
             body += `<tr><td><b>TiCS: ${reviewComment.type} violation: ${reviewComment.msg}</b><br>${reviewComment.displayCount}Line: ${reviewComment.line}, Rule: ${reviewComment.rule}, Level: ${reviewComment.level}, Category: ${reviewComment.category}</td></tr>`;
         }
-        previousPath === reviewComment.path;
+        previousPath = reviewComment.path;
     });
     return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
 }
