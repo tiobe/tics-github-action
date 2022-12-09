@@ -120,15 +120,16 @@ export async function createReviewComments(annotations: any[], changedFiles: any
   let postable: ReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
-    Logger.Instance.debug(JSON.stringify(annotation));
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.includes(annotation.line)) {
+      Logger.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
         line: annotation.line
       });
     } else {
+      Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       unpostable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
         path: annotation.fullPath.replace(`HIE://${ticsConfig.projectName}/${ticsConfig.branchName}/`, ''),
