@@ -400,9 +400,9 @@ async function createReviewComments(annotations, changedFiles) {
     let unpostable = [];
     let postable = [];
     groupedAnnotations.forEach(annotation => {
-        logger_1.default.Instance.debug(JSON.stringify(annotation));
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
         if (annotation.diffLines.includes(annotation.line)) {
+            logger_1.default.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
                 path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
@@ -410,6 +410,7 @@ async function createReviewComments(annotations, changedFiles) {
             });
         }
         else {
+            logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
             unpostable.push({
                 body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
                 path: annotation.fullPath.replace(`HIE://${configuration_1.ticsConfig.projectName}/${configuration_1.ticsConfig.branchName}/`, ''),
