@@ -56,7 +56,7 @@ async function buildRunCommand(fileListPath: string) {
   if (githubConfig.runnerOS === 'Linux') {
     return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
   }
-  return `powershell "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
+  return `powershell "${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
 }
 
 /**
@@ -70,7 +70,7 @@ async function getInstallTics() {
   if (githubConfig.runnerOS === 'Linux') {
     return `source <(curl -s '${installTicsUrl}') &&`;
   }
-  return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}')) ;`;
+  return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 
 /**
