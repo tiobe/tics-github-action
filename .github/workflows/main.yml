@@ -1,5 +1,3 @@
-on: [pull_request]
-
 jobs:
   TiCS:
     name: TiCS
@@ -7,15 +5,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: TICS Action Run
-        uses: ./
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
+      - name: Jest
+        uses: actions/setup-node@v3
         with:
-          projectName: 'js-test-project'
-          ticsConfiguration: http://localhost/tiobeweb/TiCS/api/cfg?name=default
-          installTics: true
-          clientToken: 'myclienttoken'
-          branchName: main
-          tmpDir: /home/lmtjanssen/test
+          node-version: 16
+      - run: npm ci
+      - run: npm test

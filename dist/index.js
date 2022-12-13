@@ -1,6 +1,41 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 7829:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPostedReviewComments = void 0;
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+const configuration_1 = __nccwpck_require__(6868);
+/**
+ * Gets a list of all reviews posted on the pull request.
+ * @returns List of reviews posted on the pull request.
+ */
+async function getPostedReviewComments() {
+    try {
+        logger_1.default.Instance.info('Retrieving posted review comments.');
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            pull_number: configuration_1.githubConfig.pullRequestNumber
+        };
+        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Could not retrieve the review comments: ${error.message}`);
+    }
+}
+exports.getPostedReviewComments = getPostedReviewComments;
+
+
+/***/ }),
+
 /***/ 5857:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -139,28 +174,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deletePreviousReviewComments = exports.getPostedReviewComments = void 0;
+exports.deletePreviousReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
-/**
- * Gets a list of all reviews posted on the pull request.
- * @returns List of reviews posted on the pull request.
- */
-async function getPostedReviewComments() {
-    try {
-        logger_1.default.Instance.info('Retrieving posted review comments.');
-        const params = {
-            owner: configuration_1.githubConfig.owner,
-            repo: configuration_1.githubConfig.reponame,
-            pull_number: configuration_1.githubConfig.pullRequestNumber
-        };
-        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
-    }
-    catch (error) {
-        logger_1.default.Instance.error(`Could not retrieve the review comments: ${error.message}`);
-    }
-}
-exports.getPostedReviewComments = getPostedReviewComments;
 /**
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
@@ -713,6 +729,7 @@ const fetcher_1 = __nccwpck_require__(1559);
 const review_1 = __nccwpck_require__(8973);
 const summary_1 = __nccwpck_require__(6649);
 const annotations_1 = __nccwpck_require__(9757);
+const annotations_2 = __nccwpck_require__(7829);
 if (configuration_1.githubConfig.eventName !== 'pull_request')
     logger_1.default.Instance.exit('This action can only run on pull requests.');
 if (!isCheckedOut())
@@ -745,7 +762,7 @@ async function main() {
             if (annotations) {
                 reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
             }
-            const previousReviewComments = await (0, annotations_1.getPostedReviewComments)();
+            const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
             if (previousReviewComments)
                 await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
         }

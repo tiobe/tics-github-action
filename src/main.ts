@@ -8,7 +8,8 @@ import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
 import { createReviewComments } from './github/posting/summary';
-import { getPostedReviewComments as getPreviousReviewComments, deletePreviousReviewComments } from './github/posting/annotations';
+import { deletePreviousReviewComments } from './github/posting/annotations';
+import { getPostedReviewComments } from './github/calling/annotations';
 
 if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
@@ -46,7 +47,7 @@ async function main() {
       if (annotations) {
         reviewComments = await createReviewComments(annotations, changedFiles);
       }
-      const previousReviewComments = await getPreviousReviewComments();
+      const previousReviewComments = await getPostedReviewComments();
       if (previousReviewComments) await deletePreviousReviewComments(previousReviewComments);
     }
 
