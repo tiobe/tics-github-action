@@ -147,8 +147,8 @@ exports.ticsConfig = {
     branchName: (0, core_1.getInput)('branchName'),
     branchDir: (0, core_1.getInput)('branchDir'),
     calc: (0, core_1.getInput)('calc') ? (0, core_1.getInput)('calc') : 'GATE',
-    clientToken: (0, core_1.getInput)('clientToken'),
-    extendTics: (0, core_1.getInput)('extendTics'),
+    clientData: (0, core_1.getInput)('clientData'),
+    additionalFlags: (0, core_1.getInput)('additionalFlags'),
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
     logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'debug',
@@ -910,9 +910,9 @@ function getTicsCommand(fileListPath) {
     execString += configuration_1.ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
     execString += configuration_1.ticsConfig.calc ? `-calc ${configuration_1.ticsConfig.calc} ` : '-recalc GATE ';
     execString += configuration_1.ticsConfig.projectName ? `-project ${configuration_1.ticsConfig.projectName} ` : '';
-    execString += configuration_1.ticsConfig.clientToken ? `-cdtoken ${configuration_1.ticsConfig.clientToken} ` : '';
+    execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir ${configuration_1.ticsConfig.tmpDir} ` : '';
-    execString += configuration_1.ticsConfig.extendTics ? configuration_1.ticsConfig.extendTics : '';
+    execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     return execString;
 }
 

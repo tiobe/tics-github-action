@@ -22,7 +22,9 @@ jest.mock('../src/github/configuration', () => {
       paginate: jest.fn(),
       rest: {
         pulls: {
-          listFiles: () => {}
+          listFiles: () => {},
+          listReviewComments: () => {},
+          deleteReviewComment: jest.fn()
         }
       }
     }

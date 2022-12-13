@@ -117,8 +117,8 @@ function getTicsCommand(fileListPath: string) {
   execString += ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
   execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} ` : '-recalc GATE ';
   execString += ticsConfig.projectName ? `-project ${ticsConfig.projectName} ` : '';
-  execString += ticsConfig.clientToken ? `-cdtoken ${ticsConfig.clientToken} ` : '';
+  execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir ${ticsConfig.tmpDir} ` : '';
-  execString += ticsConfig.extendTics ? ticsConfig.extendTics : '';
+  execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
   return execString;
 }
