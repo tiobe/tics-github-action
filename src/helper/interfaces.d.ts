@@ -21,5 +21,5 @@ export interface ReviewComment {
 
 export interface ReviewComments {
   postable: ReviewComment[];
-  unpostable: ReviewComment[];
+  unpostable: any[];
 }

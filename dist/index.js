@@ -394,27 +394,8 @@ function createConditionsTable(conditions) {
  */
 async function createReviewComments(annotations, changedFiles) {
     logger_1.default.Instance.info('Creating review comments from annotations.');
-    // sort the annotations based on the filename and linenumber.
-    annotations.sort((a, b) => {
-        if (a.fullPath === b.fullPath)
-            return a.line - b.line;
-        return a.fullPath > b.fullPath ? 1 : -1;
-    });
-    let groupedAnnotations = [];
-    annotations.forEach(annotation => {
-        const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
-        if (!file)
-            return;
-        const index = findAnnotationInList(groupedAnnotations, annotation);
-        if (index === -1) {
-            annotation.diffLines = fetchDiffLines(file);
-            annotation.path = file.filename;
-            groupedAnnotations.push(annotation);
-        }
-        else {
-            groupedAnnotations[index].count += annotation.count;
-        }
-    });
+    const sortedAnnotations = sortAnnotations(annotations);
+    const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
     let unpostable = [];
     let postable = [];
     groupedAnnotations.forEach(annotation => {
@@ -437,6 +418,42 @@ async function createReviewComments(annotations, changedFiles) {
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
+/**
+ * Sorts annotations based on file name and line number.
+ * @param annotations annotations returned by TiCS analyzer.
+ * @returns sorted anotations.
+ */
+function sortAnnotations(annotations) {
+    return annotations.sort((a, b) => {
+        if (a.fullPath === b.fullPath)
+            return a.line - b.line;
+        return a.fullPath > b.fullPath ? 1 : -1;
+    });
+}
+/**
+ * Groups annotations by file. Excludes annotations for files that have not been changed.
+ * @param annotations sorted annotations by file and line.
+ * @param changedFiles List of files changed in the pull request.
+ * @returns grouped annotations.
+ */
+function groupAnnotations(annotations, changedFiles) {
+    let groupedAnnotations = [];
+    annotations.forEach(annotation => {
+        const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
+        if (!file)
+            return;
+        const index = findAnnotationInList(groupedAnnotations, annotation);
+        if (index === -1) {
+            annotation.diffLines = fetchDiffLines(file);
+            annotation.path = file.filename;
+            groupedAnnotations.push(annotation);
+        }
+        else {
+            groupedAnnotations[index].count += annotation.count;
+        }
+    });
+    return groupedAnnotations;
+}
 /**
  * Finds all lines that are shown in GitHub diff chunk.
  * @param file file to search the lines changed chunk for.
