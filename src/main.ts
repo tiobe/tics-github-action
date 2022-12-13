@@ -1,4 +1,4 @@
-import { readdir } from 'fs/promises';
+import { readdirSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './github/configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
@@ -65,8 +65,8 @@ async function main() {
  * Checks if a .git directory exists to see if a checkout has been performed.
  * @returns boolean
  */
-async function isCheckedOut() {
-  const files = await readdir('.');
+function isCheckedOut() {
+  const files = readdirSync('.');
   if (files.length > 0) {
     return true;
   }
