@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { readdir } from 'fs/promises';
 import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './github/configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
@@ -65,10 +65,11 @@ async function main() {
  * Checks if a .git directory exists to see if a checkout has been performed.
  * @returns boolean
  */
-function isCheckedOut() {
-  if (!existsSync('.git')) {
-    Logger.Instance.error('No git checkout found');
-    return false;
+async function isCheckedOut() {
+  const files = await readdir('.');
+  if (files.length > 0) {
+    return true;
   }
-  return true;
+  Logger.Instance.error('No files checked out by the action.');
+  return false;
 }

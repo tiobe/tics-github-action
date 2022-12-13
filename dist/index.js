@@ -718,7 +718,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const fs_1 = __nccwpck_require__(5747);
+const promises_1 = __nccwpck_require__(9225);
 const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(6868);
 const pulls_1 = __nccwpck_require__(5857);
@@ -780,12 +780,13 @@ async function main() {
  * Checks if a .git directory exists to see if a checkout has been performed.
  * @returns boolean
  */
-function isCheckedOut() {
-    if (!(0, fs_1.existsSync)('.git')) {
-        logger_1.default.Instance.error('No git checkout found');
-        return false;
+async function isCheckedOut() {
+    const files = await (0, promises_1.readdir)('.');
+    if (files.length > 0) {
+        return true;
     }
-    return true;
+    logger_1.default.Instance.error('No files checked out by the action.');
+    return false;
 }
 
 
@@ -65520,6 +65521,14 @@ module.exports = require("events");
 
 "use strict";
 module.exports = require("fs");
+
+/***/ }),
+
+/***/ 9225:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs/promises");
 
 /***/ }),
 

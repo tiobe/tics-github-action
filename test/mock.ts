@@ -25,6 +25,9 @@ jest.mock('../src/github/configuration', () => {
           listFiles: () => {},
           listReviewComments: () => {},
           deleteReviewComment: jest.fn()
+        },
+        issues: {
+          createComment: jest.fn()
         }
       }
     }
