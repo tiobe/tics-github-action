@@ -1,8 +1,8 @@
 on: push
 
 jobs:
-  TiCS:
-    name: TiCS
+  Jest:
+    name: Jest
     runs-on: self-hosted
     steps:
       - name: Checkout
