@@ -781,12 +781,11 @@ async function main() {
  * @returns boolean
  */
 function isCheckedOut() {
-    const files = (0, fs_1.readdirSync)('.');
-    if (files.length > 0) {
-        return true;
+    if (!(0, fs_1.existsSync)('.git')) {
+        logger_1.default.Instance.error('No git checkout found');
+        return false;
     }
-    logger_1.default.Instance.error('No files checked out by the action.');
-    return false;
+    return true;
 }
 
 
