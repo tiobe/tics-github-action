@@ -36,11 +36,11 @@ jest.mock('../src/github/configuration', () => {
 });
 jest.mock('@actions/core', () => {
   return {
-    info: jest.fn(data => console.log(data)),
-    debug: jest.fn(data => console.log(data)),
-    warning: jest.fn(data => console.warn(data)),
-    error: jest.fn(data => console.error(data)),
-    setFailed: jest.fn(data => console.error(data))
+    info: jest.fn(),
+    debug: jest.fn(),
+    warning: jest.fn(),
+    error: jest.fn(),
+    setFailed: jest.fn()
   };
 });
 jest.mock('fs', () => {
