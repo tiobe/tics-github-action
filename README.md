@@ -14,6 +14,7 @@ The TiCS Github action integrates TiCS Client analysis to measure your code qual
 - It is not working for forked repositories.
 - It is not working for TiCS installations using the legacy deployment architecture.
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
+- The connected runner should have Git installed.
 
 ## Usage
 
@@ -34,7 +35,7 @@ jobs:
       - uses: actions/checkout@v3
       # Triggering TiCS analysis and posting the results of Quality Gating feature as part of the pull request.
       - name: TiCS GitHub Action
-        uses: tiobe/tics-github-action@v1.0.0
+        uses: tiobe/tics-github-action@version-2.0
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
