@@ -440,12 +440,10 @@ function groupAnnotations(annotations, changedFiles) {
     let groupedAnnotations = [];
     annotations.forEach(annotation => {
         const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
-        if (!file)
-            return;
         const index = findAnnotationInList(groupedAnnotations, annotation);
         if (index === -1) {
-            annotation.diffLines = fetchDiffLines(file);
-            annotation.path = file.filename;
+            annotation.diffLines = file ? fetchDiffLines(file) : [];
+            annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
             groupedAnnotations.push(annotation);
         }
         else {
@@ -529,7 +527,7 @@ var Status;
     Status[Status["FAILED"] = 0] = "FAILED";
     Status[Status["PASSED"] = 1] = "PASSED";
     Status[Status["WARNING"] = 2] = "WARNING";
-    Status[Status["SKIPPED"] = 2] = "SKIPPED";
+    Status[Status["SKIPPED"] = 3] = "SKIPPED";
 })(Status = exports.Status || (exports.Status = {}));
 var Events;
 (function (Events) {

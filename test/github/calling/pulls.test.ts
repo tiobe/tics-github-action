@@ -3,12 +3,22 @@ import { expect, test, jest } from '@jest/globals';
 import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFiles } from '../../../src/github/calling/pulls';
 import { octokit } from '../../../src/github/configuration';
+import Logger from '../../../src/helper/logger';
 
 test('Should return single file on getChangedFiles', async () => {
   (octokit.paginate as any).mockReturnValueOnce([{ filename: 'test.js' }]);
 
   const response = await getChangedFiles();
   expect(response).toEqual([{ filename: 'test.js' }]);
+});
+
+test('Should call debug on callback of paginate', async () => {
+  const spy = jest.spyOn(Logger.Instance, 'debug');
+  await getChangedFiles();
+
+  (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js' }, { filename: 'test.js' }] });
+  expect(spy).toHaveBeenCalledTimes(2);
+  expect(spy).toHaveBeenCalledWith('test.js');
 });
 
 test('Should be called with specific parameters on getChangedFiles', async () => {
@@ -26,12 +36,15 @@ test('Should return three files on getChangedFiles', async () => {
   expect((response as any[]).length).toEqual(3);
 });
 
-test('Should throw an error on getChangedFiles', async () => {
-  (octokit.paginate as any).mockReturnValueOnce(() => {
+test('Should call exit on thrown error on paginate', async () => {
+  (octokit.paginate as any).mockImplementationOnce(() => {
     throw new Error();
   });
-  const response = await getChangedFiles();
-  expect(response).toThrowError();
+  jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+  const spy = jest.spyOn(Logger.Instance, 'exit');
+  await getChangedFiles();
+
+  expect(spy).toHaveBeenCalledTimes(1);
 });
 
 test('Should return file location on changedFilesToFile', () => {

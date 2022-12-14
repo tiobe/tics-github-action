@@ -2,6 +2,7 @@ import { expect, test, jest } from '@jest/globals';
 import { githubConfig, octokit } from '../../../src/github/configuration';
 import { postErrorComment } from '../../../src/github/posting/comment';
 import { createErrorSummary } from '../../../src/github/posting/summary';
+import Logger from '../../../src/helper/logger';
 
 jest.mock('../../../src/github/posting/summary', () => {
   return {
@@ -37,4 +38,21 @@ test('Should call createComment with values', async () => {
     body: 'body'
   };
   expect(spy).toBeCalledWith(calledWith);
+});
+
+test('Should throw an error on postErrorComment', async () => {
+  (createErrorSummary as any).mockReturnValueOnce('body');
+  jest.spyOn(octokit.rest.issues, 'createComment').mockImplementationOnce(() => {
+    throw new Error();
+  });
+  const spy = jest.spyOn(Logger.Instance, 'error');
+
+  const analysis = {
+    errorList: ['error1'],
+    warningList: [],
+    statusCode: 0
+  };
+  await postErrorComment(analysis);
+
+  expect(spy).toBeCalledTimes(1);
 });

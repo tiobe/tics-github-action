@@ -8,6 +8,7 @@ import {
   createQualityGateSummary
 } from '../../../src/github/posting/summary';
 import { Events } from '../../../src/helper/enums';
+import Logger from '../../../src/helper/logger';
 
 jest.mock('../../../src/github/posting/summary', () => {
   return {
@@ -109,4 +110,33 @@ test('Should call postReview with values failed', async () => {
     comments: []
   };
   expect(spy).toBeCalledWith(calledWith);
+});
+
+test('Should throw an error on postErrorComment', async () => {
+  (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
+  (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
+  (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
+  (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
+
+  jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
+    throw new Error();
+  });
+  const spy = jest.spyOn(Logger.Instance, 'error');
+
+  const analysis = {
+    errorList: ['error1'],
+    warningList: [],
+    statusCode: 0,
+    explorerUrl: undefined
+  };
+  const qualityGate = {
+    passed: true,
+    message: 'message',
+    url: 'url',
+    gates: [],
+    annotationsApiV1Links: []
+  };
+  await postReview(analysis, [''], qualityGate, undefined);
+
+  expect(spy).toBeCalledTimes(1);
 });

@@ -38,6 +38,7 @@ jest.mock('@actions/core', () => {
   return {
     info: jest.fn(data => console.log(data)),
     debug: jest.fn(data => console.log(data)),
+    warning: jest.fn(data => console.warn(data)),
     error: jest.fn(data => console.error(data)),
     setFailed: jest.fn(data => console.error(data))
   };
@@ -49,6 +50,12 @@ jest.mock('fs', () => {
 });
 jest.mock('canonical-path', () => {
   return {
-    resolve: jest.fn()
+    resolve: jest.fn(data => data),
+    normalize: jest.fn(data => data)
+  };
+});
+jest.mock('markdown-table', () => {
+  return {
+    markdownTable: jest.fn(() => '|header|\n|---|\n|body|')
   };
 });

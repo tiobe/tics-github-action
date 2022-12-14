@@ -147,11 +147,10 @@ function groupAnnotations(annotations: any[], changedFiles: any[]) {
   let groupedAnnotations: any[] = [];
   annotations.forEach(annotation => {
     const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
-    if (!file) return;
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
-      annotation.diffLines = fetchDiffLines(file);
-      annotation.path = file.filename;
+      annotation.diffLines = file ? fetchDiffLines(file) : [];
+      annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else {
       groupedAnnotations[index].count += annotation.count;
