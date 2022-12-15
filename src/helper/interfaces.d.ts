@@ -1,5 +1,5 @@
 export interface Analysis {
-  statusCode: number;
+  completed: boolean;
   errorList: string[];
   warningList: string[];
   explorerUrl?: string;

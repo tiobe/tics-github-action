@@ -757,7 +757,7 @@ async function main() {
             return logger_1.default.Instance.exit('No changed files found to analyze.');
         const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
         const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-        if (analysis.statusCode === -1) {
+        if (!analysis.completed) {
             (0, comment_1.postErrorComment)(analysis);
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
             (0, api_helper_1.cliSummary)(analysis);
@@ -832,7 +832,7 @@ async function runTicsAnalyzer(fileListPath) {
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     try {
-        const statusCode = await (0, exec_1.exec)(command, [], {
+        await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
                 stdout(data) {
@@ -846,7 +846,7 @@ async function runTicsAnalyzer(fileListPath) {
             }
         });
         return {
-            statusCode: statusCode,
+            completed: true,
             explorerUrl: explorerUrl,
             errorList: errorList,
             warningList: warningList
@@ -854,7 +854,7 @@ async function runTicsAnalyzer(fileListPath) {
     }
     catch (error) {
         return {
-            statusCode: -1,
+            completed: false,
             errorList: errorList,
             warningList: warningList
         };

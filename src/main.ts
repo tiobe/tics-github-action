@@ -25,7 +25,7 @@ async function main() {
     const changedFilesFilePath = changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
-    if (analysis.statusCode === -1) {
+    if (!analysis.completed) {
       postErrorComment(analysis);
       Logger.Instance.setFailed('Failed to run TiCS Github Action.');
       cliSummary(analysis);
