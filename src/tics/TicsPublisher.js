@@ -45,7 +45,8 @@ export class TicsPublisher {
   **/
   getItemFromUrl = (explorerUrl, item) => {
     let regExpr = new RegExp(`${item}\\((.*?)\\)`);
-    let itemValue = decodeURIComponent(explorerUrl).match(regExpr);
+    let cleanedUrl = explorerUrl.replace(/\+/g, "%20");
+    let itemValue = decodeURIComponent(cleanedUrl).match(regExpr);
 
     if (itemValue.length >= 2) {
       console.log(`Retrieved ${item} value: ${itemValue[1]}`);
