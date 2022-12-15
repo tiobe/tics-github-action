@@ -107,7 +107,8 @@ export function cliSummary(analysis: Analysis) {
  **/
 export function getItemFromUrl(url: string, query: string) {
   let regExpr = new RegExp(`${query}\\((.*?)\\)`);
-  let itemValue = decodeURIComponent(url).match(regExpr);
+  let cleanUrl = url.replace(/\+/g, '%20');
+  let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
 
   if (itemValue && itemValue.length >= 2) {
     Logger.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);

@@ -151,7 +151,7 @@ exports.ticsConfig = {
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'debug',
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
     postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getInput)('postAnnotations') : true,
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
@@ -1040,7 +1040,8 @@ exports.cliSummary = cliSummary;
  **/
 function getItemFromUrl(url, query) {
     let regExpr = new RegExp(`${query}\\((.*?)\\)`);
-    let itemValue = decodeURIComponent(url).match(regExpr);
+    let cleanUrl = url.replace(/\+/g, '%20');
+    let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
     if (itemValue && itemValue.length >= 2) {
         logger_1.default.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);
         return itemValue[1];

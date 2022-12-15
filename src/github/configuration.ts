@@ -45,7 +45,7 @@ export let ticsConfig = {
   additionalFlags: getInput('additionalFlags'),
   hostnameVerification: getHostnameVerification(),
   installTics: getInput('installTics') === 'true' ? true : false,
-  logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'debug',
+  logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default',
   postAnnotations: getInput('postAnnotations') ? getInput('postAnnotations') : true,
   ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : processEnv.TICSAUTHTOKEN,
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
