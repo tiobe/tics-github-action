@@ -22,11 +22,11 @@ export async function runTicsAnalyzer(fileListPath: string) {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
-          Logger.Instance.info(data.toString());
+          process.stdout.write(data.toString());
           findInStdOutOrErr(data.toString(), fileListPath);
         },
         stderr(data: Buffer) {
-          Logger.Instance.info(data.toString());
+          process.stdout.write(data.toString());
           findInStdOutOrErr(data.toString(), fileListPath);
         }
       }

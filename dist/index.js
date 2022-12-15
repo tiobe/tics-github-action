@@ -836,11 +836,11 @@ async function runTicsAnalyzer(fileListPath) {
             silent: true,
             listeners: {
                 stdout(data) {
-                    logger_1.default.Instance.info(data.toString());
+                    process.stdout.write(data.toString());
                     findInStdOutOrErr(data.toString(), fileListPath);
                 },
                 stderr(data) {
-                    logger_1.default.Instance.info(data.toString());
+                    process.stdout.write(data.toString());
                     findInStdOutOrErr(data.toString(), fileListPath);
                 }
             }
