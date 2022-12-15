@@ -30,8 +30,8 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.1.1",
     "@actions/http-client": "^2.0.1",
-    "@octokit/rest": "^19.0.5",
     "canonical-path": "^1.0.0",
     "markdown-table": "^3.0.3",
     "proxy-agent": "^5.0.0",

@@ -14,6 +14,7 @@ test('Should call createComment once', async () => {
   (createErrorSummary as any).mockReturnValueOnce('body');
   const spy = jest.spyOn(octokit.rest.issues, 'createComment');
   const analysis = {
+    completed: true,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0
@@ -26,6 +27,7 @@ test('Should call createComment with values', async () => {
   (createErrorSummary as any).mockReturnValueOnce('body');
   const spy = jest.spyOn(octokit.rest.issues, 'createComment');
   const analysis = {
+    completed: true,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0
@@ -48,6 +50,7 @@ test('Should throw an error on postErrorComment', async () => {
   const spy = jest.spyOn(Logger.Instance, 'error');
 
   const analysis = {
+    completed: false,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0

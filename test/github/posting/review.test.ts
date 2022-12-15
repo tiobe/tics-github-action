@@ -27,6 +27,7 @@ test('Should call postReview once', async () => {
   const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
   const analysis = {
+    completed: true,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0,
@@ -51,6 +52,7 @@ test('Should call postReview with values passed and no comments', async () => {
   const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
   const analysis = {
+    completed: true,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0,
@@ -84,6 +86,7 @@ test('Should call postReview with values failed', async () => {
   const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
   const analysis = {
+    completed: true,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0,
@@ -124,6 +127,7 @@ test('Should throw an error on postErrorComment', async () => {
   const spy = jest.spyOn(Logger.Instance, 'error');
 
   const analysis = {
+    completed: false,
     errorList: ['error1'],
     warningList: [],
     statusCode: 0,

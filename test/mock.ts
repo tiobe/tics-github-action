@@ -15,7 +15,6 @@ jest.mock('../src/github/configuration', () => {
       branchdir: '',
       eventName: '',
       runnerOS: '',
-      githubToken: '',
       pullRequestNumber: '1'
     },
     octokit: {
