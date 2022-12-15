@@ -832,7 +832,7 @@ async function runTicsAnalyzer(fileListPath) {
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     try {
-        await (0, exec_1.exec)(command, [], {
+        const statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
                 stdout(data) {
@@ -847,6 +847,7 @@ async function runTicsAnalyzer(fileListPath) {
         });
         return {
             completed: true,
+            statusCode: statusCode,
             explorerUrl: explorerUrl,
             errorList: errorList,
             warningList: warningList
@@ -855,6 +856,7 @@ async function runTicsAnalyzer(fileListPath) {
     catch (error) {
         return {
             completed: false,
+            statusCode: -1,
             errorList: errorList,
             warningList: warningList
         };

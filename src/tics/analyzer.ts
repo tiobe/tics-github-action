@@ -18,7 +18,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
 
   Logger.Instance.header('Running TiCS');
   try {
-    await exec(command, [], {
+    const statusCode = await exec(command, [], {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
@@ -34,6 +34,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
 
     return {
       completed: true,
+      statusCode: statusCode,
       explorerUrl: explorerUrl,
       errorList: errorList,
       warningList: warningList
@@ -41,6 +42,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
   } catch (error: any) {
     return {
       completed: false,
+      statusCode: -1,
       errorList: errorList,
       warningList: warningList
     };
