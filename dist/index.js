@@ -107,9 +107,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const http_client_1 = __nccwpck_require__(6255);
 const fs_1 = __nccwpck_require__(5747);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const api_helper_1 = __nccwpck_require__(3823);
@@ -157,7 +158,9 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
+const httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
 exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
+exports.httpClient = new http_client_1.HttpClient('http-client', [], httpClientOptions);
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -944,9 +947,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getProjectName = exports.getItemFromUrl = exports.cliSummary = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.httpRequest = void 0;
-const http_client_1 = __nccwpck_require__(6255);
-const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
+exports.getProjectName = exports.getItemFromUrl = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.cliSummary = exports.httpRequest = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(6868);
 /**
@@ -955,15 +956,11 @@ const configuration_1 = __nccwpck_require__(6868);
  * @returns Promise of the data retrieved from the response.
  */
 async function httpRequest(url) {
-    const options = {
-        rejectUnauthorized: configuration_1.ticsConfig.hostnameVerification,
-        agent: new proxy_agent_1.default()
-    };
     const headers = {
         Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
         XRequestedWith: 'tics'
     };
-    const response = await new http_client_1.HttpClient('http-client', [], options).get(url, headers);
+    const response = await configuration_1.httpClient.get(url, headers);
     switch (response.message.statusCode) {
         case 200:
             return JSON.parse(await response.readBody());
@@ -985,6 +982,25 @@ async function httpRequest(url) {
     }
 }
 exports.httpRequest = httpRequest;
+/**
+ * Creates a cli summary of all errors and bugs based on the logLevel.
+ * @param analysis the output of the TiCS analysis run.
+ */
+function cliSummary(analysis) {
+    switch (configuration_1.ticsConfig.logLevel) {
+        case 'none':
+            break;
+        case 'debug':
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+            break;
+        case 'default':
+        default:
+            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+            break;
+    }
+}
+exports.cliSummary = cliSummary;
 /**
  * Creates the TiCS install data from the TiCS Viewer.
  * @param url url given in the ticsConfiguration.
@@ -1017,23 +1033,6 @@ function getTicsWebBaseUrlFromUrl(url) {
 }
 exports.getTicsWebBaseUrlFromUrl = getTicsWebBaseUrlFromUrl;
 /**
- * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TiCS analysis run.
- */
-function cliSummary(analysis) {
-    switch (configuration_1.ticsConfig.logLevel) {
-        case 'debug':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
-            break;
-        case 'default':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-        case 'none':
-            break;
-    }
-}
-exports.cliSummary = cliSummary;
-/**
  * Gets query value form a url
  * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
  * @param query the query (e.g. Project)
@@ -1056,7 +1055,7 @@ exports.getItemFromUrl = getItemFromUrl;
  * @returns project name.
  */
 function getProjectName(url) {
-    return configuration_1.ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : configuration_1.ticsConfig.projectName;
+    return configuration_1.ticsConfig.projectName === 'auto' ? getItemFromUrl(url, 'Project') : configuration_1.ticsConfig.projectName;
 }
 exports.getProjectName = getProjectName;
 

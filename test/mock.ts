@@ -30,7 +30,11 @@ jest.mock('../src/github/configuration', () => {
           createComment: jest.fn()
         }
       }
-    }
+    },
+    httpClient: {
+      get: jest.fn()
+    },
+    viewerUrl: '<url>'
   };
 });
 jest.mock('@actions/core', () => {
@@ -57,4 +61,7 @@ jest.mock('markdown-table', () => {
   return {
     markdownTable: jest.fn(() => '|header|\n|---|\n|body|')
   };
+});
+jest.mock('proxy-agent', () => {
+  return jest.fn();
 });

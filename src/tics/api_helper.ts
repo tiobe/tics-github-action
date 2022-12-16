@@ -1,9 +1,6 @@
-import { HttpClient } from '@actions/http-client';
 import { OutgoingHttpHeaders } from 'http';
-import { RequestOptions } from 'https';
-import ProxyAgent from 'proxy-agent';
 import Logger from '../helper/logger';
-import { ticsConfig, viewerUrl } from '../github/configuration';
+import { httpClient, ticsConfig, viewerUrl } from '../github/configuration';
 import { Analysis } from '../helper/interfaces';
 
 /**
@@ -12,15 +9,11 @@ import { Analysis } from '../helper/interfaces';
  * @returns Promise of the data retrieved from the response.
  */
 export async function httpRequest(url: string): Promise<any> {
-  const options: RequestOptions = {
-    rejectUnauthorized: ticsConfig.hostnameVerification,
-    agent: new ProxyAgent()
-  };
   const headers: OutgoingHttpHeaders = {
     Authorization: ticsConfig.ticsAuthToken ? `Basic ${ticsConfig.ticsAuthToken}` : undefined,
     XRequestedWith: 'tics'
   };
-  const response = await new HttpClient('http-client', [], options).get(url, headers);
+  const response = await httpClient.get(url, headers);
 
   switch (response.message.statusCode) {
     case 200:
@@ -50,6 +43,25 @@ export async function httpRequest(url: string): Promise<any> {
 }
 
 /**
+ * Creates a cli summary of all errors and bugs based on the logLevel.
+ * @param analysis the output of the TiCS analysis run.
+ */
+export function cliSummary(analysis: Analysis): void {
+  switch (ticsConfig.logLevel) {
+    case 'none':
+      break;
+    case 'debug':
+      analysis.errorList.forEach(error => Logger.Instance.error(error));
+      analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
+      break;
+    case 'default':
+    default:
+      analysis.errorList.forEach(error => Logger.Instance.error(error));
+      break;
+  }
+}
+
+/**
  * Creates the TiCS install data from the TiCS Viewer.
  * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
@@ -68,7 +80,7 @@ export function getInstallTicsApiUrl(url: string, os: string): string {
  * @param url url given in the ticsConfiguration.
  * @returns TIOBE web base url.
  */
-export function getTicsWebBaseUrlFromUrl(url: string) {
+export function getTicsWebBaseUrlFromUrl(url: string): string {
   const cfgMarker = 'cfg?name=';
   const apiMarker = '/api/';
   let baseUrl = '';
@@ -83,29 +95,12 @@ export function getTicsWebBaseUrlFromUrl(url: string) {
 }
 
 /**
- * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TiCS analysis run.
- */
-export function cliSummary(analysis: Analysis) {
-  switch (ticsConfig.logLevel) {
-    case 'debug':
-      analysis.errorList.forEach(error => Logger.Instance.error(error));
-      analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
-      break;
-    case 'default':
-      analysis.errorList.forEach(error => Logger.Instance.error(error));
-    case 'none':
-      break;
-  }
-}
-
-/**
  * Gets query value form a url
  * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
  * @param query the query (e.g. Project)
  * @returns query value (e.g. c-demo)
  **/
-export function getItemFromUrl(url: string, query: string) {
+export function getItemFromUrl(url: string, query: string): string {
   let regExpr = new RegExp(`${query}\\((.*?)\\)`);
   let cleanUrl = url.replace(/\+/g, '%20');
   let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
@@ -123,6 +118,6 @@ export function getItemFromUrl(url: string, query: string) {
  * @param url the TiCS explorer url.
  * @returns project name.
  */
-export function getProjectName(url: string) {
-  return ticsConfig.projectName == 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
+export function getProjectName(url: string): string {
+  return ticsConfig.projectName === 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
 }
