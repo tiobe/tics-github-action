@@ -872,16 +872,10 @@ exports.runTicsAnalyzer = runTicsAnalyzer;
  * @returns Command to run.
  */
 async function buildRunCommand(fileListPath) {
-    let command = '';
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
-        command = `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
+        return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
     }
-    else {
-        // reload environment path for current shell
-        command = `powershell "$env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + [System.Environment]::GetEnvironmentVariable('Path','User');`;
-        command += `${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
-    }
-    return command;
+    return `powershell "${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
 }
 /**
  * Get the command to install TiCS with.
@@ -893,6 +887,7 @@ async function getInstallTics() {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
+    logger_1.default.Instance.info((await (0, exec_1.exec)('where.exe TICS')).toString());
     return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
