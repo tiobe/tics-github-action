@@ -46,7 +46,7 @@ function getHostnameVerification() {
     return hostnameVerification;
 }
 exports.ticsConfig = {
-    projectName: (0, core_1.getInput)('projectName', { required: true }),
+    projectName: (0, core_1.getInput)('projectName'),
     branchName: (0, core_1.getInput)('branchName'),
     branchDir: (0, core_1.getInput)('branchDir'),
     calc: (0, core_1.getInput)('calc'),
@@ -54,10 +54,10 @@ exports.ticsConfig = {
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
-    postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getBooleanInput)('postAnnotations') : true,
+    logLevel: (0, core_1.getInput)('logLevel'),
+    postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
-    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
@@ -928,7 +928,7 @@ async function retrieveInstallTics(os) {
 function getTicsCommand(fileListPath) {
     let execString = 'TICS @' + fileListPath + ' -viewer ';
     execString += `-project '${configuration_1.ticsConfig.projectName}' `;
-    execString += configuration_1.ticsConfig.calc ? `-calc ${configuration_1.ticsConfig.calc} ` : '-calc GATE ';
+    execString += `-calc ${configuration_1.ticsConfig.calc} `;
     execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';

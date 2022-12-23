@@ -14,6 +14,7 @@ inputs:
   calc:
     description: 'Comma-separated list of metrics to be used'
     required: false
+    default: GATE
   clientData:
     description: 'A custom client-data token for the purpose of the Client Viewer functionality.'
     required: false
@@ -26,12 +27,15 @@ inputs:
   installTics:
     description: 'Boolean parameter to install TICS command-line tools on a runner before executing the analysis'
     required: false
+    default: false
   logLevel:
     description: 'Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`'
     required: false
+    default: default
   postAnnotations:
     description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
     required: false
+    default: true
   ticsAuthToken:
     description: 'Authentication token to authorize the plugin when it connects to the TICS Viewer.'
     required: false

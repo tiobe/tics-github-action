@@ -118,7 +118,7 @@ async function retrieveInstallTics(os: string) {
 function getTicsCommand(fileListPath: string) {
   let execString = 'TICS @' + fileListPath + ' -viewer ';
   execString += `-project '${ticsConfig.projectName}' `;
-  execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} ` : '-calc GATE ';
+  execString += `-calc ${ticsConfig.calc} `;
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';

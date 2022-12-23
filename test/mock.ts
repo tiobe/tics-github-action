@@ -4,7 +4,8 @@ jest.mock('../src/configuration', () => {
   return {
     ticsConfig: {
       projectName: 'project',
-      ticsConfiguration: 'http://localhost/tiobeweb/TiCS/api/cfg?name=default'
+      ticsConfiguration: 'http://localhost/tiobeweb/TiCS/api/cfg?name=default',
+      calc: 'GATE'
     },
     githubConfig: {
       repo: 'test',
