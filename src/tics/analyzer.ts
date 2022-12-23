@@ -17,6 +17,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
   const command = await buildRunCommand(fileListPath);
 
   Logger.Instance.header('Running TiCS');
+  Logger.Instance.debug(`With command: ${command}`);
   try {
     const statusCode = await exec(command, [], {
       silent: true,

@@ -833,6 +833,7 @@ async function runTicsAnalyzer(fileListPath) {
     logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
+    logger_1.default.Instance.debug(`With command: ${command}`);
     try {
         const statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
