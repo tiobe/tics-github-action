@@ -47,7 +47,7 @@ export let ticsConfig = {
   hostnameVerification: getHostnameVerification(),
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default',
-  postAnnotations: getBooleanInput('postAnnotations') ? getBooleanInput('postAnnotations') : true,
+  postAnnotations: getInput('postAnnotations') ? getBooleanInput('postAnnotations') : true,
   ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : process.env.TICSAUTHTOKEN,
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),

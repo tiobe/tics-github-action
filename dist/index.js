@@ -55,7 +55,7 @@ exports.ticsConfig = {
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
-    postAnnotations: (0, core_1.getBooleanInput)('postAnnotations') ? (0, core_1.getBooleanInput)('postAnnotations') : true,
+    postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getBooleanInput)('postAnnotations') : true,
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
