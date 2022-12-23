@@ -57,10 +57,16 @@ export async function runTicsAnalyzer(fileListPath: string) {
  * @returns Command to run.
  */
 async function buildRunCommand(fileListPath: string) {
+  let command = '';
   if (githubConfig.runnerOS === 'Linux') {
-    return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
+    command = `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
+  } else {
+    // reload path environment for current shell
+    command = `powershell "$env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + [System.Environment]::GetEnvironmentVariable('Path','User');`;
+    command += `${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
   }
-  return `powershell "${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
+
+  return command;
 }
 
 /**
@@ -74,7 +80,6 @@ async function getInstallTics() {
   if (githubConfig.runnerOS === 'Linux') {
     return `source <(curl -s '${installTicsUrl}') &&`;
   }
-  Logger.Instance.info((await exec('where.exe TICS')).toString());
   return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 
