@@ -887,7 +887,6 @@ async function getInstallTics() {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
-    logger_1.default.Instance.info((await (0, exec_1.exec)('where.exe TICS')).toString());
     return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
