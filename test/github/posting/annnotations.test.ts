@@ -1,6 +1,6 @@
 import { expect, test, jest } from '@jest/globals';
 import { deletePreviousReviewComments } from '../../../src/github/posting/annotations';
-import { octokit } from '../../../src/github/configuration';
+import { octokit } from '../../../src/configuration';
 import Logger from '../../../src/helper/logger';
 
 test('Should call deletePreviousReviewComments once on deletePreviousReviewComments', async () => {

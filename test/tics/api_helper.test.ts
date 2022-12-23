@@ -1,5 +1,5 @@
 import { expect, test, jest } from '@jest/globals';
-import { httpClient, ticsConfig } from '../../src/github/configuration';
+import { httpClient, ticsConfig } from '../../src/configuration';
 import { Analysis } from '../../src/helper/interfaces';
 import Logger from '../../src/helper/logger';
 import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTicsWebBaseUrlFromUrl, httpRequest } from '../../src/tics/api_helper';

@@ -1,4 +1,4 @@
-import { baseUrl, ticsConfig } from '../github/configuration';
+import { baseUrl, ticsConfig } from '../configuration';
 import Logger from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 

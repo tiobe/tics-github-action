@@ -1,5 +1,5 @@
 import Logger from '../../helper/logger';
-import { githubConfig, octokit } from '../configuration';
+import { githubConfig, octokit } from '../../configuration';
 
 /**
  * Deletes the review comments of previous runs.

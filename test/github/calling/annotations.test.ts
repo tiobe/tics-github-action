@@ -1,6 +1,6 @@
 import { expect, test, jest } from '@jest/globals';
 import { getPostedReviewComments } from '../../../src/github/calling/annotations';
-import { octokit } from '../../../src/github/configuration';
+import { octokit } from '../../../src/configuration';
 import Logger from '../../../src/helper/logger';
 
 test('Should return single file on getPostedReviewComments', async () => {

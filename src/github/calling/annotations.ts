@@ -1,5 +1,5 @@
 import Logger from '../../helper/logger';
-import { githubConfig, octokit } from '../configuration';
+import { githubConfig, octokit } from '../../configuration';
 
 /**
  * Gets a list of all reviews posted on the pull request.

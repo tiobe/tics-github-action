@@ -1,7 +1,7 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 import Logger from '../../helper/logger';
-import { githubConfig, octokit } from '../configuration';
+import { githubConfig, octokit } from '../../configuration';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.

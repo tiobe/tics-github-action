@@ -1,5 +1,5 @@
 import { expect, test, jest } from '@jest/globals';
-import { githubConfig, octokit } from '../../../src/github/configuration';
+import { githubConfig, octokit } from '../../../src/configuration';
 import { postErrorComment } from '../../../src/github/posting/comment';
 import { createErrorSummary } from '../../../src/github/posting/summary';
 import Logger from '../../../src/helper/logger';

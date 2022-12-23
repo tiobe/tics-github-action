@@ -4,7 +4,7 @@ import { HttpClient } from '@actions/http-client';
 import { readFileSync } from 'fs';
 import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
-import { getTicsWebBaseUrlFromUrl } from '../tics/api_helper';
+import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
@@ -41,7 +41,7 @@ export let ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   branchName: getInput('branchName'),
   branchDir: getInput('branchDir'),
-  calc: getInput('calc') ? getInput('calc') : 'GATE',
+  calc: getInput('calc'),
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
   hostnameVerification: getHostnameVerification(),

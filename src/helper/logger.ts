@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { ticsConfig } from '../github/configuration';
+import { ticsConfig } from '../configuration';
 
 export default class Logger {
   private static _instance: Logger;

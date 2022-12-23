@@ -1,5 +1,5 @@
 import { expect, test, jest } from '@jest/globals';
-import { githubConfig, octokit } from '../../../src/github/configuration';
+import { githubConfig, octokit } from '../../../src/configuration';
 import { postReview } from '../../../src/github/posting/review';
 import {
   createFilesSummary,

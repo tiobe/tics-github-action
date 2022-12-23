@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { expect, test, jest } from '@jest/globals';
 import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFiles } from '../../../src/github/calling/pulls';
-import { octokit } from '../../../src/github/configuration';
+import { octokit } from '../../../src/configuration';
 import Logger from '../../../src/helper/logger';
 
 test('Should return single file on getChangedFiles', async () => {

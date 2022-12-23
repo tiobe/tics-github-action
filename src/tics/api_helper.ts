@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import Logger from '../helper/logger';
-import { httpClient, ticsConfig, viewerUrl } from '../github/configuration';
+import { httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis } from '../helper/interfaces';
 
 /**

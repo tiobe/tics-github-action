@@ -1,6 +1,6 @@
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../helper/markdown';
 import { QualityGate, ReviewComment, ReviewComments } from '../../helper/interfaces';
-import { ticsConfig, viewerUrl } from '../configuration';
+import { ticsConfig, viewerUrl } from '../../configuration';
 import { Status } from '../../helper/enums';
 import { range } from 'underscore';
 import Logger from '../../helper/logger';

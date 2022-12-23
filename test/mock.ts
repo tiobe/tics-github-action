@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-jest.mock('../src/github/configuration', () => {
+jest.mock('../src/configuration', () => {
   return {
     ticsConfig: {
       projectName: 'project',
@@ -34,7 +34,8 @@ jest.mock('../src/github/configuration', () => {
     httpClient: {
       get: jest.fn()
     },
-    viewerUrl: '<url>'
+    viewerUrl: '<url>',
+    baseUrl: 'base.com/'
   };
 });
 jest.mock('@actions/core', () => {
@@ -44,6 +45,11 @@ jest.mock('@actions/core', () => {
     warning: jest.fn(),
     error: jest.fn(),
     setFailed: jest.fn()
+  };
+});
+jest.mock('@actions/exec', () => {
+  return {
+    exec: jest.fn()
   };
 });
 jest.mock('fs', () => {

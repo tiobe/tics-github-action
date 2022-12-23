@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { expect, test, jest } from '@jest/globals';
-import { ticsConfig } from '../../src/github/configuration';
+import { ticsConfig } from '../../src/configuration';
 import Logger from '../../src/helper/logger';
 
 test('Should call core.info on header', () => {

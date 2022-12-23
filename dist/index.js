@@ -1,6 +1,75 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 5527:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const http_client_1 = __nccwpck_require__(6255);
+const fs_1 = __nccwpck_require__(5747);
+const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
+const api_helper_1 = __nccwpck_require__(3823);
+const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
+const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
+exports.githubConfig = {
+    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
+    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
+    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY?.split('/')[1] : '',
+    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
+    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
+    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
+    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
+    githubToken: process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN : '',
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+};
+function getHostnameVerification() {
+    let hostnameVerification;
+    switch (process.env.TICSHOSTNAMEVERIFICATION) {
+        case '0':
+        case 'false':
+            hostnameVerification = false;
+            (0, core_1.info)('Hostname Verification disabled');
+            break;
+        default:
+            hostnameVerification = true;
+            break;
+    }
+    return hostnameVerification;
+}
+exports.ticsConfig = {
+    projectName: (0, core_1.getInput)('projectName', { required: true }),
+    branchName: (0, core_1.getInput)('branchName'),
+    branchDir: (0, core_1.getInput)('branchDir'),
+    calc: (0, core_1.getInput)('calc'),
+    clientData: (0, core_1.getInput)('clientData'),
+    additionalFlags: (0, core_1.getInput)('additionalFlags'),
+    hostnameVerification: getHostnameVerification(),
+    installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
+    postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getInput)('postAnnotations') : true,
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
+    tmpDir: (0, core_1.getInput)('tmpDir'),
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
+};
+const httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
+exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
+exports.httpClient = new http_client_1.HttpClient('http-client', [], httpClientOptions);
+exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
+exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
+
+
+/***/ }),
+
 /***/ 7829:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -12,7 +81,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getPostedReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 /**
  * Gets a list of all reviews posted on the pull request.
  * @returns List of reviews posted on the pull request.
@@ -49,7 +118,7 @@ exports.changedFilesToFile = exports.getChangedFiles = void 0;
 const fs_1 = __nccwpck_require__(5747);
 const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
@@ -98,75 +167,6 @@ exports.changedFilesToFile = changedFilesToFile;
 
 /***/ }),
 
-/***/ 6868:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
-const http_client_1 = __nccwpck_require__(6255);
-const fs_1 = __nccwpck_require__(5747);
-const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
-const api_helper_1 = __nccwpck_require__(3823);
-const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
-const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-exports.githubConfig = {
-    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
-    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY?.split('/')[1] : '',
-    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
-    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
-    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    githubToken: process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
-};
-function getHostnameVerification() {
-    let hostnameVerification;
-    switch (process.env.TICSHOSTNAMEVERIFICATION) {
-        case '0':
-        case 'false':
-            hostnameVerification = false;
-            (0, core_1.info)('Hostname Verification disabled');
-            break;
-        default:
-            hostnameVerification = true;
-            break;
-    }
-    return hostnameVerification;
-}
-exports.ticsConfig = {
-    projectName: (0, core_1.getInput)('projectName', { required: true }),
-    branchName: (0, core_1.getInput)('branchName'),
-    branchDir: (0, core_1.getInput)('branchDir'),
-    calc: (0, core_1.getInput)('calc') ? (0, core_1.getInput)('calc') : 'GATE',
-    clientData: (0, core_1.getInput)('clientData'),
-    additionalFlags: (0, core_1.getInput)('additionalFlags'),
-    hostnameVerification: getHostnameVerification(),
-    installTics: (0, core_1.getInput)('installTics') === 'true' ? true : false,
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel').toLowerCase() : 'default',
-    postAnnotations: (0, core_1.getInput)('postAnnotations') ? (0, core_1.getInput)('postAnnotations') : true,
-    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
-    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
-    tmpDir: (0, core_1.getInput)('tmpDir'),
-    viewerUrl: (0, core_1.getInput)('viewerUrl')
-};
-const httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
-exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
-exports.httpClient = new http_client_1.HttpClient('http-client', [], httpClientOptions);
-exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
-exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
-
-
-/***/ }),
-
 /***/ 9757:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -178,7 +178,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deletePreviousReviewComments = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 /**
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
@@ -217,7 +217,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postErrorComment = void 0;
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const summary_1 = __nccwpck_require__(6649);
 /**
@@ -256,7 +256,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const summary_1 = __nccwpck_require__(6649);
 const enums_1 = __nccwpck_require__(1655);
 /**
@@ -301,7 +301,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
 const markdown_1 = __nccwpck_require__(5300);
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(3571);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
@@ -571,7 +571,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
@@ -737,7 +737,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __nccwpck_require__(5747);
 const comment_1 = __nccwpck_require__(5436);
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const pulls_1 = __nccwpck_require__(5857);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const analyzer_1 = __nccwpck_require__(9099);
@@ -819,7 +819,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runTicsAnalyzer = void 0;
 const exec_1 = __nccwpck_require__(1514);
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
@@ -839,11 +839,11 @@ async function runTicsAnalyzer(fileListPath) {
             listeners: {
                 stdout(data) {
                     process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString(), fileListPath);
+                    findInStdOutOrErr(data.toString());
                 },
                 stderr(data) {
                     process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString(), fileListPath);
+                    findInStdOutOrErr(data.toString());
                 }
             }
         });
@@ -892,7 +892,7 @@ async function getInstallTics() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findInStdOutOrErr(data, fileListPath) {
+function findInStdOutOrErr(data) {
     const error = data.toString().match(/\[ERROR.*/g);
     if (error && !errorList.find(e => e === error?.toString()))
         errorList.push(error.toString());
@@ -925,12 +925,11 @@ async function retrieveInstallTics(os) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath) {
-    let execString = 'TICS @' + fileListPath + ' ';
-    execString += configuration_1.ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
-    execString += configuration_1.ticsConfig.calc ? `-calc ${configuration_1.ticsConfig.calc} ` : '-recalc GATE ';
-    execString += configuration_1.ticsConfig.projectName ? `-project ${configuration_1.ticsConfig.projectName} ` : '';
+    let execString = 'TICS @' + fileListPath + ' -viewer ';
+    execString += `-project '${configuration_1.ticsConfig.projectName}' `;
+    execString += configuration_1.ticsConfig.calc ? `-calc ${configuration_1.ticsConfig.calc} ` : '-calc GATE ';
     execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
-    execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir ${configuration_1.ticsConfig.tmpDir} ` : '';
+    execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     return execString;
 }
@@ -949,7 +948,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getProjectName = exports.getItemFromUrl = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.cliSummary = exports.httpRequest = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 /**
  * Executes a GET request to the given url.
  * @param url api url to perform a GET request for.
@@ -1072,7 +1071,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
-const configuration_1 = __nccwpck_require__(6868);
+const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 /**

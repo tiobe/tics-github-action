@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
-import { githubConfig, ticsConfig } from './github/configuration';
+import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';

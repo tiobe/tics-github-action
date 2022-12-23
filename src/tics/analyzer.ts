@@ -1,5 +1,5 @@
 import { exec } from '@actions/exec';
-import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../github/configuration';
+import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import Logger from '../helper/logger';
 import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 
@@ -23,11 +23,11 @@ export async function runTicsAnalyzer(fileListPath: string) {
       listeners: {
         stdout(data: Buffer) {
           process.stdout.write(data.toString());
-          findInStdOutOrErr(data.toString(), fileListPath);
+          findInStdOutOrErr(data.toString());
         },
         stderr(data: Buffer) {
           process.stdout.write(data.toString());
-          findInStdOutOrErr(data.toString(), fileListPath);
+          findInStdOutOrErr(data.toString());
         }
       }
     });
@@ -79,7 +79,7 @@ async function getInstallTics() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findInStdOutOrErr(data: string, fileListPath: string) {
+function findInStdOutOrErr(data: string) {
   const error = data.toString().match(/\[ERROR.*/g);
   if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
 
@@ -115,12 +115,11 @@ async function retrieveInstallTics(os: string) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath: string) {
-  let execString = 'TICS @' + fileListPath + ' ';
-  execString += ticsConfig.calc.includes('GATE') ? '' : '-viewer ';
-  execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} ` : '-recalc GATE ';
-  execString += ticsConfig.projectName ? `-project ${ticsConfig.projectName} ` : '';
+  let execString = 'TICS @' + fileListPath + ' -viewer ';
+  execString += `-project '${ticsConfig.projectName}' `;
+  execString += ticsConfig.calc ? `-calc ${ticsConfig.calc} ` : '-calc GATE ';
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
-  execString += ticsConfig.tmpDir ? `-tmpdir ${ticsConfig.tmpDir} ` : '';
+  execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
   return execString;
 }
