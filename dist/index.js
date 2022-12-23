@@ -46,7 +46,7 @@ function getHostnameVerification() {
     return hostnameVerification;
 }
 exports.ticsConfig = {
-    projectName: (0, core_1.getInput)('projectName'),
+    projectName: (0, core_1.getInput)('projectName', { required: true }),
     branchName: (0, core_1.getInput)('branchName'),
     branchDir: (0, core_1.getInput)('branchDir'),
     calc: (0, core_1.getInput)('calc'),
@@ -57,7 +57,7 @@ exports.ticsConfig = {
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
-    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration'),
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };

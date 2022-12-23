@@ -38,7 +38,7 @@ function getHostnameVerification() {
 }
 
 export let ticsConfig = {
-  projectName: getInput('projectName'),
+  projectName: getInput('projectName', { required: true }),
   branchName: getInput('branchName'),
   branchDir: getInput('branchDir'),
   calc: getInput('calc'),
@@ -49,7 +49,7 @@ export let ticsConfig = {
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : process.env.TICSAUTHTOKEN,
-  ticsConfiguration: getInput('ticsConfiguration'),
+  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl')
 };
