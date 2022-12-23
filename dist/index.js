@@ -817,13 +817,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.runTicsAnalyzer = exports.explorerUrl = void 0;
+exports.runTicsAnalyzer = void 0;
 const exec_1 = __nccwpck_require__(1514);
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
+let explorerUrl;
 /**
  * Runs TiCS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
@@ -850,7 +851,7 @@ async function runTicsAnalyzer(fileListPath) {
         return {
             completed: true,
             statusCode: statusCode,
-            explorerUrl: exports.explorerUrl,
+            explorerUrl: explorerUrl,
             errorList: errorList,
             warningList: warningList
         };
@@ -900,8 +901,8 @@ function findInStdOutOrErr(data) {
     if (warning && !warningList.find(w => w === warning?.toString()))
         warningList.push(warning.toString());
     const findExplorerUrl = data.match(/\/Explorer.*/g);
-    if (!exports.explorerUrl && findExplorerUrl)
-        exports.explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
+    if (!explorerUrl && findExplorerUrl)
+        explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
 }
 /**
  * Retrieves the the TiCS install url from the ticsConfiguration.

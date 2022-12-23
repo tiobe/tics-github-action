@@ -5,7 +5,7 @@ import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
-export let explorerUrl: string | undefined;
+let explorerUrl: string | undefined;
 
 /**
  * Runs TiCS based on the configuration set in a workflow.
