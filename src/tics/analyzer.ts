@@ -1,4 +1,3 @@
-import * as io from '@actions/io';
 import { exec } from '@actions/exec';
 import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import Logger from '../helper/logger';
@@ -6,7 +5,7 @@ import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
-let explorerUrl: string | undefined;
+export let explorerUrl: string | undefined;
 
 /**
  * Runs TiCS based on the configuration set in a workflow.
