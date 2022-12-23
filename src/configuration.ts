@@ -1,4 +1,4 @@
-import { getInput, info } from '@actions/core';
+import { getBooleanInput, getInput, info } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import { HttpClient } from '@actions/http-client';
 import { readFileSync } from 'fs';
@@ -45,9 +45,9 @@ export let ticsConfig = {
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
   hostnameVerification: getHostnameVerification(),
-  installTics: getInput('installTics') === 'true' ? true : false,
+  installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel') ? getInput('logLevel').toLowerCase() : 'default',
-  postAnnotations: getInput('postAnnotations') ? getInput('postAnnotations') : true,
+  postAnnotations: getBooleanInput('postAnnotations') ? getBooleanInput('postAnnotations') : true,
   ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : process.env.TICSAUTHTOKEN,
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),

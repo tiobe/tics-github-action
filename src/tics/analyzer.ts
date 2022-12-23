@@ -1,3 +1,4 @@
+import * as io from '@actions/io';
 import { exec } from '@actions/exec';
 import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import Logger from '../helper/logger';
@@ -73,6 +74,7 @@ async function getInstallTics() {
   if (githubConfig.runnerOS === 'Linux') {
     return `source <(curl -s '${installTicsUrl}') &&`;
   }
+  Logger.Instance.info(await io.which('TICS'));
   return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 
