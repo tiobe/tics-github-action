@@ -3,7 +3,7 @@ import * as api_helper from '../../src/tics/api_helper';
 import { expect, test, jest } from '@jest/globals';
 import { githubConfig, ticsConfig } from '../../src/configuration';
 import Logger from '../../src/helper/logger';
-import { explorerUrl, runTicsAnalyzer } from '../../src/tics/analyzer';
+import { runTicsAnalyzer } from '../../src/tics/analyzer';
 
 // test for multiple different types of configurations
 test('Should call exec with minimal TiCS command for Linux', async () => {
@@ -164,12 +164,14 @@ test('Should add error in errorlist', async () => {
 });
 
 test('Should add ExplorerUrl in response', async () => {
-  jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+  jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
   await runTicsAnalyzer('/path/to');
   (exec.exec as any).mock.calls[0][2].listeners.stdout('http://localhost/Explorer.html#axes=ClientData');
+  (exec.exec as any).mockResolvedValueOnce(0);
+  const response = await runTicsAnalyzer('/path/to');
 
-  expect(explorerUrl).toEqual('<url>/Explorer.html#axes=ClientData');
+  expect(response.explorerUrl).toEqual('<url>/Explorer.html#axes=ClientData');
 });
 
 // throw errors
