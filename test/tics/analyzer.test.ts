@@ -106,7 +106,7 @@ test('Should call exec with full TiCS command for Linux', async () => {
   expect(response.statusCode).toEqual(0);
   expect(response.completed).toEqual(true);
   expect(spy).toHaveBeenCalledWith(
-    "/bin/bash -c \"source <(curl -s 'base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
+    "/bin/bash -c \"source <(curl -s 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
     [],
     {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -133,7 +133,7 @@ test('Should call exec with full TiCS command for Windows', async () => {
   expect(response.statusCode).toEqual(0);
   expect(response.completed).toEqual(true);
   expect(spy).toHaveBeenCalledWith(
-    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
+    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
     [],
     {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -143,24 +143,37 @@ test('Should call exec with full TiCS command for Windows', async () => {
 });
 
 // test exec callback function (like findInStdOutOrErr)
-test('Should add error in errorlist', async () => {
+test('Should return single error if already exists in errorlist', async () => {
   jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
 
   const response = await runTicsAnalyzer('/path/to');
+  (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
   (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
 
   expect(response.errorList.length).toEqual(1);
   expect(response.errorList).toEqual(['[ERROR 666] Error']);
 });
 
-test('Should add error in errorlist', async () => {
+test('Should return two errors in errorlist', async () => {
+  jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+
+  const response = await runTicsAnalyzer('/path/to');
+  (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
+  (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 777] Different error');
+
+  expect(response.errorList.length).toEqual(2);
+  expect(response.errorList).toEqual(['[ERROR 666] Error', '[ERROR 777] Different error']);
+});
+
+test('Should return warnings in warningList', async () => {
   jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
 
   const response = await runTicsAnalyzer('/path/to');
   (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 666] Warning');
+  (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 777] Warning');
 
-  expect(response.warningList.length).toEqual(1);
-  expect(response.warningList).toEqual(['[WARNING 666] Warning']);
+  expect(response.warningList.length).toEqual(2);
+  expect(response.warningList).toEqual(['[WARNING 666] Warning', '[WARNING 777] Warning']);
 });
 
 test('Should add ExplorerUrl in response', async () => {

@@ -25,6 +25,11 @@ export async function getAnalyzedFiles(url: string): Promise<any> {
   }
 }
 
+/**
+ * Returns the url to get the analyzed files with from the TiCS.
+ * @param url The TiCS explorer url.
+ * @returns url to get the analyzed files from.
+ */
 function getAnalyzedFilesUrl(url: string) {
   let getAnalyzedFilesUrl = new URL(baseUrl + '/api/public/v1/Measure?metrics=filePath');
 

@@ -914,7 +914,7 @@ async function retrieveInstallTics(os) {
         logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
         const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTicsApiUrl)(configuration_1.baseUrl, os);
         const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
-        return configuration_1.baseUrl + data.links.installTics;
+        return configuration_1.baseUrl + '/' + data.links.installTics;
     }
     catch (error) {
         logger_1.default.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
@@ -1098,6 +1098,11 @@ async function getAnalyzedFiles(url) {
     }
 }
 exports.getAnalyzedFiles = getAnalyzedFiles;
+/**
+ * Returns the url to get the analyzed files with from the TiCS.
+ * @param url The TiCS explorer url.
+ * @returns url to get the analyzed files from.
+ */
 function getAnalyzedFilesUrl(url) {
     let getAnalyzedFilesUrl = new URL(configuration_1.baseUrl + '/api/public/v1/Measure?metrics=filePath');
     const clientData = (0, api_helper_1.getItemFromUrl)(url, 'ClientData');

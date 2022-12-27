@@ -36,7 +36,7 @@ jest.mock('../src/configuration', () => {
       get: jest.fn()
     },
     viewerUrl: '<url>',
-    baseUrl: 'base.com/'
+    baseUrl: 'http://base.com'
   };
 });
 jest.mock('@actions/core', () => {

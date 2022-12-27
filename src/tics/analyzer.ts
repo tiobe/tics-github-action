@@ -104,7 +104,7 @@ async function retrieveInstallTics(os: string) {
 
     const data = await httpRequest(ticsInstallApiBaseUrl);
 
-    return baseUrl + data.links.installTics;
+    return baseUrl + '/' + data.links.installTics;
   } catch (error: any) {
     Logger.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
   }

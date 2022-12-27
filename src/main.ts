@@ -54,6 +54,7 @@ async function main() {
     await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
 
     if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
+
     cliSummary(analysis);
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
