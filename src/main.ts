@@ -11,11 +11,16 @@ import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 
-if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
+run();
 
-if (!isCheckedOut()) Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+// exported for testing purposes
+export async function run() {
+  if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
 
-main();
+  if (!isCheckedOut()) Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+
+  await main();
+}
 
 async function main() {
   try {

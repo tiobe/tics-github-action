@@ -733,6 +733,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
 const fs_1 = __nccwpck_require__(5747);
 const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(5527);
@@ -745,11 +746,16 @@ const review_1 = __nccwpck_require__(8973);
 const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
-if (configuration_1.githubConfig.eventName !== 'pull_request')
-    logger_1.default.Instance.exit('This action can only run on pull requests.');
-if (!isCheckedOut())
-    logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
-main();
+run();
+// exported for testing purposes
+async function run() {
+    if (configuration_1.githubConfig.eventName !== 'pull_request')
+        logger_1.default.Instance.exit('This action can only run on pull requests.');
+    if (!isCheckedOut())
+        logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+    await main();
+}
+exports.run = run;
 async function main() {
     try {
         const changedFiles = await (0, pulls_1.getChangedFiles)();
