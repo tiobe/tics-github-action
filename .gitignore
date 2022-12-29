@@ -1,6 +1,10 @@
 # Dependency directory
 node_modules
 
+# Ignore built ts files
+test/runner
+lib
+
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
 logs
@@ -93,7 +97,3 @@ typings/
 # OS metadata
 .DS_Store
 Thumbs.db
-
-# Ignore built ts files
-test/runner/*
-lib/**/*

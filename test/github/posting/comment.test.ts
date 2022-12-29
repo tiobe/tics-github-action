@@ -1,9 +1,9 @@
 import { githubConfig, octokit } from '../../../src/configuration';
 import { postErrorComment } from '../../../src/github/posting/comment';
-import { createErrorSummary } from '../../../src/github/posting/summary';
+import { createErrorSummary } from '../../../src/helper/summary';
 import Logger from '../../../src/helper/logger';
 
-jest.mock('../../../src/github/posting/summary', () => {
+jest.mock('../../../src/helper/summary', () => {
   return {
     createErrorSummary: jest.fn()
   };

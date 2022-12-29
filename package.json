@@ -9,7 +9,8 @@
     "format-check": "prettier --check src/**/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
-    "test": "jest --coverage",
+    "test": "jest",
+    "test-coverage": "jest --coverage --collectCoverageFrom='src/**'",
     "all": "npm run build && npm run package"
   },
   "repository": {

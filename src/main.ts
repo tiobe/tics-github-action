@@ -7,7 +7,7 @@ import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
 import { postReview } from './github/posting/review';
-import { createReviewComments } from './github/posting/summary';
+import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 

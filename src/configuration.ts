@@ -9,10 +9,10 @@ import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 
-export let githubConfig = {
+export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
   owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-  reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY?.split('/')[1] : '',
+  reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
   branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
   basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
@@ -37,7 +37,7 @@ function getHostnameVerification() {
   return hostnameVerification;
 }
 
-export let ticsConfig = {
+export const ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   branchName: getInput('branchName'),
   branchDir: getInput('branchDir'),

@@ -22,7 +22,7 @@ const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '
 exports.githubConfig = {
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY?.split('/')[1] : '',
+    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
     branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
     basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
@@ -219,7 +219,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postErrorComment = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
-const summary_1 = __nccwpck_require__(6649);
+const summary_1 = __nccwpck_require__(1502);
 /**
  * Create error comment on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
@@ -257,7 +257,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(5527);
-const summary_1 = __nccwpck_require__(6649);
+const summary_1 = __nccwpck_require__(1502);
 const enums_1 = __nccwpck_require__(1655);
 /**
  * Create review on the pull request from the analysis given.
@@ -286,233 +286,6 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
     }
 }
 exports.postReview = postReview;
-
-
-/***/ }),
-
-/***/ 6649:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
-const markdown_1 = __nccwpck_require__(5300);
-const configuration_1 = __nccwpck_require__(5527);
-const enums_1 = __nccwpck_require__(1655);
-const underscore_1 = __nccwpck_require__(3571);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
-/**
- * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
- * @param errorList list containing all the errors found in the TiCS run.
- * @param warningList list containing all the warnings found in the TiCS run.
- * @returns string containing the error summary.
- */
-function createErrorSummary(errorList, warningList) {
-    let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
-    if (errorList.length > 0) {
-        summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
-        errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
-    }
-    if (warningList.length > 0 && configuration_1.ticsConfig.logLevel === 'debug') {
-        summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
-        warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
-    }
-    return summary;
-}
-exports.createErrorSummary = createErrorSummary;
-/**
- * Creates a markdown link summary.
- * @param url Url to the TiCS viewer analysis.
- * @returns Clickable link to the viewer analysis.
- */
-function createLinkSummary(url) {
-    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TiCS Viewer', url)}\n\n`;
-}
-exports.createLinkSummary = createLinkSummary;
-/**
- * Creates a list of all the files analyzed.
- * @param fileList list of files.
- * @returns Dropdown with all the files analyzed.
- */
-function createFilesSummary(fileList) {
-    let header = 'The following files have been checked:';
-    let body = '<ul>';
-    fileList.sort();
-    fileList.forEach(file => {
-        body += `<li>${file}</li>`;
-    });
-    body += '</ul>';
-    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
-}
-exports.createFilesSummary = createFilesSummary;
-/**
- * Creates a quality gate summary for the TiCS analysis.
- * @param qualityGate quality gate retrieved from the TiCS viewer.
- * @returns Quality gate summary.
- */
-function createQualityGateSummary(qualityGate) {
-    let qualityGateSummary = '';
-    qualityGate.gates.forEach(gate => {
-        qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
-    });
-    return `## TiCS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
-}
-exports.createQualityGateSummary = createQualityGateSummary;
-/**
- * Creates a table containing a summary for all conditions.
- * @param conditions Conditions of the quality gate
- * @returns Table containing a summary for all conditions
- */
-function createConditionsTable(conditions) {
-    let conditionsTable = '';
-    conditions.forEach(condition => {
-        if (condition.skipped)
-            return;
-        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
-        if (condition.details && condition.details.items.length > 0) {
-            const headers = [['File', condition.details.dataKeys.actualValue.title]];
-            const cells = condition.details.items
-                .filter((item) => item.itemType === 'file')
-                .map((item) => {
-                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
-            });
-            conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
-        }
-        else {
-            conditionsTable += `${conditionStatus}\n\n\n`;
-        }
-    });
-    return conditionsTable;
-}
-/**
- * Groups the annotations and creates review comments for them.
- * @param annotations Annotations retrieved from the viewer.
- * @param changedFiles List of files changed in the pull request.
- * @returns List of the review comments.
- */
-async function createReviewComments(annotations, changedFiles) {
-    logger_1.default.Instance.info('Creating review comments from annotations.');
-    const sortedAnnotations = sortAnnotations(annotations);
-    const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
-    let unpostable = [];
-    let postable = [];
-    groupedAnnotations.forEach(annotation => {
-        const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        if (annotation.diffLines.includes(annotation.line)) {
-            logger_1.default.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
-            postable.push({
-                body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
-                path: annotation.path,
-                line: annotation.line
-            });
-        }
-        else {
-            logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-            annotation.displayCount = displayCount;
-            unpostable.push(annotation);
-        }
-    });
-    logger_1.default.Instance.info('Created review comments from annotations.');
-    return { postable: postable, unpostable: unpostable };
-}
-exports.createReviewComments = createReviewComments;
-/**
- * Sorts annotations based on file name and line number.
- * @param annotations annotations returned by TiCS analyzer.
- * @returns sorted anotations.
- */
-function sortAnnotations(annotations) {
-    return annotations.sort((a, b) => {
-        if (a.fullPath === b.fullPath)
-            return a.line - b.line;
-        return a.fullPath > b.fullPath ? 1 : -1;
-    });
-}
-/**
- * Groups annotations by file. Excludes annotations for files that have not been changed.
- * @param annotations sorted annotations by file and line.
- * @param changedFiles List of files changed in the pull request.
- * @returns grouped annotations.
- */
-function groupAnnotations(annotations, changedFiles) {
-    let groupedAnnotations = [];
-    annotations.forEach(annotation => {
-        const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
-        const index = findAnnotationInList(groupedAnnotations, annotation);
-        if (index === -1) {
-            annotation.diffLines = file ? fetchDiffLines(file) : [];
-            annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
-            groupedAnnotations.push(annotation);
-        }
-        else {
-            groupedAnnotations[index].count += annotation.count;
-        }
-    });
-    return groupedAnnotations;
-}
-/**
- * Finds all lines that are shown in GitHub diff chunk.
- * @param file file to search the lines changed chunk for.
- * @returns List of all the lines in the diff chunk.
- */
-function fetchDiffLines(file) {
-    const regex = /\+(\d+),(\d+)+/g;
-    let diffLines = [];
-    let match = regex.exec(file.patch);
-    while (match !== null) {
-        const startLine = parseInt(match[1]);
-        const amountOfLines = parseInt(match[2]);
-        diffLines = diffLines.concat((0, underscore_1.range)(startLine, startLine + amountOfLines));
-        match = regex.exec(file.patch);
-    }
-    return diffLines;
-}
-/**
- * Finds an annotation in a list and returns the index.
- * @param list List to find the annotation in.
- * @param annotation Annotation to find.
- * @returns The index of the annotation found or -1
- */
-function findAnnotationInList(list, annotation) {
-    return list.findIndex(a => {
-        return (a.fullPath === annotation.fullPath &&
-            a.type === annotation.type &&
-            a.line === annotation.line &&
-            a.rule === annotation.rule &&
-            a.level === annotation.level &&
-            a.category === annotation.category &&
-            a.message === annotation.message);
-    });
-}
-/**
- * Creates a summary of all the review comments that could not be posted
- * @param unpostableReviewComments Review comments that could not be posted.
- * @returns Summary of all the review comments that could not be posted.
- */
-function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
-    let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
-    let body = '';
-    let previousPath = '';
-    unpostableReviewComments.forEach(reviewComment => {
-        if (previousPath === '') {
-            body += `<table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
-        }
-        else if (previousPath !== reviewComment.path) {
-            body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
-        }
-        else {
-            body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
-        }
-        previousPath = reviewComment.path;
-    });
-    body += '</table>';
-    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
-}
-exports.createUnpostableReviewCommentsSummary = createUnpostableReviewCommentsSummary;
 
 
 /***/ }),
@@ -726,6 +499,231 @@ exports.generateTableMarkdown = generateTableMarkdown;
 
 /***/ }),
 
+/***/ 1502:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+const markdown_1 = __nccwpck_require__(5300);
+const configuration_1 = __nccwpck_require__(5527);
+const enums_1 = __nccwpck_require__(1655);
+const underscore_1 = __nccwpck_require__(3571);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
+/**
+ * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
+ * @param errorList list containing all the errors found in the TiCS run.
+ * @param warningList list containing all the warnings found in the TiCS run.
+ * @returns string containing the error summary.
+ */
+function createErrorSummary(errorList, warningList) {
+    let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
+    if (errorList.length > 0) {
+        summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
+        errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
+    }
+    if (warningList.length > 0 && configuration_1.ticsConfig.logLevel === 'debug') {
+        summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
+        warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
+    }
+    return summary;
+}
+exports.createErrorSummary = createErrorSummary;
+/**
+ * Creates a markdown link summary.
+ * @param url Url to the TiCS viewer analysis.
+ * @returns Clickable link to the viewer analysis.
+ */
+function createLinkSummary(url) {
+    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TiCS Viewer', url)}\n\n`;
+}
+exports.createLinkSummary = createLinkSummary;
+/**
+ * Creates a list of all the files analyzed.
+ * @param fileList list of files.
+ * @returns Dropdown with all the files analyzed.
+ */
+function createFilesSummary(fileList) {
+    let header = 'The following files have been checked:';
+    let body = '<ul>';
+    fileList.sort();
+    fileList.forEach(file => {
+        body += `<li>${file}</li>`;
+    });
+    body += '</ul>';
+    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+}
+exports.createFilesSummary = createFilesSummary;
+/**
+ * Creates a quality gate summary for the TiCS analysis.
+ * @param qualityGate quality gate retrieved from the TiCS viewer.
+ * @returns Quality gate summary.
+ */
+function createQualityGateSummary(qualityGate) {
+    let qualityGateSummary = '';
+    qualityGate.gates.forEach(gate => {
+        qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
+    });
+    return `## TiCS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+}
+exports.createQualityGateSummary = createQualityGateSummary;
+/**
+ * Creates a table containing a summary for all conditions.
+ * @param conditions Conditions of the quality gate
+ * @returns Table containing a summary for all conditions
+ */
+function createConditionsTable(conditions) {
+    let conditionsTable = '';
+    conditions.forEach(condition => {
+        if (condition.skipped)
+            return;
+        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
+        if (condition.details && condition.details.items.length > 0) {
+            const headers = [['File', condition.details.dataKeys.actualValue.title]];
+            const cells = condition.details.items
+                .filter((item) => item.itemType === 'file')
+                .map((item) => {
+                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
+            });
+            conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
+        }
+        else {
+            conditionsTable += `${conditionStatus}\n\n\n`;
+        }
+    });
+    return conditionsTable;
+}
+/**
+ * Groups the annotations and creates review comments for them.
+ * @param annotations Annotations retrieved from the viewer.
+ * @param changedFiles List of files changed in the pull request.
+ * @returns List of the review comments.
+ */
+async function createReviewComments(annotations, changedFiles) {
+    logger_1.default.Instance.info('Creating review comments from annotations.');
+    const sortedAnnotations = sortAnnotations(annotations);
+    const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
+    let unpostable = [];
+    let postable = [];
+    groupedAnnotations.forEach(annotation => {
+        const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
+        if (annotation.diffLines.includes(annotation.line)) {
+            logger_1.default.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
+            postable.push({
+                body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
+                path: annotation.path,
+                line: annotation.line
+            });
+        }
+        else {
+            annotation.displayCount = displayCount;
+            logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+            unpostable.push(annotation);
+        }
+    });
+    logger_1.default.Instance.info('Created review comments from annotations.');
+    return { postable: postable, unpostable: unpostable };
+}
+exports.createReviewComments = createReviewComments;
+/**
+ * Sorts annotations based on file name and line number.
+ * @param annotations annotations returned by TiCS analyzer.
+ * @returns sorted anotations.
+ */
+function sortAnnotations(annotations) {
+    return annotations.sort((a, b) => {
+        if (a.fullPath === b.fullPath)
+            return a.line - b.line;
+        return a.fullPath > b.fullPath ? 1 : -1;
+    });
+}
+/**
+ * Groups annotations by file. Excludes annotations for files that have not been changed.
+ * @param annotations sorted annotations by file and line.
+ * @param changedFiles List of files changed in the pull request.
+ * @returns grouped annotations.
+ */
+function groupAnnotations(annotations, changedFiles) {
+    let groupedAnnotations = [];
+    annotations.forEach(annotation => {
+        const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
+        const index = findAnnotationInList(groupedAnnotations, annotation);
+        if (index === -1) {
+            annotation.diffLines = file ? fetchDiffLines(file) : [];
+            annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
+            groupedAnnotations.push(annotation);
+        }
+        else {
+            groupedAnnotations[index].count += annotation.count;
+        }
+    });
+    return groupedAnnotations;
+}
+/**
+ * Finds all lines that are shown in GitHub diff chunk.
+ * @param file file to search the lines changed chunk for.
+ * @returns List of all the lines in the diff chunk.
+ */
+function fetchDiffLines(file) {
+    const regex = /\+(\d+),(\d+)+/g;
+    let diffLines = [];
+    let match = regex.exec(file.patch);
+    while (match !== null) {
+        const startLine = parseInt(match[1]);
+        const amountOfLines = parseInt(match[2]);
+        diffLines = diffLines.concat((0, underscore_1.range)(startLine, startLine + amountOfLines));
+        match = regex.exec(file.patch);
+    }
+    return diffLines;
+}
+/**
+ * Finds an annotation in a list and returns the index.
+ * @param list List to find the annotation in.
+ * @param annotation Annotation to find.
+ * @returns The index of the annotation found or -1
+ */
+function findAnnotationInList(list, annotation) {
+    return list.findIndex(a => {
+        return (a.fullPath === annotation.fullPath &&
+            a.type === annotation.type &&
+            a.line === annotation.line &&
+            a.rule === annotation.rule &&
+            a.level === annotation.level &&
+            a.category === annotation.category &&
+            a.message === annotation.message);
+    });
+}
+/**
+ * Creates a summary of all the review comments that could not be posted
+ * @param unpostableReviewComments Review comments that could not be posted.
+ * @returns Summary of all the review comments that could not be posted.
+ */
+function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
+    let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+    let body = '';
+    let previousPath = '';
+    unpostableReviewComments.forEach(reviewComment => {
+        if (previousPath === '') {
+            body += `<table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
+        }
+        else if (previousPath !== reviewComment.path) {
+            body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
+        }
+        body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+        previousPath = reviewComment.path;
+    });
+    body += '</table>';
+    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+}
+exports.createUnpostableReviewCommentsSummary = createUnpostableReviewCommentsSummary;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -744,7 +742,7 @@ const analyzer_1 = __nccwpck_require__(9099);
 const api_helper_1 = __nccwpck_require__(3823);
 const fetcher_1 = __nccwpck_require__(1559);
 const review_1 = __nccwpck_require__(8973);
-const summary_1 = __nccwpck_require__(6649);
+const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
 if (configuration_1.githubConfig.eventName !== 'pull_request')

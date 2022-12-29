@@ -1,15 +1,10 @@
 import { githubConfig, octokit } from '../../../src/configuration';
 import { postReview } from '../../../src/github/posting/review';
-import {
-  createFilesSummary,
-  createLinkSummary,
-  createUnpostableReviewCommentsSummary,
-  createQualityGateSummary
-} from '../../../src/github/posting/summary';
+import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import Logger from '../../../src/helper/logger';
 
-jest.mock('../../../src/github/posting/summary', () => {
+jest.mock('../../../src/helper/summary', () => {
   return {
     createQualityGateSummary: jest.fn(),
     createLinkSummary: jest.fn(),

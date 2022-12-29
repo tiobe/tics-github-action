@@ -1,7 +1,7 @@
 import { githubConfig, octokit } from '../../configuration';
 import Logger from '../../helper/logger';
 import { Analysis } from '../../helper/interfaces';
-import { createErrorSummary } from './summary';
+import { createErrorSummary } from '../../helper/summary';
 
 /**
  * Create error comment on the pull request from the analysis given.

@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-jest.mock('../src/configuration', () => {
+jest.mock('../../src/configuration', () => {
   return {
     ticsConfig: {
       projectName: 'project',

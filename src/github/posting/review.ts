@@ -1,7 +1,7 @@
 import Logger from '../../helper/logger';
 import { Analysis, QualityGate, ReviewComments } from '../../helper/interfaces';
 import { githubConfig, octokit } from '../../configuration';
-import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from './summary';
+import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../helper/summary';
 import { Events } from '../../helper/enums';
 
 /**

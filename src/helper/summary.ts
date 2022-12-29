@@ -1,9 +1,9 @@
-import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../helper/markdown';
-import { QualityGate, ReviewComment, ReviewComments } from '../../helper/interfaces';
-import { ticsConfig, viewerUrl } from '../../configuration';
-import { Status } from '../../helper/enums';
+import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from './markdown';
+import { QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { ticsConfig, viewerUrl } from '../configuration';
+import { Status } from './enums';
 import { range } from 'underscore';
-import Logger from '../../helper/logger';
+import Logger from './logger';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -111,13 +111,13 @@ export async function createReviewComments(annotations: any[], changedFiles: any
     if (annotation.diffLines.includes(annotation.line)) {
       Logger.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}** \r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category} \r\n`,
+        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
         path: annotation.path,
         line: annotation.line
       });
     } else {
-      Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       annotation.displayCount = displayCount;
+      Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       unpostable.push(annotation);
     }
   });
@@ -214,9 +214,8 @@ export function createUnpostableReviewCommentsSummary(unpostableReviewComments: 
       body += `<table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
     } else if (previousPath !== reviewComment.path) {
       body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
-    } else {
-      body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     }
+    body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path;
   });
   body += '</table>';

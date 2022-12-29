@@ -7,6 +7,6 @@ module.exports = {
   },
   verbose: true,
   setupFilesAfterEnv: [
-    '<rootDir>/test/mock.ts'
+    '<rootDir>/test/.setup/mock.ts'
   ]
 };
