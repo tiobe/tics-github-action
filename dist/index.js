@@ -55,7 +55,7 @@ exports.ticsConfig = {
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
-    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : '',
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : undefined,
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),

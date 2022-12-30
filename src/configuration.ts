@@ -47,7 +47,7 @@ export const ticsConfig = {
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : '',
+  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : undefined,
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
