@@ -750,9 +750,9 @@ run();
 // exported for testing purposes
 async function run() {
     if (configuration_1.githubConfig.eventName !== 'pull_request')
-        logger_1.default.Instance.exit('This action can only run on pull requests.');
+        return logger_1.default.Instance.exit('This action can only run on pull requests.');
     if (!isCheckedOut())
-        logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+        return logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
     await main();
 }
 exports.run = run;
@@ -760,7 +760,7 @@ async function main() {
     try {
         const changedFiles = await (0, pulls_1.getChangedFiles)();
         if (!changedFiles || changedFiles.length <= 0)
-            return logger_1.default.Instance.exit('No changed files found to analyze.');
+            return logger_1.default.Instance.setFailed('No changed files found to analyze.');
         const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
         const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
         if (!analysis.completed) {
@@ -780,12 +780,13 @@ async function main() {
         let reviewComments;
         if (configuration_1.ticsConfig.postAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
-            if (annotations) {
+            if (annotations && annotations.length > 0) {
                 reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
             }
             const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-            if (previousReviewComments)
+            if (previousReviewComments && previousReviewComments.length > 0) {
                 await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+            }
         }
         await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
         if (!qualityGate.passed)

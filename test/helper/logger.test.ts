@@ -100,7 +100,6 @@ describe('setFailed', () => {
 
 describe('exit', () => {
   test('Should call core.setFailed on exit', () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     const setFailed = jest.spyOn(core, 'setFailed');
     const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
 

@@ -146,8 +146,6 @@ describe('test multiple types of configuration', () => {
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
   test('Should return single error if already exists in errorlist', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
-
     const response = await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
@@ -157,8 +155,6 @@ describe('test callback functions', () => {
   });
 
   test('Should return two errors in errorlist', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
-
     const response = await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 777] Different error');
@@ -168,8 +164,6 @@ describe('test callback functions', () => {
   });
 
   test('Should return warnings in warningList', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
-
     const response = await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 666] Warning');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 777] Warning');
@@ -204,7 +198,6 @@ describe('throwing errors', () => {
   });
 
   test('Should throw error on httpRequest in retrieveInstallTics', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
     const spy = jest.spyOn(Logger.Instance, 'exit');
 

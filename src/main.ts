@@ -15,9 +15,9 @@ run();
 
 // exported for testing purposes
 export async function run() {
-  if (githubConfig.eventName !== 'pull_request') Logger.Instance.exit('This action can only run on pull requests.');
+  if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
 
-  if (!isCheckedOut()) Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+  if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
 
   await main();
 }
@@ -25,7 +25,7 @@ export async function run() {
 async function main() {
   try {
     const changedFiles = await getChangedFiles();
-    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.exit('No changed files found to analyze.');
+    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
 
     const changedFilesFilePath = changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
@@ -49,11 +49,13 @@ async function main() {
 
     if (ticsConfig.postAnnotations) {
       const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-      if (annotations) {
+      if (annotations && annotations.length > 0) {
         reviewComments = await createReviewComments(annotations, changedFiles);
       }
       const previousReviewComments = await getPostedReviewComments();
-      if (previousReviewComments) await deletePreviousReviewComments(previousReviewComments);
+      if (previousReviewComments && previousReviewComments.length > 0) {
+        await deletePreviousReviewComments(previousReviewComments);
+      }
     }
 
     await postReview(analysis, analyzedFiles, qualityGate, reviewComments);

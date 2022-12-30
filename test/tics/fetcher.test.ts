@@ -33,7 +33,6 @@ describe('getAnalyzedFiles', () => {
   });
 
   test('Should throw error on faulty httpRequest in getAnalyzedFiles', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
@@ -60,7 +59,6 @@ describe('getQualityGate', () => {
   });
 
   test('Should throw error on faulty httpRequest in getQualityGate', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
@@ -86,7 +84,6 @@ describe('getAnnotations', () => {
   });
 
   test('Should throw error on faulty httpRequest in getAnnotations', async () => {
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
     const spy = jest.spyOn(Logger.Instance, 'exit');

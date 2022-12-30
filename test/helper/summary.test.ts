@@ -1,7 +1,5 @@
-import * as core from '@actions/core';
 import { ticsConfig } from '../../src/configuration';
 import { QualityGate } from '../../src/helper/interfaces';
-import Logger from '../../src/helper/logger';
 import {
   createErrorSummary,
   createFilesSummary,

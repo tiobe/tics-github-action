@@ -1,4 +1,4 @@
-export {};
+export default undefined;
 declare global {
   namespace jest {
     interface Matchers<R> {

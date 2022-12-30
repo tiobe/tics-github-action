@@ -7,7 +7,7 @@ describe('httpRequest', () => {
   test('Should return response on status 200', async () => {
     ticsConfig.ticsAuthToken = 'authToken'; // test setting TiCS Auth Token at least once
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body"}'));
-    const exit = jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+    const exit = jest.spyOn(Logger.Instance, 'exit');
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 200 }, readBody: readBodyFn }));
 
     const response = await httpRequest('url');
@@ -19,7 +19,6 @@ describe('httpRequest', () => {
   test('Should return undefined response and call exit on status 302', async () => {
     ticsConfig.ticsAuthToken = undefined; // test undefined TiCS Auth Token at least once
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body"}'));
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 302 }, readBody: readBodyFn }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
@@ -34,7 +33,7 @@ describe('httpRequest', () => {
 
   test('Should return undefined response and call exit on status 400', async () => {
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body", "alertMessages": [{"header": "header"}]}'));
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 400 }, readBody: readBodyFn }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
@@ -48,7 +47,7 @@ describe('httpRequest', () => {
 
   test('Should return undefined response and call exit on status 401', async () => {
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body", "alertMessages": [{"header": "header"}]}'));
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 401 }, readBody: readBodyFn }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
@@ -63,7 +62,7 @@ describe('httpRequest', () => {
 
   test('Should return undefined response and call exit on status 404', async () => {
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body", "alertMessages": [{"header": "header"}]}'));
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 404 }, readBody: readBodyFn }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
@@ -77,7 +76,7 @@ describe('httpRequest', () => {
 
   test('Should return undefined response and call exit on status null', async () => {
     const readBodyFn = jest.fn(() => Promise.resolve('{"data": "body", "alertMessages": [{"header": "header"}]}'));
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
+
     jest
       .spyOn(httpClient, 'get')
       .mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: null }, readBody: readBodyFn }));
@@ -186,7 +185,6 @@ describe('getTicsWebBaseUrlFromUrl', () => {
 
   test('Should return empty string from incorrect url.', () => {
     const spy = jest.spyOn(Logger.Instance, 'exit');
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
 
     const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TiCS/cfg?name=default');
     expect(baseUrl).toEqual('');

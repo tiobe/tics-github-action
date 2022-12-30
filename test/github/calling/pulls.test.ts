@@ -40,7 +40,6 @@ describe('getChangedFiles', () => {
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    jest.spyOn(process, 'exit').mockImplementationOnce(() => undefined as never);
     const spy = jest.spyOn(Logger.Instance, 'exit');
     await getChangedFiles();
 

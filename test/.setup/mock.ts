@@ -55,7 +55,8 @@ jest.mock('@actions/exec', () => {
 });
 jest.mock('fs', () => {
   return {
-    writeFileSync: jest.fn()
+    writeFileSync: jest.fn(),
+    existsSync: jest.fn()
   };
 });
 jest.mock('canonical-path', () => {
@@ -72,3 +73,4 @@ jest.mock('markdown-table', () => {
 jest.mock('proxy-agent', () => {
   return jest.fn();
 });
+jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
