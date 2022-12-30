@@ -18,7 +18,6 @@ export const githubConfig = {
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-  githubToken: process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN : '',
   pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 
@@ -48,7 +47,8 @@ export const ticsConfig = {
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : process.env.TICSAUTHTOKEN,
+  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : '',
+  githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl')
@@ -56,7 +56,7 @@ export const ticsConfig = {
 
 const httpClientOptions: RequestOptions = { rejectUnauthorized: ticsConfig.hostnameVerification, agent: new ProxyAgent() };
 
-export const octokit = getOctokit(githubConfig.githubToken, { request: { agent: new ProxyAgent() } });
+export const octokit = getOctokit(ticsConfig.githubToken, { request: { agent: new ProxyAgent() } });
 export const httpClient = new HttpClient('http-client', [], httpClientOptions);
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

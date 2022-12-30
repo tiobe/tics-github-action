@@ -28,7 +28,6 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    githubToken: process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN : '',
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 function getHostnameVerification() {
@@ -56,13 +55,14 @@ exports.ticsConfig = {
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
-    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : process.env.TICSAUTHTOKEN,
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : '',
+    githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 const httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
-exports.octokit = (0, github_1.getOctokit)(exports.githubConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
+exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
 exports.httpClient = new http_client_1.HttpClient('http-client', [], httpClientOptions);
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
