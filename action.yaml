@@ -1,6 +1,6 @@
 name: 'TiCS Github Action'
 author: 'TIOBE'
-description: 'Integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.'
+description: 'Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.'
 inputs:
   projectName:
     description: 'Name of the TICS project'
