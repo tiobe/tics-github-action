@@ -30,10 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: TiCS GitHub Action
-        uses: TIOBE-Software/tics-github-action@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
+        uses: TIOBE-Software/tics-github-action@v2.0.0
         with:
           projectName: 'myproject'
           ticsConfiguration: 'https://url/tiobeweb/TICS/api/cfg?name=myconfiguration'
