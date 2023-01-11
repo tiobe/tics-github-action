@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v3
       # Triggering TiCS analysis and posting the results of Quality Gating feature as part of the pull request.
       - name: TiCS GitHub Action
-        uses: TIOBE-Software/tics-github-action@v1.0.0
+        uses: tiobe/tics-github-action@v1.0.0
         env: 
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
