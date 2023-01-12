@@ -22,13 +22,18 @@ export const githubConfig = {
 };
 
 function getHostnameVerification() {
-  let hostnameVerification = getInput('branchName');
+  let hostnameVerificationCfg = getInput('hostnameVerification');
+  let hostnameVerification: boolean;
+
+  if (hostnameVerificationCfg) {
+    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
+  }
 
   switch (process.env.TICSHOSTNAMEVERIFICATION) {
     case '0':
     case 'false':
       hostnameVerification = false;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
       info('Hostname Verification disabled');
       break;
     default:
@@ -44,8 +49,6 @@ function getTicsAuthToken(){
   if (ticsAuthToken){
     // Update the environment for TICS
     process.env.TICSAUTHTOKEN = ticsAuthToken;
-  } else {
-    ticsAuthToken = undefined;
   }
 
   return ticsAuthToken;

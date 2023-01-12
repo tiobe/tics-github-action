@@ -31,11 +31,16 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 function getHostnameVerification() {
+    let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
     let hostnameVerification;
+    if (hostnameVerificationCfg) {
+        process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
+    }
     switch (process.env.TICSHOSTNAMEVERIFICATION) {
         case '0':
         case 'false':
             hostnameVerification = false;
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             (0, core_1.info)('Hostname Verification disabled');
             break;
         default:
@@ -43,6 +48,14 @@ function getHostnameVerification() {
             break;
     }
     return hostnameVerification;
+}
+function getTicsAuthToken() {
+    let ticsAuthToken = (0, core_1.getInput)('ticsAuthToken');
+    if (ticsAuthToken) {
+        // Update the environment for TICS
+        process.env.TICSAUTHTOKEN = ticsAuthToken;
+    }
+    return ticsAuthToken;
 }
 exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
@@ -55,7 +68,7 @@ exports.ticsConfig = {
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
-    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken') ? (0, core_1.getInput)('ticsAuthToken') : undefined,
+    ticsAuthToken: getTicsAuthToken(),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
