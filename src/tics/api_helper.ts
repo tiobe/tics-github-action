@@ -9,10 +9,14 @@ import { Analysis } from '../helper/interfaces';
  * @returns Promise of the data retrieved from the response.
  */
 export async function httpRequest(url: string): Promise<any> {
-  const headers: OutgoingHttpHeaders = {
-    Authorization: ticsConfig.ticsAuthToken ? `Basic ${ticsConfig.ticsAuthToken}` : undefined,
+  var headers: OutgoingHttpHeaders = {
     XRequestedWith: 'tics'
   };
+
+  if (ticsConfig.ticsAuthToken) {
+    headers.Authorization = `Basic ${ticsConfig.ticsAuthToken}`;
+  }
+
   const response = await httpClient.get(url, headers);
 
   switch (response.message.statusCode) {

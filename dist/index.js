@@ -974,10 +974,12 @@ const configuration_1 = __nccwpck_require__(5527);
  * @returns Promise of the data retrieved from the response.
  */
 async function httpRequest(url) {
-    const headers = {
-        Authorization: configuration_1.ticsConfig.ticsAuthToken ? `Basic ${configuration_1.ticsConfig.ticsAuthToken}` : undefined,
+    var headers = {
         XRequestedWith: 'tics'
     };
+    if (configuration_1.ticsConfig.ticsAuthToken) {
+        headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
+    }
     const response = await configuration_1.httpClient.get(url, headers);
     switch (response.message.statusCode) {
         case 200:
