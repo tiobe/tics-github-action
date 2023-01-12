@@ -991,7 +991,7 @@ async function httpRequest(url) {
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
             break;
         case 401:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
             break;
         case 404:
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
