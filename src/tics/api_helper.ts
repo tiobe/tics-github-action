@@ -34,7 +34,7 @@ export async function httpRequest(url: string): Promise<any> {
       break;
     case 401:
       Logger.Instance.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please provide a working TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
+        `HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
       break;
     case 404:
