@@ -22,11 +22,13 @@ export const githubConfig = {
 };
 
 function getHostnameVerification() {
-  let hostnameVerification;
+  let hostnameVerification = getInput('branchName');
+
   switch (process.env.TICSHOSTNAMEVERIFICATION) {
     case '0':
     case 'false':
       hostnameVerification = false;
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       info('Hostname Verification disabled');
       break;
     default:
@@ -34,6 +36,19 @@ function getHostnameVerification() {
       break;
   }
   return hostnameVerification;
+}
+
+function getTicsAuthToken(){
+  let ticsAuthToken = getInput('ticsAuthToken');
+
+  if (ticsAuthToken){
+    // Update the environment for TICS
+    process.env.TICSAUTHTOKEN = ticsAuthToken;
+  } else {
+    ticsAuthToken = undefined;
+  }
+
+  return ticsAuthToken;
 }
 
 export const ticsConfig = {
@@ -47,7 +62,7 @@ export const ticsConfig = {
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getInput('ticsAuthToken') ? getInput('ticsAuthToken') : undefined,
+  ticsAuthToken: getTicsAuthToken(),
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
