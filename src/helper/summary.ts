@@ -153,7 +153,9 @@ function groupAnnotations(annotations: any[], changedFiles: any[]) {
       annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else {
-      groupedAnnotations[index].count += annotation.count;
+      if (groupedAnnotations[index].gateId === annotation.gateId) {
+        groupedAnnotations[index].count += annotation.count;
+      }
     }
   });
   return groupedAnnotations;

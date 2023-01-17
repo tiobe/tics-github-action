@@ -699,7 +699,9 @@ function groupAnnotations(annotations, changedFiles) {
             groupedAnnotations.push(annotation);
         }
         else {
-            groupedAnnotations[index].count += annotation.count;
+            if (groupedAnnotations[index].gateId === annotation.gateId) {
+                groupedAnnotations[index].count += annotation.count;
+            }
         }
     });
     return groupedAnnotations;
@@ -1210,14 +1212,14 @@ async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations.');
     try {
         let annotations = [];
-        await Promise.all(apiLinks.map(async (link) => {
+        await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
-            await (0, api_helper_1.httpRequest)(annotationsUrl).then(response => {
-                response.data.forEach((annotation) => {
-                    logger_1.default.Instance.debug(JSON.stringify(annotation));
-                    annotations.push(annotation);
-                });
+            const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
+            response.data.forEach((annotation) => {
+                annotation.gateId = index;
+                logger_1.default.Instance.debug(JSON.stringify(annotation));
+                annotations.push(annotation);
             });
         }));
         logger_1.default.Instance.info('Retrieved all annotations.');
