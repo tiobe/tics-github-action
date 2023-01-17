@@ -98,6 +98,7 @@ export async function getAnnotations(apiLinks: any[]) {
         Logger.Instance.debug(`From: ${annotationsUrl}`);
         const response = await httpRequest(annotationsUrl);
         response.data.forEach((annotation: any) => {
+          Logger.Instance.debug(JSON.stringify(annotation));
           annotations.push(annotation);
         });
       })

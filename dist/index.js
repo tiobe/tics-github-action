@@ -1215,6 +1215,7 @@ async function getAnnotations(apiLinks) {
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
             response.data.forEach((annotation) => {
+                logger_1.default.Instance.debug(JSON.stringify(annotation));
                 annotations.push(annotation);
             });
         }));
