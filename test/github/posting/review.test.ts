@@ -155,7 +155,7 @@ describe('postNothingAnalyzedReview', () => {
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.APPROVE,
-      body: `## TiCS Analysis\n\n###Status\n\nMessage.`
+      body: `## TiCS Analysis\n\n### Status\n\nMessage.`
     };
 
     expect(spy).toBeCalledTimes(1);
@@ -174,7 +174,7 @@ describe('postNothingAnalyzedReview', () => {
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.REQUEST_CHANGES,
-      body: `## TiCS Analysis\n\n###Status\n\nMessage.`
+      body: `## TiCS Analysis\n\n### Status\n\nMessage.`
     };
 
     expect(spy).toBeCalledTimes(1);

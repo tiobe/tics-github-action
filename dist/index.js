@@ -309,7 +309,7 @@ exports.postReview = postReview;
  * @param event Approve or request changes in the review.
  */
 async function postNothingAnalyzedReview(message, event) {
-    const body = `## TiCS Analysis\n\n###${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[event === enums_1.Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
+    const body = `## TiCS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[event === enums_1.Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,

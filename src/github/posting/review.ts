@@ -42,7 +42,7 @@ export async function postReview(analysis: Analysis, filesAnalyzed: string[], qu
  * @param event Approve or request changes in the review.
  */
 export async function postNothingAnalyzedReview(message: string, event: Events) {
-  const body = `## TiCS Analysis\n\n###${generateStatusMarkdown(Status[event === Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
+  const body = `## TiCS Analysis\n\n### ${generateStatusMarkdown(Status[event === Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
 
   const params: any = {
     owner: githubConfig.owner,
