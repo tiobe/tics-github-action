@@ -1,8 +1,9 @@
 import { githubConfig, octokit } from '../../../src/configuration';
-import { postReview } from '../../../src/github/posting/review';
+import { postNothingAnalyzedReview, postReview } from '../../../src/github/posting/review';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import Logger from '../../../src/helper/logger';
+import * as markdown from '../../../src/helper/markdown';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
@@ -14,7 +15,7 @@ jest.mock('../../../src/helper/summary', () => {
 });
 
 describe('postReview', () => {
-  test('Should call postReview once', async () => {
+  test('Should call createReview once', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
@@ -39,7 +40,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledTimes(1);
   });
 
-  test('Should call postReview with values passed and no comments', async () => {
+  test('Should call createReview with values passed and no comments', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
@@ -72,7 +73,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should call postReview with values failed', async () => {
+  test('Should call createReview with values failed', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
@@ -110,7 +111,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should throw an error on postErrorComment', async () => {
+  test('Should throw an error on createReview', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
@@ -137,6 +138,58 @@ describe('postReview', () => {
     };
     await postReview(analysis, [''], qualityGate, undefined);
 
+    expect(spy).toBeCalledTimes(1);
+  });
+});
+
+describe('postNothingAnalyzedReview', () => {
+  test('Should call createReview once with approval', async () => {
+    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
+
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('Message.', Events.APPROVE);
+
+    const params: any = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.APPROVE,
+      body: `## TiCS Analysis\n\n###Status\n\nMessage.`
+    };
+
+    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(params);
+  });
+
+  test('Should call createReview once with requested changes', async () => {
+    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
+
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('Message.', Events.REQUEST_CHANGES);
+
+    const params: any = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.REQUEST_CHANGES,
+      body: `## TiCS Analysis\n\n###Status\n\nMessage.`
+    };
+
+    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(params);
+  });
+
+  test('Should throw error on createReview', async () => {
+    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
+
+    jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
+      throw new Error();
+    });
+    const spy = jest.spyOn(Logger.Instance, 'error');
+
+    await postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
     expect(spy).toBeCalledTimes(1);
   });
 });

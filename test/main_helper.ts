@@ -85,6 +85,14 @@ export const analysisPassed = {
   warningList: []
 };
 
+export const analysisPassedNoUrlWarning = {
+  completed: true,
+  statusCode: 0,
+  explorerUrl: undefined,
+  errorList: ['Error'],
+  warningList: ['[WARNING 5057] No files have been analyzed.']
+};
+
 export const singleFileQualityGateFailed: QualityGate = {
   passed: false,
   message: 'Project failed 2 out of 2 quality gates',

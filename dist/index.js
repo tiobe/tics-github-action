@@ -267,14 +267,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postReview = void 0;
+exports.postNothingAnalyzedReview = exports.postReview = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(5527);
 const summary_1 = __nccwpck_require__(1502);
 const enums_1 = __nccwpck_require__(1655);
+const markdown_1 = __nccwpck_require__(5300);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
+ * @param filesAnalyzed List of all files analyzed by TiCS.
+ * @param qualityGate Quality gate returned by TiCS.
+ * @param reviewComments TiCS annotations in the form of review comments.
  */
 async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
@@ -299,6 +303,30 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
     }
 }
 exports.postReview = postReview;
+/**
+ * Create review on the pull request with a body and approval0.
+ * @param message Message to display in the body of the review.
+ * @param event Approve or request changes in the review.
+ */
+async function postNothingAnalyzedReview(message, event) {
+    const body = `## TiCS Analysis\n\n###${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[event === enums_1.Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        pull_number: configuration_1.githubConfig.pullRequestNumber,
+        event: event,
+        body: body
+    };
+    try {
+        logger_1.default.Instance.header('Posting a review for this pull request.');
+        await configuration_1.octokit.rest.pulls.createReview(params);
+        logger_1.default.Instance.info('Posted review for this pull request.');
+    }
+    catch (error) {
+        logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
+    }
+}
+exports.postNothingAnalyzedReview = postNothingAnalyzedReview;
 
 
 /***/ }),
@@ -759,6 +787,7 @@ const review_1 = __nccwpck_require__(8973);
 const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
+const enums_1 = __nccwpck_require__(1655);
 run();
 // exported for testing purposes
 async function run() {
@@ -783,6 +812,11 @@ async function main() {
             return;
         }
         if (!analysis.explorerUrl) {
+            if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+                (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
+                (0, api_helper_1.cliSummary)(analysis);
+                return;
+            }
             logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
             analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
             (0, api_helper_1.cliSummary)(analysis);

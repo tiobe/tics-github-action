@@ -5,6 +5,7 @@ import { existsSync } from 'fs';
 import {
   analysisFailed,
   analysisPassed,
+  analysisPassedNoUrlWarning,
   analysisPassedNoUrl,
   doubleAnalyzedFiles,
   doubleChangedFiles,
@@ -24,6 +25,7 @@ import * as fetcher from '../src/tics/fetcher';
 import * as review from '../src/github/posting/review';
 import * as calling_annotations from '../src/github/calling/annotations';
 import * as posting_annotations from '../src/github/posting/annotations';
+import { Events } from '../src/helper/enums';
 
 describe('pre checks', () => {
   test('Should call exit if event is not pull request', async () => {
@@ -89,7 +91,7 @@ describe('SetFailed checks', () => {
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TiCS Github Action.'));
   });
 
-  test('Should call setFailed if analysis passed but no Explorer Url has been given', async () => {
+  test('Should call setFailed if analysis passed, no Explorer URL has been given and no warning is given.', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
@@ -153,6 +155,22 @@ describe('SetFailed checks', () => {
     await run();
 
     expect(spySetFailed).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('postNothingAnalyzedReview checks', () => {
+  test('Should call postNothingAnalyzedReview if analysis passed, no Explorer URL has been given and warning 5057 is given.', async () => {
+    (existsSync as any).mockReturnValueOnce(true);
+    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning);
+
+    const postNothingAnalyzedReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
+
+    await run();
+
+    expect(postNothingAnalyzedReview).toHaveBeenCalledTimes(1);
+    expect(postNothingAnalyzedReview).toHaveBeenCalledWith('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
   });
 });
 
