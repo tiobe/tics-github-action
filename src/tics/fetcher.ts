@@ -96,10 +96,11 @@ export async function getAnnotations(apiLinks: any[]) {
       apiLinks.map(async link => {
         const annotationsUrl = `${baseUrl}/${link.url}`;
         Logger.Instance.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest(annotationsUrl);
-        response.data.forEach((annotation: any) => {
-          Logger.Instance.debug(JSON.stringify(annotation));
-          annotations.push(annotation);
+        await httpRequest(annotationsUrl).then(data => {
+          data.forEach((annotation: any) => {
+            Logger.Instance.debug(JSON.stringify(annotation));
+            annotations.push(annotation);
+          });
         });
       })
     );

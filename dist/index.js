@@ -1213,10 +1213,11 @@ async function getAnnotations(apiLinks) {
         await Promise.all(apiLinks.map(async (link) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
-            const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
-            response.data.forEach((annotation) => {
-                logger_1.default.Instance.debug(JSON.stringify(annotation));
-                annotations.push(annotation);
+            await (0, api_helper_1.httpRequest)(annotationsUrl).then(data => {
+                data.forEach((annotation) => {
+                    logger_1.default.Instance.debug(JSON.stringify(annotation));
+                    annotations.push(annotation);
+                });
             });
         }));
         logger_1.default.Instance.info('Retrieved all annotations.');
