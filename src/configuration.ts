@@ -43,10 +43,10 @@ function getHostnameVerification() {
   return hostnameVerification;
 }
 
-function getTicsAuthToken(){
-  let ticsAuthToken = getInput('ticsAuthToken');
+function getTicsAuthToken(): string | undefined {
+  const ticsAuthToken = getInput('ticsAuthToken');
 
-  if (ticsAuthToken){
+  if (ticsAuthToken) {
     // Update the environment for TICS
     process.env.TICSAUTHTOKEN = ticsAuthToken;
   }

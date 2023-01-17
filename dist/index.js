@@ -50,7 +50,7 @@ function getHostnameVerification() {
     return hostnameVerification;
 }
 function getTicsAuthToken() {
-    let ticsAuthToken = (0, core_1.getInput)('ticsAuthToken');
+    const ticsAuthToken = (0, core_1.getInput)('ticsAuthToken');
     if (ticsAuthToken) {
         // Update the environment for TICS
         process.env.TICSAUTHTOKEN = ticsAuthToken;

@@ -53,7 +53,7 @@ describe('httpRequest', () => {
 
     const response = await httpRequest('url');
     const calledWith =
-      'HTTP request failed with status 401. Please provide a working TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
+      'HTTP request failed with status 401. Please provide a valid TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
