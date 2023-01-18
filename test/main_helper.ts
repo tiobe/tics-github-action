@@ -64,7 +64,7 @@ export const doubleChangedFiles: changedFile[] = [
 export const analysisFailed = {
   completed: false,
   statusCode: 1,
-  explorerUrl: 'explorerUrl',
+  explorerUrl: undefined,
   errorList: ['Error'],
   warningList: []
 };
