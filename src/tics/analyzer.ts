@@ -6,6 +6,8 @@ import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 let errorList: string[] = [];
 let warningList: string[] = [];
 let explorerUrl: string | undefined;
+let statusCode: number;
+let completed: boolean;
 
 /**
  * Runs TiCS based on the configuration set in a workflow.
@@ -19,7 +21,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
   Logger.Instance.header('Running TiCS');
   Logger.Instance.debug(`With command: ${command}`);
   try {
-    const statusCode = await exec(command, [], {
+    statusCode = await exec(command, [], {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
@@ -32,19 +34,15 @@ export async function runTicsAnalyzer(fileListPath: string) {
         }
       }
     });
-
-    return {
-      completed: true,
-      statusCode: statusCode,
-      explorerUrl: explorerUrl,
-      errorList: errorList,
-      warningList: warningList
-    };
+    completed = true;
   } catch (error: any) {
     Logger.Instance.debug(error.message);
+    completed = false;
+    statusCode = -1;
+  } finally {
     return {
-      completed: false,
-      statusCode: -1,
+      completed: completed,
+      statusCode: statusCode,
       explorerUrl: explorerUrl,
       errorList: errorList,
       warningList: warningList
