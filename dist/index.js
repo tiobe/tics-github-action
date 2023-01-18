@@ -913,6 +913,7 @@ async function runTicsAnalyzer(fileListPath) {
         return {
             completed: false,
             statusCode: -1,
+            explorerUrl: explorerUrl,
             errorList: errorList,
             warningList: warningList
         };
