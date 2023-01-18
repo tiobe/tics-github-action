@@ -31,20 +31,16 @@ async function main() {
     const changedFilesFilePath = changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
-    if (!analysis.completed) {
-      postErrorComment(analysis);
-      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      cliSummary(analysis);
-      return;
-    }
     if (!analysis.explorerUrl) {
-      if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+      if (!analysis.completed) {
+        postErrorComment(analysis);
+        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+      } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
         postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
-        cliSummary(analysis);
-        return;
+      } else {
+        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+        analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
       }
-      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
       cliSummary(analysis);
       return;
     }

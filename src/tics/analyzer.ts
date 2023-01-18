@@ -41,6 +41,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
       warningList: warningList
     };
   } catch (error: any) {
+    Logger.Instance.debug(error.message);
     return {
       completed: false,
       statusCode: -1,

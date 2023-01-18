@@ -807,20 +807,18 @@ async function main() {
             return logger_1.default.Instance.setFailed('No changed files found to analyze.');
         const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
         const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-        if (!analysis.completed) {
-            (0, comment_1.postErrorComment)(analysis);
-            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-            (0, api_helper_1.cliSummary)(analysis);
-            return;
-        }
         if (!analysis.explorerUrl) {
-            if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
-                (0, api_helper_1.cliSummary)(analysis);
-                return;
+            if (!analysis.completed) {
+                (0, comment_1.postErrorComment)(analysis);
+                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
             }
-            logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-            analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+            else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+                (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
+            }
+            else {
+                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+                analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+            }
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
@@ -911,6 +909,7 @@ async function runTicsAnalyzer(fileListPath) {
         };
     }
     catch (error) {
+        logger_1.default.Instance.debug(error.message);
         return {
             completed: false,
             statusCode: -1,
