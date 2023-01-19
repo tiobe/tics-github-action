@@ -10,11 +10,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.httpClientOptions = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
-const http_client_1 = __nccwpck_require__(6255);
 const fs_1 = __nccwpck_require__(5747);
+const http_1 = __importDefault(__nccwpck_require__(8605));
+const https_1 = __importDefault(__nccwpck_require__(7211));
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const api_helper_1 = __nccwpck_require__(3823);
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
@@ -74,9 +75,9 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
-const httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
-exports.httpClient = new http_client_1.HttpClient('http-client', [], httpClientOptions);
+exports.httpClient = new URL(exports.ticsConfig.ticsConfiguration).protocol === 'http:' ? http_1.default : https_1.default;
+exports.httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -1016,26 +1017,34 @@ async function httpRequest(url) {
     if (configuration_1.ticsConfig.ticsAuthToken) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
-    const response = await configuration_1.httpClient.get(url, headers);
-    switch (response.message.statusCode) {
-        case 200:
-            return JSON.parse(await response.readBody());
-        case 302:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-            break;
-        case 400:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
-            break;
-        case 401:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
-            break;
-        case 404:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
-            break;
-        default:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
-            break;
-    }
+    configuration_1.httpClientOptions.headers = headers;
+    configuration_1.httpClient.get(url, configuration_1.httpClientOptions, response => {
+        let body = '';
+        response.on('data', chunk => {
+            body += chunk;
+        });
+        response.on('end', () => {
+            switch (response.statusCode) {
+                case 200:
+                    return JSON.parse(body);
+                case 302:
+                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+                    break;
+                case 400:
+                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+                    break;
+                case 401:
+                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+                    break;
+                case 404:
+                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct.`);
+                    break;
+                default:
+                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if your configuration is correct.`);
+                    break;
+            }
+        });
+    });
 }
 exports.httpRequest = httpRequest;
 /**
