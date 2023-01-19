@@ -1,8 +1,8 @@
 import { getBooleanInput, getInput, info } from '@actions/core';
 import { getOctokit } from '@actions/github';
-import { HttpClient } from '@actions/http-client';
 import { readFileSync } from 'fs';
-import { RequestOptions } from 'https';
+import http from 'http';
+import https, { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 
@@ -72,9 +72,8 @@ export const ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-const httpClientOptions: RequestOptions = { rejectUnauthorized: ticsConfig.hostnameVerification, agent: new ProxyAgent() };
-
 export const octokit = getOctokit(ticsConfig.githubToken, { request: { agent: new ProxyAgent() } });
-export const httpClient = new HttpClient('http-client', [], httpClientOptions);
+export const httpClient = new URL(ticsConfig.ticsConfiguration).protocol === 'http:' ? http : https;
+export const httpClientOptions: RequestOptions = { rejectUnauthorized: ticsConfig.hostnameVerification, agent: new ProxyAgent() };
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

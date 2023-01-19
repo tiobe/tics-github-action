@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import Logger from '../helper/logger';
-import { httpClient, ticsConfig, viewerUrl } from '../configuration';
+import { httpClient, httpClientOptions, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis } from '../helper/interfaces';
 
 /**
@@ -17,33 +17,41 @@ export async function httpRequest(url: string): Promise<any> {
     headers.Authorization = `Basic ${ticsConfig.ticsAuthToken}`;
   }
 
-  const response = await httpClient.get(url, headers);
+  httpClientOptions.headers = headers;
 
-  switch (response.message.statusCode) {
-    case 200:
-      return JSON.parse(await response.readBody());
-    case 302:
-      Logger.Instance.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
-      );
-      break;
-    case 400:
-      Logger.Instance.exit(
-        `HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(await response.readBody()).alertMessages[0].header}`
-      );
-      break;
-    case 401:
-      Logger.Instance.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
-      );
-      break;
-    case 404:
-      Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
-      break;
-    default:
-      Logger.Instance.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
-      break;
-  }
+  httpClient.get(url, httpClientOptions, response => {
+    let body = '';
+
+    response.on('data', chunk => {
+      body += chunk;
+    });
+
+    response.on('end', () => {
+      switch (response.statusCode) {
+        case 200:
+          return JSON.parse(body);
+        case 302:
+          Logger.Instance.exit(
+            `HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
+          );
+          break;
+        case 400:
+          Logger.Instance.exit(`HTTP request failed with status ${response.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+          break;
+        case 401:
+          Logger.Instance.exit(
+            `HTTP request failed with status ${response.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
+          );
+          break;
+        case 404:
+          Logger.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct.`);
+          break;
+        default:
+          Logger.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if your configuration is correct.`);
+          break;
+      }
+    });
+  });
 }
 
 /**
