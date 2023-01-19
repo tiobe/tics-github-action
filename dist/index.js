@@ -1018,31 +1018,36 @@ async function httpRequest(url) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
     configuration_1.httpClientOptions.headers = headers;
-    configuration_1.httpClient.get(url, configuration_1.httpClientOptions, response => {
-        let body = '';
-        response.on('data', chunk => {
-            body += chunk;
+    return new Promise((resolve, reject) => {
+        const req = configuration_1.httpClient.get(url, configuration_1.httpClientOptions, response => {
+            let body = '';
+            response.on('data', chunk => {
+                body += chunk;
+            });
+            response.on('end', () => {
+                switch (response.statusCode) {
+                    case 200:
+                        resolve(JSON.parse(body));
+                    case 302:
+                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+                        break;
+                    case 400:
+                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+                        break;
+                    case 401:
+                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+                        break;
+                    case 404:
+                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct.`);
+                        break;
+                    default:
+                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if your configuration is correct.`);
+                        break;
+                }
+            });
         });
-        response.on('end', () => {
-            switch (response.statusCode) {
-                case 200:
-                    return JSON.parse(body);
-                case 302:
-                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-                    break;
-                case 400:
-                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
-                    break;
-                case 401:
-                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
-                    break;
-                case 404:
-                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct.`);
-                    break;
-                default:
-                    logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if your configuration is correct.`);
-                    break;
-            }
+        req.on('error', error => {
+            reject(error.message);
         });
     });
 }
