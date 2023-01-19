@@ -31,6 +31,7 @@ export async function httpRequest(url: string): Promise<any> {
         switch (response.statusCode) {
           case 200:
             resolve(JSON.parse(body));
+            break;
           case 302:
             Logger.Instance.exit(
               `HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`

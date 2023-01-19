@@ -1028,6 +1028,7 @@ async function httpRequest(url) {
                 switch (response.statusCode) {
                     case 200:
                         resolve(JSON.parse(body));
+                        break;
                     case 302:
                         logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
                         break;
