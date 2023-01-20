@@ -35,7 +35,6 @@
     "@actions/http-client": "^2.0.1",
     "canonical-path": "^1.0.0",
     "markdown-table": "^3.0.3",
-    "proxy-agent": "^5.0.0",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
