@@ -35,6 +35,7 @@ jest.mock('../../src/configuration', () => {
     httpClient: {
       get: jest.fn()
     },
+    httpClientOptions: {},
     viewerUrl: '<url>',
     baseUrl: 'http://base.com'
   };
