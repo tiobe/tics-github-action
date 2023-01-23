@@ -24,13 +24,13 @@ export async function runTicsAnalyzer(fileListPath: string) {
     statusCode = await exec(command, [], {
       silent: true,
       listeners: {
-        stdline(data: string) {
-          process.stdout.write(data);
-          findInStdOutOrErr(data);
+        stdout(data: Buffer) {
+          process.stdout.write(data.toString());
+          findInStdOutOrErr(data.toString());
         },
-        errline(data: string) {
-          process.stdout.write(data);
-          findInStdOutOrErr(data);
+        stderr(data: Buffer) {
+          process.stdout.write(data.toString());
+          findInStdOutOrErr(data.toString());
         }
       }
     });

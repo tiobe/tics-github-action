@@ -885,13 +885,13 @@ async function runTicsAnalyzer(fileListPath) {
         statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
-                stdline(data) {
-                    process.stdout.write(data);
-                    findInStdOutOrErr(data);
+                stdout(data) {
+                    process.stdout.write(data.toString());
+                    findInStdOutOrErr(data.toString());
                 },
-                errline(data) {
-                    process.stdout.write(data);
-                    findInStdOutOrErr(data);
+                stderr(data) {
+                    process.stdout.write(data.toString());
+                    findInStdOutOrErr(data.toString());
                 }
             }
         });
