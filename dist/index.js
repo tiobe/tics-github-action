@@ -786,7 +786,7 @@ const enums_1 = __nccwpck_require__(1655);
 process.removeAllListeners('warning');
 process.on('warning', warning => {
     if (configuration_1.ticsConfig.logLevel === 'debug')
-        logger_1.default.Instance.debug(warning.message.toString());
+        logger_1.default.Instance.warning(warning.message.toString());
 });
 run();
 // exported for testing purposes
