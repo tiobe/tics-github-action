@@ -6,10 +6,11 @@ import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
-import { postReview } from './github/posting/review';
+import { postNothingAnalyzedReview, postReview } from './github/posting/review';
 import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
+import { Events } from './helper/enums';
 
 run();
 
@@ -30,15 +31,16 @@ async function main() {
     const changedFilesFilePath = changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
-    if (!analysis.completed) {
-      postErrorComment(analysis);
-      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      cliSummary(analysis);
-      return;
-    }
     if (!analysis.explorerUrl) {
-      Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+      if (!analysis.completed) {
+        postErrorComment(analysis);
+        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+      } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+        postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+      } else {
+        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+        analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+      }
       cliSummary(analysis);
       return;
     }
