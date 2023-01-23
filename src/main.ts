@@ -14,7 +14,7 @@ import { Events } from './helper/enums';
 
 process.removeAllListeners('warning');
 process.on('warning', warning => {
-  Logger.Instance.debug(warning.message.toString());
+  if (ticsConfig.logLevel === 'debug') Logger.Instance.debug(warning.message.toString());
 });
 
 run();

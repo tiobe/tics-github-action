@@ -393,7 +393,7 @@ class Logger {
      */
     header(string) {
         this.addNewline('header');
-        core.info(`\u001b[35m${string}`);
+        core.info(`\u001b[34m${string}`);
         this.called = 'header';
     }
     /**
@@ -785,7 +785,8 @@ const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
 process.removeAllListeners('warning');
 process.on('warning', warning => {
-    logger_1.default.Instance.debug(warning.message.toString());
+    if (configuration_1.ticsConfig.logLevel === 'debug')
+        logger_1.default.Instance.debug(warning.message.toString());
 });
 run();
 // exported for testing purposes
