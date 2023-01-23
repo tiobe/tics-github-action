@@ -870,6 +870,8 @@ const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
 let explorerUrl;
+let statusCode;
+let completed;
 /**
  * Runs TiCS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
@@ -880,31 +882,31 @@ async function runTicsAnalyzer(fileListPath) {
     logger_1.default.Instance.header('Running TiCS');
     logger_1.default.Instance.debug(`With command: ${command}`);
     try {
-        const statusCode = await (0, exec_1.exec)(command, [], {
+        statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
-                stdout(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                stdline(data) {
+                    process.stdout.write(data);
+                    findInStdOutOrErr(data);
                 },
-                stderr(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                errline(data) {
+                    process.stdout.write(data);
+                    findInStdOutOrErr(data);
                 }
             }
         });
-        return {
-            completed: true,
-            statusCode: statusCode,
-            explorerUrl: explorerUrl,
-            errorList: errorList,
-            warningList: warningList
-        };
+        completed = true;
     }
     catch (error) {
+        logger_1.default.Instance.debug(error.message);
+        completed = false;
+        statusCode = -1;
+    }
+    finally {
         return {
-            completed: false,
-            statusCode: -1,
+            completed: completed,
+            statusCode: statusCode,
+            explorerUrl: explorerUrl,
             errorList: errorList,
             warningList: warningList
         };
