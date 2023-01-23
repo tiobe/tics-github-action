@@ -3,21 +3,10 @@ import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import Logger from './helper/logger';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-
-export const githubConfig = {
-  repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
-  owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-  reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
-  branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
-  basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-  branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-  eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
-  runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
-};
 
 function getHostnameVerification() {
   let hostnameVerificationCfg = getInput('hostnameVerification');
@@ -51,6 +40,25 @@ function getTicsAuthToken(): string | undefined {
 
   return ticsAuthToken;
 }
+
+export function configure() {
+  process.removeAllListeners('warning');
+  process.on('warning', warning => {
+    if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
+  });
+}
+
+export const githubConfig = {
+  repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
+  owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
+  reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
+  branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
+  basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
+  branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
+  eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+  runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
+  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+};
 
 export const ticsConfig = {
   projectName: getInput('projectName', { required: true }),

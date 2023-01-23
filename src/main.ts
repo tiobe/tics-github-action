@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
-import { githubConfig, ticsConfig } from './configuration';
+import { configure, githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
@@ -12,11 +12,7 @@ import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 
-process.removeAllListeners('warning');
-process.on('warning', warning => {
-  if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
-});
-
+configure();
 run();
 
 // exported for testing purposes

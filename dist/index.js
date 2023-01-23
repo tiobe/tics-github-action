@@ -10,25 +10,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = exports.configure = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const fs_1 = __nccwpck_require__(5747);
 const api_helper_1 = __nccwpck_require__(3823);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-exports.githubConfig = {
-    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
-    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
-    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
-    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
-    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
-};
 function getHostnameVerification() {
     let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
     let hostnameVerification;
@@ -56,6 +46,25 @@ function getTicsAuthToken() {
     }
     return ticsAuthToken;
 }
+function configure() {
+    process.removeAllListeners('warning');
+    process.on('warning', warning => {
+        if (exports.ticsConfig.logLevel === 'debug')
+            logger_1.default.Instance.warning(warning.message.toString());
+    });
+}
+exports.configure = configure;
+exports.githubConfig = {
+    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
+    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
+    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
+    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
+    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
+    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
+    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+};
 exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
     branchName: (0, core_1.getInput)('branchName'),
@@ -783,11 +792,7 @@ const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
-process.removeAllListeners('warning');
-process.on('warning', warning => {
-    if (configuration_1.ticsConfig.logLevel === 'debug')
-        logger_1.default.Instance.warning(warning.message.toString());
-});
+(0, configuration_1.configure)();
 run();
 // exported for testing purposes
 async function run() {
