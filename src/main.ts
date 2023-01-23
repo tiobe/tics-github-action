@@ -12,8 +12,9 @@ import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 
+process.removeAllListeners('warning');
 process.on('warning', warning => {
-  if (warning.stack) Logger.Instance.debug(warning.stack.toString());
+  Logger.Instance.debug(warning.message.toString());
 });
 
 run();
