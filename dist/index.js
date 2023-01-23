@@ -783,6 +783,10 @@ const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
+process.on('warning', warning => {
+    if (warning.stack)
+        logger_1.default.Instance.debug(warning.stack.toString());
+});
 run();
 // exported for testing purposes
 async function run() {
