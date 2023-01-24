@@ -18,6 +18,7 @@ jest.mock('../../src/configuration', () => {
       runnerOS: '',
       pullRequestNumber: '1'
     },
+    configure: jest.fn(),
     octokit: {
       paginate: jest.fn(),
       rest: {
@@ -32,9 +33,7 @@ jest.mock('../../src/configuration', () => {
         }
       }
     },
-    httpClient: {
-      get: jest.fn()
-    },
+    requestInit: { headers: {} },
     viewerUrl: '<url>',
     baseUrl: 'http://base.com'
   };
@@ -53,6 +52,7 @@ jest.mock('@actions/exec', () => {
     exec: jest.fn()
   };
 });
+jest.mock('node-fetch', () => jest.fn());
 jest.mock('fs', () => {
   return {
     writeFileSync: jest.fn(),

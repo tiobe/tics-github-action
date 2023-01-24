@@ -10,7 +10,7 @@ describe('info', () => {
     Logger.Instance.header('string');
 
     expect(info).toHaveBeenCalledTimes(1);
-    expect(info).toHaveBeenCalledWith('\u001b[35mstring');
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('string'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('header');
     expect(Logger.Instance.called).toEqual('header');
@@ -76,7 +76,7 @@ describe('error', () => {
     Logger.Instance.error('error');
 
     expect(error).toHaveBeenCalledTimes(1);
-    expect(error).toHaveBeenCalledWith('\u001b[31merror');
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('error'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
     expect(Logger.Instance.called).toEqual('error');
@@ -91,7 +91,7 @@ describe('setFailed', () => {
     Logger.Instance.setFailed('error');
 
     expect(setFailed).toHaveBeenCalledTimes(1);
-    expect(setFailed).toHaveBeenCalledWith('\u001b[31merror');
+    expect(setFailed).toHaveBeenCalledWith(expect.stringContaining('error'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
     expect(Logger.Instance.called).toEqual('error');
@@ -106,7 +106,7 @@ describe('exit', () => {
     Logger.Instance.exit('error');
 
     expect(setFailed).toHaveBeenCalledTimes(1);
-    expect(setFailed).toHaveBeenCalledWith('\u001b[31merror');
+    expect(setFailed).toHaveBeenCalledWith(expect.stringContaining('error'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
   });

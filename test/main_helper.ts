@@ -61,7 +61,15 @@ export const doubleChangedFiles: changedFile[] = [
   }
 ];
 
-export const analysisFailed = {
+export const analysisFailedNoUrl = {
+  completed: false,
+  statusCode: 1,
+  explorerUrl: undefined,
+  errorList: ['Error'],
+  warningList: []
+};
+
+export const analysisFailedUrl = {
   completed: false,
   statusCode: 1,
   explorerUrl: 'explorerUrl',
@@ -75,6 +83,14 @@ export const analysisPassedNoUrl = {
   explorerUrl: undefined,
   errorList: ['Error'],
   warningList: []
+};
+
+export const analysisPassedNoUrlWarning5057 = {
+  completed: true,
+  statusCode: 0,
+  explorerUrl: undefined,
+  errorList: ['Error'],
+  warningList: ['[WARNING 5057] No url ...']
 };
 
 export const analysisPassed = {
