@@ -634,7 +634,7 @@ function createConditionsTable(conditions) {
                 .map((item) => {
                 return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
             });
-            conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
+            conditionsTable += (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
         }
         else {
             conditionsTable += `${conditionStatus}\n\n\n`;
@@ -826,7 +826,7 @@ async function main() {
             return;
         }
         const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
-        const qualityGate = await (0, fetcher_1.getQualityGates)(analysis.explorerUrl);
+        const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         let reviewComments;
         if (configuration_1.ticsConfig.postAnnotations) {
             const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
@@ -1132,7 +1132,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getAnnotations = exports.getQualityGates = exports.getAnalyzedFiles = void 0;
+exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
@@ -1176,7 +1176,7 @@ function getAnalyzedFilesUrl(url) {
  * @param url The TiCS explorer url.
  * @returns the quality gates
  */
-async function getQualityGates(url) {
+async function getQualityGate(url) {
     logger_1.default.Instance.header('Retrieving the quality gates.');
     const qualityGateUrl = getQualityGateUrl(url);
     logger_1.default.Instance.debug(`From: ${qualityGateUrl}`);
@@ -1190,7 +1190,7 @@ async function getQualityGates(url) {
         logger_1.default.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
     }
 }
-exports.getQualityGates = getQualityGates;
+exports.getQualityGate = getQualityGate;
 /**
  * Builds the quality gate url from the explorer url.
  * @param url The TiCS Explorer url.

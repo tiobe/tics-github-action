@@ -45,7 +45,7 @@ function getAnalyzedFilesUrl(url: string) {
  * @param url The TiCS explorer url.
  * @returns the quality gates
  */
-export async function getQualityGates(url: string): Promise<any> {
+export async function getQualityGate(url: string): Promise<any> {
   Logger.Instance.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   Logger.Instance.debug(`From: ${qualityGateUrl}`);
