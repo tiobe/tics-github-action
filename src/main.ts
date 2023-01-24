@@ -5,7 +5,7 @@ import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
+import { getAnalyzedFiles, getAnnotations, getQualityGates } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/posting/review';
 import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
@@ -47,7 +47,7 @@ async function main() {
     }
 
     const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
-    const qualityGate = await getQualityGate(analysis.explorerUrl);
+    const qualityGate = await getQualityGates(analysis.explorerUrl);
     let reviewComments;
 
     if (ticsConfig.postAnnotations) {

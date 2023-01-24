@@ -45,7 +45,7 @@ function getAnalyzedFilesUrl(url: string) {
  * @param url The TiCS explorer url.
  * @returns the quality gates
  */
-export async function getQualityGate(url: string): Promise<any> {
+export async function getQualityGates(url: string): Promise<any> {
   Logger.Instance.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   Logger.Instance.debug(`From: ${qualityGateUrl}`);
@@ -53,6 +53,7 @@ export async function getQualityGate(url: string): Promise<any> {
   try {
     const response = await httpRequest(qualityGateUrl);
     Logger.Instance.info('Retrieved the quality gates.');
+    Logger.Instance.debug(response);
     return response;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
