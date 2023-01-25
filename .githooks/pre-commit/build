@@ -1,0 +1,3 @@
+#!/bin/sh
+npm run all
+exec git add dist

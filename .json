@@ -1,0 +1,120 @@
+{
+  "passed": false,
+  "message": "Project failed to pass quality gate",
+  "url": "api/public/v1/QualityGateStatusDetails?axes=Date(1674580144),ClientData(DyKxr5yOU9Rzym79dkRkkA),Project(c-demo),Window(-1)",
+  "gates": [
+    {
+      "passed": false,
+      "name": "PullRequestClient",
+      "conditions": [
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 1 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        },
+        {
+          "passed": false,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 2 should be at most 0 for each file with respect to first analysis, but was not for 1 file",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 1,
+            "itemLimit": 100,
+            "items": [
+              {
+                "itemType": "file",
+                "name": "engine_drte.c",
+                "link": "AnnotatedSource.html#axes=Level(2),Suppressions(no),Date(1674580144),ClientData(DyKxr5yOU9Rzym79dkRkkA),Project(c-demo),Window(changed,ge,1674580144),File(Path(HIE,c-demo,main,engine_drte.c)),IsNew(yes)&diff=true&metrics=Delta(G(Violations(CS),Level(2)),Run(0))",
+                "data": { "actualValue": { "formattedValue": "+2", "value": 2, "classes": ["delta-worse"] } }
+              }
+            ]
+          },
+          "annotationsApiV1Links": [
+            {
+              "url": "api/public/v1/Annotations?filters=Date(1674580144),ClientData(DyKxr5yOU9Rzym79dkRkkA),Project(c-demo),Window(-1),Level(2),Where(Eq(Violations(CS),gt,0)),DeltaDate(Run(0)),IsNew(yes)&metric=Annotations(CS)"
+            }
+          ]
+        },
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 3 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        },
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 4 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        },
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 5 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        },
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 6 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        },
+        {
+          "passed": true,
+          "error": false,
+          "message": "Δ Coding Standard Violations for level 7 should be at most 0 for each file with respect to first analysis",
+          "details": {
+            "itemTypes": ["file"],
+            "dataKeys": { "actualValue": { "title": "Coding Standard Violations", "order": 1, "itemType": "file" } },
+            "itemCount": 0,
+            "itemLimit": 100,
+            "items": []
+          },
+          "annotationsApiV1Links": []
+        }
+      ]
+    }
+  ],
+  "annotationsApiV1Links": [
+    {
+      "url": "api/public/v1/Annotations?filters=Date(1674580144),ClientData(DyKxr5yOU9Rzym79dkRkkA),Project(c-demo),Window(-1),Level(2),Where(Eq(Violations(CS),gt,0)),DeltaDate(Run(0)),IsNew(yes)&metric=Annotations(CS)"
+    }
+  ]
+}

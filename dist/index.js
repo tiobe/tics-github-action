@@ -10,27 +10,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.httpClientOptions = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = exports.configure = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
-const fs_1 = __nccwpck_require__(5747);
-const http_1 = __importDefault(__nccwpck_require__(8605));
-const https_1 = __importDefault(__nccwpck_require__(7211));
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
+const fs_1 = __nccwpck_require__(5747);
 const api_helper_1 = __nccwpck_require__(3823);
+const logger_1 = __importDefault(__nccwpck_require__(6440));
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-exports.githubConfig = {
-    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
-    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
-    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
-    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
-    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
-};
 function getHostnameVerification() {
     let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
     let hostnameVerification;
@@ -58,6 +46,25 @@ function getTicsAuthToken() {
     }
     return ticsAuthToken;
 }
+function configure() {
+    process.removeAllListeners('warning');
+    process.on('warning', warning => {
+        if (exports.ticsConfig.logLevel === 'debug')
+            logger_1.default.Instance.warning(warning.message.toString());
+    });
+}
+exports.configure = configure;
+exports.githubConfig = {
+    repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
+    owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
+    reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
+    branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
+    basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
+    branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
+    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+    runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+};
 exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
     branchName: (0, core_1.getInput)('branchName'),
@@ -75,9 +82,8 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
-exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { agent: new proxy_agent_1.default() } });
-exports.httpClient = new URL(exports.ticsConfig.ticsConfiguration).protocol === 'http:' ? http_1.default : https_1.default;
-exports.httpClientOptions = { rejectUnauthorized: exports.ticsConfig.hostnameVerification, agent: new proxy_agent_1.default() };
+exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
+exports.requestInit = { insecureHTTPParser: false, agent: new proxy_agent_1.default(), headers: {} };
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -277,9 +283,6 @@ const markdown_1 = __nccwpck_require__(5300);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
- * @param filesAnalyzed List of all files analyzed by TiCS.
- * @param qualityGate Quality gate returned by TiCS.
- * @param reviewComments TiCS annotations in the form of review comments.
  */
 async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
@@ -399,7 +402,7 @@ class Logger {
      */
     header(string) {
         this.addNewline('header');
-        core.info(`\u001b[35m${string}`);
+        core.info(`\u001b[34m${string}`);
         this.called = 'header';
     }
     /**
@@ -631,7 +634,7 @@ function createConditionsTable(conditions) {
                 .map((item) => {
                 return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
             });
-            conditionsTable = (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
+            conditionsTable += (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
         }
         else {
             conditionsTable += `${conditionStatus}\n\n\n`;
@@ -700,9 +703,7 @@ function groupAnnotations(annotations, changedFiles) {
             groupedAnnotations.push(annotation);
         }
         else {
-            if (groupedAnnotations[index].gateId === annotation.gateId) {
-                groupedAnnotations[index].count += annotation.count;
-            }
+            groupedAnnotations[index].count += annotation.count;
         }
     });
     return groupedAnnotations;
@@ -791,6 +792,7 @@ const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
+(0, configuration_1.configure)();
 run();
 // exported for testing purposes
 async function run() {
@@ -1005,6 +1007,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getProjectName = exports.getItemFromUrl = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.cliSummary = exports.httpRequest = void 0;
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const configuration_1 = __nccwpck_require__(5527);
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
 /**
  * Executes a GET request to the given url.
  * @param url api url to perform a GET request for.
@@ -1017,40 +1020,27 @@ async function httpRequest(url) {
     if (configuration_1.ticsConfig.ticsAuthToken) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
-    configuration_1.httpClientOptions.headers = headers;
-    return new Promise((resolve, reject) => {
-        const req = configuration_1.httpClient.get(url, configuration_1.httpClientOptions, response => {
-            let body = '';
-            response.on('data', chunk => {
-                body += chunk;
-            });
-            response.on('end', () => {
-                switch (response.statusCode) {
-                    case 200:
-                        resolve(JSON.parse(body));
-                        break;
-                    case 302:
-                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-                        break;
-                    case 400:
-                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
-                        break;
-                    case 401:
-                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
-                        break;
-                    case 404:
-                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if the given ticsConfiguration is correct.`);
-                        break;
-                    default:
-                        logger_1.default.Instance.exit(`HTTP request failed with status ${response.statusCode}. Please check if your configuration is correct.`);
-                        break;
-                }
-            });
-        });
-        req.on('error', error => {
-            reject(error.message);
-        });
-    });
+    configuration_1.requestInit.headers = headers;
+    const response = await (0, node_fetch_1.default)(url, configuration_1.requestInit);
+    switch (response.status) {
+        case 200:
+            return response.json();
+        case 302:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+            break;
+        case 400:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. ${(await response.json()).alertMessages[0].header}`);
+            break;
+        case 401:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+            break;
+        case 404:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+            break;
+        default:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
+            break;
+    }
 }
 exports.httpRequest = httpRequest;
 /**
@@ -1193,6 +1183,7 @@ async function getQualityGate(url) {
     try {
         const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
         logger_1.default.Instance.info('Retrieved the quality gates.');
+        logger_1.default.Instance.debug(response);
         return response;
     }
     catch (error) {
@@ -1227,13 +1218,11 @@ async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations.');
     try {
         let annotations = [];
-        await Promise.all(apiLinks.map(async (link, index) => {
+        await Promise.all(apiLinks.map(async (link) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
             response.data.forEach((annotation) => {
-                annotation.gateId = index;
-                logger_1.default.Instance.debug(JSON.stringify(annotation));
                 annotations.push(annotation);
             });
         }));
@@ -55866,6 +55855,98 @@ exports.lookupCompiler = lookupCompiler;
 
 /***/ }),
 
+/***/ 1689:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const pa = __nccwpck_require__(5622);
+const fs = __nccwpck_require__(5747);
+
+class DefaultFileSystem {
+
+	resolve(path) {
+		return pa.resolve(path);
+	}
+
+	isSeparator(char) {
+		return char === '/' || char === pa.sep;
+	}
+
+	isAbsolute(path) {
+		return pa.isAbsolute(path);
+	}
+
+	join(...paths) {
+		return pa.join(...paths);
+	}
+
+	basename(path) {
+		return pa.basename(path);
+	}
+
+	dirname(path) {
+		return pa.dirname(path);
+	}
+
+	statSync(path, options) {
+		return fs.statSync(path, options);
+	}
+
+	readFileSync(path, options) {
+		return fs.readFileSync(path, options);
+	}
+
+}
+
+class VMFileSystem {
+
+	constructor({fs: fsModule = fs, path: pathModule = pa} = {}) {
+		this.fs = fsModule;
+		this.path = pathModule;
+	}
+
+	resolve(path) {
+		return this.path.resolve(path);
+	}
+
+	isSeparator(char) {
+		return char === '/' || char === this.path.sep;
+	}
+
+	isAbsolute(path) {
+		return this.path.isAbsolute(path);
+	}
+
+	join(...paths) {
+		return this.path.join(...paths);
+	}
+
+	basename(path) {
+		return this.path.basename(path);
+	}
+
+	dirname(path) {
+		return this.path.dirname(path);
+	}
+
+	statSync(path, options) {
+		return this.fs.statSync(path, options);
+	}
+
+	readFileSync(path, options) {
+		return this.fs.readFileSync(path, options);
+	}
+
+}
+
+exports.DefaultFileSystem = DefaultFileSystem;
+exports.VMFileSystem = VMFileSystem;
+
+
+/***/ }),
+
 /***/ 4357:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -55884,11 +55965,15 @@ const {
 const {
 	NodeVM
 } = __nccwpck_require__(6461);
+const {
+	VMFileSystem
+} = __nccwpck_require__(1689);
 
 exports.VMError = VMError;
 exports.VMScript = VMScript;
 exports.NodeVM = NodeVM;
 exports.VM = VM;
+exports.VMFileSystem = VMFileSystem;
 
 
 /***/ }),
@@ -56414,7 +56499,6 @@ exports.NodeVM = NodeVM;
 // Translate the old options to the new Resolver functionality.
 
 const fs = __nccwpck_require__(5747);
-const pa = __nccwpck_require__(5622);
 const nmod = __nccwpck_require__(2282);
 const {EventEmitter} = __nccwpck_require__(8614);
 const util = __nccwpck_require__(1669);
@@ -56426,6 +56510,7 @@ const {
 const {VMScript} = __nccwpck_require__(8611);
 const {VM} = __nccwpck_require__(3841);
 const {VMError} = __nccwpck_require__(2989);
+const {DefaultFileSystem} = __nccwpck_require__(1689);
 
 /**
  * Require wrapper to be able to annotate require with webpackIgnore.
@@ -56457,8 +56542,8 @@ function makeExternalMatcher(obj) {
 
 class LegacyResolver extends DefaultResolver {
 
-	constructor(builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict, externals, allowTransitive) {
-		super(builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict);
+	constructor(fileSystem, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict, externals, allowTransitive) {
+		super(fileSystem, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict);
 		this.externals = externals;
 		this.currMod = undefined;
 		this.trustedMods = new WeakMap();
@@ -56675,7 +56760,9 @@ function defaultCustomResolver() {
 	return undefined;
 }
 
-const DENY_RESOLVER = new Resolver({__proto__: null}, [], id => {
+const DEFAULT_FS = new DefaultFileSystem();
+
+const DENY_RESOLVER = new Resolver(DEFAULT_FS, {__proto__: null}, [], id => {
 	throw new VMError(`Access denied to require '${id}'`, 'EDENIED');
 });
 
@@ -56683,7 +56770,7 @@ function resolverFromOptions(vm, options, override, compiler) {
 	if (!options) {
 		if (!override) return DENY_RESOLVER;
 		const builtins = genBuiltinsFromOptions(vm, undefined, undefined, override);
-		return new Resolver(builtins, [], defaultRequire);
+		return new Resolver(DEFAULT_FS, builtins, [], defaultRequire);
 	}
 
 	const {
@@ -56695,22 +56782,22 @@ function resolverFromOptions(vm, options, override, compiler) {
 		customRequire: hostRequire = defaultRequire,
 		context = 'host',
 		strict = true,
+		fs: fsOpt = DEFAULT_FS,
 	} = options;
 
 	const builtins = genBuiltinsFromOptions(vm, builtinOpt, mockOpt, override);
 
-	if (!externalOpt) return new Resolver(builtins, [], hostRequire);
+	if (!externalOpt) return new Resolver(fsOpt, builtins, [], hostRequire);
 
 	let checkPath;
 	if (rootPaths) {
-		const checkedRootPaths = (Array.isArray(rootPaths) ? rootPaths : [rootPaths]).map(f => pa.resolve(f));
+		const checkedRootPaths = (Array.isArray(rootPaths) ? rootPaths : [rootPaths]).map(f => fsOpt.resolve(f));
 		checkPath = (filename) => {
 			return checkedRootPaths.some(path => {
 				if (!filename.startsWith(path)) return false;
 				const len = path.length;
-				if (filename.length === len || (len > 0 && path[len-1] === pa.sep)) return true;
-				const sep = filename[len];
-				return sep === '/' || sep === pa.sep;
+				if (filename.length === len || (len > 0 && fsOpt.isSeparator(path[len-1]))) return true;
+				return fsOpt.isSeparator(filename[len]);
 			});
 		};
 	} else {
@@ -56737,7 +56824,7 @@ function resolverFromOptions(vm, options, override, compiler) {
 	}
 
 	if (typeof externalOpt !== 'object') {
-		return new DefaultResolver(builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict);
+		return new DefaultResolver(fsOpt, builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict);
 	}
 
 	let transitive = false;
@@ -56748,7 +56835,7 @@ function resolverFromOptions(vm, options, override, compiler) {
 		transitive = context === 'sandbox' && externalOpt.transitive;
 	}
 	externals = external.map(makeExternalMatcher);
-	return new LegacyResolver(builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict, externals, transitive);
+	return new LegacyResolver(fsOpt, builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict, externals, transitive);
 }
 
 exports.resolverFromOptions = resolverFromOptions;
@@ -56763,9 +56850,6 @@ exports.resolverFromOptions = resolverFromOptions;
 
 
 // The Resolver is currently experimental and might be exposed to users in the future.
-
-const pa = __nccwpck_require__(5622);
-const fs = __nccwpck_require__(5747);
 
 const {
 	VMError
@@ -56786,7 +56870,8 @@ function isArrayIndex(key) {
 
 class Resolver {
 
-	constructor(builtinModules, globalPaths, hostRequire) {
+	constructor(fs, builtinModules, globalPaths, hostRequire) {
+		this.fs = fs;
 		this.builtinModules = builtinModules;
 		this.globalPaths = globalPaths;
 		this.hostRequire = hostRequire;
@@ -56797,7 +56882,7 @@ class Resolver {
 	}
 
 	pathResolve(path) {
-		return pa.resolve(path);
+		return this.fs.resolve(path);
 	}
 
 	pathIsRelative(path) {
@@ -56805,23 +56890,23 @@ class Resolver {
 		if (path.length === 1) return true;
 		const idx = path[1] === '.' ? 2 : 1;
 		if (path.length <= idx) return false;
-		return path[idx] === '/' || path[idx] === pa.sep;
+		return this.fs.isSeparator(path[idx]);
 	}
 
 	pathIsAbsolute(path) {
-		return pa.isAbsolute(path);
+		return path !== '' && (this.fs.isSeparator(path[0]) || this.fs.isAbsolute(path));
 	}
 
 	pathConcat(...paths) {
-		return pa.join(...paths);
+		return this.fs.join(...paths);
 	}
 
 	pathBasename(path) {
-		return pa.basename(path);
+		return this.fs.basename(path);
 	}
 
 	pathDirname(path) {
-		return pa.dirname(path);
+		return this.fs.dirname(path);
 	}
 
 	lookupPaths(mod, id) {
@@ -56902,8 +56987,8 @@ class Resolver {
 
 class DefaultResolver extends Resolver {
 
-	constructor(builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict) {
-		super(builtinModules, globalPaths, hostRequire);
+	constructor(fs, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict) {
+		super(fs, builtinModules, globalPaths, hostRequire);
 		this.checkPath = checkPath;
 		this.pathContext = pathContext;
 		this.customResolver = customResolver;
@@ -56919,7 +57004,7 @@ class DefaultResolver extends Resolver {
 
 	pathTestIsDirectory(path) {
 		try {
-			const stat = fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
+			const stat = this.fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
 			return stat && stat.isDirectory();
 		} catch (e) {
 			return false;
@@ -56928,7 +57013,7 @@ class DefaultResolver extends Resolver {
 
 	pathTestIsFile(path) {
 		try {
-			const stat = fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
+			const stat = this.fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
 			return stat && stat.isFile();
 		} catch (e) {
 			return false;
@@ -56936,7 +57021,7 @@ class DefaultResolver extends Resolver {
 	}
 
 	readFile(path) {
-		return fs.readFileSync(path, {encoding: 'utf8'});
+		return this.fs.readFileSync(path, {encoding: 'utf8'});
 	}
 
 	readFileWhenExists(path) {
@@ -58151,6 +58236,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 	const TO_RIGHT = 100;
 
 	let internStateValiable = undefined;
+	let tmpname = 'VM2_INTERNAL_TMPNAME';
 
 	acornWalkFull(ast, (node, state, type) => {
 		if (type === 'Function') {
@@ -58160,15 +58246,30 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 		if (nodeType === 'CatchClause') {
 			const param = node.param;
 			if (param) {
-				const name = assertType(param, 'Identifier').name;
-				const cBody = assertType(node.body, 'BlockStatement');
-				if (cBody.body.length > 0) {
+				if (param.type === 'ObjectPattern') {
 					insertions.push({
 						__proto__: null,
-						pos: cBody.body[0].start,
-						order: TO_LEFT,
-						code: `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
+						pos: node.start,
+						order: TO_RIGHT,
+						code: `catch($tmpname){try{throw ${INTERNAL_STATE_NAME}.handleException($tmpname);}`
 					});
+					insertions.push({
+						__proto__: null,
+						pos: node.body.end,
+						order: TO_LEFT,
+						code: `}`
+					});
+				} else {
+					const name = assertType(param, 'Identifier').name;
+					const cBody = assertType(node.body, 'BlockStatement');
+					if (cBody.body.length > 0) {
+						insertions.push({
+							__proto__: null,
+							pos: cBody.body[0].start,
+							order: TO_LEFT,
+							code: `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
+						});
+					}
 				}
 			}
 		} else if (nodeType === 'WithStatement') {
@@ -58189,6 +58290,8 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 				if (internStateValiable === undefined || internStateValiable.start > node.start) {
 					internStateValiable = node;
 				}
+			} else if (node.name.startsWith(tmpname)) {
+				tmpname = node.name + '_UNIQUE';
 			}
 		} else if (nodeType === 'ImportExpression') {
 			insertions.push({
@@ -58216,7 +58319,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 	let curr = 0;
 	for (let i = 0; i < insertions.length; i++) {
 		const change = insertions[i];
-		ncode += code.substring(curr, change.pos) + change.code;
+		ncode += code.substring(curr, change.pos) + change.code.replace(/\$tmpname/g, tmpname);
 		curr = change.pos;
 	}
 	ncode += code.substring(curr);

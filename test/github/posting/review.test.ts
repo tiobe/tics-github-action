@@ -3,7 +3,6 @@ import { postNothingAnalyzedReview, postReview } from '../../../src/github/posti
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import Logger from '../../../src/helper/logger';
-import * as markdown from '../../../src/helper/markdown';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
@@ -143,53 +142,51 @@ describe('postReview', () => {
 });
 
 describe('postNothingAnalyzedReview', () => {
-  test('Should call createReview once with approval', async () => {
-    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
-
+  test('Should call createReview once', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    await postNothingAnalyzedReview('Message.', Events.APPROVE);
+    await postNothingAnalyzedReview('message', Events.APPROVE);
+    expect(spy).toBeCalledTimes(1);
+  });
 
-    const params: any = {
+  test('Should call createReview with value passed', async () => {
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('message', Events.APPROVE);
+
+    const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.APPROVE,
-      body: `## TiCS Analysis\n\n### Status\n\nMessage.`
+      body: '## TiCS Analysis\n\n### :heavy_check_mark: Passed \n\nmessage'
     };
-
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(params);
+    expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should call createReview once with requested changes', async () => {
-    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
-
+  test('Should call createReview with value failed', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    await postNothingAnalyzedReview('Message.', Events.REQUEST_CHANGES);
+    await postNothingAnalyzedReview('message', Events.REQUEST_CHANGES);
 
-    const params: any = {
+    const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.REQUEST_CHANGES,
-      body: `## TiCS Analysis\n\n### Status\n\nMessage.`
+      body: '## TiCS Analysis\n\n### :x: Failed \n\nmessage'
     };
-
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(params);
+    expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should throw error on createReview', async () => {
-    jest.spyOn(markdown, 'generateStatusMarkdown').mockReturnValueOnce('Status');
-
+  test('Should throw an error on createReview', async () => {
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
     });
     const spy = jest.spyOn(Logger.Instance, 'error');
 
-    await postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+    await postNothingAnalyzedReview('message', Events.APPROVE);
+
     expect(spy).toBeCalledTimes(1);
   });
 });

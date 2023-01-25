@@ -53,6 +53,7 @@ export async function getQualityGate(url: string): Promise<any> {
   try {
     const response = await httpRequest(qualityGateUrl);
     Logger.Instance.info('Retrieved the quality gates.');
+    Logger.Instance.debug(response);
     return response;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);

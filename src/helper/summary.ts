@@ -83,7 +83,7 @@ function createConditionsTable(conditions: any[]) {
         .map((item: any) => {
           return [generateLinkMarkdown(item.name, viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
         });
-      conditionsTable = generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
+      conditionsTable += generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
     } else {
       conditionsTable += `${conditionStatus}\n\n\n`;
     }

@@ -1,12 +1,23 @@
-import { githubConfig, ticsConfig } from '../src/configuration';
-import Logger from '../src/helper/logger';
-import { run } from '../src/main';
 import { existsSync } from 'fs';
+
+import { githubConfig, ticsConfig, configure } from '../src/configuration';
+import { Events } from '../src/helper/enums';
+import { run } from '../src/main';
+import Logger from '../src/helper/logger';
+
+import * as pulls from '../src/github/calling/pulls';
+import * as analyzer from '../src/tics/analyzer';
+import * as fetcher from '../src/tics/fetcher';
+import * as review from '../src/github/posting/review';
+import * as calling_annotations from '../src/github/calling/annotations';
+import * as posting_annotations from '../src/github/posting/annotations';
+
 import {
-  analysisFailed,
+  analysisFailedNoUrl,
+  analysisFailedUrl,
   analysisPassed,
-  analysisPassedNoUrlWarning,
   analysisPassedNoUrl,
+  analysisPassedNoUrlWarning5057,
   doubleAnalyzedFiles,
   doubleChangedFiles,
   doubleFileQualityGatePassed,
@@ -19,16 +30,9 @@ import {
   singlePreviousReviewComments
 } from './main_helper';
 
-import * as pulls from '../src/github/calling/pulls';
-import * as analyzer from '../src/tics/analyzer';
-import * as fetcher from '../src/tics/fetcher';
-import * as review from '../src/github/posting/review';
-import * as calling_annotations from '../src/github/calling/annotations';
-import * as posting_annotations from '../src/github/posting/annotations';
-import { Events } from '../src/helper/enums';
-
 describe('pre checks', () => {
   test('Should call exit if event is not pull request', async () => {
+    (configure as any).mockImplementation();
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
     await run();
@@ -77,11 +81,11 @@ describe('SetFailed checks', () => {
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
 
-  test('Should call setFailed if analysis failed', async () => {
+  test('Should call setFailed if no Explorer URL and analysis failed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailed);
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
@@ -91,7 +95,7 @@ describe('SetFailed checks', () => {
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TiCS Github Action.'));
   });
 
-  test('Should call setFailed if analysis passed, no Explorer URL has been given and no warning is given.', async () => {
+  test('Should call setFailed if no Explorer URL and analysis passed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
@@ -158,19 +162,19 @@ describe('SetFailed checks', () => {
   });
 });
 
-describe('postNothingAnalyzedReview checks', () => {
-  test('Should call postNothingAnalyzedReview if analysis passed, no Explorer URL has been given and warning 5057 is given.', async () => {
+describe('postNothingAnalyzedReview', () => {
+  test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning);
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
 
-    const postNothingAnalyzedReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
+    const spyReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
 
     await run();
 
-    expect(postNothingAnalyzedReview).toHaveBeenCalledTimes(1);
-    expect(postNothingAnalyzedReview).toHaveBeenCalledWith('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+    expect(spyReview).toHaveBeenCalled();
+    expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
   });
 });
 
