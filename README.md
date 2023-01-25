@@ -85,6 +85,10 @@ The following inputs are available for this action:
 - To combine the last two steps run `npm run all`.
 - There is Prettier auto-formatting available, run `npm run format` or enable format on save to automate the formatting.
 
+## Git hooks
+
+To enable git hooks for auto building [githooks](https://github.com/gabyx/githooks) should be used. This enables the hooks in the `.githooks` folder. Which checks for a correct commit message and auto builds on commit.
+
 ## Testing
 
 Testing this action can be done with [nektos/act](https://github.com/nektos/act). The following command can be run after installation to test the plugin.
