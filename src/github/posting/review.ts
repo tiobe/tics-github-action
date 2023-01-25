@@ -8,6 +8,9 @@ import { generateStatusMarkdown } from '../../helper/markdown';
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
+ * @param filesAnalyzed List of all files analyzed by TiCS.
+ * @param qualityGate Quality gate returned by TiCS.
+ * @param reviewComments TiCS annotations in the form of review comments.
  */
 export async function postReview(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments: ReviewComments | undefined) {
   let body = createQualityGateSummary(qualityGate);

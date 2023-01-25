@@ -72,7 +72,7 @@ export const analysisFailedNoUrl = {
 export const analysisFailedUrl = {
   completed: false,
   statusCode: 1,
-  explorerUrl: 'explorerUrl',
+  explorerUrl: undefined,
   errorList: ['Error'],
   warningList: []
 };
@@ -99,6 +99,14 @@ export const analysisPassed = {
   explorerUrl: 'explorerUrl',
   errorList: ['Error'],
   warningList: []
+};
+
+export const analysisPassedNoUrlWarning = {
+  completed: true,
+  statusCode: 0,
+  explorerUrl: undefined,
+  errorList: ['Error'],
+  warningList: ['[WARNING 5057] No files have been analyzed.']
 };
 
 export const singleFileQualityGateFailed: QualityGate = {

@@ -80,7 +80,10 @@ describe('getAnnotations', () => {
 
     const response = await getAnnotations([{ url: 'url' }, { url: 'url' }]);
 
-    expect(response).toEqual([{ annotation: 'anno_1' }, { annotation: 'anno_2' }]);
+    expect(response).toEqual([
+      { annotation: 'anno_1', gateId: 0 },
+      { annotation: 'anno_2', gateId: 1 }
+    ]);
   });
 
   test('Should throw error on faulty httpRequest in getAnnotations', async () => {
