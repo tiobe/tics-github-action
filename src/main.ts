@@ -83,3 +83,10 @@ function isCheckedOut() {
   }
   return true;
 }
+
+function meetsPrerequisites(){
+  if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
+  if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+  if (getViewerVersion >== 2022.4) return
+  https://tics.tiobe.com/api/v1/version
+}
