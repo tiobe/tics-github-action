@@ -20,6 +20,8 @@ export async function run() {
   if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
 
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+  
+  meetsPrerequisites();
 
   await main();
 }

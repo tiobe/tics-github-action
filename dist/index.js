@@ -805,6 +805,7 @@ async function run() {
         return logger_1.default.Instance.exit('This action can only run on pull requests.');
     if (!isCheckedOut())
         return logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+    meetsPrerequisites();
     await main();
 }
 exports.run = run;
