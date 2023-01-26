@@ -865,14 +865,14 @@ function isCheckedOut() {
     }
     return true;
 }
-function meetsPrerequisites() {
+async function meetsPrerequisites() {
     if (configuration_1.githubConfig.eventName !== 'pull_request')
         return logger_1.default.Instance.exit('This action can only run on pull requests.');
     if (!isCheckedOut())
         return logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
     //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
-    let viewerVersion = (0, fetcher_1.getViewerVersion)();
-    logger_1.default.Instance.setFailed(`Viewer Version: ${viewerVersion}`);
+    let viewerVersion = await (0, fetcher_1.getViewerVersion)();
+    logger_1.default.Instance.setFailed(`Viewer Version: ${viewerVersion.version}`);
 }
 
 
@@ -1252,7 +1252,7 @@ async function getAnnotations(apiLinks) {
 }
 exports.getAnnotations = getAnnotations;
 async function getViewerVersion() {
-    let getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/public/v1/version');
+    let getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
     try {
         const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
         logger_1.default.Instance.info('Retrieved the Viewer Version.');

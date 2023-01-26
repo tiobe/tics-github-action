@@ -86,10 +86,10 @@ function isCheckedOut() {
   return true;
 }
 
-function meetsPrerequisites(){
+async function meetsPrerequisites(){
   if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
   //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
-  let viewerVersion = getViewerVersion();
-  Logger.Instance.setFailed(`Viewer Version: ${viewerVersion}`);
+  let viewerVersion = await getViewerVersion();
+  Logger.Instance.setFailed(`Viewer Version: ${viewerVersion.version}`);
 }
