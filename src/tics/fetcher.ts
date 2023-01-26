@@ -113,9 +113,9 @@ export async function getAnnotations(apiLinks: any[]) {
 }
 
 export async function getViewerVersion() {
-  let viewerGetVersionUrl = new URL(baseUrl + '/api/public/v1/version');
+  let getViewerVersionUrl = new URL(baseUrl + '/api/public/v1/version');
   try {
-    const response = await httpRequest(viewerGetVersionUrl);
+    const response = await httpRequest(getViewerVersionUrl);
     Logger.Instance.info('Retrieved the Viewer Version.');
     Logger.Instance.debug(response);
     return response;
