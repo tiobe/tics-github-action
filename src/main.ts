@@ -11,6 +11,7 @@ import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
+var semver = require('semver');
 
 configure();
 run();
@@ -86,10 +87,13 @@ function isCheckedOut() {
   return true;
 }
 
+/**
+ * Checks if prerequisites are met to run the Github Plugin.
+ * @returns Logger
+ */
 async function meetsPrerequisites(){
+  let viewerVersion = await getViewerVersion();
+  if (semver.lt(viewerVersion, '2022.4.0')) return Logger.Instance.exit(`Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion}`);
   if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
-  //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
-  let viewerVersion = await getViewerVersion();
-  Logger.Instance.setFailed(`Viewer Version: ${viewerVersion.version}`);
 }
