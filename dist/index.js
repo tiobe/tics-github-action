@@ -283,6 +283,9 @@ const markdown_1 = __nccwpck_require__(5300);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
+ * @param filesAnalyzed List of all files analyzed by TiCS.
+ * @param qualityGate Quality gate returned by TiCS.
+ * @param reviewComments TiCS annotations in the form of review comments.
  */
 async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
@@ -703,7 +706,9 @@ function groupAnnotations(annotations, changedFiles) {
             groupedAnnotations.push(annotation);
         }
         else {
-            groupedAnnotations[index].count += annotation.count;
+            if (groupedAnnotations[index].gateId === annotation.gateId) {
+                groupedAnnotations[index].count += annotation.count;
+            }
         }
     });
     return groupedAnnotations;
@@ -858,6 +863,15 @@ function isCheckedOut() {
         return false;
     }
     return true;
+}
+function meetsPrerequisites() {
+    if (configuration_1.githubConfig.eventName !== 'pull_request')
+        return logger_1.default.Instance.exit('This action can only run on pull requests.');
+    if (!isCheckedOut())
+        return logger_1.default.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+    //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
+    let viewerVersion = (0, fetcher_1.getViewerVersion)();
+    logger_1.default.Instance.setFailed(`viewerVersion`);
 }
 
 
@@ -1132,7 +1146,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
+exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const api_helper_1 = __nccwpck_require__(3823);
@@ -1218,11 +1232,13 @@ async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations.');
     try {
         let annotations = [];
-        await Promise.all(apiLinks.map(async (link) => {
+        await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
             response.data.forEach((annotation) => {
+                annotation.gateId = index;
+                logger_1.default.Instance.debug(JSON.stringify(annotation));
                 annotations.push(annotation);
             });
         }));
@@ -1234,6 +1250,19 @@ async function getAnnotations(apiLinks) {
     }
 }
 exports.getAnnotations = getAnnotations;
+async function getViewerVersion() {
+    let getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/public/v1/version');
+    try {
+        const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
+        logger_1.default.Instance.info('Retrieved the Viewer Version.');
+        logger_1.default.Instance.debug(response);
+        return response;
+    }
+    catch (error) {
+        logger_1.default.Instance.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+    }
+}
+exports.getViewerVersion = getViewerVersion;
 
 
 /***/ }),
