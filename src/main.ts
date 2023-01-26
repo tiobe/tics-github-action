@@ -91,5 +91,5 @@ function meetsPrerequisites(){
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
   //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
   let viewerVersion = getViewerVersion();
-  Logger.Instance.setFailed(`viewerVersion`);
+  Logger.Instance.setFailed(`Viewer Version: ${viewerVersion}`);
 }
