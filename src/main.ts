@@ -5,7 +5,7 @@ import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
+import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/posting/review';
 import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
@@ -87,6 +87,7 @@ function isCheckedOut() {
 function meetsPrerequisites(){
   if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
-  if (getViewerVersion >== 2022.4) return
-  https://tics.tiobe.com/api/v1/version
+  //if (getViewerVersion >== 2022.4) return Logger.Instance.exit('Minimum required TiCS Viewer version is 2022.4.');
+  let viewerVersion = getViewerVersion();
+  Logger.Instance.setFailed(`viewerVersion`);
 }
