@@ -112,7 +112,7 @@ export async function getAnnotations(apiLinks: any[]) {
   }
 }
 
-export async function getViewerVerson() {
+export async function getViewerVersion() {
   let viewerGetVersionUrl = new URL(baseUrl + '/api/public/v1/version');
   try {
     const response = await httpRequest(viewerGetVersionUrl);
