@@ -30,7 +30,7 @@ function getHostnameVerification() {
         case 'false':
             hostnameVerification = false;
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            logger_1.default.Instance.info('Hostname Verification disabled');
+            (0, core_1.info)('Hostname Verification disabled');
             break;
         default:
             hostnameVerification = true;

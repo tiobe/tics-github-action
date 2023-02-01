@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput } from '@actions/core';
+import { getBooleanInput, getInput, info } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -21,7 +21,7 @@ function getHostnameVerification() {
     case 'false':
       hostnameVerification = false;
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      Logger.Instance.info('Hostname Verification disabled');
+      info('Hostname Verification disabled');
       break;
     default:
       hostnameVerification = true;
