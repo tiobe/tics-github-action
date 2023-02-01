@@ -13,10 +13,10 @@ function getHostnameVerification() {
   let hostnameVerification: boolean;
 
   if (hostnameVerificationCfg) {
-    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg.toString();
+    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
   }
 
-  switch (process.env.TICSHOSTNAMEVERIFICATION) {
+  switch (process.env.TICSHOSTNAMEVERIFICATION?.toString()) {
     case '0':
     case 'false':
       hostnameVerification = false;
