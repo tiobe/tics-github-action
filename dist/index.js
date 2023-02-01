@@ -414,6 +414,7 @@ class Logger {
      * @param {string} string
      */
     info(string) {
+        core.info(JSON.stringify(configuration_1.ticsConfig));
         if (configuration_1.ticsConfig.logLevel !== 'none') {
             core.info(string);
             this.called = 'info';
