@@ -10,11 +10,11 @@ const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '
 
 function getHostnameVerification() {
   let hostnameVerificationCfg = getInput('hostnameVerification');
-  info(hostnameVerificationCfg);
   let hostnameVerification: boolean;
 
   if (hostnameVerificationCfg) {
     process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
+    info(process.env.TICSHOSTNAMEVERIFICATION);
   }
 
   switch (process.env.TICSHOSTNAMEVERIFICATION) {
