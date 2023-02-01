@@ -74,7 +74,7 @@ exports.ticsConfig = {
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: (0, core_1.getInput)('logLevel'),
+    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel') : 'default',
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: getTicsAuthToken(),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),

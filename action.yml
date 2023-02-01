@@ -31,7 +31,6 @@ inputs:
   logLevel:
     description: 'Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`'
     required: false
-    default: default
   postAnnotations:
     description: 'Show the latest TiCS annotations directly in the GitHub Pull Request review.'
     required: false

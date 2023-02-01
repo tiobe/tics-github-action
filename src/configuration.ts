@@ -69,7 +69,7 @@ export const ticsConfig = {
   additionalFlags: getInput('additionalFlags'),
   hostnameVerification: getHostnameVerification(),
   installTics: getBooleanInput('installTics'),
-  logLevel: getInput('logLevel'),
+  logLevel: getInput('logLevel') ? getInput('logLevel') : 'default',
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getTicsAuthToken(),
   githubToken: getInput('githubToken', { required: true }),
