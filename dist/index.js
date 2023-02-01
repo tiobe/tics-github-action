@@ -72,15 +72,15 @@ exports.ticsConfig = {
     calc: (0, core_1.getInput)('calc'),
     clientData: (0, core_1.getInput)('clientData'),
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
-    hostnameVerification: getHostnameVerification(),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: (0, core_1.getInput)('logLevel') ? (0, core_1.getInput)('logLevel') : 'default',
+    logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: getTicsAuthToken(),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
-    viewerUrl: (0, core_1.getInput)('viewerUrl')
+    viewerUrl: (0, core_1.getInput)('viewerUrl'),
+    hostnameVerification: getHostnameVerification()
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -414,7 +414,6 @@ class Logger {
      * @param {string} string
      */
     info(string) {
-        core.info(JSON.stringify(configuration_1.ticsConfig));
         if (configuration_1.ticsConfig.logLevel !== 'none') {
             core.info(string);
             this.called = 'info';

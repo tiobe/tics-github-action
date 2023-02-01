@@ -67,15 +67,15 @@ export const ticsConfig = {
   calc: getInput('calc'),
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
-  hostnameVerification: getHostnameVerification(),
   installTics: getBooleanInput('installTics'),
-  logLevel: getInput('logLevel') ? getInput('logLevel') : 'default',
+  logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getTicsAuthToken(),
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
-  viewerUrl: getInput('viewerUrl')
+  viewerUrl: getInput('viewerUrl'),
+  hostnameVerification: getHostnameVerification()
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
