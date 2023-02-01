@@ -21,6 +21,7 @@ const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 function getHostnameVerification() {
     let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
+    (0, core_1.info)(hostnameVerificationCfg);
     let hostnameVerification;
     if (hostnameVerificationCfg) {
         process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
