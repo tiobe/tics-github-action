@@ -23,14 +23,14 @@ function getHostnameVerification() {
     let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
     let hostnameVerification;
     if (hostnameVerificationCfg) {
-        process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
+        process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg.toString();
     }
     switch (process.env.TICSHOSTNAMEVERIFICATION) {
         case '0':
         case 'false':
             hostnameVerification = false;
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            (0, core_1.info)('Hostname Verification disabled');
+            logger_1.default.Instance.info('Hostname Verification disabled');
             break;
         default:
             hostnameVerification = true;
@@ -83,7 +83,7 @@ exports.ticsConfig = {
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
-exports.requestInit = { insecureHTTPParser: false, agent: new proxy_agent_1.default(), headers: {} };
+exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -283,6 +283,9 @@ const markdown_1 = __nccwpck_require__(5300);
 /**
  * Create review on the pull request from the analysis given.
  * @param analysis Analysis object returned from TiCS analysis.
+ * @param filesAnalyzed List of all files analyzed by TiCS.
+ * @param qualityGate Quality gate returned by TiCS.
+ * @param reviewComments TiCS annotations in the form of review comments.
  */
 async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
     let body = (0, summary_1.createQualityGateSummary)(qualityGate);
@@ -703,7 +706,9 @@ function groupAnnotations(annotations, changedFiles) {
             groupedAnnotations.push(annotation);
         }
         else {
-            groupedAnnotations[index].count += annotation.count;
+            if (groupedAnnotations[index].gateId === annotation.gateId) {
+                groupedAnnotations[index].count += annotation.count;
+            }
         }
     });
     return groupedAnnotations;
@@ -1218,11 +1223,13 @@ async function getAnnotations(apiLinks) {
     logger_1.default.Instance.header('Retrieving annotations.');
     try {
         let annotations = [];
-        await Promise.all(apiLinks.map(async (link) => {
+        await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
             response.data.forEach((annotation) => {
+                annotation.gateId = index;
+                logger_1.default.Instance.debug(JSON.stringify(annotation));
                 annotations.push(annotation);
             });
         }));

@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, info } from '@actions/core';
+import { getBooleanInput, getInput } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -13,7 +13,7 @@ function getHostnameVerification() {
   let hostnameVerification: boolean;
 
   if (hostnameVerificationCfg) {
-    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
+    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg.toString();
   }
 
   switch (process.env.TICSHOSTNAMEVERIFICATION) {
@@ -21,7 +21,7 @@ function getHostnameVerification() {
     case 'false':
       hostnameVerification = false;
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      info('Hostname Verification disabled');
+      Logger.Instance.info('Hostname Verification disabled');
       break;
     default:
       hostnameVerification = true;
@@ -79,6 +79,6 @@ export const ticsConfig = {
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
-export const requestInit = { insecureHTTPParser: false, agent: new ProxyAgent(), headers: {} };
+export const requestInit = { agent: new ProxyAgent(), headers: {} };
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
