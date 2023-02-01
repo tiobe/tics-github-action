@@ -25,7 +25,7 @@ function getHostnameVerification() {
     if (hostnameVerificationCfg) {
         process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
     }
-    switch (process.env.TICSHOSTNAMEVERIFICATION?.toString()) {
+    switch (process.env.TICSHOSTNAMEVERIFICATION) {
         case '0':
         case 'false':
             hostnameVerification = false;
