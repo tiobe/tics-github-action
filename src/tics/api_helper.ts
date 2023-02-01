@@ -3,6 +3,7 @@ import Logger from '../helper/logger';
 import { requestInit, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis } from '../helper/interfaces';
 import fetch from 'node-fetch';
+import { exportVariable } from '@actions/core';
 
 /**
  * Executes a GET request to the given url.
@@ -19,7 +20,6 @@ export async function httpRequest(url: string): Promise<any> {
 
   requestInit.headers = headers;
 
-  console.log(process.env.NODE_TLS_REJECT_UNAUTHORIZED);
   const response = await fetch(url, requestInit);
 
   switch (response.status) {

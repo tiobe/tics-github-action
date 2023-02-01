@@ -29,7 +29,7 @@ function getHostnameVerification() {
         case '0':
         case 'false':
             hostnameVerification = false;
-            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', '0');
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             (0, core_1.info)('Hostname Verification disabled');
             break;
         default:
@@ -949,7 +949,7 @@ async function getInstallTics() {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
+    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.
@@ -1026,7 +1026,6 @@ async function httpRequest(url) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
     configuration_1.requestInit.headers = headers;
-    console.log(process.env.NODE_TLS_REJECT_UNAUTHORIZED);
     const response = await (0, node_fetch_1.default)(url, configuration_1.requestInit);
     switch (response.status) {
         case 200:
