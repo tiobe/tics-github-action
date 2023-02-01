@@ -19,6 +19,7 @@ export async function httpRequest(url: string): Promise<any> {
 
   requestInit.headers = headers;
 
+  console.log(process.env.NODE_TLS_REJECT_UNAUTHORIZED);
   const response = await fetch(url, requestInit);
 
   switch (response.status) {

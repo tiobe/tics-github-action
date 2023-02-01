@@ -1026,6 +1026,7 @@ async function httpRequest(url) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
     configuration_1.requestInit.headers = headers;
+    console.log(process.env.NODE_TLS_REJECT_UNAUTHORIZED);
     const response = await (0, node_fetch_1.default)(url, configuration_1.requestInit);
     switch (response.status) {
         case 200:
