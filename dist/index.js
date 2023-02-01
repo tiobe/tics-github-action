@@ -24,13 +24,12 @@ function getHostnameVerification() {
     let hostnameVerification;
     if (hostnameVerificationCfg) {
         process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-        (0, core_1.info)(process.env.TICSHOSTNAMEVERIFICATION);
     }
     switch (process.env.TICSHOSTNAMEVERIFICATION) {
         case '0':
         case 'false':
             hostnameVerification = false;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', '0');
             (0, core_1.info)('Hostname Verification disabled');
             break;
         default:

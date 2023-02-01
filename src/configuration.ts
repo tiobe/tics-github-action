@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, info } from '@actions/core';
+import { getBooleanInput, getInput, info, exportVariable } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -14,14 +14,13 @@ function getHostnameVerification() {
 
   if (hostnameVerificationCfg) {
     process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-    info(process.env.TICSHOSTNAMEVERIFICATION);
   }
 
   switch (process.env.TICSHOSTNAMEVERIFICATION) {
     case '0':
     case 'false':
       hostnameVerification = false;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', '0');
       info('Hostname Verification disabled');
       break;
     default:
