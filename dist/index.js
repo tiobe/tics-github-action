@@ -19,30 +19,11 @@ const api_helper_1 = __nccwpck_require__(3823);
 const logger_1 = __importDefault(__nccwpck_require__(6440));
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-function getHostnameVerification() {
-    let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
-    let hostnameVerification;
-    if (hostnameVerificationCfg) {
-        process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-    }
-    switch (process.env.TICSHOSTNAMEVERIFICATION) {
-        case '0':
-        case 'false':
-            hostnameVerification = false;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            (0, core_1.info)('Hostname Verification disabled');
-            break;
-        default:
-            hostnameVerification = true;
-            break;
-    }
-    return hostnameVerification;
-}
 function getTicsAuthToken() {
     const ticsAuthToken = (0, core_1.getInput)('ticsAuthToken');
     if (ticsAuthToken) {
         // Update the environment for TICS
-        process.env.TICSAUTHTOKEN = ticsAuthToken;
+        (0, core_1.exportVariable)('TICSAUTHTOKEN', ticsAuthToken);
     }
     return ticsAuthToken;
 }
@@ -52,6 +33,22 @@ function configure() {
         if (exports.ticsConfig.logLevel === 'debug')
             logger_1.default.Instance.warning(warning.message.toString());
     });
+    // set hostnameVerification
+    if (exports.ticsConfig.hostnameVerification) {
+        (0, core_1.exportVariable)('TICSHOSTNAMEVERIFICATION', exports.ticsConfig.hostnameVerification);
+        if (exports.ticsConfig.hostnameVerification === '0' || exports.ticsConfig.hostnameVerification === 'false') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.default.Instance.debug('Hostname Verification disabled');
+        }
+    }
+    // set trustStrategy
+    if (exports.ticsConfig.trustStrategy) {
+        (0, core_1.exportVariable)('TICSTRUSTSTRATEGY', exports.ticsConfig.trustStrategy);
+        if (exports.ticsConfig.trustStrategy === 'self-signed' || exports.ticsConfig.trustStrategy === 'all') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.default.Instance.debug(`Trust strategy set to ${exports.ticsConfig.trustStrategy}`);
+        }
+    }
 }
 exports.configure = configure;
 exports.githubConfig = {
@@ -80,7 +77,8 @@ exports.ticsConfig = {
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    hostnameVerification: getHostnameVerification()
+    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
+    trustStrategy: (0, core_1.getInput)('trustStrategy')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };

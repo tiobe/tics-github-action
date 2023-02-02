@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, info } from '@actions/core';
+import { getBooleanInput, getInput, exportVariable } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -8,34 +8,12 @@ import Logger from './helper/logger';
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 
-function getHostnameVerification() {
-  let hostnameVerificationCfg = getInput('hostnameVerification');
-  let hostnameVerification: boolean;
-
-  if (hostnameVerificationCfg) {
-    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-  }
-
-  switch (process.env.TICSHOSTNAMEVERIFICATION) {
-    case '0':
-    case 'false':
-      hostnameVerification = false;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      info('Hostname Verification disabled');
-      break;
-    default:
-      hostnameVerification = true;
-      break;
-  }
-  return hostnameVerification;
-}
-
 function getTicsAuthToken(): string | undefined {
   const ticsAuthToken = getInput('ticsAuthToken');
 
   if (ticsAuthToken) {
     // Update the environment for TICS
-    process.env.TICSAUTHTOKEN = ticsAuthToken;
+    exportVariable('TICSAUTHTOKEN', ticsAuthToken);
   }
 
   return ticsAuthToken;
@@ -46,6 +24,26 @@ export function configure() {
   process.on('warning', warning => {
     if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
   });
+
+  // set hostnameVerification
+  if (ticsConfig.hostnameVerification) {
+    exportVariable('TICSHOSTNAMEVERIFICATION', ticsConfig.hostnameVerification);
+
+    if (ticsConfig.hostnameVerification === '0' || ticsConfig.hostnameVerification === 'false') {
+      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      Logger.Instance.debug('Hostname Verification disabled');
+    }
+  }
+
+  // set trustStrategy
+  if (ticsConfig.trustStrategy) {
+    exportVariable('TICSTRUSTSTRATEGY', ticsConfig.trustStrategy);
+
+    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
+      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      Logger.Instance.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
+    }
+  }
 }
 
 export const githubConfig = {
@@ -75,7 +73,8 @@ export const ticsConfig = {
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  hostnameVerification: getHostnameVerification()
+  hostnameVerification: getInput('hostnameVerification'),
+  trustStrategy: getInput('trustStrategy')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
