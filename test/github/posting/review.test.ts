@@ -1,5 +1,5 @@
 import { githubConfig, octokit } from '../../../src/configuration';
-import { postReview } from '../../../src/github/posting/review';
+import { postNothingAnalyzedReview, postReview } from '../../../src/github/posting/review';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import Logger from '../../../src/helper/logger';
@@ -14,7 +14,7 @@ jest.mock('../../../src/helper/summary', () => {
 });
 
 describe('postReview', () => {
-  test('Should call postReview once', async () => {
+  test('Should call createReview once', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
@@ -39,7 +39,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledTimes(1);
   });
 
-  test('Should call postReview with values passed and no comments', async () => {
+  test('Should call createReview with values passed and no comments', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
@@ -72,7 +72,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should call postReview with values failed', async () => {
+  test('Should call createReview with values failed', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
@@ -110,7 +110,7 @@ describe('postReview', () => {
     expect(spy).toBeCalledWith(calledWith);
   });
 
-  test('Should throw an error on postErrorComment', async () => {
+  test('Should throw an error on createReview', async () => {
     (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
     (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
     (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
@@ -136,6 +136,56 @@ describe('postReview', () => {
       annotationsApiV1Links: []
     };
     await postReview(analysis, [''], qualityGate, undefined);
+
+    expect(spy).toBeCalledTimes(1);
+  });
+});
+
+describe('postNothingAnalyzedReview', () => {
+  test('Should call createReview once', async () => {
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('message', Events.APPROVE);
+    expect(spy).toBeCalledTimes(1);
+  });
+
+  test('Should call createReview with value passed', async () => {
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('message', Events.APPROVE);
+
+    const calledWith = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.APPROVE,
+      body: '## TiCS Analysis\n\n### :heavy_check_mark: Passed \n\nmessage'
+    };
+    expect(spy).toBeCalledWith(calledWith);
+  });
+
+  test('Should call createReview with value failed', async () => {
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('message', Events.REQUEST_CHANGES);
+
+    const calledWith = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.REQUEST_CHANGES,
+      body: '## TiCS Analysis\n\n### :x: Failed \n\nmessage'
+    };
+    expect(spy).toBeCalledWith(calledWith);
+  });
+
+  test('Should throw an error on createReview', async () => {
+    jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
+      throw new Error();
+    });
+    const spy = jest.spyOn(Logger.Instance, 'error');
+
+    await postNothingAnalyzedReview('message', Events.APPROVE);
 
     expect(spy).toBeCalledTimes(1);
   });

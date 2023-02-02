@@ -15,7 +15,7 @@ export default class Logger {
    */
   header(string: string) {
     this.addNewline('header');
-    core.info(`\u001b[35m${string}`);
+    core.info(`\u001b[34m${string}`);
     this.called = 'header';
   }
 

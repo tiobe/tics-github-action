@@ -83,7 +83,7 @@ function createConditionsTable(conditions: any[]) {
         .map((item: any) => {
           return [generateLinkMarkdown(item.name, viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
         });
-      conditionsTable = generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
+      conditionsTable += generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
     } else {
       conditionsTable += `${conditionStatus}\n\n\n`;
     }
@@ -153,7 +153,9 @@ function groupAnnotations(annotations: any[], changedFiles: any[]) {
       annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else {
-      groupedAnnotations[index].count += annotation.count;
+      if (groupedAnnotations[index].gateId === annotation.gateId) {
+        groupedAnnotations[index].count += annotation.count;
+      }
     }
   });
   return groupedAnnotations;

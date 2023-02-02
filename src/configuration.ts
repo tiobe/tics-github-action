@@ -1,9 +1,7 @@
-import { getBooleanInput, getInput, info } from '@actions/core';
+import { getBooleanInput, getInput } from '@actions/core';
 import { getOctokit } from '@actions/github';
-import { HttpClient } from '@actions/http-client';
-import { readFileSync } from 'fs';
-import { RequestOptions } from 'https';
 import ProxyAgent from 'proxy-agent';
+import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
@@ -21,39 +19,6 @@ export const githubConfig = {
   pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 
-function getHostnameVerification() {
-  let hostnameVerificationCfg = getInput('hostnameVerification');
-  let hostnameVerification: boolean;
-
-  if (hostnameVerificationCfg) {
-    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-  }
-
-  switch (process.env.TICSHOSTNAMEVERIFICATION) {
-    case '0':
-    case 'false':
-      hostnameVerification = false;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      info('Hostname Verification disabled');
-      break;
-    default:
-      hostnameVerification = true;
-      break;
-  }
-  return hostnameVerification;
-}
-
-function getTicsAuthToken(): string | undefined {
-  const ticsAuthToken = getInput('ticsAuthToken');
-
-  if (ticsAuthToken) {
-    // Update the environment for TICS
-    process.env.TICSAUTHTOKEN = ticsAuthToken;
-  }
-
-  return ticsAuthToken;
-}
-
 export const ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   branchName: getInput('branchName'),
@@ -61,20 +26,19 @@ export const ticsConfig = {
   calc: getInput('calc'),
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
-  hostnameVerification: getHostnameVerification(),
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getTicsAuthToken(),
+  ticsAuthToken: getInput('ticsAuthToken'),
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
-  viewerUrl: getInput('viewerUrl')
+  viewerUrl: getInput('viewerUrl'),
+  hostnameVerification: getInput('hostnameVerification'),
+  trustStrategy: getInput('trustStrategy')
 };
 
-const httpClientOptions: RequestOptions = { rejectUnauthorized: ticsConfig.hostnameVerification, agent: new ProxyAgent() };
-
-export const octokit = getOctokit(ticsConfig.githubToken, { request: { agent: new ProxyAgent() } });
-export const httpClient = new HttpClient('http-client', [], httpClientOptions);
+export const octokit = getOctokit(ticsConfig.githubToken);
+export const requestInit = { agent: new ProxyAgent(), headers: {} };
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
