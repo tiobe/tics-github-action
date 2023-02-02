@@ -18,7 +18,6 @@ jest.mock('../../src/configuration', () => {
       runnerOS: '',
       pullRequestNumber: '1'
     },
-    configure: jest.fn(),
     octokit: {
       paginate: jest.fn(),
       rest: {

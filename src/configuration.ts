@@ -1,50 +1,11 @@
-import { getBooleanInput, getInput, exportVariable } from '@actions/core';
+import { getBooleanInput, getInput } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
-import Logger from './helper/logger';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-
-function getTicsAuthToken(): string | undefined {
-  const ticsAuthToken = getInput('ticsAuthToken');
-
-  if (ticsAuthToken) {
-    // Update the environment for TICS
-    exportVariable('TICSAUTHTOKEN', ticsAuthToken);
-  }
-
-  return ticsAuthToken;
-}
-
-export function configure() {
-  process.removeAllListeners('warning');
-  process.on('warning', warning => {
-    if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
-  });
-
-  // set hostnameVerification
-  if (ticsConfig.hostnameVerification) {
-    exportVariable('TICSHOSTNAMEVERIFICATION', ticsConfig.hostnameVerification);
-
-    if (ticsConfig.hostnameVerification === '0' || ticsConfig.hostnameVerification === 'false') {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      Logger.Instance.debug('Hostname Verification disabled');
-    }
-  }
-
-  // set trustStrategy
-  if (ticsConfig.trustStrategy) {
-    exportVariable('TICSTRUSTSTRATEGY', ticsConfig.trustStrategy);
-
-    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      Logger.Instance.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
-    }
-  }
-}
 
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
@@ -68,7 +29,7 @@ export const ticsConfig = {
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getTicsAuthToken(),
+  ticsAuthToken: getInput('ticsAuthToken'),
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),

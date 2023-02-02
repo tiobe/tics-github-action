@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
 
-import { githubConfig, ticsConfig, configure } from '../src/configuration';
+import { githubConfig, ticsConfig } from '../src/configuration';
 import { Events } from '../src/helper/enums';
-import { run } from '../src/main';
+import * as main from '../src/main';
 import Logger from '../src/helper/logger';
 
 import * as pulls from '../src/github/calling/pulls';
@@ -32,10 +32,10 @@ import {
 
 describe('pre checks', () => {
   test('Should call exit if event is not pull request', async () => {
-    (configure as any).mockImplementation();
+    jest.spyOn(main, 'configure').mockImplementation();
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
-    await run();
+    await main.run();
 
     // for some reason the code is run before testing, so this exit is called twice
     expect(spyExit).toHaveBeenCalled();
@@ -47,7 +47,7 @@ describe('pre checks', () => {
 
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
-    await run();
+    await main.run();
 
     expect(spyExit).toHaveBeenCalled();
     expect(spyExit).toHaveBeenCalledWith(
@@ -61,7 +61,7 @@ describe('pre checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'exit');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Error'));
@@ -75,7 +75,7 @@ describe('SetFailed checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
@@ -89,7 +89,7 @@ describe('SetFailed checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TiCS Github Action.'));
@@ -104,7 +104,7 @@ describe('SetFailed checks', () => {
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
     const spyError = jest.spyOn(Logger.Instance, 'error');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TiCS Github Action.'));
@@ -122,7 +122,7 @@ describe('SetFailed checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(undefined);
@@ -139,7 +139,7 @@ describe('SetFailed checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
@@ -156,7 +156,7 @@ describe('SetFailed checks', () => {
 
     const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
 
-    await run();
+    await main.run();
 
     expect(spySetFailed).toHaveBeenCalledTimes(0);
   });
@@ -171,7 +171,7 @@ describe('postNothingAnalyzedReview', () => {
 
     const spyReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalled();
     expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
@@ -189,7 +189,7 @@ describe('PostReview checks', () => {
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalledWith(analysisPassed, [], {}, undefined);
   });
@@ -204,7 +204,7 @@ describe('PostReview checks', () => {
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalledWith(analysisPassed, singleAnalyzedFiles, singleFileQualityGateFailed, undefined);
   });
@@ -219,7 +219,7 @@ describe('PostReview checks', () => {
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalledWith(analysisPassed, singleAnalyzedFiles, singleFileQualityGatePassed, undefined);
   });
@@ -237,7 +237,7 @@ describe('PostReview checks', () => {
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalledWith(analysisPassed, doubleAnalyzedFiles, doubleFileQualityGatePassed, undefined);
   });
@@ -255,7 +255,7 @@ describe('PostReview checks', () => {
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyReview).toHaveBeenCalledWith(analysisPassed, doubleAnalyzedFiles, doubleFileQualityGatePassed, singleExpectedPostable);
   });
@@ -275,7 +275,7 @@ describe('DeletePreviousReviewComments check', () => {
     ticsConfig.postAnnotations = true;
     const spyDelete = jest.spyOn(posting_annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());
 
-    await run();
+    await main.run();
 
     expect(spyDelete).toHaveBeenCalledWith(singlePreviousReviewComments);
   });

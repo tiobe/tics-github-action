@@ -73,7 +73,12 @@ async function getInstallTics() {
   if (githubConfig.runnerOS === 'Linux') {
     return `source <(curl -s '${installTicsUrl}') &&`;
   }
-  return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
+
+  let trustStrategy = '';
+  if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
+    trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+  }
+  return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 
 /**
