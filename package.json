@@ -1,27 +1,55 @@
 {
-  "name": "tics-github-action",
-  "version": "1.0.0",
-  "description": "The TiCS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
-  "main": "index.js",
+  "name": "tics-github-plugin",
+  "version": "2.0.0",
+  "description": "The TiCS Github action integrates TiCS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
+  "main": "lib/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "format": "prettier --write src/**/*.ts",
+    "format-check": "prettier --check src/**/*.ts",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build",
+    "test": "jest",
+    "test-coverage": "jest --coverage --collectCoverageFrom='src/**'",
+    "all": "npm run build && npm run package"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tiobe/tics-github-action.git"
   },
-  "keywords": [],
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
   "author": "TIOBE",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/tiobe/tics-github-action/issues"
   },
   "homepage": "https://github.com/tiobe/tics-github-action#readme",
-  "type": "module",
   "dependencies": {
-    "@octokit/action": "^5.0.2",
     "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
-    "util": "^0.12.5"
+    "canonical-path": "^1.0.0",
+    "markdown-table": "^3.0.3",
+    "proxy-agent": "^5.0.0",
+    "underscore": "^1.13.6"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.2",
+    "@types/node": "^18.11.9",
+    "@types/node-fetch": "^2.6.2",
+    "@types/underscore": "^1.11.4",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vercel/ncc": "^0.31.1",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "^8.5.0",
+    "jest": "^27.5.1",
+    "jest-mock": "^29.3.1",
+    "prettier": "2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.9.3"
   }
 }

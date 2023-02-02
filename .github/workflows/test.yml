@@ -1,0 +1,17 @@
+name: Test
+
+on: push
+
+jobs:
+  Jest:
+    name: Jest
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Jest
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm ci
+      - run: npm run test-coverage
