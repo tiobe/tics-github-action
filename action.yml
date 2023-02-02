@@ -22,8 +22,13 @@ inputs:
     description: 'A custom client-data token for the purpose of the Client Viewer functionality.'
     required: false
   hostnameVerification:
-    description: 'Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper)'
+    description: 'Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).'
     required: false
+    default: true
+  trustStrategy:
+    description: 'Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).'
+    required: false
+    default: strict
   installTics:
     description: 'Boolean parameter to install TICS command-line tools on a runner before executing the analysis'
     required: false

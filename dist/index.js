@@ -10,50 +10,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = exports.configure = void 0;
+exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const fs_1 = __nccwpck_require__(5747);
 const api_helper_1 = __nccwpck_require__(3823);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-function getHostnameVerification() {
-    let hostnameVerificationCfg = (0, core_1.getInput)('hostnameVerification');
-    let hostnameVerification;
-    if (hostnameVerificationCfg) {
-        process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-    }
-    switch (process.env.TICSHOSTNAMEVERIFICATION) {
-        case '0':
-        case 'false':
-            hostnameVerification = false;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            (0, core_1.info)('Hostname Verification disabled');
-            break;
-        default:
-            hostnameVerification = true;
-            break;
-    }
-    return hostnameVerification;
-}
-function getTicsAuthToken() {
-    const ticsAuthToken = (0, core_1.getInput)('ticsAuthToken');
-    if (ticsAuthToken) {
-        // Update the environment for TICS
-        process.env.TICSAUTHTOKEN = ticsAuthToken;
-    }
-    return ticsAuthToken;
-}
-function configure() {
-    process.removeAllListeners('warning');
-    process.on('warning', warning => {
-        if (exports.ticsConfig.logLevel === 'debug')
-            logger_1.default.Instance.warning(warning.message.toString());
-    });
-}
-exports.configure = configure;
 exports.githubConfig = {
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
@@ -75,12 +39,13 @@ exports.ticsConfig = {
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
-    ticsAuthToken: getTicsAuthToken(),
+    ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    hostnameVerification: getHostnameVerification()
+    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
+    trustStrategy: (0, core_1.getInput)('trustStrategy')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -783,7 +748,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.configure = exports.run = void 0;
 const fs_1 = __nccwpck_require__(5747);
 const comment_1 = __nccwpck_require__(5436);
 const configuration_1 = __nccwpck_require__(5527);
@@ -797,10 +762,11 @@ const summary_1 = __nccwpck_require__(1502);
 const annotations_1 = __nccwpck_require__(9757);
 const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
-(0, configuration_1.configure)();
+const core_1 = __nccwpck_require__(2186);
 run();
 // exported for testing purposes
 async function run() {
+    configure();
     if (configuration_1.githubConfig.eventName !== 'pull_request')
         return logger_1.default.Instance.exit('This action can only run on pull requests.');
     if (!isCheckedOut())
@@ -853,6 +819,34 @@ async function main() {
         logger_1.default.Instance.exit(error.message);
     }
 }
+function configure() {
+    process.removeAllListeners('warning');
+    process.on('warning', warning => {
+        if (configuration_1.ticsConfig.logLevel === 'debug')
+            logger_1.default.Instance.warning(warning.message.toString());
+    });
+    // set ticsAuthToken
+    if (configuration_1.ticsConfig.ticsAuthToken) {
+        (0, core_1.exportVariable)('TICSAUTHTOKEN', configuration_1.ticsConfig.ticsAuthToken);
+    }
+    // set hostnameVerification
+    if (configuration_1.ticsConfig.hostnameVerification) {
+        (0, core_1.exportVariable)('TICSHOSTNAMEVERIFICATION', configuration_1.ticsConfig.hostnameVerification);
+        if (configuration_1.ticsConfig.hostnameVerification === '0' || configuration_1.ticsConfig.hostnameVerification === 'false') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.default.Instance.debug('Hostname Verification disabled');
+        }
+    }
+    // set trustStrategy
+    if (configuration_1.ticsConfig.trustStrategy) {
+        (0, core_1.exportVariable)('TICSTRUSTSTRATEGY', configuration_1.ticsConfig.trustStrategy);
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.default.Instance.debug(`Trust strategy set to ${configuration_1.ticsConfig.trustStrategy}`);
+        }
+    }
+}
+exports.configure = configure;
 /**
  * Checks if a .git directory exists to see if a checkout has been performed.
  * @returns boolean
@@ -949,7 +943,11 @@ async function getInstallTics() {
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         return `source <(curl -s '${installTicsUrl}') &&`;
     }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
+    let trustStrategy = '';
+    if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+        trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+    }
+    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.

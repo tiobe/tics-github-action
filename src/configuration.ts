@@ -1,52 +1,11 @@
-import { getBooleanInput, getInput, info } from '@actions/core';
+import { getBooleanInput, getInput } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
-import Logger from './helper/logger';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-
-function getHostnameVerification() {
-  let hostnameVerificationCfg = getInput('hostnameVerification');
-  let hostnameVerification: boolean;
-
-  if (hostnameVerificationCfg) {
-    process.env.TICSHOSTNAMEVERIFICATION = hostnameVerificationCfg;
-  }
-
-  switch (process.env.TICSHOSTNAMEVERIFICATION) {
-    case '0':
-    case 'false':
-      hostnameVerification = false;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      info('Hostname Verification disabled');
-      break;
-    default:
-      hostnameVerification = true;
-      break;
-  }
-  return hostnameVerification;
-}
-
-function getTicsAuthToken(): string | undefined {
-  const ticsAuthToken = getInput('ticsAuthToken');
-
-  if (ticsAuthToken) {
-    // Update the environment for TICS
-    process.env.TICSAUTHTOKEN = ticsAuthToken;
-  }
-
-  return ticsAuthToken;
-}
-
-export function configure() {
-  process.removeAllListeners('warning');
-  process.on('warning', warning => {
-    if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
-  });
-}
 
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
@@ -70,12 +29,13 @@ export const ticsConfig = {
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
-  ticsAuthToken: getTicsAuthToken(),
+  ticsAuthToken: getInput('ticsAuthToken'),
   githubToken: getInput('githubToken', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  hostnameVerification: getHostnameVerification()
+  hostnameVerification: getInput('hostnameVerification'),
+  trustStrategy: getInput('trustStrategy')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);

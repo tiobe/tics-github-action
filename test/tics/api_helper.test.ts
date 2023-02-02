@@ -6,7 +6,7 @@ import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTi
 
 describe('httpRequest', () => {
   test('Should return response on status 200', async () => {
-    ticsConfig.ticsAuthToken = 'authToken'; // test setting TiCS Auth Token at least once
+    // testing without setting TiCS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, json: resJson }));
@@ -17,7 +17,7 @@ describe('httpRequest', () => {
   });
 
   test('Should return undefined response and call exit on status 302', async () => {
-    ticsConfig.ticsAuthToken = undefined; // test undefined TiCS Auth Token at least once
+    ticsConfig.ticsAuthToken = 'authToken'; // test setting TiCS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 302, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
