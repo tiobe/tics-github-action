@@ -1,5 +1,5 @@
-name: 'TiCS Github Action'
-author: 'TIOBE'
+name: 'TiCS Code Quality Analysis'
+author: 'TIOBE Software'
 description: 'Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.'
 inputs:
   githubToken:
