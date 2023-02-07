@@ -74,6 +74,9 @@ async function main() {
   }
 }
 
+/**
+ * Configure the action before running the analysis.
+ */
 export function configure() {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
