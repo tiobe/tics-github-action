@@ -128,6 +128,7 @@ function getTicsCommand(fileListPath: string) {
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
   
+  // Add TICS debug flag when in debug mode, if this flag was not already set.
   if (ticsConfig.logLevel === 'debug' && !execString.includes('-log ')) {
     execString += '-log 9';
   }
