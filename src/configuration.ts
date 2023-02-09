@@ -7,6 +7,16 @@ import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 
+function getLoglevel() {
+  let logLevel = getInput('logLevel');
+
+  if (process.env.RUNNER_DEBUG) {
+    logLevel = 'debug';
+  }
+
+  return logLevel;
+}
+
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
   owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
@@ -27,7 +37,7 @@ export const ticsConfig = {
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
   installTics: getBooleanInput('installTics'),
-  logLevel: getInput('logLevel'),
+  logLevel: getLoglevel(),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken'),
   githubToken: getInput('githubToken', { required: true }),
