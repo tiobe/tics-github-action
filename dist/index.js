@@ -20,7 +20,7 @@ const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 function getLoglevel() {
     let logLevel = (0, core_1.getInput)('logLevel');
-    // RUNNER_DEBUG is set when enabling the debug checkbox.
+    // RUNNER_DEBUG is present and set only when enabling the debug checkbox.
     if (process.env.RUNNER_DEBUG) {
         logLevel = 'debug';
     }
@@ -1001,7 +1001,7 @@ function getTicsCommand(fileListPath) {
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     // Add TICS debug flag when in debug mode, if this flag was not already set.
-    if (configuration_1.ticsConfig.logLevel === 'debug') {
+    if (configuration_1.ticsConfig.logLevel === 'debug' && !execString.includes('-log ')) {
         logger_1.default.Instance.debug('Setting TICS debug mode');
         execString += ' -log 9';
     }

@@ -10,7 +10,7 @@ const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '
 function getLoglevel() {
   let logLevel = getInput('logLevel');
 
-  // RUNNER_DEBUG is set when enabling the debug checkbox.
+  // RUNNER_DEBUG is present and set only when enabling the debug checkbox.
   if (process.env.RUNNER_DEBUG) {
     logLevel = 'debug';
   }
