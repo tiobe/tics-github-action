@@ -130,7 +130,7 @@ function getTicsCommand(fileListPath: string) {
   
   // Add TICS debug flag when in debug mode, if this flag was not already set.
   if (ticsConfig.logLevel === 'debug' && !execString.includes('-log ')) {
-    execString += '-log 9';
+    execString += ' -log 9';
   }
   
   return execString;
