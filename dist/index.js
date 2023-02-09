@@ -18,6 +18,14 @@ const fs_1 = __nccwpck_require__(5747);
 const api_helper_1 = __nccwpck_require__(3823);
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
+function getLoglevel() {
+    let logLevel = (0, core_1.getInput)('logLevel');
+    // RUNNER_DEBUG is set when enabling the debug checkbox.
+    if (process.env.RUNNER_DEBUG) {
+        logLevel = 'debug';
+    }
+    return logLevel;
+}
 exports.githubConfig = {
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
@@ -37,7 +45,7 @@ exports.ticsConfig = {
     clientData: (0, core_1.getInput)('clientData'),
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: (0, core_1.getInput)('logLevel'),
+    logLevel: getLoglevel(),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -992,6 +1000,11 @@ function getTicsCommand(fileListPath) {
     execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
+    // Add TICS debug flag when in debug mode, if this flag was not already set.
+    if (configuration_1.ticsConfig.logLevel === 'debug') {
+        logger_1.default.Instance.debug('Setting TICS debug mode');
+        execString += ' -log 9';
+    }
     return execString;
 }
 
