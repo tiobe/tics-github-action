@@ -127,5 +127,9 @@ function getTicsCommand(fileListPath: string) {
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
+  if (process.env.RUNNER_DEBUG) {
+    execString += '-log 9';
+  }
+  
   return execString;
 }
