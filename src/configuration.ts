@@ -20,22 +20,24 @@ export const githubConfig = {
 };
 
 export const ticsConfig = {
+  githubToken: getInput('githubToken', { required: true }),
   projectName: getInput('projectName', { required: true }),
-  branchName: getInput('branchName'),
-  branchDir: getInput('branchDir'),
-  calc: getInput('calc'),
-  clientData: getInput('clientData'),
+  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   additionalFlags: getInput('additionalFlags'),
+  branchDir: getInput('branchDir'),
+  branchName: getInput('branchName'),
+  calc: getInput('calc'),
+  recalc: getInput('recalc'),
+  clientData: getInput('clientData'),
+  codetype: getInput('codetype'),
+  hostnameVerification: getInput('hostnameVerification'),
+  trustStrategy: getInput('trustStrategy'),
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken'),
-  githubToken: getInput('githubToken', { required: true }),
-  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
-  viewerUrl: getInput('viewerUrl'),
-  hostnameVerification: getInput('hostnameVerification'),
-  trustStrategy: getInput('trustStrategy')
+  viewerUrl: getInput('viewerUrl')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);

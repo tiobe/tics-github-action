@@ -30,22 +30,24 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
 };
 exports.ticsConfig = {
+    githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     projectName: (0, core_1.getInput)('projectName', { required: true }),
-    branchName: (0, core_1.getInput)('branchName'),
-    branchDir: (0, core_1.getInput)('branchDir'),
-    calc: (0, core_1.getInput)('calc'),
-    clientData: (0, core_1.getInput)('clientData'),
+    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
+    branchDir: (0, core_1.getInput)('branchDir'),
+    branchName: (0, core_1.getInput)('branchName'),
+    calc: (0, core_1.getInput)('calc'),
+    recalc: (0, core_1.getInput)('recalc'),
+    clientData: (0, core_1.getInput)('clientData'),
+    codetype: (0, core_1.getInput)('codetype'),
+    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
+    trustStrategy: (0, core_1.getInput)('trustStrategy'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
-    githubToken: (0, core_1.getInput)('githubToken', { required: true }),
-    ticsConfiguration: (0, core_1.getInput)('ticsConfiguration', { required: true }),
     tmpDir: (0, core_1.getInput)('tmpDir'),
-    viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
-    trustStrategy: (0, core_1.getInput)('trustStrategy')
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -989,6 +991,8 @@ function getTicsCommand(fileListPath) {
     let execString = 'TICS @' + fileListPath + ' -viewer ';
     execString += `-project '${configuration_1.ticsConfig.projectName}' `;
     execString += `-calc ${configuration_1.ticsConfig.calc} `;
+    execString += configuration_1.ticsConfig.recalc ? `-recalc ${configuration_1.ticsConfig.recalc} ` : '';
+    execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
     execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';

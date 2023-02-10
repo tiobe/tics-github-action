@@ -21,9 +21,12 @@ inputs:
     description: Location of the files to analyze
     required: false
   calc:
-    description: Comma-separated list of metrics to be used
+    description: Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
     required: false
     default: GATE
+  recalc:
+    description: Comma-separated list of metrics to be recalculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x.
+    required: false
   clientData:
     description: A custom client-data token for the purpose of the Client Viewer functionality.
     required: false
