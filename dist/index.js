@@ -819,6 +819,9 @@ async function main() {
         logger_1.default.Instance.exit(error.message);
     }
 }
+/**
+ * Configure the action before running the analysis.
+ */
 function configure() {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
@@ -941,13 +944,20 @@ async function getInstallTics() {
         return '';
     const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
-        return `source <(curl -s '${installTicsUrl}') &&`;
+        let trustStrategy = '';
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            trustStrategy = '--insecure';
+        }
+        return `source <(curl --silent ${trustStrategy} '${installTicsUrl}') &&`;
     }
-    let trustStrategy = '';
-    if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
-        trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+    else {
+        // runnerOS is assumed to be Windows here
+        let trustStrategy = '';
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+        }
+        return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
     }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.

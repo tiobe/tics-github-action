@@ -88,7 +88,7 @@ describe('test multiple types of configuration', () => {
     );
   });
 
-  test('Should call exec with full TiCS command for Linux', async () => {
+  test('Should call exec with full TiCS command for Linux, trustStrategy self-signed', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: 'url' } }));
     const spy = jest.spyOn(exec, 'exec');
@@ -98,6 +98,7 @@ describe('test multiple types of configuration', () => {
     ticsConfig.tmpDir = '/home/ubuntu/test';
     ticsConfig.additionalFlags = '-log 9';
     ticsConfig.installTics = true;
+    ticsConfig.trustStrategy = 'self-signed';
 
     githubConfig.runnerOS = 'Linux';
 
@@ -106,7 +107,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"source <(curl -s 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
+      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -125,6 +126,7 @@ describe('test multiple types of configuration', () => {
     ticsConfig.tmpDir = '/home/ubuntu/test';
     ticsConfig.additionalFlags = '-log 9';
     ticsConfig.installTics = true;
+    ticsConfig.trustStrategy = '';
 
     githubConfig.runnerOS = 'Windows';
 
