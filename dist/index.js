@@ -124,8 +124,7 @@ async function getChangedFiles() {
                     if (configuration_1.ticsConfig.excludeMovedFiles) {
                         return;
                     }
-                    const changes = data.additions + data.deletions + data.changes;
-                    if (changes === 0) {
+                    if (data.changes === 0) {
                         // If nothing has changed in the file skip it.
                         return;
                     }
@@ -136,7 +135,7 @@ async function getChangedFiles() {
             });
         });
         logger_1.default.Instance.info('Retrieved changed files.');
-        return response;
+        return response.filter(x => x !== undefined);
     }
     catch (error) {
         logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);

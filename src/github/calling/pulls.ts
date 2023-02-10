@@ -22,8 +22,7 @@ export async function getChangedFiles() {
           if (ticsConfig.excludeMovedFiles) {
             return;
           }
-          const changes = data.additions + data.deletions + data.changes;
-          if (changes === 0) {
+          if (data.changes === 0) {
             // If nothing has changed in the file skip it.
             return;
           }
@@ -34,7 +33,7 @@ export async function getChangedFiles() {
       });
     });
     Logger.Instance.info('Retrieved changed files.');
-    return response;
+    return response.filter(x => x !== undefined);
   } catch (error: any) {
     Logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
   }

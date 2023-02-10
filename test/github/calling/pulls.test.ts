@@ -16,9 +16,7 @@ describe('getChangedFiles', () => {
     const spy = jest.spyOn(Logger.Instance, 'debug');
     await getChangedFiles();
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [{ filename: 'test.js', status: 'renamed', additions: 1, deletions: 0, changes: 0 }, { filename: 'test.js' }]
-    });
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] });
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
@@ -27,9 +25,7 @@ describe('getChangedFiles', () => {
     const spy = jest.spyOn(Logger.Instance, 'debug');
     await getChangedFiles();
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [{ filename: 'test.js', status: 'renamed', additions: 0, deletions: 0, changes: 0 }, { filename: 'test.js' }]
-    });
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 0 }, { filename: 'test.js' }] });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
@@ -40,7 +36,7 @@ describe('getChangedFiles', () => {
     const spy = jest.spyOn(Logger.Instance, 'debug');
     await getChangedFiles();
 
-    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', additions: 1 }, { filename: 'test.js' }] });
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
