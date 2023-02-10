@@ -36,6 +36,7 @@ exports.ticsConfig = {
     calc: (0, core_1.getInput)('calc'),
     clientData: (0, core_1.getInput)('clientData'),
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
+    excludeMovedFiles: (0, core_1.getBooleanInput)('excludeMovedFiles'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
     logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
@@ -118,6 +119,17 @@ async function getChangedFiles() {
         };
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data.map(data => {
+                // If a file is moved or renamed the status is 'renamed'.
+                if (data.status === 'renamed') {
+                    if (configuration_1.ticsConfig.excludeMovedFiles) {
+                        return;
+                    }
+                    const changes = data.additions + data.deletions + data.changes;
+                    if (changes === 0) {
+                        // If nothing has changed in the file skip it.
+                        return;
+                    }
+                }
                 data.filename = (0, canonical_path_1.normalize)(data.filename);
                 logger_1.default.Instance.debug(data.filename);
                 return data;
