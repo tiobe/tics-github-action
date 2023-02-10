@@ -77,7 +77,7 @@ async function main() {
 export function configure() {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
-    if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
+    if (githubConfig.loglevel) Logger.Instance.warning(warning.message.toString());
   });
 
   // set ticsAuthToken
