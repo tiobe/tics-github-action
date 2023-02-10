@@ -27,17 +27,6 @@ describe('info', () => {
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(Logger.Instance.called).toEqual('info');
   });
-
-  test('Should not call core.info on info if logLevel is none', () => {
-    ticsConfig.logLevel = 'none';
-    const info = jest.spyOn(core, 'info');
-    const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
-
-    Logger.Instance.info('string');
-
-    expect(info).toHaveBeenCalledTimes(0);
-    expect(addNewline).toHaveBeenCalledTimes(0);
-  });
 });
 
 describe('debug', () => {

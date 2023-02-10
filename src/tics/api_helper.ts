@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import Logger from '../helper/logger';
-import { requestInit, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis } from '../helper/interfaces';
 import fetch from 'node-fetch';
 import { exportVariable } from '@actions/core';
@@ -52,17 +52,9 @@ export async function httpRequest(url: string): Promise<any> {
  * @param analysis the output of the TiCS analysis run.
  */
 export function cliSummary(analysis: Analysis): void {
-  switch (ticsConfig.logLevel) {
-    case 'none':
-      break;
-    case 'debug':
-      analysis.errorList.forEach(error => Logger.Instance.error(error));
-      analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
-      break;
-    case 'default':
-    default:
-      analysis.errorList.forEach(error => Logger.Instance.error(error));
-      break;
+  analysis.errorList.forEach(error => Logger.Instance.error(error));
+  if (githubConfig.debugger) {
+    analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
   }
 }
 

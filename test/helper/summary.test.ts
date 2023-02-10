@@ -1,4 +1,4 @@
-import { ticsConfig } from '../../src/configuration';
+import { githubConfig, ticsConfig } from '../../src/configuration';
 import { QualityGate } from '../../src/helper/interfaces';
 import {
   createErrorSummary,
@@ -26,7 +26,7 @@ describe('createErrorSummary', () => {
   });
 
   test('Should return summary of two  warnings on logLevel debug', () => {
-    ticsConfig.logLevel = 'debug';
+    githubConfig.debugger = 'debug';
 
     const response = createErrorSummary([], ['Warning', 'Warning']);
 
@@ -35,7 +35,7 @@ describe('createErrorSummary', () => {
   });
 
   test('Should return summary of one error and two warnings', () => {
-    ticsConfig.logLevel = 'debug';
+    githubConfig.debugger = 'debug';
 
     const response = createErrorSummary(['Error'], ['Warning', 'Warning']);
 

@@ -127,12 +127,8 @@ function getTicsCommand(fileListPath: string) {
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
-  
   // Add TICS debug flag when in debug mode, if this flag was not already set.
-  if (ticsConfig.logLevel === 'debug' && !execString.includes('-log ')) {
-    Logger.Instance.debug('Setting TICS debug mode');
-    execString += ' -log 9';
-  }
-  
+  execString += githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
+
   return execString;
 }

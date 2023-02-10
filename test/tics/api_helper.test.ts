@@ -1,4 +1,4 @@
-import { ticsConfig } from '../../src/configuration';
+import { githubConfig, ticsConfig } from '../../src/configuration';
 import { Analysis } from '../../src/helper/interfaces';
 import Logger from '../../src/helper/logger';
 import fetch from 'node-fetch';
@@ -94,7 +94,7 @@ describe('cliSummary', () => {
     const error = jest.spyOn(Logger.Instance, 'error');
     const warning = jest.spyOn(Logger.Instance, 'warning');
 
-    ticsConfig.logLevel = 'debug';
+    githubConfig.debugger = 'debug';
 
     const analysis: Analysis = {
       completed: false,
@@ -112,43 +112,7 @@ describe('cliSummary', () => {
     const error = jest.spyOn(Logger.Instance, 'error');
     const warning = jest.spyOn(Logger.Instance, 'warning');
 
-    ticsConfig.logLevel = 'default';
-
-    const analysis: Analysis = {
-      completed: false,
-      statusCode: -1,
-      errorList: ['error', 'error', 'warning'],
-      warningList: ['warning', 'warning']
-    };
-    cliSummary(analysis);
-
-    expect(error).toHaveBeenCalledTimes(3);
-    expect(warning).toHaveBeenCalledTimes(0);
-  });
-
-  test('Should not post errors and warnings on logLevel none, cliSummary.', async () => {
-    const error = jest.spyOn(Logger.Instance, 'error');
-    const warning = jest.spyOn(Logger.Instance, 'warning');
-
-    ticsConfig.logLevel = 'none';
-
-    const analysis: Analysis = {
-      completed: false,
-      statusCode: -1,
-      errorList: ['error', 'error', 'warning'],
-      warningList: ['warning', 'warning']
-    };
-    cliSummary(analysis);
-
-    expect(error).toHaveBeenCalledTimes(0);
-    expect(warning).toHaveBeenCalledTimes(0);
-  });
-
-  test('Should post errors and no warnings on incorrect logLevel, cliSummary.', async () => {
-    const error = jest.spyOn(Logger.Instance, 'error');
-    const warning = jest.spyOn(Logger.Instance, 'warning');
-
-    ticsConfig.logLevel = '';
+    githubConfig.debugger = undefined;
 
     const analysis: Analysis = {
       completed: false,
