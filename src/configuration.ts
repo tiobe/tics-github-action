@@ -17,7 +17,7 @@ export const githubConfig = {
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
   pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
-  debugger: process.env.ACTIONS_RUNNER_DEBUG
+  debugger: process.env.RUNNER_DEBUG
 };
 
 export const ticsConfig = {
