@@ -26,6 +26,7 @@ export const ticsConfig = {
   calc: getInput('calc'),
   clientData: getInput('clientData'),
   additionalFlags: getInput('additionalFlags'),
+  excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
   installTics: getBooleanInput('installTics'),
   logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
