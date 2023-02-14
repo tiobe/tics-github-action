@@ -1,4 +1,4 @@
-import { githubConfig, octokit } from '../../../src/configuration';
+import { githubConfig, octokit, ticsConfig } from '../../../src/configuration';
 import { postNothingAnalyzedReview, postReview } from '../../../src/github/posting/review';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
@@ -104,6 +104,46 @@ describe('postReview', () => {
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.REQUEST_CHANGES,
+      body: 'GateSummary...\nLinkSummary...\nUnpostableSummary...\nFilesSummary...\n',
+      comments: []
+    };
+    expect(spy).toBeCalledWith(calledWith);
+  });
+
+  test('Should call createReview with type COMMENT if pullRequestApproval is set to false', async () => {
+    (createQualityGateSummary as any).mockReturnValueOnce('GateSummary...\n');
+    (createLinkSummary as any).mockReturnValueOnce('LinkSummary...\n');
+    (createUnpostableReviewCommentsSummary as any).mockReturnValueOnce('UnpostableSummary...\n');
+    (createFilesSummary as any).mockReturnValueOnce('FilesSummary...\n');
+
+    ticsConfig.pullRequestApproval = false;
+
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    const analysis = {
+      completed: true,
+      errorList: ['error1'],
+      warningList: [],
+      statusCode: 0,
+      explorerUrl: 'url'
+    };
+    const qualityGate = {
+      passed: false,
+      message: 'message',
+      url: 'url',
+      gates: [],
+      annotationsApiV1Links: []
+    };
+    const reviewComments = {
+      postable: [],
+      unpostable: [{}]
+    };
+    await postReview(analysis, [''], qualityGate, reviewComments);
+    const calledWith = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.COMMENT,
       body: 'GateSummary...\nLinkSummary...\nUnpostableSummary...\nFilesSummary...\n',
       comments: []
     };
