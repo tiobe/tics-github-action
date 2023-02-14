@@ -16,6 +16,4 @@ jobs:
           node-version: 16
       - run: npm run all
       - name: Git commit and push
-      - run: git add dist
-      - run: git commit -m 'Build dist after push to main'
-      - run: git push
+        run: git add dist && git commit -m 'Build dist after push to main' && git push
