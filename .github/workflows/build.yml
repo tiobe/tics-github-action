@@ -14,6 +14,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: npm ci && npm run all
-      - name: Git commit and push
-        run: git add dist && git commit -m 'Build dist after push to main' && git push
+      - run: |
+          npm ci
+          npm run all
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Commit and push
+        run: |
+          git add dist 
+          git commit -m 'Build dist after push to main'
+          git push origin main
