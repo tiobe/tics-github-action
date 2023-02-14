@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - main
-env:
-  GITHUB_TOKEN: ${{ secrets.TIOBE_TOKEN }}
 jobs:
   build:
     name: build
@@ -20,9 +18,12 @@ jobs:
           npm ci
           npm run all
       - name: Setup git config
-        run: |
-          git config user.name "${{ secrets.TIOBE_NAME }}"
-          git config user.email "${{ secrets.TIOBE_EMAIL }}"
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.TIOBE_TOKEN }}
+      - run: |
+          git config user.name ${{ secrets.TIOBE_NAME }}
+          git config user.email ${{ secrets.TIOBE_EMAIL }}
       - name: Commit and push
         run: |
           git add dist 
