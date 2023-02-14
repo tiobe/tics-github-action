@@ -88,7 +88,7 @@ describe('test multiple types of configuration', () => {
     );
   });
 
-  test('Should call exec with full TiCS command for Linux', async () => {
+  test('Should call exec with full TiCS command for Linux, trustStrategy self-signed', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: 'url' } }));
     const spy = jest.spyOn(exec, 'exec');
@@ -98,6 +98,7 @@ describe('test multiple types of configuration', () => {
     ticsConfig.tmpDir = '/home/ubuntu/test';
     ticsConfig.additionalFlags = '-log 9';
     ticsConfig.installTics = true;
+    ticsConfig.trustStrategy = 'self-signed';
 
     githubConfig.runnerOS = 'Linux';
 
@@ -106,7 +107,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"source <(curl -s 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
+      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -125,6 +126,7 @@ describe('test multiple types of configuration', () => {
     ticsConfig.tmpDir = '/home/ubuntu/test';
     ticsConfig.additionalFlags = '-log 9';
     ticsConfig.installTics = true;
+    ticsConfig.trustStrategy = '';
 
     githubConfig.runnerOS = 'Windows';
 
@@ -151,13 +153,14 @@ test('Should call exec with full TiCS command for Windows, trustStrategy set to 
   ticsConfig.calc = 'CS';
   ticsConfig.clientData = 'token';
   ticsConfig.tmpDir = '/home/ubuntu/test';
-  ticsConfig.additionalFlags = '-log 9';
+  ticsConfig.additionalFlags = '';
   ticsConfig.installTics = true;
   ticsConfig.trustStrategy = 'all';
   ticsConfig.nocalc = 'CW';
   ticsConfig.recalc = 'CY';
   ticsConfig.norecalc = 'CD';
   ticsConfig.codetype = 'TESTCODE';
+  githubConfig.debugger = true;
 
   githubConfig.runnerOS = 'Windows';
 
@@ -166,7 +169,7 @@ test('Should call exec with full TiCS command for Windows, trustStrategy set to 
   expect(response.statusCode).toEqual(0);
   expect(response.completed).toEqual(true);
   expect(spy).toHaveBeenCalledWith(
-    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
+    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test'  -log 9}\"",
     [],
     {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },

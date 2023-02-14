@@ -71,14 +71,19 @@ async function getInstallTics() {
   const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
 
   if (githubConfig.runnerOS === 'Linux') {
-    return `source <(curl -s '${installTicsUrl}') &&`;
+    let trustStrategy = '';
+    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
+      trustStrategy = '--insecure';
+    }
+    return `source <(curl --silent ${trustStrategy} '${installTicsUrl}') &&`;
+  } else {
+    // runnerOS is assumed to be Windows here
+    let trustStrategy = '';
+    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
+      trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+    }
+    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
   }
-
-  let trustStrategy = '';
-  if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
-    trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
-  }
-  return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 
 /**
@@ -131,5 +136,8 @@ function getTicsCommand(fileListPath: string) {
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
+  // Add TICS debug flag when in debug mode, if this flag was not already set.
+  execString += githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
+
   return execString;
 }

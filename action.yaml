@@ -36,9 +36,13 @@ inputs:
   clientData:
     description: A custom client-data token for the purpose of the Client Viewer functionality.
     required: false
-  codeType:
+  codetype:
     description: Allows you to pick which specific types of code you want to analyze with the TICS client
     required: false
+  excludeMovedFiles:
+    description: Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.
+    required: false
+    default: false
   hostnameVerification:
     description: Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).
     required: false

@@ -1,7 +1,7 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 import Logger from '../../helper/logger';
-import { githubConfig, octokit } from '../../configuration';
+import { githubConfig, octokit, ticsConfig } from '../../configuration';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -17,13 +17,23 @@ export async function getChangedFiles() {
     };
     const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data.map(data => {
+        // If a file is moved or renamed the status is 'renamed'.
+        if (data.status === 'renamed') {
+          if (ticsConfig.excludeMovedFiles) {
+            return;
+          }
+          if (data.changes === 0) {
+            // If nothing has changed in the file skip it.
+            return;
+          }
+        }
         data.filename = normalize(data.filename);
         Logger.Instance.debug(data.filename);
         return data;
       });
     });
     Logger.Instance.info('Retrieved changed files.');
-    return response;
+    return response.filter(x => x !== undefined);
   } catch (error: any) {
     Logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
   }

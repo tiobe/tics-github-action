@@ -74,10 +74,13 @@ async function main() {
   }
 }
 
+/**
+ * Configure the action before running the analysis.
+ */
 export function configure() {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
-    if (ticsConfig.logLevel === 'debug') Logger.Instance.warning(warning.message.toString());
+    if (githubConfig.debugger) Logger.Instance.warning(warning.message.toString());
   });
 
   // set ticsAuthToken

@@ -27,7 +27,8 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
+    debugger: (0, core_1.isDebug)()
 };
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -44,8 +45,8 @@ exports.ticsConfig = {
     codetype: (0, core_1.getInput)('codetype'),
     hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
     trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    excludeMovedFiles: (0, core_1.getBooleanInput)('excludeMovedFiles'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: (0, core_1.getInput)('logLevel'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
@@ -122,13 +123,23 @@ async function getChangedFiles() {
         };
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data.map(data => {
+                // If a file is moved or renamed the status is 'renamed'.
+                if (data.status === 'renamed') {
+                    if (configuration_1.ticsConfig.excludeMovedFiles) {
+                        return;
+                    }
+                    if (data.changes === 0) {
+                        // If nothing has changed in the file skip it.
+                        return;
+                    }
+                }
                 data.filename = (0, canonical_path_1.normalize)(data.filename);
                 logger_1.default.Instance.debug(data.filename);
                 return data;
             });
         });
         logger_1.default.Instance.info('Retrieved changed files.');
-        return response;
+        return response.filter(x => x !== undefined);
     }
     catch (error) {
         logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
@@ -361,7 +372,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
@@ -383,10 +393,8 @@ class Logger {
      * @param {string} string
      */
     info(string) {
-        if (configuration_1.ticsConfig.logLevel !== 'none') {
-            core.info(string);
-            this.called = 'info';
-        }
+        core.info(string);
+        this.called = 'info';
     }
     /**
      * Uses core.debug to print to the console.
@@ -543,7 +551,7 @@ function createErrorSummary(errorList, warningList) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
     }
-    if (warningList.length > 0 && configuration_1.ticsConfig.logLevel === 'debug') {
+    if (warningList.length > 0 && configuration_1.githubConfig.debugger) {
         summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
         warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
     }
@@ -823,10 +831,13 @@ async function main() {
         logger_1.default.Instance.exit(error.message);
     }
 }
+/**
+ * Configure the action before running the analysis.
+ */
 function configure() {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
-        if (configuration_1.ticsConfig.logLevel === 'debug')
+        if (configuration_1.githubConfig.debugger)
             logger_1.default.Instance.warning(warning.message.toString());
     });
     // set ticsAuthToken
@@ -945,13 +956,20 @@ async function getInstallTics() {
         return '';
     const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
-        return `source <(curl -s '${installTicsUrl}') &&`;
+        let trustStrategy = '';
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            trustStrategy = '--insecure';
+        }
+        return `source <(curl --silent ${trustStrategy} '${installTicsUrl}') &&`;
     }
-    let trustStrategy = '';
-    if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
-        trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+    else {
+        // runnerOS is assumed to be Windows here
+        let trustStrategy = '';
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
+        }
+        return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
     }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
 }
 /**
  * Push warnings or errors to a list to summarize them on exit.
@@ -1000,6 +1018,8 @@ function getTicsCommand(fileListPath) {
     execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
+    // Add TICS debug flag when in debug mode, if this flag was not already set.
+    execString += configuration_1.githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
     return execString;
 }
 
@@ -1059,17 +1079,9 @@ exports.httpRequest = httpRequest;
  * @param analysis the output of the TiCS analysis run.
  */
 function cliSummary(analysis) {
-    switch (configuration_1.ticsConfig.logLevel) {
-        case 'none':
-            break;
-        case 'debug':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
-            break;
-        case 'default':
-        default:
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            break;
+    analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+    if (configuration_1.githubConfig.debugger) {
+        analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
     }
 }
 exports.cliSummary = cliSummary;

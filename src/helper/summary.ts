@@ -1,6 +1,6 @@
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from './markdown';
 import { QualityGate, ReviewComment, ReviewComments } from './interfaces';
-import { ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import Logger from './logger';
@@ -18,7 +18,7 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
     errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
   }
-  if (warningList.length > 0 && ticsConfig.logLevel === 'debug') {
+  if (warningList.length > 0 && githubConfig.debugger) {
     summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
     warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
   }
