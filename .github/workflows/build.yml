@@ -25,4 +25,4 @@ jobs:
         run: |
           git add dist 
           git commit -m 'Build dist after push to main'
-          git push origin main
+          git push --force origin main
