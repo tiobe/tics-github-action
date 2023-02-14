@@ -124,7 +124,9 @@ function getTicsCommand(fileListPath: string) {
   let execString = 'TICS @' + fileListPath + ' -viewer ';
   execString += `-project '${ticsConfig.projectName}' `;
   execString += `-calc ${ticsConfig.calc} `;
+  execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
   execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
+  execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
   execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
   execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
   execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';

@@ -154,7 +154,9 @@ test('Should call exec with full TiCS command for Windows, trustStrategy set to 
   ticsConfig.additionalFlags = '-log 9';
   ticsConfig.installTics = true;
   ticsConfig.trustStrategy = 'all';
-  ticsConfig.recalc = 'CW';
+  ticsConfig.nocalc = 'CW';
+  ticsConfig.recalc = 'CY';
+  ticsConfig.norecalc = 'CD';
   ticsConfig.codetype = 'TESTCODE';
 
   githubConfig.runnerOS = 'Windows';
@@ -164,7 +166,7 @@ test('Should call exec with full TiCS command for Windows, trustStrategy set to 
   expect(response.statusCode).toEqual(0);
   expect(response.completed).toEqual(true);
   expect(spy).toHaveBeenCalledWith(
-    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -recalc CW -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
+    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
     [],
     {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
