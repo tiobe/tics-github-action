@@ -62,6 +62,10 @@ inputs:
     description: Show the latest TiCS annotations directly in the GitHub Pull Request review.
     required: false
     default: true
+  pullRequestApproval:
+    description: Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.
+    required: false
+    default: true
   ticsAuthToken:
     description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
     required: false

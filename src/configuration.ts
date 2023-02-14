@@ -40,7 +40,8 @@ export const ticsConfig = {
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
-  viewerUrl: getInput('viewerUrl')
+  viewerUrl: getInput('viewerUrl'),
+  pullRequestApproval: getBooleanInput('pullRequestApproval')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
