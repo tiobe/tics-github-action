@@ -47,7 +47,7 @@ exports.ticsConfig = {
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
     hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
     trustStrategy: (0, core_1.getInput)('trustStrategy'),
-    pullRequestApproval: (0, core_1.getBooleanInput)('postReview')
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
