@@ -1,6 +1,6 @@
 import Logger from '../../helper/logger';
 import { Analysis, QualityGate, ReviewComments } from '../../helper/interfaces';
-import { githubConfig, octokit } from '../../configuration';
+import { githubConfig, octokit, ticsConfig } from '../../configuration';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../helper/summary';
 import { Events, Status } from '../../helper/enums';
 import { generateStatusMarkdown } from '../../helper/markdown';
@@ -22,7 +22,7 @@ export async function postReview(analysis: Analysis, filesAnalyzed: string[], qu
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
-    event: qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES,
+    event: ticsConfig.pullRequestApproval ? (qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES) : Events.COMMENT,
     body: body,
     comments: reviewComments ? reviewComments.postable : undefined
   };

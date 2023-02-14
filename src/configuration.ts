@@ -36,7 +36,8 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
   hostnameVerification: getInput('hostnameVerification'),
-  trustStrategy: getInput('trustStrategy')
+  trustStrategy: getInput('trustStrategy'),
+  pullRequestApproval: getBooleanInput('postReview')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
