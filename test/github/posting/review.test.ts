@@ -189,8 +189,25 @@ describe('postNothingAnalyzedReview', () => {
     expect(spy).toBeCalledTimes(1);
   });
 
+  test('Should call createReview with value passed and event COMMENT', async () => {
+    const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    await postNothingAnalyzedReview('message', Events.REQUEST_CHANGES);
+
+    const calledWith = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      pull_number: githubConfig.pullRequestNumber,
+      event: Events.COMMENT,
+      body: '## TiCS Analysis\n\n### :x: Failed \n\nmessage'
+    };
+    expect(spy).toBeCalledWith(calledWith);
+  });
+
   test('Should call createReview with value passed', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
+
+    ticsConfig.pullRequestApproval = true;
 
     await postNothingAnalyzedReview('message', Events.APPROVE);
 

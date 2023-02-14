@@ -48,7 +48,7 @@ export async function postNothingAnalyzedReview(message: string, event: Events) 
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
-    event: event,
+    event: ticsConfig.pullRequestApproval ? event : Events.COMMENT,
     body: body
   };
 
