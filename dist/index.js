@@ -46,7 +46,8 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
     hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
-    trustStrategy: (0, core_1.getInput)('trustStrategy')
+    trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -272,7 +273,7 @@ async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) 
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES,
+        event: configuration_1.ticsConfig.pullRequestApproval ? (qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES) : enums_1.Events.COMMENT,
         body: body,
         comments: reviewComments ? reviewComments.postable : undefined
     };
@@ -297,7 +298,7 @@ async function postNothingAnalyzedReview(message, event) {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: event,
+        event: configuration_1.ticsConfig.pullRequestApproval ? event : enums_1.Events.COMMENT,
         body: body
     };
     try {

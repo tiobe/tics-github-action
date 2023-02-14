@@ -5,7 +5,8 @@ jest.mock('../../src/configuration', () => {
     ticsConfig: {
       projectName: 'project',
       ticsConfiguration: 'http://localhost/tiobeweb/TiCS/api/cfg?name=default',
-      calc: 'GATE'
+      calc: 'GATE',
+      pullRequestApproval: true
     },
     githubConfig: {
       repo: 'test',
