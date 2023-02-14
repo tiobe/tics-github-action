@@ -27,5 +27,5 @@ jobs:
       - name: Commit and push
         run: |
           git add dist 
-          git commit -m 'Build dist after push to main'
+          git commit -m 'Build dist after push to main' || echo "No changes to commit"
           git push origin main
