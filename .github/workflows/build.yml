@@ -8,7 +8,7 @@ jobs:
     name: build
     runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Setup git config
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.TIOBE_TOKEN }}
@@ -22,9 +22,7 @@ jobs:
       - run: |
           npm ci
           npm run all
-      - name: Setup git config
-        uses: actions/checkout@v3
-      - name: Commit and push
-        run: |
-          git diff --quiet dist || (git add dist && git commit -m 'Build dist after push to main')
+      - run: |
+          git add dist 
+          git diff --staged --quiet || git commit -m 'Build dist after push to main'
           git push origin main
