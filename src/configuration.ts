@@ -21,22 +21,26 @@ export const githubConfig = {
 };
 
 export const ticsConfig = {
+  githubToken: getInput('githubToken', { required: true }),
   projectName: getInput('projectName', { required: true }),
-  branchName: getInput('branchName'),
-  branchDir: getInput('branchDir'),
-  calc: getInput('calc'),
-  clientData: getInput('clientData'),
+  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   additionalFlags: getInput('additionalFlags'),
+  branchDir: getInput('branchDir'),
+  branchName: getInput('branchName'),
+  calc: getInput('calc'),
+  nocalc: getInput('nocalc'),
+  recalc: getInput('recalc'),
+  norecalc: getInput('norecalc'),
+  clientData: getInput('clientData'),
+  codetype: getInput('codetype'),
+  hostnameVerification: getInput('hostnameVerification'),
+  trustStrategy: getInput('trustStrategy'),
   excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
   installTics: getBooleanInput('installTics'),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken'),
-  githubToken: getInput('githubToken', { required: true }),
-  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  hostnameVerification: getInput('hostnameVerification'),
-  trustStrategy: getInput('trustStrategy'),
   pullRequestApproval: getBooleanInput('pullRequestApproval')
 };
 

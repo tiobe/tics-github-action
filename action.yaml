@@ -21,11 +21,23 @@ inputs:
     description: Location of the files to analyze
     required: false
   calc:
-    description: Comma-separated list of metrics to be used
+    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
     required: false
     default: GATE
+  nocalc:
+    description: Comma-separated list of metrics not to be calculated.
+    required: false
+  recalc:
+    description: Comma-separated list of metrics to be recalculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x.
+    required: false
+  norecalc:
+    description: Comma-separated list of metrics not to be recalculated.
+    required: false
   clientData:
     description: A custom client-data token for the purpose of the Client Viewer functionality.
+    required: false
+  codetype:
+    description: Allows you to pick which specific types of code you want to analyze with the TICS client
     required: false
   excludeMovedFiles:
     description: Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.
