@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput } from '@actions/core';
+import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -16,7 +16,8 @@ export const githubConfig = {
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
+  debugger: isDebug()
 };
 
 export const ticsConfig = {
@@ -28,7 +29,6 @@ export const ticsConfig = {
   additionalFlags: getInput('additionalFlags'),
   excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
   installTics: getBooleanInput('installTics'),
-  logLevel: getInput('logLevel'),
   postAnnotations: getBooleanInput('postAnnotations'),
   ticsAuthToken: getInput('ticsAuthToken'),
   githubToken: getInput('githubToken', { required: true }),
