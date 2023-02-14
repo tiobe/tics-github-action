@@ -44,7 +44,7 @@
     "@types/underscore": "^1.11.4",
     "@typescript-eslint/parser": "^5.51.0",
     "@vercel/ncc": "^0.31.1",
-    "eslint": "^8.27.0",
+    "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "jest": "^27.5.1",
     "jest-mock": "^29.4.1",
