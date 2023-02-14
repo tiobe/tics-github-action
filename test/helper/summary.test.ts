@@ -26,7 +26,7 @@ describe('createErrorSummary', () => {
   });
 
   test('Should return summary of two  warnings on logLevel debug', () => {
-    githubConfig.debugger = 'debug';
+    githubConfig.debugger = true;
 
     const response = createErrorSummary([], ['Warning', 'Warning']);
 
@@ -35,7 +35,7 @@ describe('createErrorSummary', () => {
   });
 
   test('Should return summary of one error and two warnings', () => {
-    githubConfig.debugger = 'debug';
+    githubConfig.debugger = true;
 
     const response = createErrorSummary(['Error'], ['Warning', 'Warning']);
 

@@ -18,14 +18,6 @@ const fs_1 = __nccwpck_require__(5747);
 const api_helper_1 = __nccwpck_require__(3823);
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
-function getLoglevel() {
-    let logLevel = (0, core_1.getInput)('logLevel');
-    // RUNNER_DEBUG is present and set only when enabling the debug checkbox.
-    if (process.env.RUNNER_DEBUG) {
-        logLevel = 'debug';
-    }
-    return logLevel;
-}
 exports.githubConfig = {
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
@@ -35,7 +27,8 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
+    debugger: (0, core_1.isDebug)()
 };
 exports.ticsConfig = {
     projectName: (0, core_1.getInput)('projectName', { required: true }),
@@ -45,7 +38,6 @@ exports.ticsConfig = {
     clientData: (0, core_1.getInput)('clientData'),
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
-    logLevel: getLoglevel(),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -365,7 +357,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
@@ -387,10 +378,8 @@ class Logger {
      * @param {string} string
      */
     info(string) {
-        if (configuration_1.ticsConfig.logLevel !== 'none') {
-            core.info(string);
-            this.called = 'info';
-        }
+        core.info(string);
+        this.called = 'info';
     }
     /**
      * Uses core.debug to print to the console.
@@ -547,7 +536,7 @@ function createErrorSummary(errorList, warningList) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
     }
-    if (warningList.length > 0 && configuration_1.ticsConfig.logLevel === 'debug') {
+    if (warningList.length > 0 && configuration_1.githubConfig.debugger) {
         summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
         warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
     }
@@ -830,7 +819,7 @@ async function main() {
 function configure() {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
-        if (configuration_1.ticsConfig.logLevel === 'debug')
+        if (configuration_1.githubConfig.debugger)
             logger_1.default.Instance.warning(warning.message.toString());
     });
     // set ticsAuthToken
@@ -1001,10 +990,7 @@ function getTicsCommand(fileListPath) {
     execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     // Add TICS debug flag when in debug mode, if this flag was not already set.
-    if (configuration_1.ticsConfig.logLevel === 'debug' && !execString.includes('-log ')) {
-        logger_1.default.Instance.debug('Setting TICS debug mode');
-        execString += ' -log 9';
-    }
+    execString += configuration_1.githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
     return execString;
 }
 
@@ -1064,17 +1050,9 @@ exports.httpRequest = httpRequest;
  * @param analysis the output of the TiCS analysis run.
  */
 function cliSummary(analysis) {
-    switch (configuration_1.ticsConfig.logLevel) {
-        case 'none':
-            break;
-        case 'debug':
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
-            break;
-        case 'default':
-        default:
-            analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
-            break;
+    analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+    if (configuration_1.githubConfig.debugger) {
+        analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
     }
 }
 exports.cliSummary = cliSummary;

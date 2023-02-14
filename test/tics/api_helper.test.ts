@@ -94,7 +94,7 @@ describe('cliSummary', () => {
     const error = jest.spyOn(Logger.Instance, 'error');
     const warning = jest.spyOn(Logger.Instance, 'warning');
 
-    githubConfig.debugger = 'debug';
+    githubConfig.debugger = true;
 
     const analysis: Analysis = {
       completed: false,
@@ -112,7 +112,7 @@ describe('cliSummary', () => {
     const error = jest.spyOn(Logger.Instance, 'error');
     const warning = jest.spyOn(Logger.Instance, 'warning');
 
-    githubConfig.debugger = undefined;
+    githubConfig.debugger = false;
 
     const analysis: Analysis = {
       completed: false,

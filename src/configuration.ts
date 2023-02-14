@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput } from '@actions/core';
+import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
@@ -17,7 +17,7 @@ export const githubConfig = {
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
   pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
-  debugger: process.env.RUNNER_DEBUG
+  debugger: isDebug()
 };
 
 export const ticsConfig = {
