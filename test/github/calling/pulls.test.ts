@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFiles } from '../../../src/github/calling/pulls';
-import { octokit } from '../../../src/configuration';
+import { octokit, ticsConfig } from '../../../src/configuration';
 import Logger from '../../../src/helper/logger';
 
 describe('getChangedFiles', () => {
@@ -10,6 +10,35 @@ describe('getChangedFiles', () => {
 
     const response = await getChangedFiles();
     expect(response).toEqual([{ filename: 'test.js' }]);
+  });
+
+  test('Should include changed moved file', async () => {
+    const spy = jest.spyOn(Logger.Instance, 'debug');
+    await getChangedFiles();
+
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] });
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledWith('test.js');
+  });
+
+  test('Should exclude unchanged moved file', async () => {
+    const spy = jest.spyOn(Logger.Instance, 'debug');
+    await getChangedFiles();
+
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 0 }, { filename: 'test.js' }] });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('test.js');
+  });
+
+  test('Should include changed moved file on excludeMovedFiles', async () => {
+    ticsConfig.excludeMovedFiles = true;
+
+    const spy = jest.spyOn(Logger.Instance, 'debug');
+    await getChangedFiles();
+
+    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('test.js');
   });
 
   test('Should call debug on callback of paginate', async () => {

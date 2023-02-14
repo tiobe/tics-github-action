@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: TiCS GitHub Action
-        uses: tiobe/tics-github-action@v2.0.0
+        uses: tiobe/tics-github-action@v2
         with:
           projectName: 'myproject'
           ticsConfiguration: 'https://url/tiobeweb/TICS/api/cfg?name=myconfiguration'
@@ -60,22 +60,25 @@ env:
 
 The following inputs are available for this action:
 
-| Input                 | Description                                                                                                                                                                                                      | Required |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `githubToken`         | Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)) | true     |
-| `projectName`         | Name of the TiCS project present in the TiCS Viewer.                                                                                                                                                             | true     |
-| `ticsConfiguration`   | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
-| `branchName`          | Name of the branch in TiCS.                                                                                                                                                                                      | false    |
-| `branchDir`           | Location of the files to analyze.                                                                                                                                                                                | false    |
-| `calc`                | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, `GATE` will be used by default.                                            | false    |
-| `clientData`          | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                   | false    |
-| `hostnameVerfication` | Necessary in case of self-signed certificates. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).                                       | false    |
-| `installTics`         | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job.                           | false    |
-| `logLevel`            | Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`                                                                                                  | false    |
-| `postAnnotation`      | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                                                     | false    |
-| `ticsAuthToken`       | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                                                | false    |
-| `tmpDir`              | Location to store debug information.                                                                                                                                                                             | false    |
-| `viewerUrl`           | The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)                                                                                     | false    |
+| Input                  | Description                                                                                                                                                                                                          | Required |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `githubToken`          | Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token))     | true     |
+| `projectName`          | Name of the TiCS project present in the TiCS Viewer.                                                                                                                                                                 | true     |
+| `ticsConfiguration`    | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                                                    | true     |
+| `branchName`           | Name of the branch in TiCS.                                                                                                                                                                                          | false    |
+| `branchDir`            | Location of the files to analyze.                                                                                                                                                                                    | false    |
+| `calc`                 | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, `GATE` will be used by default.                                                | false    |
+| `clientData`           | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                       | false    |
+| `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                                                                                      | false    |
+| `hostnameVerification` | Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper). | false    |
+| `trustStrategy`        | Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).        | false    |
+| `installTics`          | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job.                               | false    |
+| `logLevel`             | Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`                                                                                                      | false    |
+| `postAnnotation`       | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                                                         | false    |
+| `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.                                                                                                            | false    |
+| `ticsAuthToken`        | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                                                    | false    |
+| `tmpDir`               | Location to store debug information.                                                                                                                                                                                 | false    |
+| `viewerUrl`            | The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)                                                                                         | false    |
 
 # Developer notes
 

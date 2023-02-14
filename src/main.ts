@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
-import { configure, githubConfig, ticsConfig } from './configuration';
+import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
@@ -12,12 +12,14 @@ import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
+import { exportVariable } from '@actions/core';
 
-configure();
 run();
 
 // exported for testing purposes
 export async function run() {
+  configure();
+
   if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
 
   if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
@@ -72,6 +74,41 @@ async function main() {
   } catch (error: any) {
     Logger.Instance.error('Failed to run TiCS Github Action');
     Logger.Instance.exit(error.message);
+  }
+}
+
+/**
+ * Configure the action before running the analysis.
+ */
+export function configure() {
+  process.removeAllListeners('warning');
+  process.on('warning', warning => {
+    if (githubConfig.debugger) Logger.Instance.warning(warning.message.toString());
+  });
+
+  // set ticsAuthToken
+  if (ticsConfig.ticsAuthToken) {
+    exportVariable('TICSAUTHTOKEN', ticsConfig.ticsAuthToken);
+  }
+
+  // set hostnameVerification
+  if (ticsConfig.hostnameVerification) {
+    exportVariable('TICSHOSTNAMEVERIFICATION', ticsConfig.hostnameVerification);
+
+    if (ticsConfig.hostnameVerification === '0' || ticsConfig.hostnameVerification === 'false') {
+      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      Logger.Instance.debug('Hostname Verification disabled');
+    }
+  }
+
+  // set trustStrategy
+  if (ticsConfig.trustStrategy) {
+    exportVariable('TICSTRUSTSTRATEGY', ticsConfig.trustStrategy);
+
+    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
+      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      Logger.Instance.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
+    }
   }
 }
 
