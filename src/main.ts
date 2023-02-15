@@ -20,7 +20,7 @@ run();
 export async function run() {
   configure();
 
-  const message = meetsPrerequisites();
+  const message = await meetsPrerequisites();
   if (message) return Logger.Instance.exit(message);
 
   await main();
@@ -119,15 +119,11 @@ async function meetsPrerequisites() {
 
   let viewerVersion = await getViewerVersion();
 
-  if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
-    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion}`;
-  }
-
   if (githubConfig.eventName !== 'pull_request') {
     message = 'This action can only run on pull requests.';
-  }
-
-  if (!isCheckedOut()) {
+  } else if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
+    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
+  } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
   }
 

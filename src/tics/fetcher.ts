@@ -112,6 +112,10 @@ export async function getAnnotations(apiLinks: any[]) {
   }
 }
 
+/**
+ * Gets the version of the TiCS viewer used.
+ * @returns Version of the used TiCS viewer.
+ */
 export async function getViewerVersion() {
   let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   try {
