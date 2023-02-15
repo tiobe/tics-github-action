@@ -20,11 +20,8 @@ run();
 export async function run() {
   configure();
 
-  if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
-
-  if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
-  
-  meetsPrerequisites();
+  const message = meetsPrerequisites();
+  if (message) return Logger.Instance.exit(message);
 
   await main();
 }
@@ -113,8 +110,33 @@ export function configure() {
 }
 
 /**
+ * Checks if prerequisites are met to run the Github Plugin.
+ * If any of these checks fail it returns a message.
+ * @returns Message containing why it failed the prerequisite.
+ */
+async function meetsPrerequisites() {
+  let message;
+
+  let viewerVersion = await getViewerVersion();
+
+  if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
+    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion}`;
+  }
+
+  if (githubConfig.eventName !== 'pull_request') {
+    message = 'This action can only run on pull requests.';
+  }
+
+  if (!isCheckedOut()) {
+    message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
+  }
+
+  return message;
+}
+
+/**
  * Checks if a .git directory exists to see if a checkout has been performed.
- * @returns boolean
+ * @returns Boolean value if the folder is found or not.
  */
 function isCheckedOut() {
   if (!existsSync('.git')) {
@@ -122,15 +144,4 @@ function isCheckedOut() {
     return false;
   }
   return true;
-}
-
-/**
- * Checks if prerequisites are met to run the Github Plugin.
- * @returns Logger
- */
-async function meetsPrerequisites(){
-  let viewerVersion = await getViewerVersion();
-  if (!satisfies(viewerVersion.version, '>=2022.4.0')) return Logger.Instance.exit(`Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion}`);
-  if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
-  if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
 }
