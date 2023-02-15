@@ -5,7 +5,7 @@ on: push
 jobs:
   Jest:
     name: Jest
-    runs-on: self-hosted
+    runs-on: zeus 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
