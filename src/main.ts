@@ -12,6 +12,7 @@ import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
+import { resolve } from 'canonical-path';
 import { exportVariable } from '@actions/core';
 
 run();
@@ -28,10 +29,14 @@ export async function run() {
 
 async function main() {
   try {
-    const changedFiles = await getChangedFiles();
-    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
-
-    const changedFilesFilePath = changedFilesToFile(changedFiles);
+    if (ticsConfig.changedFiles) {
+      const changedFilesFilePath = resolve(ticsConfig.changedFiles);
+    } else {
+      const changedFiles = await getChangedFiles();
+      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
+      const changedFilesFilePath = changedFilesToFile(changedFiles);
+    }
+   
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
     if (!analysis.explorerUrl) {
