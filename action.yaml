@@ -75,6 +75,8 @@ inputs:
   viewerUrl:
     description: The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)
     required: false
+  changedFiles:
+    description: Path to file on disk that contains a newline separated list of changed files.
 branding:
   icon: flag
   color: blue
