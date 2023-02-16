@@ -41,7 +41,8 @@ export const ticsConfig = {
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  pullRequestApproval: getBooleanInput('pullRequestApproval')
+  pullRequestApproval: getBooleanInput('pullRequestApproval'),
+  changedFiles: getInput('changedFiles'),
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
