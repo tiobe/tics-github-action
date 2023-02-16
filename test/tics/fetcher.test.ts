@@ -1,7 +1,7 @@
 import { ticsConfig } from '../../src/configuration';
 import Logger from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate } from '../../src/tics/fetcher';
+import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
 
 describe('getAnalyzedFiles', () => {
   test('Should return analyzed file from viewer', async () => {
@@ -92,6 +92,26 @@ describe('getAnnotations', () => {
     const spy = jest.spyOn(Logger.Instance, 'exit');
 
     await getAnnotations([{ url: 'url' }]);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('getViewerVersion', () => {
+  test('Should version of the viewer', async () => {
+    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ version: '2022.0.0' }));
+
+    const response = await getViewerVersion();
+
+    expect(response.version).toEqual('2022.0.0');
+  });
+
+  test('Should throw error on faulty httpRequest in getViewerVersion', async () => {
+    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+
+    const spy = jest.spyOn(Logger.Instance, 'exit');
+
+    await getViewerVersion();
 
     expect(spy).toHaveBeenCalledTimes(1);
   });

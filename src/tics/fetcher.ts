@@ -111,3 +111,19 @@ export async function getAnnotations(apiLinks: any[]) {
     Logger.Instance.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
   }
 }
+
+/**
+ * Gets the version of the TiCS viewer used.
+ * @returns Version of the used TiCS viewer.
+ */
+export async function getViewerVersion() {
+  let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
+  try {
+    const response = await httpRequest(getViewerVersionUrl.href);
+    Logger.Instance.info('Retrieved the Viewer Version.');
+    Logger.Instance.debug(response);
+    return response;
+  } catch (error: any) {
+    Logger.Instance.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+  }
+}

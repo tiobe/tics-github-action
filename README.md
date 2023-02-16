@@ -6,7 +6,7 @@ The TiCS Github action integrates TiCS Client analysis to measure your code qual
 
 ### Prerequisites
 
-- A TiCS Viewer running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
+- A TiCS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
 
 ### Action Restrictions
 

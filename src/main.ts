@@ -5,12 +5,13 @@ import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate } from './tics/fetcher';
+import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/posting/review';
 import { createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
+import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
 
 run();
@@ -19,9 +20,8 @@ run();
 export async function run() {
   configure();
 
-  if (githubConfig.eventName !== 'pull_request') return Logger.Instance.exit('This action can only run on pull requests.');
-
-  if (!isCheckedOut()) return Logger.Instance.exit('No checkout found to analyze. Please perform a checkout before running the TiCS Action.');
+  const message = await meetsPrerequisites();
+  if (message) return Logger.Instance.exit(message);
 
   await main();
 }
@@ -110,8 +110,29 @@ export function configure() {
 }
 
 /**
+ * Checks if prerequisites are met to run the Github Plugin.
+ * If any of these checks fail it returns a message.
+ * @returns Message containing why it failed the prerequisite.
+ */
+async function meetsPrerequisites() {
+  let message;
+
+  let viewerVersion = await getViewerVersion();
+
+  if (githubConfig.eventName !== 'pull_request') {
+    message = 'This action can only run on pull requests.';
+  } else if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
+    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
+  } else if (!isCheckedOut()) {
+    message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
+  }
+
+  return message;
+}
+
+/**
  * Checks if a .git directory exists to see if a checkout has been performed.
- * @returns boolean
+ * @returns Boolean value if the folder is found or not.
  */
 function isCheckedOut() {
   if (!existsSync('.git')) {

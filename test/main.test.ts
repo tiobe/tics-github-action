@@ -42,8 +42,19 @@ describe('pre checks', () => {
     expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('This action can only run on pull requests.'));
   });
 
-  test('Should call exit if ".git" does not exist', async () => {
+  test('Should call exit if viewer version is too low', async () => {
+    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValueOnce({ version: '2022.0.0' });
+    const spyExit = jest.spyOn(Logger.Instance, 'exit');
     githubConfig.eventName = 'pull_request';
+
+    await main.run();
+
+    expect(spyExit).toHaveBeenCalled();
+    expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('Minimum required TiCS Viewer version is 2022.4. Found version 2022.0.0.'));
+  });
+
+  test('Should call exit if ".git" does not exist', async () => {
+    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
 
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
