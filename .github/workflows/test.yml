@@ -5,7 +5,7 @@ on: push
 jobs:
   Jest:
     name: Jest
-    runs-on: zeus 
+    runs-on: ubuntu-latest 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
