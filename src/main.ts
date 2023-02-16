@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './configuration';
-import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
+import { changedFilesPathToVariable, changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import Logger from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
@@ -29,14 +29,10 @@ export async function run() {
 
 async function main() {
   try {
-    if (ticsConfig.changedFiles) {
-      const changedFilesFilePath = resolve(ticsConfig.changedFiles);
-    } else {
-      const changedFiles = await getChangedFiles();
-      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
-      const changedFilesFilePath = changedFilesToFile(changedFiles);
-    }
-   
+    const changedFiles = ticsConfig.changedFilesPath ? changedFilesPathToVariable(ticsConfig.changedFilesPath) : await getChangedFiles();
+    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
+
+    const changedFilesFilePath = ticsConfig.changedFilesPath ? resolve(ticsConfig.changedFilesPath) : changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
     if (!analysis.explorerUrl) {

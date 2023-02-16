@@ -1,21 +1,7 @@
-import { QualityGate } from '../src/helper/interfaces';
-
-interface changedFile {
-  sha: string;
-  filename: string;
-  status: 'modified' | 'added' | 'removed' | 'renamed' | 'copied' | 'changed' | 'unchanged';
-  additions: number;
-  deletions: number;
-  changes: number;
-  blob_url: string;
-  raw_url: string;
-  contents_url: string;
-  patch?: string | undefined;
-  previous_filename?: string | undefined;
-}
+import { QualityGate, ChangedFile } from '../src/helper/interfaces';
 
 export const singleAnalyzedFiles: string[] = ['test.js'];
-export const singleChangedFiles: changedFile[] = [
+export const singleChangedFiles: ChangedFile[] = [
   {
     sha: 'test',
     filename: 'test.js',
@@ -32,7 +18,7 @@ export const singleChangedFiles: changedFile[] = [
 ];
 
 export const doubleAnalyzedFiles: string[] = ['test.js', 'jest.js'];
-export const doubleChangedFiles: changedFile[] = [
+export const doubleChangedFiles: ChangedFile[] = [
   {
     sha: 'test',
     filename: 'test.js',
