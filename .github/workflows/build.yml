@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Setup git config
         uses: actions/checkout@v3
