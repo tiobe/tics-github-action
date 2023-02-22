@@ -30,6 +30,11 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
     debugger: (0, core_1.isDebug)()
 };
+function getMaskKeys(maskKeys) {
+    const defaults = ['token', 'secret', 'auth'];
+    const keys = maskKeys ? maskKeys.split(',') : [];
+    return defaults.concat(keys);
+}
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     projectName: (0, core_1.getInput)('projectName', { required: true }),
@@ -51,7 +56,8 @@ exports.ticsConfig = {
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval')
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
+    maskKeys: getMaskKeys((0, core_1.getInput)('maskKeys'))
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -373,6 +379,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
+const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
@@ -381,9 +388,10 @@ class Logger {
     }
     /**
      * Uses core.info to print to the console with a purple color.
-     * @param {string} string
+     * @param string
      */
     header(string) {
+        string = this.maskSecrets(string);
         this.addNewline('header');
         core.info(`\u001b[34m${string}`);
         this.called = 'header';
@@ -391,36 +399,40 @@ class Logger {
     /**
      * Uses core.info to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     info(string) {
+        string = this.maskSecrets(string);
         core.info(string);
         this.called = 'info';
     }
     /**
      * Uses core.debug to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     debug(string) {
+        string = this.maskSecrets(string);
         core.debug(string);
         this.called = 'debug';
     }
     /**
      * Uses core.warning to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     warning(string) {
+        string = this.maskSecrets(string);
         core.warning(`\u001b[33m${string}`);
         this.called = 'warning';
     }
     /**
      * Uses core.error to print to the console with a red color.
      *
-     * @param {any} error
+     * @param error
      */
     error(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.error(`\u001b[31m${error}`);
         this.called = 'error';
@@ -428,9 +440,10 @@ class Logger {
     /**
      * Uses core.setFailed to exit with error.
      *
-     * @param {any} error
+     * @param error
      */
     setFailed(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.setFailed(`\u001b[31m${error}`);
         this.called = 'error';
@@ -438,16 +451,17 @@ class Logger {
     /**
      * Uses core.setFailed to exit with error.
      *
-     * @param {any} error
+     * @param error
      */
     exit(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.setFailed(`\u001b[31m${error}`);
         process.exit(1);
     }
     /**
      * Add newline above header, error and setFailed if the logger has been called before.
-     * @param {string} type the type of call to add a newline for.
+     * @param type the type of call to add a newline for.
      */
     addNewline(type) {
         if (this.called) {
@@ -455,6 +469,23 @@ class Logger {
                 core.info('');
             }
         }
+    }
+    /**
+     * Masks the secrets defined in ticsConfig maskKeys from the console logging.
+     * @param string string that is going to be logged to the console.
+     * @returns the message with the secrets masked.
+     */
+    maskSecrets(string) {
+        let filtered = string;
+        configuration_1.ticsConfig.maskKeys.forEach(key => {
+            if (filtered.match(new RegExp(key, 'gi'))) {
+                const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
+                const matches = regex.exec(filtered);
+                if (matches && matches[1] !== '')
+                    filtered = filtered.replaceAll(matches[1], '***');
+            }
+        });
+        return filtered;
     }
 }
 exports["default"] = Logger;
@@ -1226,7 +1257,7 @@ async function getQualityGate(url) {
     try {
         const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
         logger_1.default.Instance.info('Retrieved the quality gates.');
-        logger_1.default.Instance.debug(response);
+        logger_1.default.Instance.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {
@@ -1288,7 +1319,7 @@ async function getViewerVersion() {
     try {
         const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
         logger_1.default.Instance.info('Retrieved the Viewer Version.');
-        logger_1.default.Instance.debug(response);
+        logger_1.default.Instance.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {

@@ -55,8 +55,8 @@ inputs:
     description: Boolean parameter to install TICS command-line tools on a runner before executing the analysis.
     required: false
     default: false
-  logLevel:
-    description: Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`.
+  maskKeys:
+    description: Extra keys to mask in the console output. Accepts a comma-seperated list of keys.
     required: false
   postAnnotations:
     description: Show the latest TiCS annotations directly in the GitHub Pull Request review.
