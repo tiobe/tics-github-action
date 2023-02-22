@@ -3,19 +3,6 @@ import { ticsConfig } from '../../src/configuration';
 import Logger from '../../src/helper/logger';
 
 describe('info', () => {
-  test('Should call core.info on header', () => {
-    const info = jest.spyOn(core, 'info');
-    const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
-
-    Logger.Instance.header('string');
-
-    expect(info).toHaveBeenCalledTimes(1);
-    expect(info).toHaveBeenCalledWith(expect.stringContaining('string'));
-    expect(addNewline).toHaveBeenCalledTimes(1);
-    expect(addNewline).toHaveBeenCalledWith('header');
-    expect(Logger.Instance.called).toEqual('header');
-  });
-
   test('Should call core.info on info', () => {
     const info = jest.spyOn(core, 'info');
     const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
@@ -27,6 +14,19 @@ describe('info', () => {
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(Logger.Instance.called).toEqual('info');
   });
+
+  test('Should call core.info on header', () => {
+    const info = jest.spyOn(core, 'info');
+    const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
+
+    Logger.Instance.header('string');
+
+    expect(info).toHaveBeenCalledTimes(2); // once for header, once for newline
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('string'));
+    expect(addNewline).toHaveBeenCalledTimes(1);
+    expect(addNewline).toHaveBeenCalledWith('header');
+    expect(Logger.Instance.called).toEqual('header');
+  });
 });
 
 describe('debug', () => {
@@ -34,10 +34,10 @@ describe('debug', () => {
     const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
 
-    Logger.Instance.debug('string');
+    Logger.Instance.debug('string token secret');
 
     expect(debug).toHaveBeenCalledTimes(1);
-    expect(debug).toHaveBeenCalledWith('string');
+    expect(debug).toHaveBeenCalledWith('string token ***');
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(Logger.Instance.called).toEqual('debug');
   });

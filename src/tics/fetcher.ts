@@ -53,7 +53,7 @@ export async function getQualityGate(url: string): Promise<any> {
   try {
     const response = await httpRequest(qualityGateUrl);
     Logger.Instance.info('Retrieved the quality gates.');
-    Logger.Instance.debug(response);
+    Logger.Instance.debug(JSON.stringify(response));
     return response;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
@@ -121,7 +121,7 @@ export async function getViewerVersion() {
   try {
     const response = await httpRequest(getViewerVersionUrl.href);
     Logger.Instance.info('Retrieved the Viewer Version.');
-    Logger.Instance.debug(response);
+    Logger.Instance.debug(JSON.stringify(response));
     return response;
   } catch (error: any) {
     Logger.Instance.exit(`There was an error retrieving the Viewer version: ${error.message}`);

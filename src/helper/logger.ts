@@ -11,9 +11,10 @@ export default class Logger {
 
   /**
    * Uses core.info to print to the console with a purple color.
-   * @param {string} string
+   * @param string
    */
-  header(string: string) {
+  header(string: string): void {
+    string = this.maskSecrets(string);
     this.addNewline('header');
     core.info(`\u001b[34m${string}`);
     this.called = 'header';
@@ -22,9 +23,10 @@ export default class Logger {
   /**
    * Uses core.info to print to the console.
    *
-   * @param {string} string
+   * @param string
    */
-  info(string: string) {
+  info(string: string): void {
+    string = this.maskSecrets(string);
     core.info(string);
     this.called = 'info';
   }
@@ -32,9 +34,10 @@ export default class Logger {
   /**
    * Uses core.debug to print to the console.
    *
-   * @param {string} string
+   * @param string
    */
-  debug(string: string) {
+  debug(string: string): void {
+    string = this.maskSecrets(string);
     core.debug(string);
     this.called = 'debug';
   }
@@ -42,9 +45,10 @@ export default class Logger {
   /**
    * Uses core.warning to print to the console.
    *
-   * @param {string} string
+   * @param string
    */
-  warning(string: string) {
+  warning(string: string): void {
+    string = this.maskSecrets(string);
     core.warning(`\u001b[33m${string}`);
     this.called = 'warning';
   }
@@ -52,9 +56,10 @@ export default class Logger {
   /**
    * Uses core.error to print to the console with a red color.
    *
-   * @param {any} error
+   * @param error
    */
-  error(error: any) {
+  error(error: string): void {
+    error = this.maskSecrets(error);
     this.addNewline('error');
     core.error(`\u001b[31m${error}`);
     this.called = 'error';
@@ -63,9 +68,10 @@ export default class Logger {
   /**
    * Uses core.setFailed to exit with error.
    *
-   * @param {any} error
+   * @param error
    */
-  setFailed(error: any) {
+  setFailed(error: string): void {
+    error = this.maskSecrets(error);
     this.addNewline('error');
     core.setFailed(`\u001b[31m${error}`);
     this.called = 'error';
@@ -74,9 +80,10 @@ export default class Logger {
   /**
    * Uses core.setFailed to exit with error.
    *
-   * @param {any} error
+   * @param error
    */
-  exit(error: any) {
+  exit(error: string): void {
+    error = this.maskSecrets(error);
     this.addNewline('error');
     core.setFailed(`\u001b[31m${error}`);
     process.exit(1);
@@ -84,13 +91,31 @@ export default class Logger {
 
   /**
    * Add newline above header, error and setFailed if the logger has been called before.
-   * @param {string} type the type of call to add a newline for.
+   * @param type the type of call to add a newline for.
    */
-  addNewline(type: string) {
+  addNewline(type: string): void {
     if (this.called) {
       if (type === 'header') {
         core.info('');
       }
     }
+  }
+
+  /**
+   * Masks the secrets defined in ticsConfig maskKeys from the console logging.
+   * @param string string that is going to be logged to the console.
+   * @returns the message with the secrets masked.
+   */
+  maskSecrets(string: string): string {
+    let filtered = string;
+    ticsConfig.maskKeys.forEach(key => {
+      if (filtered.match(new RegExp(key, 'gi'))) {
+        const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
+        const matches = regex.exec(filtered);
+
+        if (matches && matches[1] !== '') filtered = filtered.replaceAll(matches[1], '***');
+      }
+    });
+    return filtered;
   }
 }

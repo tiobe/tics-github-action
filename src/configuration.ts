@@ -20,6 +20,13 @@ export const githubConfig = {
   debugger: isDebug()
 };
 
+function getMaskKeys(maskKeys: string | undefined) {
+  const defaults = ['token', 'secret', 'auth'];
+  const keys = maskKeys ? maskKeys.split(',') : [];
+
+  return defaults.concat(keys);
+}
+
 export const ticsConfig = {
   githubToken: getInput('githubToken', { required: true }),
   projectName: getInput('projectName', { required: true }),
@@ -41,7 +48,8 @@ export const ticsConfig = {
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  pullRequestApproval: getBooleanInput('pullRequestApproval')
+  pullRequestApproval: getBooleanInput('pullRequestApproval'),
+  maskKeys: getMaskKeys(getInput('maskKeys'))
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
