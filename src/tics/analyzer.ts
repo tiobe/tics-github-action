@@ -14,7 +14,7 @@ let completed: boolean;
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string) {
-  Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}`);
+  Logger.Instance.header(`Analyzing for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
 

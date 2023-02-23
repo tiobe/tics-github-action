@@ -835,6 +835,7 @@ async function main() {
     try {
         let analysis;
         if (configuration_1.ticsConfig.mode === 'diagnostic') {
+            logger_1.default.Instance.header('Running action in diagnostic mode');
             analysis = await (0, analyzer_1.runTicsAnalyzer)('');
             if (analysis.statusCode !== 0)
                 logger_1.default.Instance.setFailed('Diagnostic run has failed.');
@@ -976,7 +977,7 @@ let completed;
  * @param fileListPath Path to changedFiles.txt.
  */
 async function runTicsAnalyzer(fileListPath) {
-    logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
+    logger_1.default.Instance.header(`Analyzing for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     logger_1.default.Instance.debug(`With command: ${command}`);

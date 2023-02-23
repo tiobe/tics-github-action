@@ -32,6 +32,7 @@ async function main() {
     let analysis: Analysis | undefined;
 
     if (ticsConfig.mode === 'diagnostic') {
+      Logger.Instance.header('Running action in diagnostic mode');
       analysis = await runTicsAnalyzer('');
       if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
     } else {
