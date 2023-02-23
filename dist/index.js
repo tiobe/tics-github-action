@@ -30,9 +30,9 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
     debugger: (0, core_1.isDebug)()
 };
-function getMaskKeys(maskKeys) {
-    const defaults = ['token', 'secret', 'auth'];
-    const keys = maskKeys ? maskKeys.split(',') : [];
+function getsecretsFilter(secretsFilter) {
+    const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN'];
+    const keys = secretsFilter ? secretsFilter.split(',') : [];
     return defaults.concat(keys);
 }
 exports.ticsConfig = {
@@ -57,7 +57,7 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
     pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
-    maskKeys: getMaskKeys((0, core_1.getInput)('maskKeys'))
+    secretsFilter: getsecretsFilter((0, core_1.getInput)('secretsFilter'))
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -471,13 +471,13 @@ class Logger {
         }
     }
     /**
-     * Masks the secrets defined in ticsConfig maskKeys from the console logging.
+     * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
      * @param string string that is going to be logged to the console.
      * @returns the message with the secrets masked.
      */
     maskSecrets(string) {
         let filtered = string;
-        configuration_1.ticsConfig.maskKeys.forEach(key => {
+        configuration_1.ticsConfig.secretsFilter.forEach(key => {
             if (filtered.match(new RegExp(key, 'gi'))) {
                 const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
                 const matches = regex.exec(filtered);

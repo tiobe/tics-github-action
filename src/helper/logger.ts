@@ -102,13 +102,13 @@ export default class Logger {
   }
 
   /**
-   * Masks the secrets defined in ticsConfig maskKeys from the console logging.
+   * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
    * @param string string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
   maskSecrets(string: string): string {
     let filtered = string;
-    ticsConfig.maskKeys.forEach(key => {
+    ticsConfig.secretsFilter.forEach(key => {
       if (filtered.match(new RegExp(key, 'gi'))) {
         const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
         const matches = regex.exec(filtered);

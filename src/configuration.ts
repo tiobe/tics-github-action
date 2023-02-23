@@ -20,9 +20,9 @@ export const githubConfig = {
   debugger: isDebug()
 };
 
-function getMaskKeys(maskKeys: string | undefined) {
+function getsecretsFilter(secretsFilter: string | undefined) {
   const defaults = ['token', 'secret', 'auth'];
-  const keys = maskKeys ? maskKeys.split(',') : [];
+  const keys = secretsFilter ? secretsFilter.split(',') : [];
 
   return defaults.concat(keys);
 }
@@ -49,7 +49,7 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
   pullRequestApproval: getBooleanInput('pullRequestApproval'),
-  maskKeys: getMaskKeys(getInput('maskKeys'))
+  secretsFilter: getsecretsFilter(getInput('secretsFilter'))
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);

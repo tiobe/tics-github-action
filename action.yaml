@@ -55,9 +55,6 @@ inputs:
     description: Boolean parameter to install TICS command-line tools on a runner before executing the analysis.
     required: false
     default: false
-  maskKeys:
-    description: Extra keys to mask in the console output. Accepts a comma-seperated list of keys.
-    required: false
   postAnnotations:
     description: Show the latest TiCS annotations directly in the GitHub Pull Request review.
     required: false
@@ -66,6 +63,9 @@ inputs:
     description: Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.
     required: false
     default: true
+  secretsFilter:
+    description: Comma-seperated list of extra secrets to mask in the console output.
+    required: false
   ticsAuthToken:
     description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
     required: false
