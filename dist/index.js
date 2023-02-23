@@ -961,13 +961,15 @@ async function runTicsAnalyzer(fileListPath) {
             silent: true,
             listeners: {
                 stdout(data) {
-                    logger_1.default.Instance.info(data.toString());
-                    const filtered = logger_1.default.Instance.maskSecrets(data.toString());
+                    let filtered = data.toString();
+                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    process.stdout.write(filtered);
                     findInStdOutOrErr(filtered);
                 },
                 stderr(data) {
-                    logger_1.default.Instance.info(data.toString());
-                    const filtered = logger_1.default.Instance.maskSecrets(data.toString());
+                    let filtered = data.toString();
+                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    process.stdout.write(filtered);
                     findInStdOutOrErr(filtered);
                 }
             }
