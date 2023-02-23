@@ -106,11 +106,11 @@ export default class Logger {
    * @param string string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
-  maskSecrets(string: string): string {
+  public maskSecrets(string: string): string {
     let filtered = string;
     ticsConfig.secretsFilter.forEach(key => {
       if (filtered.match(new RegExp(key, 'gi'))) {
-        const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
+        const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(.*)`, 'gi');
         const matches = regex.exec(filtered);
 
         if (matches && matches[1] !== '') filtered = filtered.replaceAll(matches[1], '***');
