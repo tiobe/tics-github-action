@@ -34,38 +34,42 @@ async function main() {
     const changedFilesFilePath = changedFilesToFile(changedFiles);
     const analysis = await runTicsAnalyzer(changedFilesFilePath);
 
-    if (!analysis.explorerUrl) {
-      if (!analysis.completed) {
-        postErrorComment(analysis);
-        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-        postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
-      } else {
-        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-        analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+    if (ticsConfig.mode === 'diagnostic') {
+      if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
+    } else {
+      if (!analysis.explorerUrl) {
+        if (!analysis.completed) {
+          postErrorComment(analysis);
+          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+        } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+          postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+        } else {
+          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+          analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+        }
+        cliSummary(analysis);
+        return;
       }
-      cliSummary(analysis);
-      return;
+
+      const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
+      const qualityGate = await getQualityGate(analysis.explorerUrl);
+      let reviewComments;
+
+      if (ticsConfig.postAnnotations) {
+        const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+        if (annotations && annotations.length > 0) {
+          reviewComments = await createReviewComments(annotations, changedFiles);
+        }
+        const previousReviewComments = await getPostedReviewComments();
+        if (previousReviewComments && previousReviewComments.length > 0) {
+          await deletePreviousReviewComments(previousReviewComments);
+        }
+      }
+
+      await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
+
+      if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
     }
-
-    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
-    const qualityGate = await getQualityGate(analysis.explorerUrl);
-    let reviewComments;
-
-    if (ticsConfig.postAnnotations) {
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-      if (annotations && annotations.length > 0) {
-        reviewComments = await createReviewComments(annotations, changedFiles);
-      }
-      const previousReviewComments = await getPostedReviewComments();
-      if (previousReviewComments && previousReviewComments.length > 0) {
-        await deletePreviousReviewComments(previousReviewComments);
-      }
-    }
-
-    await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
-
-    if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
 
     cliSummary(analysis);
   } catch (error: any) {

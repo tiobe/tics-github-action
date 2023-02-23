@@ -838,37 +838,43 @@ async function main() {
             return logger_1.default.Instance.setFailed('No changed files found to analyze.');
         const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
         const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-        if (!analysis.explorerUrl) {
-            if (!analysis.completed) {
-                (0, comment_1.postErrorComment)(analysis);
-                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-            }
-            else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
-            }
-            else {
-                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-                analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
-            }
-            (0, api_helper_1.cliSummary)(analysis);
-            return;
+        if (configuration_1.ticsConfig.mode === 'diagnostic') {
+            if (analysis.statusCode !== 0)
+                logger_1.default.Instance.setFailed('Diagnostic run has failed.');
         }
-        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
-        const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        let reviewComments;
-        if (configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
-            if (annotations && annotations.length > 0) {
-                reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
+        else {
+            if (!analysis.explorerUrl) {
+                if (!analysis.completed) {
+                    (0, comment_1.postErrorComment)(analysis);
+                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+                }
+                else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+                    (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
+                }
+                else {
+                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+                    analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+                }
+                (0, api_helper_1.cliSummary)(analysis);
+                return;
             }
-            const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-            if (previousReviewComments && previousReviewComments.length > 0) {
-                await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
+            const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
+            let reviewComments;
+            if (configuration_1.ticsConfig.postAnnotations) {
+                const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+                if (annotations && annotations.length > 0) {
+                    reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
+                }
+                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+                if (previousReviewComments && previousReviewComments.length > 0) {
+                    await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+                }
             }
+            await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
+            if (!qualityGate.passed)
+                logger_1.default.Instance.setFailed(qualityGate.message);
         }
-        await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
-        if (!qualityGate.passed)
-            logger_1.default.Instance.setFailed(qualityGate.message);
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
