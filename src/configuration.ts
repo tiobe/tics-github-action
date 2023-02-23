@@ -23,7 +23,7 @@ export const githubConfig = {
 
 function getSecretsFilter(secretsFilter: string | undefined) {
   const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
-  const keys = secretsFilter ? secretsFilter.split(',') : [];
+  const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
 
   const combinedFilters = defaults.concat(keys);
   if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
