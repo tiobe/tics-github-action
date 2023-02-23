@@ -69,14 +69,6 @@ export const analysisFailedNoUrl = {
   warningList: []
 };
 
-export const analysisFailedUrl = {
-  completed: false,
-  statusCode: 1,
-  explorerUrl: undefined,
-  errorList: ['Error'],
-  warningList: []
-};
-
 export const analysisPassedNoUrl = {
   completed: true,
   statusCode: 0,

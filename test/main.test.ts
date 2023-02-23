@@ -14,7 +14,6 @@ import * as posting_annotations from '../src/github/posting/annotations';
 
 import {
   analysisFailedNoUrl,
-  analysisFailedUrl,
   analysisPassed,
   analysisPassedNoUrl,
   analysisPassedNoUrlWarning5057,

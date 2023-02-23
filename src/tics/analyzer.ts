@@ -130,9 +130,9 @@ async function retrieveInstallTics(os: string) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath: string) {
-  let execString = 'TICS ';
+  let execString = 'TICS -ide ';
   if (ticsConfig.mode === 'diagnostic') {
-    execString += '-viewer ';
+    execString += '-version ';
   } else {
     execString += `@${fileListPath} -viewer `;
     execString += `-project '${ticsConfig.projectName}' `;
