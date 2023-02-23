@@ -33,7 +33,10 @@ exports.githubConfig = {
 function getSecretsFilter(secretsFilter) {
     const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
     const keys = secretsFilter ? secretsFilter.split(',') : [];
-    return defaults.concat(keys);
+    const combinedFilters = defaults.concat(keys);
+    if (exports.githubConfig.debugger)
+        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}`);
+    return combinedFilters;
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -476,15 +479,15 @@ class Logger {
      * @returns the message with the secrets masked.
      */
     maskSecrets(string) {
-        if (this.called !== '')
-            core.debug(`SecretsFilter: ${JSON.stringify(configuration_1.ticsConfig.secretsFilter)}`);
         let filtered = string;
         configuration_1.ticsConfig.secretsFilter.forEach(key => {
             if (filtered.match(new RegExp(key, 'gi'))) {
-                const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(.*)`, 'gi');
-                const matches = regex.exec(filtered);
-                if (matches && matches[1] !== '')
-                    filtered = filtered.replaceAll(matches[1], '***');
+                const regex = new RegExp(`\\w*${key}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+                let match = null;
+                while ((match = regex.exec(filtered))) {
+                    if (match && match[1] !== '')
+                        filtered = filtered.replaceAll(match[1], '***');
+                }
             }
         });
         return filtered;

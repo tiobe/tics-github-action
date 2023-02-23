@@ -107,15 +107,14 @@ export default class Logger {
    * @returns the message with the secrets masked.
    */
   public maskSecrets(string: string): string {
-    if (this.called !== '') core.debug(`SecretsFilter: ${JSON.stringify(ticsConfig.secretsFilter)}`);
-
     let filtered = string;
     ticsConfig.secretsFilter.forEach(key => {
       if (filtered.match(new RegExp(key, 'gi'))) {
-        const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(.*)`, 'gi');
-        const matches = regex.exec(filtered);
-
-        if (matches && matches[1] !== '') filtered = filtered.replaceAll(matches[1], '***');
+        const regex = new RegExp(`\\w*${key}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+        let match: RegExpExecArray | null = null;
+        while ((match = regex.exec(filtered))) {
+          if (match && match[1] !== '') filtered = filtered.replaceAll(match[1], '***');
+        }
       }
     });
     return filtered;
