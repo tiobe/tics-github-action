@@ -49,7 +49,7 @@ describe('getQualityGate', () => {
   test('Should return quality gates from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: 'data' }));
+    jest.spyOn(api_helper, 'httpRequest').mockResolvedValueOnce({ data: 'data' });
 
     ticsConfig.branchName = 'main';
 

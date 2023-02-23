@@ -16,6 +16,7 @@ const github_1 = __nccwpck_require__(5438);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const fs_1 = __nccwpck_require__(7147);
 const api_helper_1 = __nccwpck_require__(3823);
+const os_1 = __nccwpck_require__(2037);
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 exports.githubConfig = {
@@ -30,6 +31,14 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
     debugger: (0, core_1.isDebug)()
 };
+function getSecretsFilter(secretsFilter) {
+    const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
+    const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
+    const combinedFilters = defaults.concat(keys);
+    if (exports.githubConfig.debugger)
+        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + os_1.EOL}`);
+    return combinedFilters;
+}
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
     projectName: (0, core_1.getInput)('projectName', { required: true }),
@@ -51,7 +60,8 @@ exports.ticsConfig = {
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval')
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
+    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter'))
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -373,17 +383,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
+const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
+    matched = [];
     static get Instance() {
         return this._instance || (this._instance = new this());
     }
     /**
      * Uses core.info to print to the console with a purple color.
-     * @param {string} string
+     * @param string
      */
     header(string) {
+        string = this.maskSecrets(string);
         this.addNewline('header');
         core.info(`\u001b[34m${string}`);
         this.called = 'header';
@@ -391,36 +404,40 @@ class Logger {
     /**
      * Uses core.info to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     info(string) {
+        string = this.maskSecrets(string);
         core.info(string);
         this.called = 'info';
     }
     /**
      * Uses core.debug to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     debug(string) {
+        string = this.maskSecrets(string);
         core.debug(string);
         this.called = 'debug';
     }
     /**
      * Uses core.warning to print to the console.
      *
-     * @param {string} string
+     * @param string
      */
     warning(string) {
+        string = this.maskSecrets(string);
         core.warning(`\u001b[33m${string}`);
         this.called = 'warning';
     }
     /**
      * Uses core.error to print to the console with a red color.
      *
-     * @param {any} error
+     * @param error
      */
     error(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.error(`\u001b[31m${error}`);
         this.called = 'error';
@@ -428,9 +445,10 @@ class Logger {
     /**
      * Uses core.setFailed to exit with error.
      *
-     * @param {any} error
+     * @param error
      */
     setFailed(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.setFailed(`\u001b[31m${error}`);
         this.called = 'error';
@@ -438,16 +456,17 @@ class Logger {
     /**
      * Uses core.setFailed to exit with error.
      *
-     * @param {any} error
+     * @param error
      */
     exit(error) {
+        error = this.maskSecrets(error);
         this.addNewline('error');
         core.setFailed(`\u001b[31m${error}`);
         process.exit(1);
     }
     /**
      * Add newline above header, error and setFailed if the logger has been called before.
-     * @param {string} type the type of call to add a newline for.
+     * @param type the type of call to add a newline for.
      */
     addNewline(type) {
         if (this.called) {
@@ -455,6 +474,30 @@ class Logger {
                 core.info('');
             }
         }
+    }
+    /**
+     * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
+     * @param data string that is going to be logged to the console.
+     * @returns the message with the secrets masked.
+     */
+    maskSecrets(data) {
+        // Find secrets value and add them to this.matched
+        configuration_1.ticsConfig.secretsFilter.forEach(secret => {
+            if (data.match(new RegExp(secret, 'gi'))) {
+                const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
+                let match = null;
+                while ((match = regex.exec(data))) {
+                    if (match[1] !== '') {
+                        this.matched.push(match[1]);
+                    }
+                }
+            }
+        });
+        // Filter out the values from the output
+        this.matched.forEach(match => {
+            data = data.replaceAll(match, '***');
+        });
+        return data;
     }
 }
 exports["default"] = Logger;
@@ -930,12 +973,16 @@ async function runTicsAnalyzer(fileListPath) {
             silent: true,
             listeners: {
                 stdout(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                    let filtered = data.toString();
+                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    process.stdout.write(filtered);
+                    findInStdOutOrErr(filtered);
                 },
                 stderr(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                    let filtered = data.toString();
+                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    process.stdout.write(filtered);
+                    findInStdOutOrErr(filtered);
                 }
             }
         });
@@ -1226,7 +1273,7 @@ async function getQualityGate(url) {
     try {
         const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
         logger_1.default.Instance.info('Retrieved the quality gates.');
-        logger_1.default.Instance.debug(response);
+        logger_1.default.Instance.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {
@@ -1288,7 +1335,7 @@ async function getViewerVersion() {
     try {
         const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
         logger_1.default.Instance.info('Retrieved the Viewer Version.');
-        logger_1.default.Instance.debug(response);
+        logger_1.default.Instance.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {

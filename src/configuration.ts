@@ -3,6 +3,7 @@ import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import { EOL } from 'os';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
@@ -19,6 +20,16 @@ export const githubConfig = {
   pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
   debugger: isDebug()
 };
+
+function getSecretsFilter(secretsFilter: string | undefined) {
+  const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
+  const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
+
+  const combinedFilters = defaults.concat(keys);
+  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
+
+  return combinedFilters;
+}
 
 export const ticsConfig = {
   githubToken: getInput('githubToken', { required: true }),
@@ -41,7 +52,8 @@ export const ticsConfig = {
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
-  pullRequestApproval: getBooleanInput('pullRequestApproval')
+  pullRequestApproval: getBooleanInput('pullRequestApproval'),
+  secretsFilter: getSecretsFilter(getInput('secretsFilter'))
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);

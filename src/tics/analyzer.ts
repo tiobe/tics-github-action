@@ -25,12 +25,16 @@ export async function runTicsAnalyzer(fileListPath: string) {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
-          process.stdout.write(data.toString());
-          findInStdOutOrErr(data.toString());
+          let filtered = data.toString();
+          filtered = Logger.Instance.maskSecrets(filtered);
+          process.stdout.write(filtered);
+          findInStdOutOrErr(filtered);
         },
         stderr(data: Buffer) {
-          process.stdout.write(data.toString());
-          findInStdOutOrErr(data.toString());
+          let filtered = data.toString();
+          filtered = Logger.Instance.maskSecrets(filtered);
+          process.stdout.write(filtered);
+          findInStdOutOrErr(filtered);
         }
       }
     });

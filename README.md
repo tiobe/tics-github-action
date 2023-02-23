@@ -1,4 +1,6 @@
 # TICS GitHub Action
+[![Build](https://github.com/tiobe/tics-github-action/actions/workflows/build.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/build.yml)
+[![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
 The TiCS Github action integrates TiCS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
 
@@ -75,9 +77,9 @@ The following inputs are available for this action:
 | `hostnameVerification` | Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper). | false    |
 | `trustStrategy`        | Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).        | false    |
 | `installTics`          | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job.                               | false    |
-| `logLevel`             | Show logging of information other than steps taken during the action. Options are `default`, `none` and `debug`                                                                                                      | false    |
 | `postAnnotation`       | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                                                         | false    |
 | `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.                                                                                                            | false    |
+| `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                 | false    |
 | `ticsAuthToken`        | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                                                    | false    |
 | `tmpDir`               | Location to store debug information.                                                                                                                                                                                 | false    |
 | `viewerUrl`            | The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)                                                                                         | false    |
