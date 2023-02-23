@@ -34,6 +34,7 @@ describe('debug', () => {
     const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(Logger.Instance, 'addNewline');
 
+    ticsConfig.secretsFilter = ['token'];
     Logger.Instance.debug('string token secret');
 
     expect(debug).toHaveBeenCalledTimes(1);
