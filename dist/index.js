@@ -33,7 +33,10 @@ exports.githubConfig = {
 function getSecretsFilter(secretsFilter) {
     const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
     const keys = secretsFilter ? secretsFilter.split(',') : [];
-    return defaults.concat(keys);
+    const completeList = defaults.concat(keys);
+    if (exports.githubConfig.debugger)
+        process.stdout.write(`SecretsFilter: ${JSON.stringify(completeList)}`);
+    return completeList;
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
