@@ -46,22 +46,23 @@ exports.ticsConfig = {
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     branchDir: (0, core_1.getInput)('branchDir'),
     branchName: (0, core_1.getInput)('branchName'),
-    calc: (0, core_1.getInput)('calc'),
-    nocalc: (0, core_1.getInput)('nocalc'),
-    recalc: (0, core_1.getInput)('recalc'),
-    norecalc: (0, core_1.getInput)('norecalc'),
     clientData: (0, core_1.getInput)('clientData'),
     codetype: (0, core_1.getInput)('codetype'),
-    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
-    trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    calc: (0, core_1.getInput)('calc'),
     excludeMovedFiles: (0, core_1.getBooleanInput)('excludeMovedFiles'),
+    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
+    mode: (0, core_1.getInput)('mode'),
+    nocalc: (0, core_1.getInput)('nocalc'),
+    norecalc: (0, core_1.getInput)('norecalc'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
+    recalc: (0, core_1.getInput)('recalc'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
-    viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
-    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter'))
+    trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter')),
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -1075,15 +1076,21 @@ async function retrieveInstallTics(os) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath) {
-    let execString = 'TICS @' + fileListPath + ' -viewer ';
-    execString += `-project '${configuration_1.ticsConfig.projectName}' `;
-    execString += `-calc ${configuration_1.ticsConfig.calc} `;
-    execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
-    execString += configuration_1.ticsConfig.recalc ? `-recalc ${configuration_1.ticsConfig.recalc} ` : '';
-    execString += configuration_1.ticsConfig.norecalc ? `-norecalc ${configuration_1.ticsConfig.norecalc} ` : '';
-    execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
-    execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
-    execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
+    let execString = 'TICS ';
+    if (configuration_1.ticsConfig.mode === 'diagnostic') {
+        execString += '-viewer ';
+    }
+    else {
+        execString += `@${fileListPath} -viewer `;
+        execString += `-project '${configuration_1.ticsConfig.projectName}' `;
+        execString += `-calc ${configuration_1.ticsConfig.calc} `;
+        execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
+        execString += configuration_1.ticsConfig.recalc ? `-recalc ${configuration_1.ticsConfig.recalc} ` : '';
+        execString += configuration_1.ticsConfig.norecalc ? `-norecalc ${configuration_1.ticsConfig.norecalc} ` : '';
+        execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
+        execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
+        execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
+    }
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     // Add TICS debug flag when in debug mode, if this flag was not already set.
     execString += configuration_1.githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';

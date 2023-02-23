@@ -38,22 +38,23 @@ export const ticsConfig = {
   additionalFlags: getInput('additionalFlags'),
   branchDir: getInput('branchDir'),
   branchName: getInput('branchName'),
-  calc: getInput('calc'),
-  nocalc: getInput('nocalc'),
-  recalc: getInput('recalc'),
-  norecalc: getInput('norecalc'),
   clientData: getInput('clientData'),
   codetype: getInput('codetype'),
-  hostnameVerification: getInput('hostnameVerification'),
-  trustStrategy: getInput('trustStrategy'),
+  calc: getInput('calc'),
   excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
+  hostnameVerification: getInput('hostnameVerification'),
   installTics: getBooleanInput('installTics'),
+  mode: getInput('mode'),
+  nocalc: getInput('nocalc'),
+  norecalc: getInput('norecalc'),
   postAnnotations: getBooleanInput('postAnnotations'),
+  pullRequestApproval: getBooleanInput('pullRequestApproval'),
+  recalc: getInput('recalc'),
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
-  viewerUrl: getInput('viewerUrl'),
-  pullRequestApproval: getBooleanInput('pullRequestApproval'),
-  secretsFilter: getSecretsFilter(getInput('secretsFilter'))
+  trustStrategy: getInput('trustStrategy'),
+  secretsFilter: getSecretsFilter(getInput('secretsFilter')),
+  viewerUrl: getInput('viewerUrl')
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);

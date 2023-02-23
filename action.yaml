@@ -55,6 +55,10 @@ inputs:
     description: Boolean parameter to install TICS command-line tools on a runner before executing the analysis.
     required: false
     default: false
+  mode:
+    description: Set the mode to run the action in. Options are `default` for a normal analysis run and `diagnostic` for a diagnostic testing of the setup.
+    required: false
+    default: default
   postAnnotations:
     description: Show the latest TiCS annotations directly in the GitHub Pull Request review.
     required: false
