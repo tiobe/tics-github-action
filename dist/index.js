@@ -477,7 +477,7 @@ class Logger {
      */
     maskSecrets(string) {
         if (this.called !== '')
-            this.debug(`SecretsFilter: ${JSON.stringify(configuration_1.ticsConfig.secretsFilter)}`);
+            core.debug(`SecretsFilter: ${JSON.stringify(configuration_1.ticsConfig.secretsFilter)}`);
         let filtered = string;
         configuration_1.ticsConfig.secretsFilter.forEach(key => {
             if (filtered.match(new RegExp(key, 'gi'))) {
