@@ -104,26 +104,26 @@ export default class Logger {
 
   /**
    * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
-   * @param string string that is going to be logged to the console.
+   * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
-  public maskSecrets(string: string): string {
-    let filtered = string;
+  public maskSecrets(data: string): string {
+    // Find secrets value and add them to this.matched
     ticsConfig.secretsFilter.forEach(secret => {
-      if (filtered.match(new RegExp(secret, 'gi'))) {
+      if (data.match(new RegExp(secret, 'gi'))) {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
-        while ((match = regex.exec(filtered))) {
+        while ((match = regex.exec(data))) {
           if (match[1] !== '') {
             this.matched.push(match[1]);
-            filtered = filtered.replaceAll(match[1], '***');
           }
         }
       }
     });
+    // Filter out the values from the output
     this.matched.forEach(match => {
-      filtered = filtered.replaceAll(match, '***');
+      data = data.replaceAll(match, '***');
     });
-    return filtered;
+    return data;
   }
 }
