@@ -387,6 +387,7 @@ const configuration_1 = __nccwpck_require__(5527);
 class Logger {
     static _instance;
     called = '';
+    matched = [];
     static get Instance() {
         return this._instance || (this._instance = new this());
     }
@@ -483,13 +484,17 @@ class Logger {
         let filtered = string;
         configuration_1.ticsConfig.secretsFilter.forEach(secret => {
             if (filtered.match(new RegExp(secret, 'gi'))) {
-                const regex = new RegExp(`\\w*${secret}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+                const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
                 let match = null;
                 while ((match = regex.exec(filtered))) {
+                    this.matched.push(match[1]);
                     if (match && match[1] !== '')
                         filtered = filtered.replaceAll(match[1], '***');
                 }
             }
+        });
+        this.matched.forEach(match => {
+            filtered = filtered.replaceAll(match, '***');
         });
         return filtered;
     }

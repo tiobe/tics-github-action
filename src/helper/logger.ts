@@ -4,6 +4,7 @@ import { ticsConfig } from '../configuration';
 export default class Logger {
   private static _instance: Logger;
   called: string = '';
+  matched: string[] = [];
 
   public static get Instance() {
     return this._instance || (this._instance = new this());
@@ -110,12 +111,16 @@ export default class Logger {
     let filtered = string;
     ticsConfig.secretsFilter.forEach(secret => {
       if (filtered.match(new RegExp(secret, 'gi'))) {
-        const regex = new RegExp(`\\w*${secret}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+        const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
         while ((match = regex.exec(filtered))) {
+          this.matched.push(match[1]);
           if (match && match[1] !== '') filtered = filtered.replaceAll(match[1], '***');
         }
       }
+    });
+    this.matched.forEach(match => {
+      filtered = filtered.replaceAll(match, '***');
     });
     return filtered;
   }
