@@ -35,7 +35,7 @@ function getSecretsFilter(secretsFilter) {
     const keys = secretsFilter ? secretsFilter.split(',') : [];
     const combinedFilters = defaults.concat(keys);
     if (exports.githubConfig.debugger)
-        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}`);
+        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}\n\r`);
     return combinedFilters;
 }
 exports.ticsConfig = {

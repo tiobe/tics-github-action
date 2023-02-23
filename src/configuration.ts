@@ -25,7 +25,7 @@ function getSecretsFilter(secretsFilter: string | undefined) {
   const keys = secretsFilter ? secretsFilter.split(',') : [];
 
   const combinedFilters = defaults.concat(keys);
-  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}`);
+  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}\n`);
 
   return combinedFilters;
 }
