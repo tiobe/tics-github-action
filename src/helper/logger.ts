@@ -114,8 +114,10 @@ export default class Logger {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
         while ((match = regex.exec(filtered))) {
-          this.matched.push(match[1]);
-          if (match && match[1] !== '') filtered = filtered.replaceAll(match[1], '***');
+          if (match[1] !== '') {
+            this.matched.push(match[1]);
+            filtered = filtered.replaceAll(match[1], '***');
+          }
         }
       }
     });
