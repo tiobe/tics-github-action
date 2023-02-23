@@ -108,9 +108,9 @@ export default class Logger {
    */
   public maskSecrets(string: string): string {
     let filtered = string;
-    ticsConfig.secretsFilter.forEach(key => {
-      if (filtered.match(new RegExp(key, 'gi'))) {
-        const regex = new RegExp(`\\w*${key}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+    ticsConfig.secretsFilter.forEach(secret => {
+      if (filtered.match(new RegExp(secret, 'gi'))) {
+        const regex = new RegExp(`\\w*${secret}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
         while ((match = regex.exec(filtered))) {
           if (match && match[1] !== '') filtered = filtered.replaceAll(match[1], '***');

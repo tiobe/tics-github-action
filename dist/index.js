@@ -16,6 +16,7 @@ const github_1 = __nccwpck_require__(5438);
 const proxy_agent_1 = __importDefault(__nccwpck_require__(7367));
 const fs_1 = __nccwpck_require__(7147);
 const api_helper_1 = __nccwpck_require__(3823);
+const os_1 = __nccwpck_require__(2037);
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 exports.githubConfig = {
@@ -35,7 +36,7 @@ function getSecretsFilter(secretsFilter) {
     const keys = secretsFilter ? secretsFilter.split(',') : [];
     const combinedFilters = defaults.concat(keys);
     if (exports.githubConfig.debugger)
-        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}\n\r`);
+        process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + os_1.EOL}`);
     return combinedFilters;
 }
 exports.ticsConfig = {
@@ -480,9 +481,9 @@ class Logger {
      */
     maskSecrets(string) {
         let filtered = string;
-        configuration_1.ticsConfig.secretsFilter.forEach(key => {
-            if (filtered.match(new RegExp(key, 'gi'))) {
-                const regex = new RegExp(`\\w*${key}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
+        configuration_1.ticsConfig.secretsFilter.forEach(secret => {
+            if (filtered.match(new RegExp(secret, 'gi'))) {
+                const regex = new RegExp(`\\w*${secret}\\w*(?:[ \t]*[:=>]*[ \t]*)(.*)`, 'gi');
                 let match = null;
                 while ((match = regex.exec(filtered))) {
                     if (match && match[1] !== '')

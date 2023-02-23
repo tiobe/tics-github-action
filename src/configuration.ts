@@ -3,6 +3,7 @@ import { getOctokit } from '@actions/github';
 import ProxyAgent from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import { EOL } from 'os';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
 const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
@@ -25,7 +26,7 @@ function getSecretsFilter(secretsFilter: string | undefined) {
   const keys = secretsFilter ? secretsFilter.split(',') : [];
 
   const combinedFilters = defaults.concat(keys);
-  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters)}\n`);
+  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
 
   return combinedFilters;
 }
