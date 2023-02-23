@@ -30,8 +30,8 @@ exports.githubConfig = {
     pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
     debugger: (0, core_1.isDebug)()
 };
-function getsecretsFilter(secretsFilter) {
-    const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN'];
+function getSecretsFilter(secretsFilter) {
+    const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
     const keys = secretsFilter ? secretsFilter.split(',') : [];
     return defaults.concat(keys);
 }
@@ -57,7 +57,7 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     viewerUrl: (0, core_1.getInput)('viewerUrl'),
     pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
-    secretsFilter: getsecretsFilter((0, core_1.getInput)('secretsFilter'))
+    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter'))
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -479,7 +479,7 @@ class Logger {
         let filtered = string;
         configuration_1.ticsConfig.secretsFilter.forEach(key => {
             if (filtered.match(new RegExp(key, 'gi'))) {
-                const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(\\w*)`, 'gi');
+                const regex = new RegExp(`\\w*${key}\\w*(?:\\s*[:=>]*\\s*)(.*)`, 'gi');
                 const matches = regex.exec(filtered);
                 if (matches && matches[1] !== '')
                     filtered = filtered.replaceAll(matches[1], '***');
@@ -961,12 +961,14 @@ async function runTicsAnalyzer(fileListPath) {
             silent: true,
             listeners: {
                 stdout(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                    logger_1.default.Instance.info(data.toString());
+                    const filtered = logger_1.default.Instance.maskSecrets(data.toString());
+                    findInStdOutOrErr(filtered);
                 },
                 stderr(data) {
-                    process.stdout.write(data.toString());
-                    findInStdOutOrErr(data.toString());
+                    logger_1.default.Instance.info(data.toString());
+                    const filtered = logger_1.default.Instance.maskSecrets(data.toString());
+                    findInStdOutOrErr(filtered);
                 }
             }
         });

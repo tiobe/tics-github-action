@@ -20,8 +20,8 @@ export const githubConfig = {
   debugger: isDebug()
 };
 
-function getsecretsFilter(secretsFilter: string | undefined) {
-  const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN'];
+function getSecretsFilter(secretsFilter: string | undefined) {
+  const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
   const keys = secretsFilter ? secretsFilter.split(',') : [];
 
   return defaults.concat(keys);
@@ -49,7 +49,7 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   viewerUrl: getInput('viewerUrl'),
   pullRequestApproval: getBooleanInput('pullRequestApproval'),
-  secretsFilter: getsecretsFilter(getInput('secretsFilter'))
+  secretsFilter: getSecretsFilter(getInput('secretsFilter'))
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken);
