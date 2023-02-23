@@ -21,7 +21,7 @@ export const githubConfig = {
 };
 
 function getsecretsFilter(secretsFilter: string | undefined) {
-  const defaults = ['token', 'secret', 'auth'];
+  const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN'];
   const keys = secretsFilter ? secretsFilter.split(',') : [];
 
   return defaults.concat(keys);
