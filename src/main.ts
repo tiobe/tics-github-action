@@ -13,6 +13,7 @@ import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
+import { Analysis } from './helper/interfaces';
 
 run();
 
@@ -28,15 +29,18 @@ export async function run() {
 
 async function main() {
   try {
-    const changedFiles = await getChangedFiles();
-    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
-
-    const changedFilesFilePath = changedFilesToFile(changedFiles);
-    const analysis = await runTicsAnalyzer(changedFilesFilePath);
+    let analysis: Analysis | undefined;
 
     if (ticsConfig.mode === 'diagnostic') {
+      analysis = await runTicsAnalyzer('');
       if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
     } else {
+      const changedFiles = await getChangedFiles();
+      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
+
+      const changedFilesFilePath = changedFilesToFile(changedFiles);
+      analysis = await runTicsAnalyzer(changedFilesFilePath);
+
       if (!analysis.explorerUrl) {
         if (!analysis.completed) {
           postErrorComment(analysis);
@@ -121,12 +125,14 @@ export function configure() {
 async function meetsPrerequisites() {
   let message;
 
-  let viewerVersion = await getViewerVersion();
+  const viewerVersion = await getViewerVersion();
 
-  if (githubConfig.eventName !== 'pull_request') {
+  if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
+    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
+  } else if (ticsConfig.mode === 'diagnostic') {
+    // No need for pull_request and checked out repository.
+  } else if (githubConfig.eventName !== 'pull_request') {
     message = 'This action can only run on pull requests.';
-  } else if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
-    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
   } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
   }

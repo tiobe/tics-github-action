@@ -30,21 +30,9 @@ import {
 } from './main_helper';
 
 describe('pre checks', () => {
-  test('Should call exit if event is not pull request', async () => {
-    jest.spyOn(main, 'configure').mockImplementation();
-    const spyExit = jest.spyOn(Logger.Instance, 'exit');
-
-    await main.run();
-
-    // for some reason the code is run before testing, so this exit is called twice
-    expect(spyExit).toHaveBeenCalled();
-    expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('This action can only run on pull requests.'));
-  });
-
   test('Should call exit if viewer version is too low', async () => {
-    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValueOnce({ version: '2022.0.0' });
+    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.0.0' });
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
-    githubConfig.eventName = 'pull_request';
 
     await main.run();
 
@@ -52,9 +40,19 @@ describe('pre checks', () => {
     expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('Minimum required TiCS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
-  test('Should call exit if ".git" does not exist', async () => {
+  test('Should call exit if event is not pull request', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
+    jest.spyOn(main, 'configure').mockImplementation();
+    const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
+    await main.run();
+
+    expect(spyExit).toHaveBeenCalled();
+    expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('This action can only run on pull requests.'));
+  });
+
+  test('Should call exit if ".git" does not exist', async () => {
+    githubConfig.eventName = 'pull_request';
     const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
     await main.run();
@@ -69,12 +67,12 @@ describe('pre checks', () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockRejectedValueOnce(new Error('Error'));
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'exit');
+    const spyExit = jest.spyOn(Logger.Instance, 'exit');
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
-    expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Error'));
+    expect(spyExit).toHaveBeenCalled();
+    expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('Error'));
   });
 });
 
@@ -288,5 +286,29 @@ describe('DeletePreviousReviewComments check', () => {
     await main.run();
 
     expect(spyDelete).toHaveBeenCalledWith(singlePreviousReviewComments);
+  });
+});
+
+describe('Diagnostic mode checks', () => {
+  test('Diagnostic mode succeeds', async () => {
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
+
+    ticsConfig.mode = 'diagnostic';
+    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+
+    await main.run();
+
+    expect(spySetFailed).toHaveBeenCalledTimes(0);
+  });
+
+  test('Diagnostic mode fails', async () => {
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
+
+    ticsConfig.mode = 'diagnostic';
+    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+
+    await main.run();
+
+    expect(spySetFailed).toHaveBeenCalledTimes(1);
   });
 });

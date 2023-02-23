@@ -833,16 +833,18 @@ async function run() {
 exports.run = run;
 async function main() {
     try {
-        const changedFiles = await (0, pulls_1.getChangedFiles)();
-        if (!changedFiles || changedFiles.length <= 0)
-            return logger_1.default.Instance.setFailed('No changed files found to analyze.');
-        const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
-        const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
+        let analysis;
         if (configuration_1.ticsConfig.mode === 'diagnostic') {
+            analysis = await (0, analyzer_1.runTicsAnalyzer)('');
             if (analysis.statusCode !== 0)
                 logger_1.default.Instance.setFailed('Diagnostic run has failed.');
         }
         else {
+            const changedFiles = await (0, pulls_1.getChangedFiles)();
+            if (!changedFiles || changedFiles.length <= 0)
+                return logger_1.default.Instance.setFailed('No changed files found to analyze.');
+            const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+            analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
             if (!analysis.explorerUrl) {
                 if (!analysis.completed) {
                     (0, comment_1.postErrorComment)(analysis);
@@ -920,12 +922,15 @@ exports.configure = configure;
  */
 async function meetsPrerequisites() {
     let message;
-    let viewerVersion = await (0, fetcher_1.getViewerVersion)();
-    if (configuration_1.githubConfig.eventName !== 'pull_request') {
-        message = 'This action can only run on pull requests.';
+    const viewerVersion = await (0, fetcher_1.getViewerVersion)();
+    if (!viewerVersion || !(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
+        message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
     }
-    else if (!(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
-        message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
+    else if (configuration_1.ticsConfig.mode === 'diagnostic') {
+        // No need for pull_request and checked out repository.
+    }
+    else if (configuration_1.githubConfig.eventName !== 'pull_request') {
+        message = 'This action can only run on pull requests.';
     }
     else if (!isCheckedOut()) {
         message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
@@ -1082,7 +1087,7 @@ async function retrieveInstallTics(os) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath) {
-    let execString = 'TICS -ide ';
+    let execString = 'TICS -ide github ';
     if (configuration_1.ticsConfig.mode === 'diagnostic') {
         execString += '-version ';
     }
