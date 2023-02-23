@@ -107,6 +107,8 @@ export default class Logger {
    * @returns the message with the secrets masked.
    */
   public maskSecrets(string: string): string {
+    if (this.called !== '') this.debug(`SecretsFilter: ${JSON.stringify(ticsConfig.secretsFilter)}`);
+
     let filtered = string;
     ticsConfig.secretsFilter.forEach(key => {
       if (filtered.match(new RegExp(key, 'gi'))) {

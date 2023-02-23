@@ -24,9 +24,7 @@ function getSecretsFilter(secretsFilter: string | undefined) {
   const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
   const keys = secretsFilter ? secretsFilter.split(',') : [];
 
-  const completeList = defaults.concat(keys);
-  if (githubConfig.debugger) process.stdout.write(`SecretsFilter: ${JSON.stringify(completeList)}`);
-  return completeList;
+  return defaults.concat(keys);
 }
 
 export const ticsConfig = {

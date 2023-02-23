@@ -33,10 +33,7 @@ exports.githubConfig = {
 function getSecretsFilter(secretsFilter) {
     const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
     const keys = secretsFilter ? secretsFilter.split(',') : [];
-    const completeList = defaults.concat(keys);
-    if (exports.githubConfig.debugger)
-        process.stdout.write(`SecretsFilter: ${JSON.stringify(completeList)}`);
-    return completeList;
+    return defaults.concat(keys);
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -479,6 +476,8 @@ class Logger {
      * @returns the message with the secrets masked.
      */
     maskSecrets(string) {
+        if (this.called !== '')
+            this.debug(`SecretsFilter: ${JSON.stringify(configuration_1.ticsConfig.secretsFilter)}`);
         let filtered = string;
         configuration_1.ticsConfig.secretsFilter.forEach(key => {
             if (filtered.match(new RegExp(key, 'gi'))) {
