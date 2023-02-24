@@ -6,17 +6,35 @@ import { runTicsAnalyzer } from '../../src/tics/analyzer';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
-  test('Should call exec with minimal TiCS command for Linux', async () => {
+  test('Should call exec with diagnostic TiCS command for Linux', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
     githubConfig.runnerOS = 'Linux';
+    ticsConfig.mode = 'diagnostic';
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS @/path/to -viewer -project \'project\' -calc GATE "', [], {
+    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS -ide github -version "', [], {
+      listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
+      silent: true
+    });
+  });
+
+  test('Should call exec with minimal TiCS command for Linux', async () => {
+    const spy = jest.spyOn(exec, 'exec');
+    (exec.exec as any).mockResolvedValueOnce(0);
+
+    githubConfig.runnerOS = 'Linux';
+    ticsConfig.mode = 'default';
+
+    const response = await runTicsAnalyzer('/path/to');
+
+    expect(response.statusCode).toEqual(0);
+    expect(response.completed).toEqual(true);
+    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS -ide github @/path/to -viewer -project \'project\' -calc GATE "', [], {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
       silent: true
     });
@@ -32,7 +50,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith(`powershell "; if ($?) {TICS @/path/to -viewer -project \'project\' -calc GATE }"`, [], {
+    expect(spy).toHaveBeenCalledWith(`powershell "; if ($?) {TICS -ide github @/path/to -viewer -project \'project\' -calc GATE }"`, [], {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
       silent: true
     });
@@ -54,7 +72,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \" TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
+      "/bin/bash -c \" TICS -ide github @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -79,7 +97,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"; if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
+      "powershell \"; if ($?) {TICS -ide github @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -107,7 +125,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/url') && TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
+      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/url') && TICS -ide github @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -135,7 +153,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;  iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;  iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS -ide github @/path/to -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -169,7 +187,7 @@ test('Should call exec with full TiCS command for Windows, trustStrategy set to 
   expect(response.statusCode).toEqual(0);
   expect(response.completed).toEqual(true);
   expect(spy).toHaveBeenCalledWith(
-    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS @/path/to -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test'  -log 9}\"",
+    "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/url')); if ($?) {TICS -ide github @/path/to -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test'  -log 9}\"",
     [],
     {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },

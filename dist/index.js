@@ -46,22 +46,23 @@ exports.ticsConfig = {
     additionalFlags: (0, core_1.getInput)('additionalFlags'),
     branchDir: (0, core_1.getInput)('branchDir'),
     branchName: (0, core_1.getInput)('branchName'),
-    calc: (0, core_1.getInput)('calc'),
-    nocalc: (0, core_1.getInput)('nocalc'),
-    recalc: (0, core_1.getInput)('recalc'),
-    norecalc: (0, core_1.getInput)('norecalc'),
     clientData: (0, core_1.getInput)('clientData'),
     codetype: (0, core_1.getInput)('codetype'),
-    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
-    trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    calc: (0, core_1.getInput)('calc'),
     excludeMovedFiles: (0, core_1.getBooleanInput)('excludeMovedFiles'),
+    hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
+    mode: (0, core_1.getInput)('mode'),
+    nocalc: (0, core_1.getInput)('nocalc'),
+    norecalc: (0, core_1.getInput)('norecalc'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
+    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
+    recalc: (0, core_1.getInput)('recalc'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
     tmpDir: (0, core_1.getInput)('tmpDir'),
-    viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
-    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter'))
+    trustStrategy: (0, core_1.getInput)('trustStrategy'),
+    secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter')),
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.default(), headers: {} };
@@ -832,42 +833,51 @@ async function run() {
 exports.run = run;
 async function main() {
     try {
-        const changedFiles = await (0, pulls_1.getChangedFiles)();
-        if (!changedFiles || changedFiles.length <= 0)
-            return logger_1.default.Instance.setFailed('No changed files found to analyze.');
-        const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
-        const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-        if (!analysis.explorerUrl) {
-            if (!analysis.completed) {
-                (0, comment_1.postErrorComment)(analysis);
-                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-            }
-            else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
-            }
-            else {
-                logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-                analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
-            }
-            (0, api_helper_1.cliSummary)(analysis);
-            return;
+        let analysis;
+        if (configuration_1.ticsConfig.mode === 'diagnostic') {
+            logger_1.default.Instance.header('Running action in diagnostic mode');
+            analysis = await (0, analyzer_1.runTicsAnalyzer)('');
+            if (analysis.statusCode !== 0)
+                logger_1.default.Instance.setFailed('Diagnostic run has failed.');
         }
-        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
-        const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        let reviewComments;
-        if (configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
-            if (annotations && annotations.length > 0) {
-                reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
+        else {
+            const changedFiles = await (0, pulls_1.getChangedFiles)();
+            if (!changedFiles || changedFiles.length <= 0)
+                return logger_1.default.Instance.setFailed('No changed files found to analyze.');
+            const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+            analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
+            if (!analysis.explorerUrl) {
+                if (!analysis.completed) {
+                    (0, comment_1.postErrorComment)(analysis);
+                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+                }
+                else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+                    (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
+                }
+                else {
+                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
+                    analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+                }
+                (0, api_helper_1.cliSummary)(analysis);
+                return;
             }
-            const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-            if (previousReviewComments && previousReviewComments.length > 0) {
-                await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
+            const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
+            let reviewComments;
+            if (configuration_1.ticsConfig.postAnnotations) {
+                const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+                if (annotations && annotations.length > 0) {
+                    reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
+                }
+                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+                if (previousReviewComments && previousReviewComments.length > 0) {
+                    await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+                }
             }
+            await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
+            if (!qualityGate.passed)
+                logger_1.default.Instance.setFailed(qualityGate.message);
         }
-        await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
-        if (!qualityGate.passed)
-            logger_1.default.Instance.setFailed(qualityGate.message);
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
@@ -913,12 +923,15 @@ exports.configure = configure;
  */
 async function meetsPrerequisites() {
     let message;
-    let viewerVersion = await (0, fetcher_1.getViewerVersion)();
-    if (configuration_1.githubConfig.eventName !== 'pull_request') {
-        message = 'This action can only run on pull requests.';
+    const viewerVersion = await (0, fetcher_1.getViewerVersion)();
+    if (!viewerVersion || !(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
+        message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
     }
-    else if (!(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
-        message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
+    else if (configuration_1.ticsConfig.mode === 'diagnostic') {
+        // No need for pull_request and checked out repository.
+    }
+    else if (configuration_1.githubConfig.eventName !== 'pull_request') {
+        message = 'This action can only run on pull requests.';
     }
     else if (!isCheckedOut()) {
         message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
@@ -964,7 +977,7 @@ let completed;
  * @param fileListPath Path to changedFiles.txt.
  */
 async function runTicsAnalyzer(fileListPath) {
-    logger_1.default.Instance.header(`Analyzing new pull request for project ${configuration_1.ticsConfig.projectName}`);
+    logger_1.default.Instance.header(`Analyzing for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
     logger_1.default.Instance.header('Running TiCS');
     logger_1.default.Instance.debug(`With command: ${command}`);
@@ -1075,15 +1088,21 @@ async function retrieveInstallTics(os) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath) {
-    let execString = 'TICS @' + fileListPath + ' -viewer ';
-    execString += `-project '${configuration_1.ticsConfig.projectName}' `;
-    execString += `-calc ${configuration_1.ticsConfig.calc} `;
-    execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
-    execString += configuration_1.ticsConfig.recalc ? `-recalc ${configuration_1.ticsConfig.recalc} ` : '';
-    execString += configuration_1.ticsConfig.norecalc ? `-norecalc ${configuration_1.ticsConfig.norecalc} ` : '';
-    execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
-    execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
-    execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
+    let execString = 'TICS -ide github ';
+    if (configuration_1.ticsConfig.mode === 'diagnostic') {
+        execString += '-version ';
+    }
+    else {
+        execString += `@${fileListPath} -viewer `;
+        execString += `-project '${configuration_1.ticsConfig.projectName}' `;
+        execString += `-calc ${configuration_1.ticsConfig.calc} `;
+        execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
+        execString += configuration_1.ticsConfig.recalc ? `-recalc ${configuration_1.ticsConfig.recalc} ` : '';
+        execString += configuration_1.ticsConfig.norecalc ? `-norecalc ${configuration_1.ticsConfig.norecalc} ` : '';
+        execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
+        execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
+        execString += configuration_1.ticsConfig.tmpDir ? `-tmpdir '${configuration_1.ticsConfig.tmpDir}' ` : '';
+    }
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
     // Add TICS debug flag when in debug mode, if this flag was not already set.
     execString += configuration_1.githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';

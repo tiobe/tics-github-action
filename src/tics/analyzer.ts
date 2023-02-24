@@ -14,7 +14,7 @@ let completed: boolean;
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string) {
-  Logger.Instance.header(`Analyzing new pull request for project ${ticsConfig.projectName}`);
+  Logger.Instance.header(`Analyzing for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
 
@@ -130,15 +130,20 @@ async function retrieveInstallTics(os: string) {
  * @returns string of the command to run TiCS.
  */
 function getTicsCommand(fileListPath: string) {
-  let execString = 'TICS @' + fileListPath + ' -viewer ';
-  execString += `-project '${ticsConfig.projectName}' `;
-  execString += `-calc ${ticsConfig.calc} `;
-  execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
-  execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
-  execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
-  execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
-  execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
-  execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
+  let execString = 'TICS -ide github ';
+  if (ticsConfig.mode === 'diagnostic') {
+    execString += '-version ';
+  } else {
+    execString += `@${fileListPath} -viewer `;
+    execString += `-project '${ticsConfig.projectName}' `;
+    execString += `-calc ${ticsConfig.calc} `;
+    execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
+    execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
+    execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
+    execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
+    execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
+    execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
+  }
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
   // Add TICS debug flag when in debug mode, if this flag was not already set.
   execString += githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';

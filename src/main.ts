@@ -13,6 +13,7 @@ import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
+import { Analysis } from './helper/interfaces';
 
 run();
 
@@ -28,44 +29,52 @@ export async function run() {
 
 async function main() {
   try {
-    const changedFiles = await getChangedFiles();
-    if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
+    let analysis: Analysis | undefined;
 
-    const changedFilesFilePath = changedFilesToFile(changedFiles);
-    const analysis = await runTicsAnalyzer(changedFilesFilePath);
+    if (ticsConfig.mode === 'diagnostic') {
+      Logger.Instance.header('Running action in diagnostic mode');
+      analysis = await runTicsAnalyzer('');
+      if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
+    } else {
+      const changedFiles = await getChangedFiles();
+      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
 
-    if (!analysis.explorerUrl) {
-      if (!analysis.completed) {
-        postErrorComment(analysis);
-        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-      } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-        postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
-      } else {
-        Logger.Instance.setFailed('Failed to run TiCS Github Action.');
-        analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+      const changedFilesFilePath = changedFilesToFile(changedFiles);
+      analysis = await runTicsAnalyzer(changedFilesFilePath);
+
+      if (!analysis.explorerUrl) {
+        if (!analysis.completed) {
+          postErrorComment(analysis);
+          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+        } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+          postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+        } else {
+          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+          analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+        }
+        cliSummary(analysis);
+        return;
       }
-      cliSummary(analysis);
-      return;
+
+      const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
+      const qualityGate = await getQualityGate(analysis.explorerUrl);
+      let reviewComments;
+
+      if (ticsConfig.postAnnotations) {
+        const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+        if (annotations && annotations.length > 0) {
+          reviewComments = await createReviewComments(annotations, changedFiles);
+        }
+        const previousReviewComments = await getPostedReviewComments();
+        if (previousReviewComments && previousReviewComments.length > 0) {
+          await deletePreviousReviewComments(previousReviewComments);
+        }
+      }
+
+      await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
+
+      if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
     }
-
-    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
-    const qualityGate = await getQualityGate(analysis.explorerUrl);
-    let reviewComments;
-
-    if (ticsConfig.postAnnotations) {
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-      if (annotations && annotations.length > 0) {
-        reviewComments = await createReviewComments(annotations, changedFiles);
-      }
-      const previousReviewComments = await getPostedReviewComments();
-      if (previousReviewComments && previousReviewComments.length > 0) {
-        await deletePreviousReviewComments(previousReviewComments);
-      }
-    }
-
-    await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
-
-    if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
 
     cliSummary(analysis);
   } catch (error: any) {
@@ -117,12 +126,14 @@ export function configure() {
 async function meetsPrerequisites() {
   let message;
 
-  let viewerVersion = await getViewerVersion();
+  const viewerVersion = await getViewerVersion();
 
-  if (githubConfig.eventName !== 'pull_request') {
+  if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
+    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
+  } else if (ticsConfig.mode === 'diagnostic') {
+    // No need for pull_request and checked out repository.
+  } else if (githubConfig.eventName !== 'pull_request') {
     message = 'This action can only run on pull requests.';
-  } else if (!satisfies(viewerVersion.version, '>=2022.4.0')) {
-    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion.version}.`;
   } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
   }
