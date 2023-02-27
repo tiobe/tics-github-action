@@ -1,5 +1,6 @@
 module.exports = {
   clearMocks: true,
+  coverageReporters: ['lcov', 'cobertura', 'text'],
   moduleFileExtensions: ['js', 'ts'],
   testMatch: ['**/*.test.ts'],
   transform: {
