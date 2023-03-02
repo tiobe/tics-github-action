@@ -56,7 +56,7 @@ async function main() {
         return;
       }
 
-      const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
+      const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl, changedFiles);
       const qualityGate = await getQualityGate(analysis.explorerUrl);
       let reviewComments;
 

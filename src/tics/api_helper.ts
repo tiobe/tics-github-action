@@ -3,14 +3,13 @@ import Logger from '../helper/logger';
 import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis } from '../helper/interfaces';
 import fetch from 'node-fetch';
-import { exportVariable } from '@actions/core';
 
 /**
  * Executes a GET request to the given url.
  * @param url api url to perform a GET request for.
  * @returns Promise of the data retrieved from the response.
  */
-export async function httpRequest(url: string): Promise<any> {
+export async function httpRequest<T>(url: string): Promise<T | undefined> {
   var headers: OutgoingHttpHeaders = {
     XRequestedWith: 'tics'
   };

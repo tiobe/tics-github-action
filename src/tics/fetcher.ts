@@ -1,4 +1,5 @@
 import { baseUrl, ticsConfig } from '../configuration';
+import { AnalyzedFile, AnalyzedFiles, ChangedFile } from '../helper/interfaces';
 import Logger from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -7,21 +8,31 @@ import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
  * @param url The TiCS explorer url.
  * @returns the analyzed files.
  */
-export async function getAnalyzedFiles(url: string): Promise<any> {
+export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[]): Promise<string[]> {
   Logger.Instance.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
+  let analyzedFiles: string[] = [];
   Logger.Instance.debug(`From: ${analyzedFilesUrl}`);
 
   try {
-    const response = await httpRequest(analyzedFilesUrl);
-    const analyzedFiles = response.data.map((file: any) => {
-      Logger.Instance.debug(file.formattedValue);
-      return file.formattedValue;
-    });
-    Logger.Instance.info('Retrieved the analyzed files.');
+    const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
+    if (response) {
+      analyzedFiles = response.data
+        .filter((file: AnalyzedFile) => {
+          return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
+        })
+        .map((file: AnalyzedFile) => {
+          Logger.Instance.debug(file.formattedValue);
+          return file.formattedValue;
+        });
+      Logger.Instance.info('Retrieved the analyzed files.');
+    }
+  } catch (error: unknown) {
+    let message = 'unknown error';
+    if (error instanceof Error) message = error.message;
+    Logger.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
+  } finally {
     return analyzedFiles;
-  } catch (error: any) {
-    Logger.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
   }
 }
 
@@ -97,7 +108,7 @@ export async function getAnnotations(apiLinks: any[]) {
       apiLinks.map(async (link, index) => {
         const annotationsUrl = `${baseUrl}/${link.url}`;
         Logger.Instance.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest(annotationsUrl);
+        const response = await httpRequest<any>(annotationsUrl);
         response.data.forEach((annotation: any) => {
           annotation.gateId = index;
           Logger.Instance.debug(JSON.stringify(annotation));
@@ -116,7 +127,7 @@ export async function getAnnotations(apiLinks: any[]) {
  * Gets the version of the TiCS viewer used.
  * @returns Version of the used TiCS viewer.
  */
-export async function getViewerVersion() {
+export async function getViewerVersion(): Promise<any> {
   let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   try {
     const response = await httpRequest(getViewerVersionUrl.href);
