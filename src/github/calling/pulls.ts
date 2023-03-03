@@ -2,38 +2,40 @@ import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 import Logger from '../../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../../configuration';
+import { ChangedFile } from '../../helper/interfaces';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
-export async function getChangedFiles() {
-  Logger.Instance.header('Retrieving changed files.');
+export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
+  const params = {
+    owner: githubConfig.owner,
+    repo: githubConfig.reponame,
+    pull_number: githubConfig.pullRequestNumber
+  };
   try {
-    const params = {
-      owner: githubConfig.owner,
-      repo: githubConfig.reponame,
-      pull_number: githubConfig.pullRequestNumber
-    };
+    Logger.Instance.header('Retrieving changed files.');
     const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
-      return response.data.map(data => {
-        // If a file is moved or renamed the status is 'renamed'.
-        if (data.status === 'renamed') {
-          if (ticsConfig.excludeMovedFiles) {
-            return;
+      return response.data
+        .filter(item => {
+          if (item.status === 'renamed') {
+            // If a files has been moved without changes or if moved files are excluded, exclude them.
+            if (ticsConfig.excludeMovedFiles || item.changes === 0) {
+              return false;
+            }
           }
-          if (data.changes === 0) {
-            // If nothing has changed in the file skip it.
-            return;
-          }
-        }
-        data.filename = normalize(data.filename);
-        Logger.Instance.debug(data.filename);
-        return data;
-      });
+          return true;
+        })
+        .map(item => {
+          // If a file is moved or renamed the status is 'renamed'.
+          item.filename = normalize(item.filename);
+          Logger.Instance.debug(item.filename);
+          return item;
+        });
     });
     Logger.Instance.info('Retrieved changed files.');
-    return response.filter(x => x !== undefined);
+    return response;
   } catch (error: any) {
     Logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
   }

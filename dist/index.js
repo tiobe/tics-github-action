@@ -126,32 +126,33 @@ const configuration_1 = __nccwpck_require__(5527);
  * @returns List of changed files within the GitHub Pull request.
  */
 async function getChangedFiles() {
-    logger_1.default.Instance.header('Retrieving changed files.');
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        pull_number: configuration_1.githubConfig.pullRequestNumber
+    };
     try {
-        const params = {
-            owner: configuration_1.githubConfig.owner,
-            repo: configuration_1.githubConfig.reponame,
-            pull_number: configuration_1.githubConfig.pullRequestNumber
-        };
+        logger_1.default.Instance.header('Retrieving changed files.');
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
-            return response.data.map(data => {
-                // If a file is moved or renamed the status is 'renamed'.
-                if (data.status === 'renamed') {
-                    if (configuration_1.ticsConfig.excludeMovedFiles) {
-                        return;
-                    }
-                    if (data.changes === 0) {
-                        // If nothing has changed in the file skip it.
-                        return;
+            return response.data
+                .filter(item => {
+                if (item.status === 'renamed') {
+                    // If a files has been moved without changes or if moved files are excluded, exclude them.
+                    if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                        return false;
                     }
                 }
-                data.filename = (0, canonical_path_1.normalize)(data.filename);
-                logger_1.default.Instance.debug(data.filename);
-                return data;
+                return true;
+            })
+                .map(item => {
+                // If a file is moved or renamed the status is 'renamed'.
+                item.filename = (0, canonical_path_1.normalize)(item.filename);
+                logger_1.default.Instance.debug(item.filename);
+                return item;
             });
         });
         logger_1.default.Instance.info('Retrieved changed files.');
-        return response.filter(x => x !== undefined);
+        return response;
     }
     catch (error) {
         logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
@@ -861,7 +862,7 @@ async function main() {
                 (0, api_helper_1.cliSummary)(analysis);
                 return;
             }
-            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
+            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl, changedFiles);
             const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
             let reviewComments;
             if (configuration_1.ticsConfig.postAnnotations) {
@@ -1250,21 +1251,33 @@ const api_helper_1 = __nccwpck_require__(3823);
  * @param url The TiCS explorer url.
  * @returns the analyzed files.
  */
-async function getAnalyzedFiles(url) {
+async function getAnalyzedFiles(url, changedFiles) {
     logger_1.default.Instance.header('Retrieving analyzed files.');
     const analyzedFilesUrl = getAnalyzedFilesUrl(url);
+    let analyzedFiles = [];
     logger_1.default.Instance.debug(`From: ${analyzedFilesUrl}`);
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
-        const analyzedFiles = response.data.map((file) => {
-            logger_1.default.Instance.debug(file.formattedValue);
-            return file.formattedValue;
-        });
-        logger_1.default.Instance.info('Retrieved the analyzed files.');
-        return analyzedFiles;
+        if (response) {
+            analyzedFiles = response.data
+                .filter((file) => {
+                return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
+            })
+                .map((file) => {
+                logger_1.default.Instance.debug(file.formattedValue);
+                return file.formattedValue;
+            });
+            logger_1.default.Instance.info('Retrieved the analyzed files.');
+        }
     }
     catch (error) {
-        logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${error.message}`);
+        let message = 'unknown error';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
+    }
+    finally {
+        return analyzedFiles;
     }
 }
 exports.getAnalyzedFiles = getAnalyzedFiles;

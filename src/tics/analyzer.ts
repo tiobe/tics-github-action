@@ -116,7 +116,7 @@ async function retrieveInstallTics(os: string) {
 
     const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
 
-    const data = await httpRequest(ticsInstallApiBaseUrl);
+    const data = await httpRequest<any>(ticsInstallApiBaseUrl);
 
     return baseUrl + '/' + data.links.installTics;
   } catch (error: any) {

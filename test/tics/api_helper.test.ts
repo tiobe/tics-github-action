@@ -11,7 +11,7 @@ describe('httpRequest', () => {
     const exit = jest.spyOn(Logger.Instance, 'exit');
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, json: resJson }));
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     expect(response.data).toEqual('body');
     expect(exit).toHaveBeenCalledTimes(0);
   });
@@ -22,7 +22,7 @@ describe('httpRequest', () => {
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 302, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     const calledWith =
       'HTTP request failed with status 302. Please check if the given ticsConfiguration is correct (possibly http instead of https).';
 
@@ -37,7 +37,7 @@ describe('httpRequest', () => {
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 400, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status 400. header';
 
     expect(response).toEqual(undefined);
@@ -51,7 +51,7 @@ describe('httpRequest', () => {
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 401, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     const calledWith =
       'HTTP request failed with status 401. Please provide a valid TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
 
@@ -66,7 +66,7 @@ describe('httpRequest', () => {
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 404, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status 404. Please check if the given ticsConfiguration is correct.';
 
     expect(response).toEqual(undefined);
@@ -80,7 +80,7 @@ describe('httpRequest', () => {
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: null, json: resJson }));
     const exit = jest.spyOn(Logger.Instance, 'exit');
 
-    const response = await httpRequest('url');
+    const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status null. Please check if your configuration is correct.';
 
     expect(response).toEqual(undefined);
