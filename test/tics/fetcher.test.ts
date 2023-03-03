@@ -1,23 +1,24 @@
 import { ticsConfig } from '../../src/configuration';
+import { ChangedFile } from '../../src/helper/interfaces';
 import Logger from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
 
 describe('getAnalyzedFiles', () => {
-  test('Should return analyzed file from viewer', async () => {
+  test('Should return one analyzed file from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }] }));
 
     const spy = jest.spyOn(Logger.Instance, 'debug');
 
-    const response = await getAnalyzedFiles('url');
+    const response = await getAnalyzedFiles('url', changedFiles);
 
-    expect(spy).toHaveBeenCalledTimes(2);
     expect(response).toEqual(['file.js']);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  test('Should return analyzed files from viewer', async () => {
+  test('Should return two analyzed files from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest
@@ -26,10 +27,25 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(Logger.Instance, 'debug');
 
-    const response = await getAnalyzedFiles('url');
+    const response = await getAnalyzedFiles('url', changedFiles);
 
     expect(spy).toHaveBeenCalledTimes(3);
     expect(response).toEqual(['file.js', 'files.js']);
+  });
+
+  test('Should return one analyzed files from viewer', async () => {
+    jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
+    jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
+    jest
+      .spyOn(api_helper, 'httpRequest')
+      .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'filed.js' }] }));
+
+    const spy = jest.spyOn(Logger.Instance, 'debug');
+
+    const response = await getAnalyzedFiles('url', changedFiles);
+
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(response).toEqual(['file.js']);
   });
 
   test('Should throw error on faulty httpRequest in getAnalyzedFiles', async () => {
@@ -39,7 +55,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(Logger.Instance, 'exit');
 
-    await getAnalyzedFiles('url');
+    await getAnalyzedFiles('url', changedFiles);
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -116,3 +132,28 @@ describe('getViewerVersion', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });
+
+const changedFiles: ChangedFile[] = [
+  {
+    sha: 'sha',
+    filename: 'file.js',
+    status: 'added',
+    additions: 0,
+    deletions: 1,
+    changes: 1,
+    blob_url: 'url',
+    raw_url: 'url',
+    contents_url: 'url'
+  },
+  {
+    sha: 'sha',
+    filename: 'files.js',
+    status: 'added',
+    additions: 0,
+    deletions: 1,
+    changes: 1,
+    blob_url: 'url',
+    raw_url: 'url',
+    contents_url: 'url'
+  }
+];
