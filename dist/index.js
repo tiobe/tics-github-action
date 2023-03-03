@@ -844,7 +844,7 @@ async function main() {
         else {
             const changedFiles = await (0, pulls_1.getChangedFiles)();
             if (!changedFiles || changedFiles.length <= 0)
-                return logger_1.default.Instance.setFailed('No changed files found to analyze.');
+                return logger_1.default.Instance.info('No changed files found to analyze.');
             const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
             analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
             if (!analysis.explorerUrl) {

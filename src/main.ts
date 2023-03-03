@@ -37,7 +37,7 @@ async function main() {
       if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
     } else {
       const changedFiles = await getChangedFiles();
-      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.setFailed('No changed files found to analyze.');
+      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.info('No changed files found to analyze.');
 
       const changedFilesFilePath = changedFilesToFile(changedFiles);
       analysis = await runTicsAnalyzer(changedFilesFilePath);
