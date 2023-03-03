@@ -77,16 +77,16 @@ describe('pre checks', () => {
 });
 
 describe('SetFailed checks', () => {
-  test('Should call setFailed if no files are found', async () => {
+  test('Should call info if no files are found', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce([]);
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spyInfo = jest.spyOn(Logger.Instance, 'info');
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
-    expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
+    expect(spyInfo).toHaveBeenCalled();
+    expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
 
   test('Should call setFailed if no Explorer URL and analysis failed', async () => {
