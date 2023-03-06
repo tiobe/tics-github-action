@@ -1276,9 +1276,7 @@ async function getAnalyzedFiles(url, changedFiles) {
             message = error.message;
         logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
     }
-    finally {
-        return analyzedFiles;
-    }
+    return analyzedFiles;
 }
 exports.getAnalyzedFiles = getAnalyzedFiles;
 /**
