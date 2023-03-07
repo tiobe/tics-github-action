@@ -31,9 +31,8 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
     let message = 'unknown error';
     if (error instanceof Error) message = error.message;
     Logger.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
-  } finally {
-    return analyzedFiles;
   }
+  return analyzedFiles;
 }
 
 /**
