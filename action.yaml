@@ -74,7 +74,7 @@ inputs:
     description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
     required: false
   tmpDir:
-    description: Location to store debug information.
+    description: 'Location to store debug information. Defaults to $TMPDIR when set.'
     required: false
   viewerUrl:
     description: The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)

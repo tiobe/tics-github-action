@@ -51,7 +51,7 @@ export const ticsConfig = {
   pullRequestApproval: getBooleanInput('pullRequestApproval'),
   recalc: getInput('recalc'),
   ticsAuthToken: getInput('ticsAuthToken'),
-  tmpDir: getInput('tmpDir'),
+  tmpDir: getInput('tmpDir') ?? process.env['TMPDIR'] ?? '/tmp',
   trustStrategy: getInput('trustStrategy'),
   secretsFilter: getSecretsFilter(getInput('secretsFilter')),
   viewerUrl: getInput('viewerUrl')
