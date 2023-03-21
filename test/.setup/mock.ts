@@ -40,12 +40,25 @@ jest.mock('../../src/configuration', () => {
   };
 });
 jest.mock('@actions/core', () => {
+  let summaryOutput = '';
   return {
+    exportVariable: jest.fn(),
     info: jest.fn(),
     debug: jest.fn(),
     warning: jest.fn(),
     error: jest.fn(),
-    setFailed: jest.fn()
+    setFailed: jest.fn(),
+    summary: {
+      addBreak: jest.fn(() => (summaryOutput += '\n')),
+      addHeading: jest.fn((heading, level) => (summaryOutput += `${level ? level : 1} ${heading}\n`)),
+      addLink: jest.fn((text, link) => (summaryOutput += `[${text}](${link})`)),
+      addRaw: jest.fn(raw => (summaryOutput += raw)),
+      addTable: jest.fn(),
+      clear: jest.fn(() => (summaryOutput = '')),
+      stringify: jest.fn(() => {
+        return summaryOutput;
+      })
+    }
   };
 });
 jest.mock('@actions/exec', () => {
@@ -64,11 +77,6 @@ jest.mock('canonical-path', () => {
   return {
     resolve: jest.fn(data => data),
     normalize: jest.fn(data => data)
-  };
-});
-jest.mock('markdown-table', () => {
-  return {
-    markdownTable: jest.fn(() => '|header|\n|---|\n|body|')
   };
 });
 jest.mock('proxy-agent', () => {

@@ -513,9 +513,8 @@ exports["default"] = Logger;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateTableMarkdown = exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
+exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
 const enums_1 = __nccwpck_require__(1655);
-const markdown_table_1 = __nccwpck_require__(4701);
 /**
  * Generates a link with text in markdown.
  * @param text Text for the link.
@@ -556,16 +555,6 @@ function generateExpandableAreaMarkdown(header, body) {
     return `<details><summary>${header}</summary>\n${body}</details>\n\n`;
 }
 exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
-/**
- * Generates a table in markdown.
- * @param headers headers of the table.
- * @param cells cells of the table.
- * @returns Table in markdown.
- */
-function generateTableMarkdown(headers, cells) {
-    return `\n${(0, markdown_table_1.markdownTable)([...headers, ...cells])}\n\n`;
-}
-exports.generateTableMarkdown = generateTableMarkdown;
 
 
 /***/ }),
@@ -580,6 +569,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+const core_1 = __nccwpck_require__(2186);
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
@@ -635,11 +625,27 @@ exports.createFilesSummary = createFilesSummary;
  * @returns Quality gate summary.
  */
 function createQualityGateSummary(qualityGate) {
-    let qualityGateSummary = '';
+    let failedConditions = [];
     qualityGate.gates.forEach(gate => {
-        qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
+        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
     });
-    return `## TiCS Quality Gate\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+    core_1.summary.clear();
+    core_1.summary.addHeading('TiCS Quality Gate');
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}`, 3);
+    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
+    failedConditions.forEach(condition => {
+        if (condition.details && condition.details.items.length > 0) {
+            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+            core_1.summary.addBreak();
+            core_1.summary.addTable(createConditionTable(condition));
+            core_1.summary.addRaw('</details>', true);
+        }
+        else {
+            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+        }
+    });
+    core_1.summary.addRaw('', true);
+    return core_1.summary.stringify();
 }
 exports.createQualityGateSummary = createQualityGateSummary;
 /**
@@ -647,26 +653,27 @@ exports.createQualityGateSummary = createQualityGateSummary;
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionsTable(conditions) {
-    let conditionsTable = '';
-    conditions.forEach(condition => {
-        if (condition.skipped)
-            return;
-        const conditionStatus = `${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
-        if (condition.details && condition.details.items.length > 0) {
-            const headers = [['File', condition.details.dataKeys.actualValue.title]];
-            const cells = condition.details.items
-                .filter((item) => item.itemType === 'file')
-                .map((item) => {
-                return [(0, markdown_1.generateLinkMarkdown)(item.name, configuration_1.viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
-            });
-            conditionsTable += (0, markdown_1.generateExpandableAreaMarkdown)(conditionStatus, (0, markdown_1.generateTableMarkdown)(headers, cells));
-        }
-        else {
-            conditionsTable += `${conditionStatus}\n\n\n`;
-        }
+function createConditionTable(condition) {
+    if (!condition.details)
+        return [];
+    let rows = [
+        [
+            {
+                data: 'File',
+                header: true
+            },
+            {
+                data: condition.details.dataKeys.actualValue.title,
+                header: true
+            }
+        ]
+    ];
+    condition.details.items
+        .filter(item => item.itemType === 'file')
+        .forEach(item => {
+        rows.push([`\n\n[${item.name}](${configuration_1.viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue]);
     });
-    return conditionsTable;
+    return rows;
 }
 /**
  * Groups the annotations and creates review comments for them.
@@ -895,6 +902,7 @@ function configure() {
         if (configuration_1.githubConfig.debugger)
             logger_1.default.Instance.warning(warning.message.toString());
     });
+    (0, core_1.exportVariable)('TICSIDE', 'GITHUB');
     // set ticsAuthToken
     if (configuration_1.ticsConfig.ticsAuthToken) {
         (0, core_1.exportVariable)('TICSAUTHTOKEN', configuration_1.ticsConfig.ticsAuthToken);
@@ -65987,398 +65995,6 @@ module.exports = underscoreNodeF._;
 
 /***/ }),
 
-/***/ 4701:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "markdownTable": () => (/* binding */ markdownTable)
-/* harmony export */ });
-/**
- * @typedef Options
- *   Configuration (optional).
- * @property {string|null|ReadonlyArray<string|null|undefined>} [align]
- *   One style for all columns, or styles for their respective columns.
- *   Each style is either `'l'` (left), `'r'` (right), or `'c'` (center).
- *   Other values are treated as `''`, which doesn’t place the colon in the
- *   alignment row but does align left.
- *   *Only the lowercased first character is used, so `Right` is fine.*
- * @property {boolean} [padding=true]
- *   Whether to add a space of padding between delimiters and cells.
- *
- *   When `true`, there is padding:
- *
- *   ```markdown
- *   | Alpha | B     |
- *   | ----- | ----- |
- *   | C     | Delta |
- *   ```
- *
- *   When `false`, there is no padding:
- *
- *   ```markdown
- *   |Alpha|B    |
- *   |-----|-----|
- *   |C    |Delta|
- *   ```
- * @property {boolean} [delimiterStart=true]
- *   Whether to begin each row with the delimiter.
- *
- *   > 👉 **Note**: please don’t use this: it could create fragile structures
- *   > that aren’t understandable to some markdown parsers.
- *
- *   When `true`, there are starting delimiters:
- *
- *   ```markdown
- *   | Alpha | B     |
- *   | ----- | ----- |
- *   | C     | Delta |
- *   ```
- *
- *   When `false`, there are no starting delimiters:
- *
- *   ```markdown
- *   Alpha | B     |
- *   ----- | ----- |
- *   C     | Delta |
- *   ```
- * @property {boolean} [delimiterEnd=true]
- *   Whether to end each row with the delimiter.
- *
- *   > 👉 **Note**: please don’t use this: it could create fragile structures
- *   > that aren’t understandable to some markdown parsers.
- *
- *   When `true`, there are ending delimiters:
- *
- *   ```markdown
- *   | Alpha | B     |
- *   | ----- | ----- |
- *   | C     | Delta |
- *   ```
- *
- *   When `false`, there are no ending delimiters:
- *
- *   ```markdown
- *   | Alpha | B
- *   | ----- | -----
- *   | C     | Delta
- *   ```
- * @property {boolean} [alignDelimiters=true]
- *   Whether to align the delimiters.
- *   By default, they are aligned:
- *
- *   ```markdown
- *   | Alpha | B     |
- *   | ----- | ----- |
- *   | C     | Delta |
- *   ```
- *
- *   Pass `false` to make them staggered:
- *
- *   ```markdown
- *   | Alpha | B |
- *   | - | - |
- *   | C | Delta |
- *   ```
- * @property {(value: string) => number} [stringLength]
- *   Function to detect the length of table cell content.
- *   This is used when aligning the delimiters (`|`) between table cells.
- *   Full-width characters and emoji mess up delimiter alignment when viewing
- *   the markdown source.
- *   To fix this, you can pass this function, which receives the cell content
- *   and returns its “visible” size.
- *   Note that what is and isn’t visible depends on where the text is displayed.
- *
- *   Without such a function, the following:
- *
- *   ```js
- *   markdownTable([
- *     ['Alpha', 'Bravo'],
- *     ['中文', 'Charlie'],
- *     ['👩‍❤️‍👩', 'Delta']
- *   ])
- *   ```
- *
- *   Yields:
- *
- *   ```markdown
- *   | Alpha | Bravo |
- *   | - | - |
- *   | 中文 | Charlie |
- *   | 👩‍❤️‍👩 | Delta |
- *   ```
- *
- *   With [`string-width`](https://github.com/sindresorhus/string-width):
- *
- *   ```js
- *   import stringWidth from 'string-width'
- *
- *   markdownTable(
- *     [
- *       ['Alpha', 'Bravo'],
- *       ['中文', 'Charlie'],
- *       ['👩‍❤️‍👩', 'Delta']
- *     ],
- *     {stringLength: stringWidth}
- *   )
- *   ```
- *
- *   Yields:
- *
- *   ```markdown
- *   | Alpha | Bravo   |
- *   | ----- | ------- |
- *   | 中文  | Charlie |
- *   | 👩‍❤️‍👩    | Delta   |
- *   ```
- */
-
-/**
- * @typedef {Options} MarkdownTableOptions
- * @todo
- *   Remove next major.
- */
-
-/**
- * Generate a markdown ([GFM](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables)) table..
- *
- * @param {ReadonlyArray<ReadonlyArray<string|null|undefined>>} table
- *   Table data (matrix of strings).
- * @param {Options} [options]
- *   Configuration (optional).
- * @returns {string}
- */
-function markdownTable(table, options = {}) {
-  const align = (options.align || []).concat()
-  const stringLength = options.stringLength || defaultStringLength
-  /** @type {Array<number>} Character codes as symbols for alignment per column. */
-  const alignments = []
-  /** @type {Array<Array<string>>} Cells per row. */
-  const cellMatrix = []
-  /** @type {Array<Array<number>>} Sizes of each cell per row. */
-  const sizeMatrix = []
-  /** @type {Array<number>} */
-  const longestCellByColumn = []
-  let mostCellsPerRow = 0
-  let rowIndex = -1
-
-  // This is a superfluous loop if we don’t align delimiters, but otherwise we’d
-  // do superfluous work when aligning, so optimize for aligning.
-  while (++rowIndex < table.length) {
-    /** @type {Array<string>} */
-    const row = []
-    /** @type {Array<number>} */
-    const sizes = []
-    let columnIndex = -1
-
-    if (table[rowIndex].length > mostCellsPerRow) {
-      mostCellsPerRow = table[rowIndex].length
-    }
-
-    while (++columnIndex < table[rowIndex].length) {
-      const cell = serialize(table[rowIndex][columnIndex])
-
-      if (options.alignDelimiters !== false) {
-        const size = stringLength(cell)
-        sizes[columnIndex] = size
-
-        if (
-          longestCellByColumn[columnIndex] === undefined ||
-          size > longestCellByColumn[columnIndex]
-        ) {
-          longestCellByColumn[columnIndex] = size
-        }
-      }
-
-      row.push(cell)
-    }
-
-    cellMatrix[rowIndex] = row
-    sizeMatrix[rowIndex] = sizes
-  }
-
-  // Figure out which alignments to use.
-  let columnIndex = -1
-
-  if (typeof align === 'object' && 'length' in align) {
-    while (++columnIndex < mostCellsPerRow) {
-      alignments[columnIndex] = toAlignment(align[columnIndex])
-    }
-  } else {
-    const code = toAlignment(align)
-
-    while (++columnIndex < mostCellsPerRow) {
-      alignments[columnIndex] = code
-    }
-  }
-
-  // Inject the alignment row.
-  columnIndex = -1
-  /** @type {Array<string>} */
-  const row = []
-  /** @type {Array<number>} */
-  const sizes = []
-
-  while (++columnIndex < mostCellsPerRow) {
-    const code = alignments[columnIndex]
-    let before = ''
-    let after = ''
-
-    if (code === 99 /* `c` */) {
-      before = ':'
-      after = ':'
-    } else if (code === 108 /* `l` */) {
-      before = ':'
-    } else if (code === 114 /* `r` */) {
-      after = ':'
-    }
-
-    // There *must* be at least one hyphen-minus in each alignment cell.
-    let size =
-      options.alignDelimiters === false
-        ? 1
-        : Math.max(
-            1,
-            longestCellByColumn[columnIndex] - before.length - after.length
-          )
-
-    const cell = before + '-'.repeat(size) + after
-
-    if (options.alignDelimiters !== false) {
-      size = before.length + size + after.length
-
-      if (size > longestCellByColumn[columnIndex]) {
-        longestCellByColumn[columnIndex] = size
-      }
-
-      sizes[columnIndex] = size
-    }
-
-    row[columnIndex] = cell
-  }
-
-  // Inject the alignment row.
-  cellMatrix.splice(1, 0, row)
-  sizeMatrix.splice(1, 0, sizes)
-
-  rowIndex = -1
-  /** @type {Array<string>} */
-  const lines = []
-
-  while (++rowIndex < cellMatrix.length) {
-    const row = cellMatrix[rowIndex]
-    const sizes = sizeMatrix[rowIndex]
-    columnIndex = -1
-    /** @type {Array<string>} */
-    const line = []
-
-    while (++columnIndex < mostCellsPerRow) {
-      const cell = row[columnIndex] || ''
-      let before = ''
-      let after = ''
-
-      if (options.alignDelimiters !== false) {
-        const size =
-          longestCellByColumn[columnIndex] - (sizes[columnIndex] || 0)
-        const code = alignments[columnIndex]
-
-        if (code === 114 /* `r` */) {
-          before = ' '.repeat(size)
-        } else if (code === 99 /* `c` */) {
-          if (size % 2) {
-            before = ' '.repeat(size / 2 + 0.5)
-            after = ' '.repeat(size / 2 - 0.5)
-          } else {
-            before = ' '.repeat(size / 2)
-            after = before
-          }
-        } else {
-          after = ' '.repeat(size)
-        }
-      }
-
-      if (options.delimiterStart !== false && !columnIndex) {
-        line.push('|')
-      }
-
-      if (
-        options.padding !== false &&
-        // Don’t add the opening space if we’re not aligning and the cell is
-        // empty: there will be a closing space.
-        !(options.alignDelimiters === false && cell === '') &&
-        (options.delimiterStart !== false || columnIndex)
-      ) {
-        line.push(' ')
-      }
-
-      if (options.alignDelimiters !== false) {
-        line.push(before)
-      }
-
-      line.push(cell)
-
-      if (options.alignDelimiters !== false) {
-        line.push(after)
-      }
-
-      if (options.padding !== false) {
-        line.push(' ')
-      }
-
-      if (
-        options.delimiterEnd !== false ||
-        columnIndex !== mostCellsPerRow - 1
-      ) {
-        line.push('|')
-      }
-    }
-
-    lines.push(
-      options.delimiterEnd === false
-        ? line.join('').replace(/ +$/, '')
-        : line.join('')
-    )
-  }
-
-  return lines.join('\n')
-}
-
-/**
- * @param {string|null|undefined} [value]
- * @returns {string}
- */
-function serialize(value) {
-  return value === null || value === undefined ? '' : String(value)
-}
-
-/**
- * @param {string} value
- * @returns {number}
- */
-function defaultStringLength(value) {
-  return value.length
-}
-
-/**
- * @param {string|null|undefined} value
- * @returns {number}
- */
-function toAlignment(value) {
-  const code = typeof value === 'string' ? value.codePointAt(0) : 0
-
-  return code === 67 /* `C` */ || code === 99 /* `c` */
-    ? 99 /* `c` */
-    : code === 76 /* `L` */ || code === 108 /* `l` */
-    ? 108 /* `l` */
-    : code === 82 /* `R` */ || code === 114 /* `r` */
-    ? 114 /* `r` */
-    : 0
-}
-
-
-/***/ }),
-
 /***/ 6475:
 /***/ ((module) => {
 
@@ -66508,34 +66124,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

@@ -10,8 +10,54 @@ export interface QualityGate {
   passed: boolean;
   message: string;
   url: string;
-  gates: any[];
-  annotationsApiV1Links: any[];
+  gates: Gate[];
+  annotationsApiV1Links: AnnotationApiLink[];
+}
+
+export interface Gate {
+  passed: boolean;
+  name: string;
+  conditions: Condition[];
+}
+
+export interface Condition {
+  passed: boolean;
+  skipped?: boolean;
+  error: boolean;
+  message: string;
+  details?: ConditionDetails;
+  annotationsApiV1Links?: AnnotationApiLink[];
+}
+
+export interface ConditionDetails {
+  itemTypes: string[];
+  dataKeys: {
+    actualValue: {
+      title: string;
+      order: number;
+      itemType: string;
+    };
+  };
+  itemCount: number;
+  itemLimit: number;
+  items: ConditionItem[];
+}
+
+export interface ConditionItem {
+  itemType: string;
+  name: string;
+  link: string;
+  data: {
+    actualValue: {
+      formattedValue: string;
+      value: number;
+      classes: string[];
+    };
+  };
+}
+
+export interface AnnotationApiLink {
+  url: string;
 }
 
 export interface ReviewComment {

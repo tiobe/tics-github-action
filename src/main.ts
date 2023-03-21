@@ -92,6 +92,8 @@ export function configure() {
     if (githubConfig.debugger) Logger.Instance.warning(warning.message.toString());
   });
 
+  exportVariable('TICSIDE', 'GITHUB');
+
   // set ticsAuthToken
   if (ticsConfig.ticsAuthToken) {
     exportVariable('TICSAUTHTOKEN', ticsConfig.ticsAuthToken);

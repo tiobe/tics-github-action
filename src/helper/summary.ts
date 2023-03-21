@@ -1,6 +1,8 @@
-import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from './markdown';
-import { QualityGate, ReviewComment, ReviewComments } from './interfaces';
-import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
+import { summary } from '@actions/core';
+import { SummaryTableRow } from '@actions/core/lib/summary';
+import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown } from './markdown';
+import { Condition, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import Logger from './logger';
@@ -57,12 +59,29 @@ export function createFilesSummary(fileList: string[]): string {
  * @returns Quality gate summary.
  */
 export function createQualityGateSummary(qualityGate: QualityGate): string {
-  let qualityGateSummary = '';
+  let failedConditions: Condition[] = [];
 
   qualityGate.gates.forEach(gate => {
-    qualityGateSummary += `## ${gate.name}\n\n${createConditionsTable(gate.conditions)}`;
+    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
   });
-  return `## TiCS Quality Gate\n\n### ${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}\n\n${qualityGateSummary}`;
+
+  summary.clear();
+  summary.addHeading('TiCS Quality Gate');
+  summary.addHeading(`${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}`, 3);
+  summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
+  failedConditions.forEach(condition => {
+    if (condition.details && condition.details.items.length > 0) {
+      summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+      summary.addBreak();
+      summary.addTable(createConditionTable(condition));
+      summary.addRaw('</details>', true);
+    } else {
+      summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+    }
+  });
+  summary.addRaw('', true);
+
+  return summary.stringify();
 }
 
 /**
@@ -70,25 +89,28 @@ export function createQualityGateSummary(qualityGate: QualityGate): string {
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionsTable(conditions: any[]) {
-  let conditionsTable = '';
-  conditions.forEach(condition => {
-    if (condition.skipped) return;
-    const conditionStatus = `${generateStatusMarkdown(Status[condition.passed ? 1 : 0], false)}  ${condition.message}`;
+function createConditionTable(condition: Condition): SummaryTableRow[] {
+  if (!condition.details) return [];
 
-    if (condition.details && condition.details.items.length > 0) {
-      const headers = [['File', condition.details.dataKeys.actualValue.title]];
-      const cells = condition.details.items
-        .filter((item: any) => item.itemType === 'file')
-        .map((item: any) => {
-          return [generateLinkMarkdown(item.name, viewerUrl + '/' + item.link), item.data.actualValue.formattedValue];
-        });
-      conditionsTable += generateExpandableAreaMarkdown(conditionStatus, generateTableMarkdown(headers, cells));
-    } else {
-      conditionsTable += `${conditionStatus}\n\n\n`;
-    }
-  });
-  return conditionsTable;
+  let rows: SummaryTableRow[] = [
+    [
+      {
+        data: 'File',
+        header: true
+      },
+      {
+        data: condition.details.dataKeys.actualValue.title,
+        header: true
+      }
+    ]
+  ];
+  condition.details.items
+    .filter(item => item.itemType === 'file')
+    .forEach(item => {
+      rows.push([`\n\n[${item.name}](${viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue]);
+    });
+
+  return rows;
 }
 
 /**

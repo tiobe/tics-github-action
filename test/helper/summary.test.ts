@@ -123,7 +123,6 @@ describe('createQualityGateSummary', () => {
     const response = createQualityGateSummary(qualityGate);
 
     expect(response).toContainTimes(':x:', 2);
-    expect(response).toContainTimes(':heavy_check_mark', 3);
   });
 
   test('Should return summary failed quality gate', () => {
@@ -186,7 +185,6 @@ describe('createQualityGateSummary', () => {
     const response = createQualityGateSummary(qualityGate);
 
     expect(response).toContainTimes(':x:', 2);
-    expect(response).toContainTimes(':heavy_check_mark', 0);
   });
 
   test('Should return summary on skipped quality gate', () => {
@@ -218,7 +216,6 @@ describe('createQualityGateSummary', () => {
     const response = createQualityGateSummary(qualityGate);
 
     expect(response).toContainTimes(':x:', 0);
-    expect(response).toContainTimes(':heavy_check_mark', 1);
   });
 });
 

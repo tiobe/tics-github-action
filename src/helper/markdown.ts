@@ -1,5 +1,4 @@
 import { Status } from './enums';
-import { markdownTable } from 'markdown-table';
 
 /**
  * Generates a link with text in markdown.
@@ -39,14 +38,4 @@ export function generateStatusMarkdown(status: string, hasSuffix: boolean = fals
  */
 export function generateExpandableAreaMarkdown(header: any, body: any): string {
   return `<details><summary>${header}</summary>\n${body}</details>\n\n`;
-}
-
-/**
- * Generates a table in markdown.
- * @param headers headers of the table.
- * @param cells cells of the table.
- * @returns Table in markdown.
- */
-export function generateTableMarkdown(headers: any[], cells: any[]) {
-  return `\n${markdownTable([...headers, ...cells])}\n\n`;
 }

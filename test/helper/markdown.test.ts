@@ -1,5 +1,5 @@
 import { Status } from '../../src/helper/enums';
-import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown, generateTableMarkdown } from '../../src/helper/markdown';
+import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown } from '../../src/helper/markdown';
 
 describe('generateStatusMarkdown', () => {
   test('Should return failed without prefix', () => {
@@ -59,12 +59,5 @@ describe('generateExpandableAreaMarkdown', () => {
   test('Should return markdown expandable area', () => {
     const area = generateExpandableAreaMarkdown('header', 'body');
     expect(area).toEqual('<details><summary>header</summary>\nbody</details>\n\n');
-  });
-});
-
-describe('generateTableMarkdown', () => {
-  test('Should return markdown table', () => {
-    const table = generateTableMarkdown([], []);
-    expect(table).toEqual('\n|header|\n|---|\n|body|\n\n');
   });
 });
