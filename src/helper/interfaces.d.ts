@@ -1,3 +1,5 @@
+import { Http2ServerResponse } from 'http2';
+
 export interface Analysis {
   completed: boolean;
   statusCode: number;
@@ -96,4 +98,8 @@ export interface AnalyzedFile {
 
 export interface AnalyzedFiles {
   data: AnalyzedFile[];
+}
+
+export interface HttpResponse {
+  alertMessages: { header: string }[];
 }

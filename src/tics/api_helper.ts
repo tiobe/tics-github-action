@@ -1,7 +1,7 @@
 import { OutgoingHttpHeaders } from 'http';
 import Logger from '../helper/logger';
 import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
-import { Analysis } from '../helper/interfaces';
+import { Analysis, HttpResponse } from '../helper/interfaces';
 import fetch from 'node-fetch';
 
 /**
@@ -23,19 +23,22 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
   switch (response.status) {
     case 200:
-      return response.json();
+      return <T>response.json();
     case 302:
       Logger.Instance.exit(
         `HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
       );
       break;
     case 400:
-      Logger.Instance.exit(`HTTP request failed with status ${response.status}. ${(await response.json()).alertMessages[0].header}`);
+      Logger.Instance.exit(`HTTP request failed with status ${response.status}. ${(<HttpResponse>await response.json()).alertMessages[0].header}`);
       break;
     case 401:
       Logger.Instance.exit(
         `HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
+      break;
+    case 403:
+      Logger.Instance.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
       break;
     case 404:
       Logger.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);

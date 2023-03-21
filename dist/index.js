@@ -1160,6 +1160,9 @@ async function httpRequest(url) {
         case 401:
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
             break;
+        case 403:
+            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
+            break;
         case 404:
             logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
             break;
