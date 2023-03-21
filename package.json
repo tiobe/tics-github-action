@@ -50,7 +50,7 @@
     "eslint-config-prettier": "^8.7.0",
     "jest": "^27.5.1",
     "jest-mock": "^29.5.0",
-    "prettier": "2.8.5",
+    "prettier": "2.8.6",
     "ts-jest": "^27.1.2",
     "typescript": "^4.9.5"
   }
