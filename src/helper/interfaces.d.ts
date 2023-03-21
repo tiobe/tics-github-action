@@ -101,5 +101,6 @@ export interface AnalyzedFiles {
 }
 
 export interface HttpResponse {
+  data: string;
   alertMessages: { header: string }[];
 }

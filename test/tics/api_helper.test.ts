@@ -60,6 +60,20 @@ describe('httpRequest', () => {
     expect(exit).toHaveBeenCalledWith(calledWith);
   });
 
+  test('Should return undefined response and call exit on status 403', async () => {
+    const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
+
+    (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 403, json: resJson }));
+    const exit = jest.spyOn(Logger.Instance, 'exit');
+
+    const response = await httpRequest<any>('url');
+    const calledWith = 'HTTP request failed with status 403. Forbidden call: url';
+
+    expect(response).toEqual(undefined);
+    expect(exit).toHaveBeenCalledTimes(1);
+    expect(exit).toHaveBeenCalledWith(calledWith);
+  });
+
   test('Should return undefined response and call exit on status 404', async () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
