@@ -42,6 +42,7 @@ jest.mock('../../src/configuration', () => {
 jest.mock('@actions/core', () => {
   let summaryOutput = '';
   return {
+    exportVariable: jest.fn(),
     info: jest.fn(),
     debug: jest.fn(),
     warning: jest.fn(),
