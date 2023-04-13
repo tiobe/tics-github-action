@@ -132,7 +132,7 @@ async function retrieveInstallTics(os: string) {
 function getTicsCommand(fileListPath: string) {
   let execString = 'TICS -ide github ';
   if (ticsConfig.mode === 'diagnostic') {
-    execString += '-version ';
+    execString += '-help ';
   } else {
     execString += `@${fileListPath} -viewer `;
     execString += `-project '${ticsConfig.projectName}' `;
