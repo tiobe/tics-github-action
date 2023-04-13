@@ -1099,7 +1099,7 @@ async function retrieveInstallTics(os) {
 function getTicsCommand(fileListPath) {
     let execString = 'TICS -ide github ';
     if (configuration_1.ticsConfig.mode === 'diagnostic') {
-        execString += '-version ';
+        execString += '-help ';
     }
     else {
         execString += `@${fileListPath} -viewer `;
@@ -56771,13 +56771,8 @@ function resolverFromOptions(vm, options, override, compiler) {
 			}
 			const resolved = customResolver(x, path);
 			if (!resolved) return undefined;
-			if (typeof resolved === 'string') {
-				if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
-				return resolver.loadAsFileOrDirectory(resolved, extList);
-			}
-			const {module=x, path: resolvedPath} = resolved;
-			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolvedPath)));
-			return resolver.loadNodeModules(module, [resolvedPath], extList);
+			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
+			return resolver.loadAsFileOrDirecotry(resolved, extList);
 		};
 	}
 
@@ -57049,7 +57044,7 @@ class DefaultResolver extends Resolver {
 		// 2. If X begins with '/'
 		if (this.pathIsAbsolute(x)) {
 			// a. set Y to be the filesystem root
-			f = this.loadAsFileOrDirectory(x, extList);
+			f = this.loadAsFileOrDirecotry(x, extList);
 			if (f) return f;
 
 			// c. THROW "not found"
@@ -57063,13 +57058,13 @@ class DefaultResolver extends Resolver {
 					for (let i = 0; i < paths.length; i++) {
 						// a. LOAD_AS_FILE(Y + X)
 						// b. LOAD_AS_DIRECTORY(Y + X)
-						f = this.loadAsFileOrDirectory(this.pathConcat(paths[i], x), extList);
+						f = this.loadAsFileOrDirecotry(this.pathConcat(paths[i], x), extList);
 						if (f) return f;
 					}
 				} else if (paths === undefined) {
 					// a. LOAD_AS_FILE(Y + X)
 					// b. LOAD_AS_DIRECTORY(Y + X)
-					f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+					f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 					if (f) return f;
 				} else {
 					throw new VMError('Invalid options.paths option.');
@@ -57077,7 +57072,7 @@ class DefaultResolver extends Resolver {
 			} else {
 				// a. LOAD_AS_FILE(Y + X)
 				// b. LOAD_AS_DIRECTORY(Y + X)
-				f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+				f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 				if (f) return f;
 			}
 
@@ -57122,7 +57117,7 @@ class DefaultResolver extends Resolver {
 		return super.resolveFull(mod, x, options, ext, direct);
 	}
 
-	loadAsFileOrDirectory(x, extList) {
+	loadAsFileOrDirecotry(x, extList) {
 		// a. LOAD_AS_FILE(X)
 		const f = this.loadAsFile(x, extList);
 		if (f) return f;
@@ -57362,7 +57357,7 @@ class DefaultResolver extends Resolver {
 		} else {
 			// a. LOAD_AS_FILE(RESOLVED_PATH)
 			// b. LOAD_AS_DIRECTORY(RESOLVED_PATH)
-			f = this.loadAsFileOrDirectory(resolvedPath, extList);
+			f = this.loadAsFileOrDirecotry(resolvedPath, extList);
 		}
 		if (f) return f;
 		// 5. THROW "not found"

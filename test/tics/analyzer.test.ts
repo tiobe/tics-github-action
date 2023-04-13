@@ -17,7 +17,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS -ide github -version "', [], {
+    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS -ide github -help "', [], {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
       silent: true
     });
