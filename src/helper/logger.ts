@@ -1,14 +1,9 @@
 import * as core from '@actions/core';
 import { ticsConfig } from '../configuration';
 
-export default class Logger {
-  private static _instance: Logger;
+class Logger {
   called: string = '';
   matched: string[] = [];
-
-  public static get Instance() {
-    return this._instance || (this._instance = new this());
-  }
 
   /**
    * Uses core.info to print to the console with a purple color.
@@ -127,3 +122,5 @@ export default class Logger {
     return data;
   }
 }
+
+export const logger: Logger = new Logger();

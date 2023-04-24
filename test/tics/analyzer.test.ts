@@ -1,7 +1,7 @@
 import * as exec from '@actions/exec';
 import * as api_helper from '../../src/tics/api_helper';
 import { githubConfig, ticsConfig } from '../../src/configuration';
-import Logger from '../../src/helper/logger';
+import { logger } from '../../src/helper/logger';
 import { runTicsAnalyzer } from '../../src/tics/analyzer';
 
 // test for multiple different types of configurations
@@ -252,7 +252,7 @@ describe('throwing errors', () => {
 
   test('Should throw error on httpRequest in retrieveInstallTics', async () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await runTicsAnalyzer('');
 

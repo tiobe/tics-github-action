@@ -1,7 +1,7 @@
 import { githubConfig, octokit } from '../../../src/configuration';
 import { postErrorComment } from '../../../src/github/posting/comment';
 import { createErrorSummary } from '../../../src/helper/summary';
-import Logger from '../../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
@@ -47,7 +47,7 @@ describe('postErrorComment', () => {
     jest.spyOn(octokit.rest.issues, 'createComment').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(Logger.Instance, 'error');
+    const spy = jest.spyOn(logger, 'error');
 
     const analysis = {
       completed: false,

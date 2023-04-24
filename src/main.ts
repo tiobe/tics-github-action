@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
-import Logger from './helper/logger';
+import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
@@ -22,7 +22,7 @@ export async function run() {
   configure();
 
   const message = await meetsPrerequisites();
-  if (message) return Logger.Instance.exit(message);
+  if (message) return logger.exit(message);
 
   await main();
 }
@@ -32,12 +32,12 @@ async function main() {
     let analysis: Analysis | undefined;
 
     if (ticsConfig.mode === 'diagnostic') {
-      Logger.Instance.header('Running action in diagnostic mode');
+      logger.header('Running action in diagnostic mode');
       analysis = await runTicsAnalyzer('');
-      if (analysis.statusCode !== 0) Logger.Instance.setFailed('Diagnostic run has failed.');
+      if (analysis.statusCode !== 0) logger.setFailed('Diagnostic run has failed.');
     } else {
       const changedFiles = await getChangedFiles();
-      if (!changedFiles || changedFiles.length <= 0) return Logger.Instance.info('No changed files found to analyze.');
+      if (!changedFiles || changedFiles.length <= 0) return logger.info('No changed files found to analyze.');
 
       const changedFilesFilePath = changedFilesToFile(changedFiles);
       analysis = await runTicsAnalyzer(changedFilesFilePath);
@@ -45,11 +45,11 @@ async function main() {
       if (!analysis.explorerUrl) {
         if (!analysis.completed) {
           postErrorComment(analysis);
-          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+          logger.setFailed('Failed to run TiCS Github Action.');
         } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
           postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
         } else {
-          Logger.Instance.setFailed('Failed to run TiCS Github Action.');
+          logger.setFailed('Failed to run TiCS Github Action.');
           analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
         }
         cliSummary(analysis);
@@ -73,13 +73,13 @@ async function main() {
 
       await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
 
-      if (!qualityGate.passed) Logger.Instance.setFailed(qualityGate.message);
+      if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
 
     cliSummary(analysis);
   } catch (error: any) {
-    Logger.Instance.error('Failed to run TiCS Github Action');
-    Logger.Instance.exit(error.message);
+    logger.error('Failed to run TiCS Github Action');
+    logger.exit(error.message);
   }
 }
 
@@ -89,7 +89,7 @@ async function main() {
 export function configure() {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
-    if (githubConfig.debugger) Logger.Instance.warning(warning.message.toString());
+    if (githubConfig.debugger) logger.warning(warning.message.toString());
   });
 
   exportVariable('TICSIDE', 'GITHUB');
@@ -105,7 +105,7 @@ export function configure() {
 
     if (ticsConfig.hostnameVerification === '0' || ticsConfig.hostnameVerification === 'false') {
       exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      Logger.Instance.debug('Hostname Verification disabled');
+      logger.debug('Hostname Verification disabled');
     }
   }
 
@@ -115,7 +115,7 @@ export function configure() {
 
     if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
       exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      Logger.Instance.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
+      logger.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
     }
   }
 }
@@ -149,7 +149,7 @@ async function meetsPrerequisites() {
  */
 function isCheckedOut() {
   if (!existsSync('.git')) {
-    Logger.Instance.error('No git checkout found');
+    logger.error('No git checkout found');
     return false;
   }
   return true;

@@ -1,6 +1,6 @@
 import { baseUrl, ticsConfig } from '../configuration';
 import { AnalyzedFile, AnalyzedFiles, ChangedFile } from '../helper/interfaces';
-import Logger from '../helper/logger';
+import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
 /**
@@ -9,10 +9,10 @@ import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
  * @returns the analyzed files.
  */
 export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[]): Promise<string[]> {
-  Logger.Instance.header('Retrieving analyzed files.');
+  logger.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
   let analyzedFiles: string[] = [];
-  Logger.Instance.debug(`From: ${analyzedFilesUrl}`);
+  logger.debug(`From: ${analyzedFilesUrl}`);
 
   try {
     const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
@@ -22,15 +22,15 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
           return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
         })
         .map((file: AnalyzedFile) => {
-          Logger.Instance.debug(file.formattedValue);
+          logger.debug(file.formattedValue);
           return file.formattedValue;
         });
-      Logger.Instance.info('Retrieved the analyzed files.');
+      logger.info('Retrieved the analyzed files.');
     }
   } catch (error: unknown) {
     let message = 'unknown error';
     if (error instanceof Error) message = error.message;
-    Logger.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
+    logger.exit(`There was an error retrieving the analyzed files: ${message}`);
   }
   return analyzedFiles;
 }
@@ -56,17 +56,17 @@ function getAnalyzedFilesUrl(url: string) {
  * @returns the quality gates
  */
 export async function getQualityGate(url: string): Promise<any> {
-  Logger.Instance.header('Retrieving the quality gates.');
+  logger.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
-  Logger.Instance.debug(`From: ${qualityGateUrl}`);
+  logger.debug(`From: ${qualityGateUrl}`);
 
   try {
     const response = await httpRequest(qualityGateUrl);
-    Logger.Instance.info('Retrieved the quality gates.');
-    Logger.Instance.debug(JSON.stringify(response));
+    logger.info('Retrieved the quality gates.');
+    logger.debug(JSON.stringify(response));
     return response;
   } catch (error: any) {
-    Logger.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
+    logger.exit(`There was an error retrieving the quality gates: ${error.message}`);
   }
 }
 
@@ -100,25 +100,25 @@ function getQualityGateUrl(url: string) {
  * @returns TiCS annotations.
  */
 export async function getAnnotations(apiLinks: any[]) {
-  Logger.Instance.header('Retrieving annotations.');
+  logger.header('Retrieving annotations.');
   try {
     let annotations: any[] = [];
     await Promise.all(
       apiLinks.map(async (link, index) => {
         const annotationsUrl = `${baseUrl}/${link.url}`;
-        Logger.Instance.debug(`From: ${annotationsUrl}`);
+        logger.debug(`From: ${annotationsUrl}`);
         const response = await httpRequest<any>(annotationsUrl);
         response.data.forEach((annotation: any) => {
           annotation.gateId = index;
-          Logger.Instance.debug(JSON.stringify(annotation));
+          logger.debug(JSON.stringify(annotation));
           annotations.push(annotation);
         });
       })
     );
-    Logger.Instance.info('Retrieved all annotations.');
+    logger.info('Retrieved all annotations.');
     return annotations;
   } catch (error: any) {
-    Logger.Instance.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
+    logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
   }
 }
 
@@ -130,10 +130,10 @@ export async function getViewerVersion(): Promise<any> {
   let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   try {
     const response = await httpRequest(getViewerVersionUrl.href);
-    Logger.Instance.info('Retrieved the Viewer Version.');
-    Logger.Instance.debug(JSON.stringify(response));
+    logger.info('Retrieved the Viewer Version.');
+    logger.debug(JSON.stringify(response));
     return response;
   } catch (error: any) {
-    Logger.Instance.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+    logger.exit(`There was an error retrieving the Viewer version: ${error.message}`);
   }
 }

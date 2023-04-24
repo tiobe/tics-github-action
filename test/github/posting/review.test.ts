@@ -2,7 +2,7 @@ import { githubConfig, octokit, ticsConfig } from '../../../src/configuration';
 import { postNothingAnalyzedReview, postReview } from '../../../src/github/posting/review';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
-import Logger from '../../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
@@ -159,7 +159,7 @@ describe('postReview', () => {
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(Logger.Instance, 'error');
+    const spy = jest.spyOn(logger, 'error');
 
     const analysis = {
       completed: false,
@@ -240,7 +240,7 @@ describe('postNothingAnalyzedReview', () => {
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(Logger.Instance, 'error');
+    const spy = jest.spyOn(logger, 'error');
 
     await postNothingAnalyzedReview('message', Events.APPROVE);
 

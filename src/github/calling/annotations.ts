@@ -1,4 +1,4 @@
-import Logger from '../../helper/logger';
+import { logger } from '../../helper/logger';
 import { githubConfig, octokit } from '../../configuration';
 
 /**
@@ -7,7 +7,7 @@ import { githubConfig, octokit } from '../../configuration';
  */
 export async function getPostedReviewComments() {
   try {
-    Logger.Instance.info('Retrieving posted review comments.');
+    logger.info('Retrieving posted review comments.');
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
@@ -15,6 +15,6 @@ export async function getPostedReviewComments() {
     };
     return await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
   } catch (error: any) {
-    Logger.Instance.error(`Could not retrieve the review comments: ${error.message}`);
+    logger.error(`Could not retrieve the review comments: ${error.message}`);
   }
 }

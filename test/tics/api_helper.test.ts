@@ -1,6 +1,6 @@
 import { githubConfig, ticsConfig } from '../../src/configuration';
 import { Analysis } from '../../src/helper/interfaces';
-import Logger from '../../src/helper/logger';
+import { logger } from '../../src/helper/logger';
 import fetch from 'node-fetch';
 import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTicsWebBaseUrlFromUrl, httpRequest } from '../../src/tics/api_helper';
 
@@ -8,7 +8,7 @@ describe('httpRequest', () => {
   test('Should return response on status 200', async () => {
     // testing without setting TiCS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, json: resJson }));
 
     const response = await httpRequest<any>('url');
@@ -20,7 +20,7 @@ describe('httpRequest', () => {
     ticsConfig.ticsAuthToken = 'authToken'; // test setting TiCS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 302, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith =
@@ -35,7 +35,7 @@ describe('httpRequest', () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 400, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status 400. header';
@@ -49,7 +49,7 @@ describe('httpRequest', () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 401, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith =
@@ -64,7 +64,7 @@ describe('httpRequest', () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 403, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status 403. Forbidden call: url';
@@ -78,7 +78,7 @@ describe('httpRequest', () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 404, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status 404. Please check if the given ticsConfiguration is correct.';
@@ -92,7 +92,7 @@ describe('httpRequest', () => {
     const resJson = jest.fn(() => Promise.resolve({ data: 'body', alertMessages: [{ header: 'header' }] }));
 
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: null, json: resJson }));
-    const exit = jest.spyOn(Logger.Instance, 'exit');
+    const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
     const calledWith = 'HTTP request failed with status null. Please check if your configuration is correct.';
@@ -105,8 +105,8 @@ describe('httpRequest', () => {
 
 describe('cliSummary', () => {
   test('Should post errors and warnings on logLevel debug, cliSummary.', async () => {
-    const error = jest.spyOn(Logger.Instance, 'error');
-    const warning = jest.spyOn(Logger.Instance, 'warning');
+    const error = jest.spyOn(logger, 'error');
+    const warning = jest.spyOn(logger, 'warning');
 
     githubConfig.debugger = true;
 
@@ -123,8 +123,8 @@ describe('cliSummary', () => {
   });
 
   test('Should post errors and no warnings on logLevel default, cliSummary.', async () => {
-    const error = jest.spyOn(Logger.Instance, 'error');
-    const warning = jest.spyOn(Logger.Instance, 'warning');
+    const error = jest.spyOn(logger, 'error');
+    const warning = jest.spyOn(logger, 'warning');
 
     githubConfig.debugger = false;
 
@@ -160,7 +160,7 @@ describe('getTicsWebBaseUrlFromUrl', () => {
   });
 
   test('Should return empty string from incorrect url.', () => {
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TiCS/cfg?name=default');
     expect(baseUrl).toEqual('');

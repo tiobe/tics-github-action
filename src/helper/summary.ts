@@ -5,7 +5,7 @@ import { Condition, QualityGate, ReviewComment, ReviewComments } from './interfa
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
-import Logger from './logger';
+import { logger } from './logger';
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -120,7 +120,7 @@ function createConditionTable(condition: Condition): SummaryTableRow[] {
  * @returns List of the review comments.
  */
 export async function createReviewComments(annotations: any[], changedFiles: any[]): Promise<ReviewComments> {
-  Logger.Instance.info('Creating review comments from annotations.');
+  logger.info('Creating review comments from annotations.');
 
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
@@ -131,7 +131,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (annotation.diffLines.includes(annotation.line)) {
-      Logger.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
+      logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
         body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
         path: annotation.path,
@@ -139,11 +139,11 @@ export async function createReviewComments(annotations: any[], changedFiles: any
       });
     } else {
       annotation.displayCount = displayCount;
-      Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+      logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       unpostable.push(annotation);
     }
   });
-  Logger.Instance.info('Created review comments from annotations.');
+  logger.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }
 

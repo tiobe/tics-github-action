@@ -1,4 +1,4 @@
-import Logger from '../../helper/logger';
+import { logger } from '../../helper/logger';
 import { Analysis, QualityGate, ReviewComments } from '../../helper/interfaces';
 import { githubConfig, octokit, ticsConfig } from '../../configuration';
 import { createFilesSummary, createLinkSummary, createUnpostableReviewCommentsSummary, createQualityGateSummary } from '../../helper/summary';
@@ -28,11 +28,11 @@ export async function postReview(analysis: Analysis, filesAnalyzed: string[], qu
   };
 
   try {
-    Logger.Instance.header('Posting a review for this pull request.');
+    logger.header('Posting a review for this pull request.');
     await octokit.rest.pulls.createReview(params);
-    Logger.Instance.info('Posted review for this pull request.');
+    logger.info('Posted review for this pull request.');
   } catch (error: any) {
-    Logger.Instance.error(`Posting the review failed: ${error.message}`);
+    logger.error(`Posting the review failed: ${error.message}`);
   }
 }
 
@@ -53,10 +53,10 @@ export async function postNothingAnalyzedReview(message: string, event: Events) 
   };
 
   try {
-    Logger.Instance.header('Posting a review for this pull request.');
+    logger.header('Posting a review for this pull request.');
     await octokit.rest.pulls.createReview(params);
-    Logger.Instance.info('Posted review for this pull request.');
+    logger.info('Posted review for this pull request.');
   } catch (error: any) {
-    Logger.Instance.error(`Posting the review failed: ${error.message}`);
+    logger.error(`Posting the review failed: ${error.message}`);
   }
 }

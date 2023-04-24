@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { githubConfig, ticsConfig } from '../src/configuration';
 import { Events } from '../src/helper/enums';
 import * as main from '../src/main';
-import Logger from '../src/helper/logger';
+import { logger } from '../src/helper/logger';
 
 import * as pulls from '../src/github/calling/pulls';
 import * as analyzer from '../src/tics/analyzer';
@@ -32,7 +32,7 @@ import {
 describe('pre checks', () => {
   test('Should call exit if viewer version is too low', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.0.0' });
-    const spyExit = jest.spyOn(Logger.Instance, 'exit');
+    const spyExit = jest.spyOn(logger, 'exit');
 
     await main.run();
 
@@ -43,7 +43,7 @@ describe('pre checks', () => {
   test('Should call exit if event is not pull request', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
     jest.spyOn(main, 'configure').mockImplementation();
-    const spyExit = jest.spyOn(Logger.Instance, 'exit');
+    const spyExit = jest.spyOn(logger, 'exit');
 
     await main.run();
 
@@ -53,7 +53,7 @@ describe('pre checks', () => {
 
   test('Should call exit if ".git" does not exist', async () => {
     githubConfig.eventName = 'pull_request';
-    const spyExit = jest.spyOn(Logger.Instance, 'exit');
+    const spyExit = jest.spyOn(logger, 'exit');
 
     await main.run();
 
@@ -67,7 +67,7 @@ describe('pre checks', () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockRejectedValueOnce(new Error('Error'));
 
-    const spyExit = jest.spyOn(Logger.Instance, 'exit');
+    const spyExit = jest.spyOn(logger, 'exit');
 
     await main.run();
 
@@ -81,7 +81,7 @@ describe('SetFailed checks', () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce([]);
 
-    const spyInfo = jest.spyOn(Logger.Instance, 'info');
+    const spyInfo = jest.spyOn(logger, 'info');
 
     await main.run();
 
@@ -95,7 +95,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
@@ -109,8 +109,8 @@ describe('SetFailed checks', () => {
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrl);
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
-    const spyError = jest.spyOn(Logger.Instance, 'error');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
+    const spyError = jest.spyOn(logger, 'error');
 
     await main.run();
 
@@ -128,7 +128,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce({});
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
@@ -145,7 +145,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGateFailed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
@@ -162,7 +162,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGatePassed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
@@ -294,7 +294,7 @@ describe('Diagnostic mode checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
 
     ticsConfig.mode = 'diagnostic';
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
@@ -305,7 +305,7 @@ describe('Diagnostic mode checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
     ticsConfig.mode = 'diagnostic';
-    const spySetFailed = jest.spyOn(Logger.Instance, 'setFailed');
+    const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.run();
 
