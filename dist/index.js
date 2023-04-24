@@ -58204,20 +58204,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 		if (nodeType === 'CatchClause') {
 			const param = node.param;
 			if (param) {
-				if (param.type === 'ObjectPattern') {
-					insertions.push({
-						__proto__: null,
-						pos: node.start,
-						order: TO_RIGHT,
-						coder: () => `catch(${tmpname}){try{throw(${tmpname}=${INTERNAL_STATE_NAME}.handleException(${tmpname}));}`
-					});
-					insertions.push({
-						__proto__: null,
-						pos: node.body.end,
-						order: TO_LEFT,
-						coder: () => `}`
-					});
-				} else {
+				if (param.type === 'Identifier') {
 					const name = assertType(param, 'Identifier').name;
 					const cBody = assertType(node.body, 'BlockStatement');
 					if (cBody.body.length > 0) {
@@ -58228,6 +58215,19 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 							coder: () => `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
 						});
 					}
+				} else {
+					insertions.push({
+						__proto__: null,
+						pos: node.start,
+						order: TO_RIGHT,
+						coder: () => `catch(${tmpname}){${tmpname}=${INTERNAL_STATE_NAME}.handleException(${tmpname});try{throw ${tmpname};}`
+					});
+					insertions.push({
+						__proto__: null,
+						pos: node.body.end,
+						order: TO_LEFT,
+						coder: () => `}`
+					});
 				}
 			}
 		} else if (nodeType === 'WithStatement') {
