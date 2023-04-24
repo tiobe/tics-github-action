@@ -14,7 +14,6 @@ import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
 import { Analysis } from './helper/interfaces';
-import { log } from 'console';
 
 run();
 
