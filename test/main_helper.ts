@@ -302,7 +302,7 @@ export const singleExpectedPostable = {
     {
       path: 'test.js',
       line: 0,
-      body: ':warning: **TiCS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
+      body: ':warning: **TICS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
     }
   ],
   unpostable: []

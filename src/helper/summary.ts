@@ -1,20 +1,34 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown } from './markdown';
-import { Condition, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { Analysis, Condition, QualityGate, ReviewComment, ReviewComments } from './interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
+export function createReviewBody(
+  analysis: Analysis,
+  filesAnalyzed: string[],
+  qualityGate: QualityGate,
+  reviewComments: ReviewComments | undefined
+): string {
+  let body = createQualityGateSummary(qualityGate);
+  body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
+  body += reviewComments && reviewComments.unpostable.length > 0 ? createUnpostableReviewCommentsSummary(reviewComments.unpostable) : '';
+  body += createFilesSummary(filesAnalyzed);
+
+  return body;
+}
+
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
- * @param errorList list containing all the errors found in the TiCS run.
- * @param warningList list containing all the warnings found in the TiCS run.
+ * @param errorList list containing all the errors found in the TICS run.
+ * @param warningList list containing all the warnings found in the TICS run.
  * @returns string containing the error summary.
  */
 export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
+  let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
 
   if (errorList.length > 0) {
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
@@ -30,11 +44,11 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
 
 /**
  * Creates a markdown link summary.
- * @param url Url to the TiCS viewer analysis.
+ * @param url Url to the TICS viewer analysis.
  * @returns Clickable link to the viewer analysis.
  */
 export function createLinkSummary(url: string): string {
-  return `${generateLinkMarkdown('See the results in the TiCS Viewer', url)}\n\n`;
+  return `${generateLinkMarkdown('See the results in the TICS Viewer', url)}\n\n`;
 }
 
 /**
@@ -54,8 +68,8 @@ export function createFilesSummary(fileList: string[]): string {
 }
 
 /**
- * Creates a quality gate summary for the TiCS analysis.
- * @param qualityGate quality gate retrieved from the TiCS viewer.
+ * Creates a quality gate summary for the TICS analysis.
+ * @param qualityGate quality gate retrieved from the TICS viewer.
  * @returns Quality gate summary.
  */
 export function createQualityGateSummary(qualityGate: QualityGate): string {
@@ -66,8 +80,8 @@ export function createQualityGateSummary(qualityGate: QualityGate): string {
   });
 
   summary.clear();
-  summary.addHeading('TiCS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}`, 3);
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
   summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
   failedConditions.forEach(condition => {
     if (condition.details && condition.details.items.length > 0) {
@@ -133,7 +147,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
     if (annotation.diffLines.includes(annotation.line)) {
       logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
+        body: `:warning: **TICS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
         path: annotation.path,
         line: annotation.line
       });
@@ -149,7 +163,7 @@ export async function createReviewComments(annotations: any[], changedFiles: any
 
 /**
  * Sorts annotations based on file name and line number.
- * @param annotations annotations returned by TiCS analyzer.
+ * @param annotations annotations returned by TICS analyzer.
  * @returns sorted anotations.
  */
 function sortAnnotations(annotations: any[]) {

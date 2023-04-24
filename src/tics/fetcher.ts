@@ -1,11 +1,11 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { AnalyzedFile, AnalyzedFiles, ChangedFile } from '../helper/interfaces';
+import { AnalyzedFile, AnalyzedFiles, ChangedFile, QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
 /**
- * Retrieves the files TiCS analyzed from the TiCS viewer.
- * @param url The TiCS explorer url.
+ * Retrieves the files TICS analyzed from the TICS viewer.
+ * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
 export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[]): Promise<string[]> {
@@ -36,8 +36,8 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
 }
 
 /**
- * Returns the url to get the analyzed files with from the TiCS.
- * @param url The TiCS explorer url.
+ * Returns the url to get the analyzed files with from the TICS.
+ * @param url The TICS explorer url.
  * @returns url to get the analyzed files from.
  */
 function getAnalyzedFilesUrl(url: string) {
@@ -51,28 +51,30 @@ function getAnalyzedFilesUrl(url: string) {
 }
 
 /**
- * Retrieves the TiCS quality gate from the TiCS viewer.
- * @param url The TiCS explorer url.
+ * Retrieves the TICS quality gate from the TICS viewer.
+ * @param url The TICS explorer url.
  * @returns the quality gates
  */
-export async function getQualityGate(url: string): Promise<any> {
+export async function getQualityGate(url: string): Promise<QualityGate | undefined> {
   logger.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);
 
   try {
-    const response = await httpRequest(qualityGateUrl);
+    const response = await httpRequest<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
     return response;
-  } catch (error: any) {
-    logger.exit(`There was an error retrieving the quality gates: ${error.message}`);
+  } catch (error: unknown) {
+    let message = 'reason unknown';
+    if (error instanceof Error) message = error.message;
+    logger.exit(`There was an error retrieving the quality gates: ${message}`);
   }
 }
 
 /**
  * Builds the quality gate url from the explorer url.
- * @param url The TiCS Explorer url.
+ * @param url The TICS Explorer url.
  * @returns The url to get the quality gate analysis.
  */
 function getQualityGateUrl(url: string) {
@@ -95,9 +97,9 @@ function getQualityGateUrl(url: string) {
 }
 
 /**
- * Gets the annotations from the TiCS viewer.
+ * Gets the annotations from the TICS viewer.
  * @param apiLinks annotationsApiLinks url.
- * @returns TiCS annotations.
+ * @returns TICS annotations.
  */
 export async function getAnnotations(apiLinks: any[]) {
   logger.header('Retrieving annotations.');
@@ -123,8 +125,8 @@ export async function getAnnotations(apiLinks: any[]) {
 }
 
 /**
- * Gets the version of the TiCS viewer used.
- * @returns Version of the used TiCS viewer.
+ * Gets the version of the TICS viewer used.
+ * @returns Version of the used TICS viewer.
  */
 export async function getViewerVersion(): Promise<any> {
   let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');

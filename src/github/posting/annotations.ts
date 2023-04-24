@@ -1,5 +1,7 @@
 import { logger } from '../../helper/logger';
 import { githubConfig, octokit } from '../../configuration';
+import { ReviewComments } from '../../helper/interfaces';
+import path from 'path';
 
 /**
  * Deletes the review comments of previous runs.
@@ -8,7 +10,7 @@ import { githubConfig, octokit } from '../../configuration';
 export async function deletePreviousReviewComments(postedReviewComments: any[]) {
   logger.header('Deleting review comments of previous runs.');
   postedReviewComments.map(async reviewComment => {
-    if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
+    if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -22,4 +24,15 @@ export async function deletePreviousReviewComments(postedReviewComments: any[]) 
     }
   });
   logger.info('Deleted review comments of previous runs.');
+}
+
+export async function postAnnotations(reviewComments: ReviewComments) {
+  logger.header('Posting annotations.');
+  reviewComments.postable.forEach(reviewComment => {
+    logger.warning(reviewComment.body, {
+      file: reviewComment.path,
+      startLine: reviewComment.line,
+      title: 'TICS annotation'
+    });
+  });
 }

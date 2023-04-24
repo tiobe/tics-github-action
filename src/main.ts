@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { postErrorComment } from './github/posting/comment';
+import { postComment, postErrorComment } from './github/posting/comment';
 import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import { logger } from './helper/logger';
@@ -7,13 +7,14 @@ import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/posting/review';
-import { createReviewComments } from './helper/summary';
-import { deletePreviousReviewComments } from './github/posting/annotations';
+import { createReviewBody, createReviewComments } from './helper/summary';
+import { deletePreviousReviewComments, postAnnotations } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
 import { Analysis } from './helper/interfaces';
+import { log } from 'console';
 
 run();
 
@@ -45,12 +46,12 @@ async function main() {
       if (!analysis.explorerUrl) {
         if (!analysis.completed) {
           postErrorComment(analysis);
-          logger.setFailed('Failed to run TiCS Github Action.');
+          logger.setFailed('Failed to run TICS Github Action.');
         } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-          postNothingAnalyzedReview('No changed files applicable for TiCS analysis quality gating.', Events.APPROVE);
+          postNothingAnalyzedReview('No changed files applicable for TICS analysis quality gating.');
         } else {
-          logger.setFailed('Failed to run TiCS Github Action.');
-          analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
+          logger.setFailed('Failed to run TICS Github Action.');
+          analysis.errorList.push('Explorer URL not returned from TICS analysis.');
         }
         cliSummary(analysis);
         return;
@@ -58,12 +59,16 @@ async function main() {
 
       const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl, changedFiles);
       const qualityGate = await getQualityGate(analysis.explorerUrl);
+
+      if (!qualityGate) return logger.exit('Quality gate could not be retrieved');
+
       let reviewComments;
 
       if (ticsConfig.postAnnotations) {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
           reviewComments = await createReviewComments(annotations, changedFiles);
+          reviewComments && (await postAnnotations(reviewComments));
         }
         const previousReviewComments = await getPostedReviewComments();
         if (previousReviewComments && previousReviewComments.length > 0) {
@@ -71,14 +76,20 @@ async function main() {
         }
       }
 
-      await postReview(analysis, analyzedFiles, qualityGate, reviewComments);
+      let reviewBody = createReviewBody(analysis, analyzedFiles, qualityGate, reviewComments);
+
+      if (ticsConfig.pullRequestApproval) {
+        await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+      } else {
+        await postComment(reviewBody);
+      }
 
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
 
     cliSummary(analysis);
   } catch (error: any) {
-    logger.error('Failed to run TiCS Github Action');
+    logger.error('Failed to run TICS Github Action');
     logger.exit(error.message);
   }
 }
@@ -131,13 +142,13 @@ async function meetsPrerequisites() {
   const viewerVersion = await getViewerVersion();
 
   if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
-    message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
+    message = `Minimum required TICS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for pull_request and checked out repository.
   } else if (githubConfig.eventName !== 'pull_request') {
     message = 'This action can only run on pull requests.';
   } else if (!isCheckedOut()) {
-    message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
+    message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
   }
 
   return message;

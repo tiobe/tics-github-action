@@ -51,7 +51,7 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TiCS analysis run.
+ * @param analysis the output of the TICS analysis run.
  */
 export function cliSummary(analysis: Analysis): void {
   analysis.errorList.forEach(error => logger.error(error));
@@ -61,10 +61,10 @@ export function cliSummary(analysis: Analysis): void {
 }
 
 /**
- * Creates the TiCS install data from the TiCS Viewer.
+ * Creates the TICS install data from the TICS Viewer.
  * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 export function getInstallTicsApiUrl(url: string, os: string): string {
   const installTicsApi = new URL(ticsConfig.ticsConfiguration);
@@ -87,7 +87,7 @@ export function getTicsWebBaseUrlFromUrl(url: string): string {
   if (url.includes(apiMarker + cfgMarker)) {
     baseUrl = url.split(apiMarker)[0];
   } else {
-    logger.exit('Missing configuration api in the TiCS Viewer URL. Please check your workflow configuration.');
+    logger.exit('Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.');
   }
 
   return baseUrl;
@@ -95,7 +95,7 @@ export function getTicsWebBaseUrlFromUrl(url: string): string {
 
 /**
  * Gets query value form a url
- * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
+ * @param url The TICS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
  * @param query the query (e.g. Project)
  * @returns query value (e.g. c-demo)
  **/
@@ -114,7 +114,7 @@ export function getItemFromUrl(url: string, query: string): string {
 
 /**
  * In case of project auto this returns the project name from the explorer url.
- * @param url the TiCS explorer url.
+ * @param url the TICS explorer url.
  * @returns project name.
  */
 export function getProjectName(url: string): string {

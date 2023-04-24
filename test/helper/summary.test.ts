@@ -48,7 +48,7 @@ describe('createLinkSummary', () => {
   test('Should return markdown link to url', () => {
     const response = createLinkSummary('https://url.com');
 
-    expect(response).toEqual('[See the results in the TiCS Viewer](https://url.com)\n\n');
+    expect(response).toEqual('[See the results in the TICS Viewer](https://url.com)\n\n');
   });
 });
 
@@ -249,7 +249,7 @@ describe('createReviewComments', () => {
       {
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TiCS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: ':warning: **TICS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
       }
     ];
 
@@ -291,7 +291,7 @@ describe('createReviewComments', () => {
       {
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TiCS: test violation: test**\r\n(2x) Line: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: ':warning: **TICS: test violation: test**\r\n(2x) Line: 0, Rule: test, Level: 1, Category: test\r\n'
       }
     ];
 
@@ -343,7 +343,7 @@ describe('createReviewComments', () => {
       {
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TiCS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: ':warning: **TICS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
       }
     ];
 

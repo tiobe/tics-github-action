@@ -7,7 +7,7 @@ describe('deletePreviousReviewComments', () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([
-      { id: 1, body: ':warning: **TiCS:' },
+      { id: 1, body: ':warning: **TICS:' },
       { id: 2, body: '' }
     ]);
     expect(spy).toBeCalledTimes(1);
@@ -17,8 +17,8 @@ describe('deletePreviousReviewComments', () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([
-      { id: 1, body: ':warning: **TiCS:' },
-      { id: 2, body: ':warning: **TiCS:' }
+      { id: 1, body: ':warning: **TICS:' },
+      { id: 2, body: ':warning: **TICS:' }
     ]);
     expect(spy).toBeCalledTimes(2);
   });
@@ -39,7 +39,7 @@ describe('deletePreviousReviewComments', () => {
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    await deletePreviousReviewComments([{ id: 1, body: ':warning: **TiCS:' }]);
+    await deletePreviousReviewComments([{ id: 1, body: ':warning: **TICS:' }]);
 
     expect(spy).toBeCalledTimes(1);
   });

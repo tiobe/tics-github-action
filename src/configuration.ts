@@ -6,7 +6,7 @@ import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
-const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
+const pullRequestNumber: string = payload.pull_request ? payload.pull_request.number : '';
 
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',

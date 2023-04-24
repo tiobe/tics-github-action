@@ -1,3 +1,4 @@
+import { RequestHeaders, RequestParameters, RequestRequestOptions } from '@octokit/types';
 import { Http2ServerResponse } from 'http2';
 
 export interface Analysis {

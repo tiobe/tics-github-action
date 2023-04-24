@@ -10,7 +10,7 @@ let statusCode: number;
 let completed: boolean;
 
 /**
- * Runs TiCS based on the configuration set in a workflow.
+ * Runs TICS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string) {
@@ -18,7 +18,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
 
   const command = await buildRunCommand(fileListPath);
 
-  logger.header('Running TiCS');
+  logger.header('Running TICS');
   logger.debug(`With command: ${command}`);
   try {
     statusCode = await exec(command, [], {
@@ -55,7 +55,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
 }
 
 /**
- * Build the command to run (and optionally install) TiCS.
+ * Build the command to run (and optionally install) TICS.
  * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
@@ -67,7 +67,7 @@ async function buildRunCommand(fileListPath: string) {
 }
 
 /**
- * Get the command to install TiCS with.
+ * Get the command to install TICS with.
  */
 async function getInstallTics() {
   if (!ticsConfig.installTics) return '';
@@ -106,13 +106,13 @@ function findInStdOutOrErr(data: string) {
 }
 
 /**
- * Retrieves the the TiCS install url from the ticsConfiguration.
+ * Retrieves the the TICS install url from the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 async function retrieveInstallTics(os: string) {
   try {
-    logger.info('Trying to retrieve configuration information from TiCS.');
+    logger.info('Trying to retrieve configuration information from TICS.');
 
     const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
 
@@ -125,9 +125,9 @@ async function retrieveInstallTics(os: string) {
 }
 
 /**
- * Builds the TiCS calculate command based on the fileListPath and the ticsConfig set.
+ * Builds the TICS calculate command based on the fileListPath and the ticsConfig set.
  * @param fileListPath
- * @returns string of the command to run TiCS.
+ * @returns string of the command to run TICS.
  */
 function getTicsCommand(fileListPath: string) {
   let execString = 'TICS -ide github ';

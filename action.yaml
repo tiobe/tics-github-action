@@ -1,4 +1,4 @@
-name: TiCS Code Quality Analysis
+name: TICS Code Quality Analysis
 author: TIOBE Software
 description: Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.
 inputs:
@@ -21,14 +21,14 @@ inputs:
     description: Location of the files to analyze
     required: false
   calc:
-    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
+    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
     required: false
     default: GATE
   nocalc:
     description: Comma-separated list of metrics not to be calculated.
     required: false
   recalc:
-    description: Comma-separated list of metrics to be recalculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x.
+    description: Comma-separated list of metrics to be recalculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.
     required: false
   norecalc:
     description: Comma-separated list of metrics not to be recalculated.
@@ -60,7 +60,7 @@ inputs:
     required: false
     default: default
   postAnnotations:
-    description: Show the latest TiCS annotations directly in the GitHub Pull Request review.
+    description: Show the latest TICS annotations directly in the GitHub Pull Request review.
     required: false
     default: true
   pullRequestApproval:
@@ -77,7 +77,7 @@ inputs:
     description: Location to store debug information.
     required: false
   viewerUrl:
-    description: The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)
+    description: The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)
     required: false
 branding:
   icon: flag

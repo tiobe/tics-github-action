@@ -103,7 +103,7 @@ class Logger {
    * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
-  public maskSecrets(data: string): string {
+  maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
     ticsConfig.secretsFilter.forEach(secret => {
       if (data.match(new RegExp(secret, 'gi'))) {

@@ -6,7 +6,7 @@ import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTi
 
 describe('httpRequest', () => {
   test('Should return response on status 200', async () => {
-    // testing without setting TiCS Auth Token at least once
+    // testing without setting TICS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
     const exit = jest.spyOn(logger, 'exit');
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, json: resJson }));
@@ -17,7 +17,7 @@ describe('httpRequest', () => {
   });
 
   test('Should return undefined response and call exit on status 302', async () => {
-    ticsConfig.ticsAuthToken = 'authToken'; // test setting TiCS Auth Token at least once
+    ticsConfig.ticsAuthToken = 'authToken'; // test setting TICS Auth Token at least once
     const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
     (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 302, json: resJson }));
     const exit = jest.spyOn(logger, 'exit');
@@ -143,26 +143,26 @@ describe('cliSummary', () => {
 
 describe('getInstallTicsApiUrl', () => {
   test('Should append configuration url with platform and url', () => {
-    ticsConfig.ticsConfiguration = 'http://localhost/tiobeweb/TiCS/api/cfg?name=default';
+    ticsConfig.ticsConfiguration = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 
-    const installTicsApiUrl = getInstallTicsApiUrl('http://localhost/tiobeweb/TiCS', 'Linux');
+    const installTicsApiUrl = getInstallTicsApiUrl('http://localhost/tiobeweb/TICS', 'Linux');
 
     const decodedUrl = decodeURIComponent(installTicsApiUrl);
 
-    expect(decodedUrl).toEqual('http://localhost/tiobeweb/TiCS/api/cfg?name=default&platform=Linux&url=http://localhost/tiobeweb/TiCS');
+    expect(decodedUrl).toEqual('http://localhost/tiobeweb/TICS/api/cfg?name=default&platform=Linux&url=http://localhost/tiobeweb/TICS');
   });
 });
 
 describe('getTicsWebBaseUrlFromUrl', () => {
   test('Should return base url from correct url.', () => {
-    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TiCS/api/cfg?name=default');
-    expect(baseUrl).toEqual('http://localhost/tiobeweb/TiCS');
+    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TICS/api/cfg?name=default');
+    expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
   test('Should return empty string from incorrect url.', () => {
     const spy = jest.spyOn(logger, 'exit');
 
-    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TiCS/cfg?name=default');
+    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TICS/cfg?name=default');
     expect(baseUrl).toEqual('');
     expect(spy).toHaveBeenCalledTimes(1);
   });
