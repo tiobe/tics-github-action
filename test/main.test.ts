@@ -23,7 +23,6 @@ import {
   singleAnalyzedFiles,
   singleAnnotations,
   singleChangedFiles,
-  singleExpectedPostable,
   singleFileQualityGateFailed,
   singleFileQualityGatePassed as singleFileQualityGatePassed,
   singlePreviousReviewComments

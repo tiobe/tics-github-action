@@ -68,7 +68,7 @@ async function main() {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
           reviewComments = await createReviewComments(annotations, changedFiles);
-          reviewComments && (await postAnnotations(reviewComments));
+          if (reviewComments) await postAnnotations(reviewComments);
         }
         const previousReviewComments = await getPostedReviewComments();
         if (previousReviewComments && previousReviewComments.length > 0) {
