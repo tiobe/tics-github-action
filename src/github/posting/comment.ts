@@ -33,7 +33,7 @@ export async function postComment(body: string): Promise<void> {
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
-    issue_number: parseInt(githubConfig.pullRequestNumber),
+    issue_number: githubConfig.pullRequestNumber,
     body: body
   };
 
