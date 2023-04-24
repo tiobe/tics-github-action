@@ -52,7 +52,7 @@ describe('warning', () => {
     logger.warning('string');
 
     expect(debug).toHaveBeenCalledTimes(1);
-    expect(debug).toHaveBeenCalledWith('\u001b[33mstring');
+    expect(debug).toHaveBeenCalledWith('\u001b[33mstring', undefined);
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(logger.called).toEqual('warning');
   });
@@ -66,7 +66,7 @@ describe('error', () => {
     logger.error('error');
 
     expect(error).toHaveBeenCalledTimes(1);
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('error'));
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('error'), undefined);
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
     expect(logger.called).toEqual('error');

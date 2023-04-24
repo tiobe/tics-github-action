@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { ticsConfig } from '../configuration';
+import { AnnotationProperties } from '@actions/core';
 
 class Logger {
   called: string = '';
@@ -43,9 +44,9 @@ class Logger {
    *
    * @param string
    */
-  warning(string: string): void {
+  warning(string: string, properties?: AnnotationProperties): void {
     string = this.maskSecrets(string);
-    core.warning(`\u001b[33m${string}`);
+    core.warning(`\u001b[33m${string}`, properties);
     this.called = 'warning';
   }
 
@@ -54,10 +55,10 @@ class Logger {
    *
    * @param error
    */
-  error(error: string): void {
+  error(error: string, properties?: AnnotationProperties): void {
     error = this.maskSecrets(error);
     this.addNewline('error');
-    core.error(`\u001b[31m${error}`);
+    core.error(`\u001b[31m${error}`, properties);
     this.called = 'error';
   }
 
