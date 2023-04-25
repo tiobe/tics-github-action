@@ -28,7 +28,7 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
+    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? parseInt(process.env.PULL_REQUEST_NUMBER) : pullRequestNumber,
     debugger: (0, core_1.isDebug)()
 };
 function getSecretsFilter(secretsFilter) {
@@ -73,16 +73,13 @@ exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.
 /***/ }),
 
 /***/ 7829:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getPostedReviewComments = void 0;
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -90,7 +87,7 @@ const configuration_1 = __nccwpck_require__(5527);
  */
 async function getPostedReviewComments() {
     try {
-        logger_1.default.Instance.info('Retrieving posted review comments.');
+        logger_1.logger.info('Retrieving posted review comments.');
         const params = {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
@@ -99,7 +96,7 @@ async function getPostedReviewComments() {
         return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
     }
     catch (error) {
-        logger_1.default.Instance.error(`Could not retrieve the review comments: ${error.message}`);
+        logger_1.logger.error(`Could not retrieve the review comments: ${error.message}`);
     }
 }
 exports.getPostedReviewComments = getPostedReviewComments;
@@ -108,18 +105,15 @@ exports.getPostedReviewComments = getPostedReviewComments;
 /***/ }),
 
 /***/ 5857:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.changedFilesToFile = exports.getChangedFiles = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const canonical_path_1 = __nccwpck_require__(5806);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -132,7 +126,7 @@ async function getChangedFiles() {
         pull_number: configuration_1.githubConfig.pullRequestNumber
     };
     try {
-        logger_1.default.Instance.header('Retrieving changed files.');
+        logger_1.logger.header('Retrieving changed files.');
         const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data
                 .filter(item => {
@@ -147,15 +141,15 @@ async function getChangedFiles() {
                 .map(item => {
                 // If a file is moved or renamed the status is 'renamed'.
                 item.filename = (0, canonical_path_1.normalize)(item.filename);
-                logger_1.default.Instance.debug(item.filename);
+                logger_1.logger.debug(item.filename);
                 return item;
             });
         });
-        logger_1.default.Instance.info('Retrieved changed files.');
+        logger_1.logger.info('Retrieved changed files.');
         return response;
     }
     catch (error) {
-        logger_1.default.Instance.exit(`Could not retrieve the changed files: ${error}`);
+        logger_1.logger.exit(`Could not retrieve the changed files: ${error}`);
     }
 }
 exports.getChangedFiles = getChangedFiles;
@@ -165,14 +159,14 @@ exports.getChangedFiles = getChangedFiles;
  * @returns Location of the written file.
  */
 function changedFilesToFile(changedFiles) {
-    logger_1.default.Instance.header('Writing changedFiles to file');
+    logger_1.logger.header('Writing changedFiles to file');
     let contents = '';
     changedFiles.forEach(item => {
         contents += item.filename + '\n';
     });
     const fileListPath = (0, canonical_path_1.resolve)('changedFiles.txt');
     (0, fs_1.writeFileSync)(fileListPath, contents);
-    logger_1.default.Instance.info(`Content written to: ${fileListPath}`);
+    logger_1.logger.info(`Content written to: ${fileListPath}`);
     return fileListPath;
 }
 exports.changedFilesToFile = changedFilesToFile;
@@ -181,25 +175,22 @@ exports.changedFilesToFile = changedFilesToFile;
 /***/ }),
 
 /***/ 9757:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deletePreviousReviewComments = void 0;
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+exports.postAnnotations = exports.deletePreviousReviewComments = void 0;
+const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 /**
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
 async function deletePreviousReviewComments(postedReviewComments) {
-    logger_1.default.Instance.header('Deleting review comments of previous runs.');
+    logger_1.logger.header('Deleting review comments of previous runs.');
     postedReviewComments.map(async (reviewComment) => {
-        if (reviewComment.body.substring(0, 17) === ':warning: **TiCS:') {
+        if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
             try {
                 const params = {
                     owner: configuration_1.githubConfig.owner,
@@ -209,121 +200,140 @@ async function deletePreviousReviewComments(postedReviewComments) {
                 await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
             }
             catch (error) {
-                logger_1.default.Instance.error(`Could not delete review comment: ${error.message}`);
+                logger_1.logger.error(`Could not delete review comment: ${error.message}`);
             }
         }
     });
-    logger_1.default.Instance.info('Deleted review comments of previous runs.');
+    logger_1.logger.info('Deleted review comments of previous runs.');
 }
 exports.deletePreviousReviewComments = deletePreviousReviewComments;
+async function postAnnotations(reviewComments) {
+    logger_1.logger.header('Posting annotations.');
+    reviewComments.postable.forEach(reviewComment => {
+        logger_1.logger.warning(reviewComment.body, {
+            file: reviewComment.path,
+            startLine: reviewComment.line,
+            title: reviewComment.title
+        });
+    });
+}
+exports.postAnnotations = postAnnotations;
 
 
 /***/ }),
 
 /***/ 5436:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postErrorComment = void 0;
+exports.postComment = exports.postNothingAnalyzedComment = exports.postErrorComment = void 0;
 const configuration_1 = __nccwpck_require__(5527);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const summary_1 = __nccwpck_require__(1502);
+const markdown_1 = __nccwpck_require__(5300);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Create error comment on the pull request from the analysis given.
- * @param analysis Analysis object returned from TiCS analysis.
+ * @param analysis Analysis object returned from TICS analysis.
  */
 async function postErrorComment(analysis) {
-    try {
-        const params = {
-            owner: configuration_1.githubConfig.owner,
-            repo: configuration_1.githubConfig.reponame,
-            issue_number: configuration_1.githubConfig.pullRequestNumber,
-            body: (0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList)
-        };
-        logger_1.default.Instance.header('Posting error summary in pull request.');
-        await configuration_1.octokit.rest.issues.createComment(params);
-        logger_1.default.Instance.info('Posted the error summary in pull request.');
-    }
-    catch (error) {
-        logger_1.default.Instance.error(`Posting the comment failed: ${error.message}`);
-    }
+    let body = (0, summary_1.createErrorSummary)(analysis.errorList, analysis.warningList);
+    await postComment(body);
 }
 exports.postErrorComment = postErrorComment;
+/**
+ * Create a comment on the pull request with a body and approval.
+ * @param message Message to display in the body of the comment.
+ */
+async function postNothingAnalyzedComment(message) {
+    const body = `## TICS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
+    await postComment(body);
+}
+exports.postNothingAnalyzedComment = postNothingAnalyzedComment;
+/**
+ * Create review on the pull request from the analysis given.
+ * @param body Body posted to the comment.
+ */
+async function postComment(body) {
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        issue_number: configuration_1.githubConfig.pullRequestNumber,
+        body: body
+    };
+    try {
+        logger_1.logger.header('Posting a comment for this pull request.');
+        await configuration_1.octokit.rest.issues.createComment(params);
+        logger_1.logger.info('Posted comment for this pull request.');
+    }
+    catch (error) {
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Posting the comment failed: ${message}`);
+    }
+}
+exports.postComment = postComment;
 
 
 /***/ }),
 
 /***/ 8973:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.postNothingAnalyzedReview = exports.postReview = void 0;
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
-const summary_1 = __nccwpck_require__(1502);
 const enums_1 = __nccwpck_require__(1655);
 const markdown_1 = __nccwpck_require__(5300);
 /**
  * Create review on the pull request from the analysis given.
- * @param analysis Analysis object returned from TiCS analysis.
- * @param filesAnalyzed List of all files analyzed by TiCS.
- * @param qualityGate Quality gate returned by TiCS.
- * @param reviewComments TiCS annotations in the form of review comments.
+ * @param body Body containing the summary of the review
+ * @param event Either approve or request changes in the review.
  */
-async function postReview(analysis, filesAnalyzed, qualityGate, reviewComments) {
-    let body = (0, summary_1.createQualityGateSummary)(qualityGate);
-    body += analysis.explorerUrl ? (0, summary_1.createLinkSummary)(analysis.explorerUrl) : '';
-    body += reviewComments && reviewComments.unpostable.length > 0 ? (0, summary_1.createUnpostableReviewCommentsSummary)(reviewComments.unpostable) : '';
-    body += (0, summary_1.createFilesSummary)(filesAnalyzed);
+async function postReview(body, event) {
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: configuration_1.ticsConfig.pullRequestApproval ? (qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES) : enums_1.Events.COMMENT,
-        body: body,
-        comments: reviewComments ? reviewComments.postable : undefined
+        event: event,
+        body: body
     };
     try {
-        logger_1.default.Instance.header('Posting a review for this pull request.');
+        logger_1.logger.header('Posting a review for this pull request.');
         await configuration_1.octokit.rest.pulls.createReview(params);
-        logger_1.default.Instance.info('Posted review for this pull request.');
+        logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
+        logger_1.logger.error(`Posting the review failed: ${error.message}`);
     }
 }
 exports.postReview = postReview;
 /**
- * Create review on the pull request with a body and approval0.
+ * Create review on the pull request with a body and approval.
  * @param message Message to display in the body of the review.
- * @param event Approve or request changes in the review.
  */
-async function postNothingAnalyzedReview(message, event) {
-    const body = `## TiCS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[event === enums_1.Events.APPROVE ? 1 : 0], true)}\n\n${message}`;
+async function postNothingAnalyzedReview(message) {
+    const body = `## TICS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber,
-        event: configuration_1.ticsConfig.pullRequestApproval ? event : enums_1.Events.COMMENT,
+        event: enums_1.Events.APPROVE,
         body: body
     };
     try {
-        logger_1.default.Instance.header('Posting a review for this pull request.');
+        logger_1.logger.header('Posting a review for this pull request.');
         await configuration_1.octokit.rest.pulls.createReview(params);
-        logger_1.default.Instance.info('Posted review for this pull request.');
+        logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        logger_1.default.Instance.error(`Posting the review failed: ${error.message}`);
+        logger_1.logger.error(`Posting the review failed: ${error.message}`);
     }
 }
 exports.postNothingAnalyzedReview = postNothingAnalyzedReview;
@@ -340,10 +350,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Events = exports.Status = void 0;
 var Status;
 (function (Status) {
-    Status[Status["FAILED"] = 0] = "FAILED";
-    Status[Status["PASSED"] = 1] = "PASSED";
-    Status[Status["WARNING"] = 2] = "WARNING";
-    Status[Status["SKIPPED"] = 3] = "SKIPPED";
+    Status["FAILED"] = "FAILED";
+    Status["PASSED"] = "PASSED";
+    Status["WARNING"] = "WARNING";
+    Status["SKIPPED"] = "SKIPPED";
 })(Status = exports.Status || (exports.Status = {}));
 var Events;
 (function (Events) {
@@ -384,15 +394,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.logger = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const configuration_1 = __nccwpck_require__(5527);
 class Logger {
-    static _instance;
     called = '';
     matched = [];
-    static get Instance() {
-        return this._instance || (this._instance = new this());
-    }
     /**
      * Uses core.info to print to the console with a purple color.
      * @param string
@@ -428,9 +435,9 @@ class Logger {
      *
      * @param string
      */
-    warning(string) {
+    warning(string, properties) {
         string = this.maskSecrets(string);
-        core.warning(`\u001b[33m${string}`);
+        core.warning(`\u001b[33m${string}`, properties);
         this.called = 'warning';
     }
     /**
@@ -438,10 +445,10 @@ class Logger {
      *
      * @param error
      */
-    error(error) {
+    error(error, properties) {
         error = this.maskSecrets(error);
         this.addNewline('error');
-        core.error(`\u001b[31m${error}`);
+        core.error(`\u001b[31m${error}`, properties);
         this.called = 'error';
     }
     /**
@@ -502,7 +509,7 @@ class Logger {
         return data;
     }
 }
-exports["default"] = Logger;
+exports.logger = new Logger();
 
 
 /***/ }),
@@ -513,18 +520,8 @@ exports["default"] = Logger;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
+exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = void 0;
 const enums_1 = __nccwpck_require__(1655);
-/**
- * Generates a link with text in markdown.
- * @param text Text for the link.
- * @param link The actual link to.
- * @returns Annotated link in markdown.
- */
-function generateLinkMarkdown(text, link) {
-    return `[${text}](${link})`;
-}
-exports.generateLinkMarkdown = generateLinkMarkdown;
 /**
  * Generates a status symbol with optional suffix.
  * @param status The status. (Either 'passed', 'failed', 'skipped' or 'warning').
@@ -533,15 +530,13 @@ exports.generateLinkMarkdown = generateLinkMarkdown;
  */
 function generateStatusMarkdown(status, hasSuffix = false) {
     switch (status) {
-        case enums_1.Status[0]:
+        case enums_1.Status.FAILED:
             return ':x: ' + (hasSuffix ? 'Failed ' : '');
-        case enums_1.Status[1]:
+        case enums_1.Status.PASSED:
             return ':heavy_check_mark: ' + (hasSuffix ? 'Passed ' : '');
-        case enums_1.Status[2]:
-        case enums_1.Status[3]:
+        case enums_1.Status.SKIPPED:
+        case enums_1.Status.WARNING:
             return ':warning: ' + (hasSuffix ? 'Skipped ' : '');
-        default:
-            return '';
     }
 }
 exports.generateStatusMarkdown = generateStatusMarkdown;
@@ -560,29 +555,60 @@ exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
 /***/ }),
 
 /***/ 1502:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = void 0;
+exports.createUnpostableAnnotationsDetails = exports.createReviewComments = exports.createFilesSummary = exports.createErrorSummary = exports.createSummaryBody = void 0;
 const core_1 = __nccwpck_require__(2186);
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
+function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
+    const failedConditions = extractFailedConditions(qualityGate.gates);
+    core_1.summary.clear();
+    core_1.summary.addHeading('TICS Quality Gate');
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
+    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
+    failedConditions.forEach(condition => {
+        if (condition.details && condition.details.items.length > 0) {
+            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+            core_1.summary.addBreak();
+            core_1.summary.addTable(createConditionTable(condition));
+            core_1.summary.addRaw('</details>', true);
+        }
+        else {
+            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+        }
+    });
+    core_1.summary.addEOL();
+    if (analysis.explorerUrl)
+        core_1.summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
+    if (reviewComments && reviewComments.unpostable.length > 0) {
+        core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+    }
+    core_1.summary.addRaw(createFilesSummary(filesAnalyzed));
+    return core_1.summary.stringify();
+}
+exports.createSummaryBody = createSummaryBody;
+function extractFailedConditions(gates) {
+    let failedConditions = [];
+    gates.forEach(gate => {
+        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
+    });
+    return failedConditions;
+}
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
- * @param errorList list containing all the errors found in the TiCS run.
- * @param warningList list containing all the warnings found in the TiCS run.
+ * @param errorList list containing all the errors found in the TICS run.
+ * @param warningList list containing all the warnings found in the TICS run.
  * @returns string containing the error summary.
  */
 function createErrorSummary(errorList, warningList) {
-    let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
+    let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
     if (errorList.length > 0) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
@@ -594,15 +620,6 @@ function createErrorSummary(errorList, warningList) {
     return summary;
 }
 exports.createErrorSummary = createErrorSummary;
-/**
- * Creates a markdown link summary.
- * @param url Url to the TiCS viewer analysis.
- * @returns Clickable link to the viewer analysis.
- */
-function createLinkSummary(url) {
-    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TiCS Viewer', url)}\n\n`;
-}
-exports.createLinkSummary = createLinkSummary;
 /**
  * Creates a list of all the files analyzed.
  * @param fileList list of files.
@@ -619,35 +636,6 @@ function createFilesSummary(fileList) {
     return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
 }
 exports.createFilesSummary = createFilesSummary;
-/**
- * Creates a quality gate summary for the TiCS analysis.
- * @param qualityGate quality gate retrieved from the TiCS viewer.
- * @returns Quality gate summary.
- */
-function createQualityGateSummary(qualityGate) {
-    let failedConditions = [];
-    qualityGate.gates.forEach(gate => {
-        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
-    });
-    core_1.summary.clear();
-    core_1.summary.addHeading('TiCS Quality Gate');
-    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(enums_1.Status[qualityGate.passed ? 1 : 0], true)}`, 3);
-    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-    failedConditions.forEach(condition => {
-        if (condition.details && condition.details.items.length > 0) {
-            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-            core_1.summary.addBreak();
-            core_1.summary.addTable(createConditionTable(condition));
-            core_1.summary.addRaw('</details>', true);
-        }
-        else {
-            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
-        }
-    });
-    core_1.summary.addRaw('', true);
-    return core_1.summary.stringify();
-}
-exports.createQualityGateSummary = createQualityGateSummary;
 /**
  * Creates a table containing a summary for all conditions.
  * @param conditions Conditions of the quality gate
@@ -681,35 +669,36 @@ function createConditionTable(condition) {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-async function createReviewComments(annotations, changedFiles) {
-    logger_1.default.Instance.info('Creating review comments from annotations.');
+function createReviewComments(annotations, changedFiles) {
+    logger_1.logger.info('Creating review comments from annotations.');
     const sortedAnnotations = sortAnnotations(annotations);
     const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
     let unpostable = [];
     let postable = [];
     groupedAnnotations.forEach(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        if (annotation.diffLines.includes(annotation.line)) {
-            logger_1.default.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
+        if (annotation.diffLines?.includes(annotation.line)) {
+            logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
-                body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
+                title: `${annotation.type}: ${annotation.rule}`,
+                body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
                 path: annotation.path,
                 line: annotation.line
             });
         }
         else {
             annotation.displayCount = displayCount;
-            logger_1.default.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+            logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
             unpostable.push(annotation);
         }
     });
-    logger_1.default.Instance.info('Created review comments from annotations.');
+    logger_1.logger.info('Created review comments from annotations.');
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
 /**
  * Sorts annotations based on file name and line number.
- * @param annotations annotations returned by TiCS analyzer.
+ * @param annotations annotations returned by TICS analyzer.
  * @returns sorted anotations.
  */
 function sortAnnotations(annotations) {
@@ -751,6 +740,8 @@ function groupAnnotations(annotations, changedFiles) {
 function fetchDiffLines(file) {
     const regex = /\+(\d+),(\d+)+/g;
     let diffLines = [];
+    if (!file.patch)
+        return [];
     let match = regex.exec(file.patch);
     while (match !== null) {
         const startLine = parseInt(match[1]);
@@ -774,7 +765,7 @@ function findAnnotationInList(list, annotation) {
             a.rule === annotation.rule &&
             a.level === annotation.level &&
             a.category === annotation.category &&
-            a.message === annotation.message);
+            a.msg === annotation.msg);
     });
 }
 /**
@@ -782,8 +773,8 @@ function findAnnotationInList(list, annotation) {
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
-    let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+function createUnpostableAnnotationsDetails(unpostableReviewComments) {
+    let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
     let body = '';
     let previousPath = '';
     unpostableReviewComments.forEach(reviewComment => {
@@ -794,187 +785,26 @@ function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
             body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
         }
         body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
-        previousPath = reviewComment.path;
+        previousPath = reviewComment.path ? reviewComment.path : '';
     });
     body += '</table>';
-    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+    return (0, markdown_1.generateExpandableAreaMarkdown)(label, body);
 }
-exports.createUnpostableReviewCommentsSummary = createUnpostableReviewCommentsSummary;
-
-
-/***/ }),
-
-/***/ 3109:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configure = exports.run = void 0;
-const fs_1 = __nccwpck_require__(7147);
-const comment_1 = __nccwpck_require__(5436);
-const configuration_1 = __nccwpck_require__(5527);
-const pulls_1 = __nccwpck_require__(5857);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
-const analyzer_1 = __nccwpck_require__(9099);
-const api_helper_1 = __nccwpck_require__(3823);
-const fetcher_1 = __nccwpck_require__(1559);
-const review_1 = __nccwpck_require__(8973);
-const summary_1 = __nccwpck_require__(1502);
-const annotations_1 = __nccwpck_require__(9757);
-const annotations_2 = __nccwpck_require__(7829);
-const enums_1 = __nccwpck_require__(1655);
-const compare_versions_1 = __nccwpck_require__(4773);
-const core_1 = __nccwpck_require__(2186);
-run();
-// exported for testing purposes
-async function run() {
-    configure();
-    const message = await meetsPrerequisites();
-    if (message)
-        return logger_1.default.Instance.exit(message);
-    await main();
-}
-exports.run = run;
-async function main() {
-    try {
-        let analysis;
-        if (configuration_1.ticsConfig.mode === 'diagnostic') {
-            logger_1.default.Instance.header('Running action in diagnostic mode');
-            analysis = await (0, analyzer_1.runTicsAnalyzer)('');
-            if (analysis.statusCode !== 0)
-                logger_1.default.Instance.setFailed('Diagnostic run has failed.');
-        }
-        else {
-            const changedFiles = await (0, pulls_1.getChangedFiles)();
-            if (!changedFiles || changedFiles.length <= 0)
-                return logger_1.default.Instance.info('No changed files found to analyze.');
-            const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
-            analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-            if (!analysis.explorerUrl) {
-                if (!analysis.completed) {
-                    (0, comment_1.postErrorComment)(analysis);
-                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-                }
-                else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                    (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TiCS analysis quality gating.', enums_1.Events.APPROVE);
-                }
-                else {
-                    logger_1.default.Instance.setFailed('Failed to run TiCS Github Action.');
-                    analysis.errorList.push('Explorer URL not returned from TiCS analysis.');
-                }
-                (0, api_helper_1.cliSummary)(analysis);
-                return;
-            }
-            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl, changedFiles);
-            const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-            let reviewComments;
-            if (configuration_1.ticsConfig.postAnnotations) {
-                const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
-                if (annotations && annotations.length > 0) {
-                    reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
-                }
-                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-                if (previousReviewComments && previousReviewComments.length > 0) {
-                    await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
-                }
-            }
-            await (0, review_1.postReview)(analysis, analyzedFiles, qualityGate, reviewComments);
-            if (!qualityGate.passed)
-                logger_1.default.Instance.setFailed(qualityGate.message);
-        }
-        (0, api_helper_1.cliSummary)(analysis);
-    }
-    catch (error) {
-        logger_1.default.Instance.error('Failed to run TiCS Github Action');
-        logger_1.default.Instance.exit(error.message);
-    }
-}
-/**
- * Configure the action before running the analysis.
- */
-function configure() {
-    process.removeAllListeners('warning');
-    process.on('warning', warning => {
-        if (configuration_1.githubConfig.debugger)
-            logger_1.default.Instance.warning(warning.message.toString());
-    });
-    (0, core_1.exportVariable)('TICSIDE', 'GITHUB');
-    // set ticsAuthToken
-    if (configuration_1.ticsConfig.ticsAuthToken) {
-        (0, core_1.exportVariable)('TICSAUTHTOKEN', configuration_1.ticsConfig.ticsAuthToken);
-    }
-    // set hostnameVerification
-    if (configuration_1.ticsConfig.hostnameVerification) {
-        (0, core_1.exportVariable)('TICSHOSTNAMEVERIFICATION', configuration_1.ticsConfig.hostnameVerification);
-        if (configuration_1.ticsConfig.hostnameVerification === '0' || configuration_1.ticsConfig.hostnameVerification === 'false') {
-            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-            logger_1.default.Instance.debug('Hostname Verification disabled');
-        }
-    }
-    // set trustStrategy
-    if (configuration_1.ticsConfig.trustStrategy) {
-        (0, core_1.exportVariable)('TICSTRUSTSTRATEGY', configuration_1.ticsConfig.trustStrategy);
-        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
-            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-            logger_1.default.Instance.debug(`Trust strategy set to ${configuration_1.ticsConfig.trustStrategy}`);
-        }
-    }
-}
-exports.configure = configure;
-/**
- * Checks if prerequisites are met to run the Github Plugin.
- * If any of these checks fail it returns a message.
- * @returns Message containing why it failed the prerequisite.
- */
-async function meetsPrerequisites() {
-    let message;
-    const viewerVersion = await (0, fetcher_1.getViewerVersion)();
-    if (!viewerVersion || !(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
-        message = `Minimum required TiCS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
-    }
-    else if (configuration_1.ticsConfig.mode === 'diagnostic') {
-        // No need for pull_request and checked out repository.
-    }
-    else if (configuration_1.githubConfig.eventName !== 'pull_request') {
-        message = 'This action can only run on pull requests.';
-    }
-    else if (!isCheckedOut()) {
-        message = 'No checkout found to analyze. Please perform a checkout before running the TiCS Action.';
-    }
-    return message;
-}
-/**
- * Checks if a .git directory exists to see if a checkout has been performed.
- * @returns Boolean value if the folder is found or not.
- */
-function isCheckedOut() {
-    if (!(0, fs_1.existsSync)('.git')) {
-        logger_1.default.Instance.error('No git checkout found');
-        return false;
-    }
-    return true;
-}
+exports.createUnpostableAnnotationsDetails = createUnpostableAnnotationsDetails;
 
 
 /***/ }),
 
 /***/ 9099:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runTicsAnalyzer = void 0;
 const exec_1 = __nccwpck_require__(1514);
 const configuration_1 = __nccwpck_require__(5527);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
 let errorList = [];
 let warningList = [];
@@ -982,27 +812,27 @@ let explorerUrl;
 let statusCode;
 let completed;
 /**
- * Runs TiCS based on the configuration set in a workflow.
+ * Runs TICS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
 async function runTicsAnalyzer(fileListPath) {
-    logger_1.default.Instance.header(`Analyzing for project ${configuration_1.ticsConfig.projectName}`);
+    logger_1.logger.header(`Analyzing for project ${configuration_1.ticsConfig.projectName}`);
     const command = await buildRunCommand(fileListPath);
-    logger_1.default.Instance.header('Running TiCS');
-    logger_1.default.Instance.debug(`With command: ${command}`);
+    logger_1.logger.header('Running TICS');
+    logger_1.logger.debug(`With command: ${command}`);
     try {
         statusCode = await (0, exec_1.exec)(command, [], {
             silent: true,
             listeners: {
                 stdout(data) {
                     let filtered = data.toString();
-                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    filtered = logger_1.logger.maskSecrets(filtered);
                     process.stdout.write(filtered);
                     findInStdOutOrErr(filtered);
                 },
                 stderr(data) {
                     let filtered = data.toString();
-                    filtered = logger_1.default.Instance.maskSecrets(filtered);
+                    filtered = logger_1.logger.maskSecrets(filtered);
                     process.stdout.write(filtered);
                     findInStdOutOrErr(filtered);
                 }
@@ -1011,7 +841,7 @@ async function runTicsAnalyzer(fileListPath) {
         completed = true;
     }
     catch (error) {
-        logger_1.default.Instance.debug(error.message);
+        logger_1.logger.debug(error.message);
         completed = false;
         statusCode = -1;
     }
@@ -1027,7 +857,7 @@ async function runTicsAnalyzer(fileListPath) {
 }
 exports.runTicsAnalyzer = runTicsAnalyzer;
 /**
- * Build the command to run (and optionally install) TiCS.
+ * Build the command to run (and optionally install) TICS.
  * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
@@ -1038,7 +868,7 @@ async function buildRunCommand(fileListPath) {
     return `powershell "${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
 }
 /**
- * Get the command to install TiCS with.
+ * Get the command to install TICS with.
  */
 async function getInstallTics() {
     if (!configuration_1.ticsConfig.installTics)
@@ -1076,25 +906,25 @@ function findInStdOutOrErr(data) {
         explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
 }
 /**
- * Retrieves the the TiCS install url from the ticsConfiguration.
+ * Retrieves the the TICS install url from the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 async function retrieveInstallTics(os) {
     try {
-        logger_1.default.Instance.info('Trying to retrieve configuration information from TiCS.');
+        logger_1.logger.info('Trying to retrieve configuration information from TICS.');
         const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTicsApiUrl)(configuration_1.baseUrl, os);
         const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
         return configuration_1.baseUrl + '/' + data.links.installTics;
     }
     catch (error) {
-        logger_1.default.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
+        logger_1.logger.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
     }
 }
 /**
- * Builds the TiCS calculate command based on the fileListPath and the ticsConfig set.
+ * Builds the TICS calculate command based on the fileListPath and the ticsConfig set.
  * @param fileListPath
- * @returns string of the command to run TiCS.
+ * @returns string of the command to run TICS.
  */
 function getTicsCommand(fileListPath) {
     let execString = 'TICS -ide github ';
@@ -1131,7 +961,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getProjectName = exports.getItemFromUrl = exports.getTicsWebBaseUrlFromUrl = exports.getInstallTicsApiUrl = exports.cliSummary = exports.httpRequest = void 0;
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
 /**
@@ -1152,42 +982,42 @@ async function httpRequest(url) {
         case 200:
             return response.json();
         case 302:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
             break;
         case 400:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. ${(await response.json()).alertMessages[0].header}`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. ${(await response.json()).alertMessages[0].header}`);
             break;
         case 401:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
             break;
         case 403:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
             break;
         case 404:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
             break;
         default:
-            logger_1.default.Instance.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
+            logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
             break;
     }
 }
 exports.httpRequest = httpRequest;
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TiCS analysis run.
+ * @param analysis the output of the TICS analysis run.
  */
 function cliSummary(analysis) {
-    analysis.errorList.forEach(error => logger_1.default.Instance.error(error));
+    analysis.errorList.forEach(error => logger_1.logger.error(error));
     if (configuration_1.githubConfig.debugger) {
-        analysis.warningList.forEach(warning => logger_1.default.Instance.warning(warning));
+        analysis.warningList.forEach(warning => logger_1.logger.warning(warning));
     }
 }
 exports.cliSummary = cliSummary;
 /**
- * Creates the TiCS install data from the TiCS Viewer.
+ * Creates the TICS install data from the TICS Viewer.
  * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 function getInstallTicsApiUrl(url, os) {
     const installTicsApi = new URL(configuration_1.ticsConfig.ticsConfiguration);
@@ -1209,14 +1039,14 @@ function getTicsWebBaseUrlFromUrl(url) {
         baseUrl = url.split(apiMarker)[0];
     }
     else {
-        logger_1.default.Instance.exit('Missing configuration api in the TiCS Viewer URL. Please check your workflow configuration.');
+        logger_1.logger.exit('Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.');
     }
     return baseUrl;
 }
 exports.getTicsWebBaseUrlFromUrl = getTicsWebBaseUrlFromUrl;
 /**
  * Gets query value form a url
- * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
+ * @param url The TICS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
  * @param query the query (e.g. Project)
  * @returns query value (e.g. c-demo)
  **/
@@ -1225,7 +1055,7 @@ function getItemFromUrl(url, query) {
     let cleanUrl = url.replace(/\+/g, '%20');
     let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
     if (itemValue && itemValue.length >= 2) {
-        logger_1.default.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);
+        logger_1.logger.debug(`Retrieved ${query} value: ${itemValue[1]}`);
         return itemValue[1];
     }
     return '';
@@ -1233,7 +1063,7 @@ function getItemFromUrl(url, query) {
 exports.getItemFromUrl = getItemFromUrl;
 /**
  * In case of project auto this returns the project name from the explorer url.
- * @param url the TiCS explorer url.
+ * @param url the TICS explorer url.
  * @returns project name.
  */
 function getProjectName(url) {
@@ -1245,28 +1075,25 @@ exports.getProjectName = getProjectName;
 /***/ }),
 
 /***/ 1559:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
 const configuration_1 = __nccwpck_require__(5527);
-const logger_1 = __importDefault(__nccwpck_require__(6440));
+const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
 /**
- * Retrieves the files TiCS analyzed from the TiCS viewer.
- * @param url The TiCS explorer url.
+ * Retrieves the files TICS analyzed from the TICS viewer.
+ * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
 async function getAnalyzedFiles(url, changedFiles) {
-    logger_1.default.Instance.header('Retrieving analyzed files.');
+    logger_1.logger.header('Retrieving analyzed files.');
     const analyzedFilesUrl = getAnalyzedFilesUrl(url);
     let analyzedFiles = [];
-    logger_1.default.Instance.debug(`From: ${analyzedFilesUrl}`);
+    logger_1.logger.debug(`From: ${analyzedFilesUrl}`);
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
         if (response) {
@@ -1275,24 +1102,24 @@ async function getAnalyzedFiles(url, changedFiles) {
                 return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
             })
                 .map((file) => {
-                logger_1.default.Instance.debug(file.formattedValue);
+                logger_1.logger.debug(file.formattedValue);
                 return file.formattedValue;
             });
-            logger_1.default.Instance.info('Retrieved the analyzed files.');
+            logger_1.logger.info('Retrieved the analyzed files.');
         }
     }
     catch (error) {
         let message = 'unknown error';
         if (error instanceof Error)
             message = error.message;
-        logger_1.default.Instance.exit(`There was an error retrieving the analyzed files: ${message}`);
+        logger_1.logger.exit(`There was an error retrieving the analyzed files: ${message}`);
     }
     return analyzedFiles;
 }
 exports.getAnalyzedFiles = getAnalyzedFiles;
 /**
- * Returns the url to get the analyzed files with from the TiCS.
- * @param url The TiCS explorer url.
+ * Returns the url to get the analyzed files with from the TICS.
+ * @param url The TICS explorer url.
  * @returns url to get the analyzed files from.
  */
 function getAnalyzedFilesUrl(url) {
@@ -1303,28 +1130,31 @@ function getAnalyzedFilesUrl(url) {
     return getAnalyzedFilesUrl.href;
 }
 /**
- * Retrieves the TiCS quality gate from the TiCS viewer.
- * @param url The TiCS explorer url.
+ * Retrieves the TICS quality gate from the TICS viewer.
+ * @param url The TICS explorer url.
  * @returns the quality gates
  */
 async function getQualityGate(url) {
-    logger_1.default.Instance.header('Retrieving the quality gates.');
+    logger_1.logger.header('Retrieving the quality gates.');
     const qualityGateUrl = getQualityGateUrl(url);
-    logger_1.default.Instance.debug(`From: ${qualityGateUrl}`);
+    logger_1.logger.debug(`From: ${qualityGateUrl}`);
     try {
         const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
-        logger_1.default.Instance.info('Retrieved the quality gates.');
-        logger_1.default.Instance.debug(JSON.stringify(response));
+        logger_1.logger.info('Retrieved the quality gates.');
+        logger_1.logger.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {
-        logger_1.default.Instance.exit(`There was an error retrieving the quality gates: ${error.message}`);
+        let message = 'reason unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`There was an error retrieving the quality gates: ${message}`);
     }
 }
 exports.getQualityGate = getQualityGate;
 /**
  * Builds the quality gate url from the explorer url.
- * @param url The TiCS Explorer url.
+ * @param url The TICS Explorer url.
  * @returns The url to get the quality gate analysis.
  */
 function getQualityGateUrl(url) {
@@ -1341,46 +1171,48 @@ function getQualityGateUrl(url) {
     return qualityGateUrl.href;
 }
 /**
- * Gets the annotations from the TiCS viewer.
+ * Gets the annotations from the TICS viewer.
  * @param apiLinks annotationsApiLinks url.
- * @returns TiCS annotations.
+ * @returns TICS annotations.
  */
 async function getAnnotations(apiLinks) {
-    logger_1.default.Instance.header('Retrieving annotations.');
+    let annotations = [];
+    logger_1.logger.header('Retrieving annotations.');
     try {
-        let annotations = [];
         await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
-            logger_1.default.Instance.debug(`From: ${annotationsUrl}`);
+            logger_1.logger.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
-            response.data.forEach((annotation) => {
-                annotation.gateId = index;
-                logger_1.default.Instance.debug(JSON.stringify(annotation));
-                annotations.push(annotation);
-            });
+            if (response) {
+                response.data.forEach((annotation) => {
+                    annotation.gateId = index;
+                    logger_1.logger.debug(JSON.stringify(annotation));
+                    annotations.push(annotation);
+                });
+            }
         }));
-        logger_1.default.Instance.info('Retrieved all annotations.');
-        return annotations;
+        logger_1.logger.info('Retrieved all annotations.');
     }
     catch (error) {
-        logger_1.default.Instance.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
+        logger_1.logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
     }
+    return annotations;
 }
 exports.getAnnotations = getAnnotations;
 /**
- * Gets the version of the TiCS viewer used.
- * @returns Version of the used TiCS viewer.
+ * Gets the version of the TICS viewer used.
+ * @returns Version of the used TICS viewer.
  */
 async function getViewerVersion() {
-    let getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
+    const getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
     try {
         const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
-        logger_1.default.Instance.info('Retrieved the Viewer Version.');
-        logger_1.default.Instance.debug(JSON.stringify(response));
+        logger_1.logger.info('Retrieved the Viewer Version.');
+        logger_1.logger.debug(JSON.stringify(response));
         return response;
     }
     catch (error) {
-        logger_1.default.Instance.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+        logger_1.logger.exit(`There was an error retrieving the Viewer version: ${error.message}`);
     }
 }
 exports.getViewerVersion = getViewerVersion;
@@ -56771,13 +56603,8 @@ function resolverFromOptions(vm, options, override, compiler) {
 			}
 			const resolved = customResolver(x, path);
 			if (!resolved) return undefined;
-			if (typeof resolved === 'string') {
-				if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
-				return resolver.loadAsFileOrDirectory(resolved, extList);
-			}
-			const {module=x, path: resolvedPath} = resolved;
-			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolvedPath)));
-			return resolver.loadNodeModules(module, [resolvedPath], extList);
+			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
+			return resolver.loadAsFileOrDirecotry(resolved, extList);
 		};
 	}
 
@@ -57049,7 +56876,7 @@ class DefaultResolver extends Resolver {
 		// 2. If X begins with '/'
 		if (this.pathIsAbsolute(x)) {
 			// a. set Y to be the filesystem root
-			f = this.loadAsFileOrDirectory(x, extList);
+			f = this.loadAsFileOrDirecotry(x, extList);
 			if (f) return f;
 
 			// c. THROW "not found"
@@ -57063,13 +56890,13 @@ class DefaultResolver extends Resolver {
 					for (let i = 0; i < paths.length; i++) {
 						// a. LOAD_AS_FILE(Y + X)
 						// b. LOAD_AS_DIRECTORY(Y + X)
-						f = this.loadAsFileOrDirectory(this.pathConcat(paths[i], x), extList);
+						f = this.loadAsFileOrDirecotry(this.pathConcat(paths[i], x), extList);
 						if (f) return f;
 					}
 				} else if (paths === undefined) {
 					// a. LOAD_AS_FILE(Y + X)
 					// b. LOAD_AS_DIRECTORY(Y + X)
-					f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+					f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 					if (f) return f;
 				} else {
 					throw new VMError('Invalid options.paths option.');
@@ -57077,7 +56904,7 @@ class DefaultResolver extends Resolver {
 			} else {
 				// a. LOAD_AS_FILE(Y + X)
 				// b. LOAD_AS_DIRECTORY(Y + X)
-				f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+				f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 				if (f) return f;
 			}
 
@@ -57122,7 +56949,7 @@ class DefaultResolver extends Resolver {
 		return super.resolveFull(mod, x, options, ext, direct);
 	}
 
-	loadAsFileOrDirectory(x, extList) {
+	loadAsFileOrDirecotry(x, extList) {
 		// a. LOAD_AS_FILE(X)
 		const f = this.loadAsFile(x, extList);
 		if (f) return f;
@@ -57362,7 +57189,7 @@ class DefaultResolver extends Resolver {
 		} else {
 			// a. LOAD_AS_FILE(RESOLVED_PATH)
 			// b. LOAD_AS_DIRECTORY(RESOLVED_PATH)
-			f = this.loadAsFileOrDirectory(resolvedPath, extList);
+			f = this.loadAsFileOrDirecotry(resolvedPath, extList);
 		}
 		if (f) return f;
 		// 5. THROW "not found"
@@ -58204,7 +58031,20 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 		if (nodeType === 'CatchClause') {
 			const param = node.param;
 			if (param) {
-				if (param.type === 'Identifier') {
+				if (param.type === 'ObjectPattern') {
+					insertions.push({
+						__proto__: null,
+						pos: node.start,
+						order: TO_RIGHT,
+						code: `catch($tmpname){try{throw ${INTERNAL_STATE_NAME}.handleException($tmpname);}`
+					});
+					insertions.push({
+						__proto__: null,
+						pos: node.body.end,
+						order: TO_LEFT,
+						code: `}`
+					});
+				} else {
 					const name = assertType(param, 'Identifier').name;
 					const cBody = assertType(node.body, 'BlockStatement');
 					if (cBody.body.length > 0) {
@@ -58212,22 +58052,9 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 							__proto__: null,
 							pos: cBody.body[0].start,
 							order: TO_LEFT,
-							coder: () => `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
+							code: `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
 						});
 					}
-				} else {
-					insertions.push({
-						__proto__: null,
-						pos: node.start,
-						order: TO_RIGHT,
-						coder: () => `catch(${tmpname}){${tmpname}=${INTERNAL_STATE_NAME}.handleException(${tmpname});try{throw ${tmpname};}`
-					});
-					insertions.push({
-						__proto__: null,
-						pos: node.body.end,
-						order: TO_LEFT,
-						coder: () => `}`
-					});
 				}
 			}
 		} else if (nodeType === 'WithStatement') {
@@ -58235,13 +58062,13 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 				__proto__: null,
 				pos: node.object.start,
 				order: TO_LEFT,
-				coder: () => INTERNAL_STATE_NAME + '.wrapWith('
+				code: INTERNAL_STATE_NAME + '.wrapWith('
 			});
 			insertions.push({
 				__proto__: null,
 				pos: node.object.end,
 				order: TO_RIGHT,
-				coder: () => ')'
+				code: ')'
 			});
 		} else if (nodeType === 'Identifier') {
 			if (node.name === INTERNAL_STATE_NAME) {
@@ -58256,7 +58083,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 				__proto__: null,
 				pos: node.start,
 				order: TO_RIGHT,
-				coder: () => INTERNAL_STATE_NAME + '.'
+				code: INTERNAL_STATE_NAME + '.'
 			});
 		}
 	});
@@ -58277,7 +58104,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 	let curr = 0;
 	for (let i = 0; i < insertions.length; i++) {
 		const change = insertions[i];
-		ncode += code.substring(curr, change.pos) + change.coder();
+		ncode += code.substring(curr, change.pos) + change.code.replace(/\$tmpname/g, tmpname);
 		curr = change.pos;
 	}
 	ncode += code.substring(curr);
@@ -66137,12 +65964,175 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.configure = exports.run = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const comment_1 = __nccwpck_require__(5436);
+const configuration_1 = __nccwpck_require__(5527);
+const pulls_1 = __nccwpck_require__(5857);
+const logger_1 = __nccwpck_require__(6440);
+const analyzer_1 = __nccwpck_require__(9099);
+const api_helper_1 = __nccwpck_require__(3823);
+const fetcher_1 = __nccwpck_require__(1559);
+const review_1 = __nccwpck_require__(8973);
+const summary_1 = __nccwpck_require__(1502);
+const annotations_1 = __nccwpck_require__(9757);
+const annotations_2 = __nccwpck_require__(7829);
+const enums_1 = __nccwpck_require__(1655);
+const compare_versions_1 = __nccwpck_require__(4773);
+const core_1 = __nccwpck_require__(2186);
+run().catch((error) => {
+    let message = 'TICS failed with unknown reason';
+    if (error instanceof Error)
+        message = error.message;
+    logger_1.logger.exit(message);
+});
+// exported for testing purposes
+async function run() {
+    configure();
+    const message = await meetsPrerequisites();
+    if (message)
+        return logger_1.logger.exit(message);
+    await main();
+}
+exports.run = run;
+async function main() {
+    try {
+        let analysis;
+        if (configuration_1.ticsConfig.mode === 'diagnostic') {
+            logger_1.logger.header('Running action in diagnostic mode');
+            analysis = await (0, analyzer_1.runTicsAnalyzer)('');
+            if (analysis.statusCode !== 0)
+                logger_1.logger.setFailed('Diagnostic run has failed.');
+        }
+        else {
+            const changedFiles = await (0, pulls_1.getChangedFiles)();
+            if (!changedFiles || changedFiles.length <= 0)
+                return logger_1.logger.info('No changed files found to analyze.');
+            const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+            analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
+            if (!analysis.explorerUrl) {
+                if (!analysis.completed) {
+                    await (0, comment_1.postErrorComment)(analysis);
+                    logger_1.logger.setFailed('Failed to run TICS Github Action.');
+                }
+                else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+                    await (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TICS analysis quality gating.');
+                }
+                else {
+                    logger_1.logger.setFailed('Failed to run TICS Github Action.');
+                    analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+                }
+                (0, api_helper_1.cliSummary)(analysis);
+                return;
+            }
+            const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl, changedFiles);
+            const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
+            if (!qualityGate)
+                return logger_1.logger.exit('Quality gate could not be retrieved');
+            let reviewComments;
+            if (configuration_1.ticsConfig.postAnnotations) {
+                const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+                if (annotations && annotations.length > 0) {
+                    reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
+                    await (0, annotations_1.postAnnotations)(reviewComments);
+                }
+                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+                if (previousReviewComments && previousReviewComments.length > 0) {
+                    await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+                }
+            }
+            let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
+            if (configuration_1.ticsConfig.pullRequestApproval) {
+                await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
+            }
+            else {
+                await (0, comment_1.postComment)(reviewBody);
+            }
+            if (!qualityGate.passed)
+                logger_1.logger.setFailed(qualityGate.message);
+        }
+        (0, api_helper_1.cliSummary)(analysis);
+    }
+    catch (error) {
+        throw error;
+    }
+}
+/**
+ * Configure the action before running the analysis.
+ */
+function configure() {
+    process.removeAllListeners('warning');
+    process.on('warning', warning => {
+        if (configuration_1.githubConfig.debugger)
+            logger_1.logger.debug(warning.message.toString());
+    });
+    (0, core_1.exportVariable)('TICSIDE', 'GITHUB');
+    // set ticsAuthToken
+    if (configuration_1.ticsConfig.ticsAuthToken) {
+        (0, core_1.exportVariable)('TICSAUTHTOKEN', configuration_1.ticsConfig.ticsAuthToken);
+    }
+    // set hostnameVerification
+    if (configuration_1.ticsConfig.hostnameVerification) {
+        (0, core_1.exportVariable)('TICSHOSTNAMEVERIFICATION', configuration_1.ticsConfig.hostnameVerification);
+        if (configuration_1.ticsConfig.hostnameVerification === '0' || configuration_1.ticsConfig.hostnameVerification === 'false') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.logger.debug('Hostname Verification disabled');
+        }
+    }
+    // set trustStrategy
+    if (configuration_1.ticsConfig.trustStrategy) {
+        (0, core_1.exportVariable)('TICSTRUSTSTRATEGY', configuration_1.ticsConfig.trustStrategy);
+        if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
+            (0, core_1.exportVariable)('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+            logger_1.logger.debug(`Trust strategy set to ${configuration_1.ticsConfig.trustStrategy}`);
+        }
+    }
+}
+exports.configure = configure;
+/**
+ * Checks if prerequisites are met to run the Github Plugin.
+ * If any of these checks fail it returns a message.
+ * @returns Message containing why it failed the prerequisite.
+ */
+async function meetsPrerequisites() {
+    let message;
+    const viewerVersion = await (0, fetcher_1.getViewerVersion)();
+    if (!viewerVersion || !(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
+        const version = viewerVersion ? viewerVersion.version : 'unknown';
+        message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
+    }
+    else if (configuration_1.ticsConfig.mode === 'diagnostic') {
+        // No need for pull_request and checked out repository.
+    }
+    else if (configuration_1.githubConfig.eventName !== 'pull_request') {
+        message = 'This action can only run on pull requests.';
+    }
+    else if (!isCheckedOut()) {
+        message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
+    }
+    return message;
+}
+/**
+ * Checks if a .git directory exists to see if a checkout has been performed.
+ * @returns Boolean value if the folder is found or not.
+ */
+function isCheckedOut() {
+    if (!(0, fs_1.existsSync)('.git')) {
+        logger_1.logger.error('No git checkout found');
+        return false;
+    }
+    return true;
+}
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;

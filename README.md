@@ -1,39 +1,39 @@
-# TiCS GitHub Action
+# TICS GitHub Action
 
 [![Build](https://github.com/tiobe/tics-github-action/actions/workflows/build.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/build.yml)
 [![Tests](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml)
 [![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
-The TiCS Github action integrates TiCS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
+The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
 
 ## Before you start
 
 ### Prerequisites
 
-- A TiCS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
+- A TICS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
 
 ### Action Restrictions
 
 - It will only be triggered on a pull request event.
 - It is not working for forked repositories.
-- It is not working for TiCS installations using the legacy deployment architecture.
+- It is not working for TICS installations using the legacy deployment architecture.
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
 - The connected runner should have Git installed.
 
 ## Usage
 
-Add the `TiCS GitHub Action` to your workflow to launch TiCS code analysis and post the results of Quality Gating feature as part of your pull request.
-Below is an example of how to include the `TiCS GitHub Action` step as part of your workflow:
+Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request.
+Below is an example of how to include the `TICS GitHub Action` step as part of your workflow:
 
 ```
 on: [pull_request]
 
 jobs:
-  TiCS:
+  TICS:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: TiCS GitHub Action
+      - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:
           projectName: 'myproject'
@@ -58,7 +58,7 @@ env:
 ```
 
 - `GITHUB_TOKEN` – Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)).
-- `TICSAUTHTOKEN` – It is required only when the TiCS viewer is not publicly accessible and requires an authentication token. You can create a TiCS Viewer Authentication token of role 'TICS Client' (see [Configuring a token for TICS Client](https://demo.tiobe.com/tiobeweb/TICS/docs/index.html#doc=admin/admin_11_viewer.html%23auth-token)). You can then assign the TICSAUTHTOKEN value in the "Secrets" settings page of your repository, or add them at the level of your GitHub organization.
+- `TICSAUTHTOKEN` – It is required only when the TICS viewer is not publicly accessible and requires an authentication token. You can create a TICS Viewer Authentication token of role 'TICS Client' (see [Configuring a token for TICS Client](https://demo.tiobe.com/tiobeweb/TICS/docs/index.html#doc=admin/admin_11_viewer.html%23auth-token)). You can then assign the TICSAUTHTOKEN value in the "Secrets" settings page of your repository, or add them at the level of your GitHub organization.
 
 ### Action Parameters
 
@@ -67,25 +67,25 @@ The following inputs are available for this action:
 | Input                  | Description                                                                                                                                                                                                          | Required |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `githubToken`          | Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token))     | true     |
-| `projectName`          | Name of the TiCS project present in the TiCS Viewer.                                                                                                                                                                 | true     |
-| `ticsConfiguration`    | A URL pointing to the "cfg" API endpoint of the TiCS Viewer. It contains the name of the TiCS Analyzer Configuration or "-" in case of the default configuration.                                                    | true     |
-| `branchName`           | Name of the branch in TiCS.                                                                                                                                                                                          | false    |
+| `projectName`          | Name of the TICS project present in the TICS Viewer.                                                                                                                                                                 | true     |
+| `ticsConfiguration`    | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                    | true     |
+| `branchName`           | Name of the branch in TICS.                                                                                                                                                                                          | false    |
 | `branchDir`            | Location of the files to analyze.                                                                                                                                                                                    | false    |
-| `calc`                 | Comma-separated list of metrics to be used. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x. If not specified, `GATE` will be used by default.                                                | false    |
-| `recalc`               | Comma-separated list of metrics to be recalculated. GATE metric is supported for TiCS Viewer versions higher than 2022.2.x.                                                                                          | false    |
+| `calc`                 | Comma-separated list of metrics to be used. GATE metric is supported for TICS Viewer versions higher than 2022.2.x. If not specified, `GATE` will be used by default.                                                | false    |
+| `recalc`               | Comma-separated list of metrics to be recalculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                                          | false    |
 | `clientData`           | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                       | false    |
 | `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE` and `EXTERNAL`.                                                                       | false    |
 | `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                                                                                      | false    |
 | `hostnameVerification` | Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper). | false    |
 | `trustStrategy`        | Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).        | false    |
-| `installTics`          | Boolean parameter to install TiCS command-line tools on a runner before executing the analysis. If not specified, TiCS should be installed manually on the machine that runs this job.                               | false    |
+| `installTics`          | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job.                               | false    |
 | `mode`                 | Set the mode to run the action in. Options are `default` for a normal analysis run and `diagnostic` for a diagnostic testing of the setup.                                                                           | false    |
-| `postAnnotation`       | Show the latest TiCS annotations directly in the GitHub Pull Request review.                                                                                                                                         | false    |
+| `postAnnotation`       | Show the latest TICS annotations directly in the GitHub Pull Request review.                                                                                                                                         | false    |
 | `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.                                                                                                            | false    |
 | `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                 | false    |
 | `ticsAuthToken`        | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                                                    | false    |
 | `tmpDir`               | Location to store debug information.                                                                                                                                                                                 | false    |
-| `viewerUrl`            | The publicly available Viewer URL of TiCS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TiCS)                                                                                         | false    |
+| `viewerUrl`            | The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)                                                                                         | false    |
 
 # Developer notes
 
@@ -110,5 +110,5 @@ act -s GITHUB_TOKEN=<TOKEN> -s TICSAUTHTOKEN=<TOKEN> -P self-hosted=catthehacker
 | Variable              | Type        | Description                                          |
 | --------------------- | ----------- | ---------------------------------------------------- |
 | `GITHUB_TOKEN`        | Secret      | Personal Access Token connected to a GitHub account. |
-| `TICSAUTHTOKEN`       | Secret      | Auth token set in the TiCS viewer.                   |
+| `TICSAUTHTOKEN`       | Secret      | Auth token set in the TICS viewer.                   |
 | `PULL_REQUEST_NUMBER` | Environment | Number of the pull request to test with.             |

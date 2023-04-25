@@ -6,7 +6,7 @@ import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
 
 const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
-const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
+const pullRequestNumber: number = payload.pull_request ? payload.pull_request.number : '';
 
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
@@ -17,7 +17,7 @@ export const githubConfig = {
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? process.env.PULL_REQUEST_NUMBER : pullRequestNumber,
+  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? parseInt(process.env.PULL_REQUEST_NUMBER) : pullRequestNumber,
   debugger: isDebug()
 };
 

@@ -1,14 +1,10 @@
 import * as core from '@actions/core';
 import { ticsConfig } from '../configuration';
+import { AnnotationProperties } from '@actions/core';
 
-export default class Logger {
-  private static _instance: Logger;
+class Logger {
   called: string = '';
   matched: string[] = [];
-
-  public static get Instance() {
-    return this._instance || (this._instance = new this());
-  }
 
   /**
    * Uses core.info to print to the console with a purple color.
@@ -48,9 +44,9 @@ export default class Logger {
    *
    * @param string
    */
-  warning(string: string): void {
+  warning(string: string, properties?: AnnotationProperties): void {
     string = this.maskSecrets(string);
-    core.warning(`\u001b[33m${string}`);
+    core.warning(`\u001b[33m${string}`, properties);
     this.called = 'warning';
   }
 
@@ -59,10 +55,10 @@ export default class Logger {
    *
    * @param error
    */
-  error(error: string): void {
+  error(error: string, properties?: AnnotationProperties): void {
     error = this.maskSecrets(error);
     this.addNewline('error');
-    core.error(`\u001b[31m${error}`);
+    core.error(`\u001b[31m${error}`, properties);
     this.called = 'error';
   }
 
@@ -107,7 +103,7 @@ export default class Logger {
    * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
-  public maskSecrets(data: string): string {
+  maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
     ticsConfig.secretsFilter.forEach(secret => {
       if (data.match(new RegExp(secret, 'gi'))) {
@@ -127,3 +123,5 @@ export default class Logger {
     return data;
   }
 }
+
+export const logger: Logger = new Logger();

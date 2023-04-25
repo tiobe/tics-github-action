@@ -1,6 +1,6 @@
 import { ticsConfig } from '../../src/configuration';
 import { ChangedFile } from '../../src/helper/interfaces';
-import Logger from '../../src/helper/logger';
+import { logger } from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
 
@@ -10,7 +10,7 @@ describe('getAnalyzedFiles', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }] }));
 
-    const spy = jest.spyOn(Logger.Instance, 'debug');
+    const spy = jest.spyOn(logger, 'debug');
 
     const response = await getAnalyzedFiles('url', changedFiles);
 
@@ -25,7 +25,7 @@ describe('getAnalyzedFiles', () => {
       .spyOn(api_helper, 'httpRequest')
       .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] }));
 
-    const spy = jest.spyOn(Logger.Instance, 'debug');
+    const spy = jest.spyOn(logger, 'debug');
 
     const response = await getAnalyzedFiles('url', changedFiles);
 
@@ -40,7 +40,7 @@ describe('getAnalyzedFiles', () => {
       .spyOn(api_helper, 'httpRequest')
       .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'filed.js' }] }));
 
-    const spy = jest.spyOn(Logger.Instance, 'debug');
+    const spy = jest.spyOn(logger, 'debug');
 
     const response = await getAnalyzedFiles('url', changedFiles);
 
@@ -53,7 +53,7 @@ describe('getAnalyzedFiles', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await getAnalyzedFiles('url', changedFiles);
 
@@ -79,7 +79,7 @@ describe('getQualityGate', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await getQualityGate('url');
 
@@ -105,7 +105,7 @@ describe('getAnnotations', () => {
   test('Should throw error on faulty httpRequest in getAnnotations', async () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await getAnnotations([{ url: 'url' }]);
 
@@ -119,13 +119,13 @@ describe('getViewerVersion', () => {
 
     const response = await getViewerVersion();
 
-    expect(response.version).toEqual('2022.0.0');
+    expect(response?.version).toEqual('2022.0.0');
   });
 
   test('Should throw error on faulty httpRequest in getViewerVersion', async () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await getViewerVersion();
 

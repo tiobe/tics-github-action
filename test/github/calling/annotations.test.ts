@@ -1,6 +1,6 @@
 import { getPostedReviewComments } from '../../../src/github/calling/annotations';
 import { octokit } from '../../../src/configuration';
-import Logger from '../../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 describe('getPostedReviewComments', () => {
   test('Should return single file on getPostedReviewComments', async () => {
@@ -26,7 +26,7 @@ describe('getPostedReviewComments', () => {
   });
 
   test('Should throw an error on getPostedReviewComments', async () => {
-    const spy = jest.spyOn(Logger.Instance, 'error');
+    const spy = jest.spyOn(logger, 'error');
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });

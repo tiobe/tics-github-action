@@ -1,6 +1,6 @@
 import { exec } from '@actions/exec';
 import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
-import Logger from '../helper/logger';
+import { logger } from '../helper/logger';
 import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 
 let errorList: string[] = [];
@@ -10,29 +10,29 @@ let statusCode: number;
 let completed: boolean;
 
 /**
- * Runs TiCS based on the configuration set in a workflow.
+ * Runs TICS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string) {
-  Logger.Instance.header(`Analyzing for project ${ticsConfig.projectName}`);
+  logger.header(`Analyzing for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
 
-  Logger.Instance.header('Running TiCS');
-  Logger.Instance.debug(`With command: ${command}`);
+  logger.header('Running TICS');
+  logger.debug(`With command: ${command}`);
   try {
     statusCode = await exec(command, [], {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
           let filtered = data.toString();
-          filtered = Logger.Instance.maskSecrets(filtered);
+          filtered = logger.maskSecrets(filtered);
           process.stdout.write(filtered);
           findInStdOutOrErr(filtered);
         },
         stderr(data: Buffer) {
           let filtered = data.toString();
-          filtered = Logger.Instance.maskSecrets(filtered);
+          filtered = logger.maskSecrets(filtered);
           process.stdout.write(filtered);
           findInStdOutOrErr(filtered);
         }
@@ -40,7 +40,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
     });
     completed = true;
   } catch (error: any) {
-    Logger.Instance.debug(error.message);
+    logger.debug(error.message);
     completed = false;
     statusCode = -1;
   } finally {
@@ -55,7 +55,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
 }
 
 /**
- * Build the command to run (and optionally install) TiCS.
+ * Build the command to run (and optionally install) TICS.
  * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
@@ -67,7 +67,7 @@ async function buildRunCommand(fileListPath: string) {
 }
 
 /**
- * Get the command to install TiCS with.
+ * Get the command to install TICS with.
  */
 async function getInstallTics() {
   if (!ticsConfig.installTics) return '';
@@ -106,13 +106,13 @@ function findInStdOutOrErr(data: string) {
 }
 
 /**
- * Retrieves the the TiCS install url from the ticsConfiguration.
+ * Retrieves the the TICS install url from the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 async function retrieveInstallTics(os: string) {
   try {
-    Logger.Instance.info('Trying to retrieve configuration information from TiCS.');
+    logger.info('Trying to retrieve configuration information from TICS.');
 
     const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
 
@@ -120,14 +120,14 @@ async function retrieveInstallTics(os: string) {
 
     return baseUrl + '/' + data.links.installTics;
   } catch (error: any) {
-    Logger.Instance.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
+    logger.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
   }
 }
 
 /**
- * Builds the TiCS calculate command based on the fileListPath and the ticsConfig set.
+ * Builds the TICS calculate command based on the fileListPath and the ticsConfig set.
  * @param fileListPath
- * @returns string of the command to run TiCS.
+ * @returns string of the command to run TICS.
  */
 function getTicsCommand(fileListPath: string) {
   let execString = 'TICS -ide github ';

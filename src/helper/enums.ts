@@ -1,8 +1,8 @@
 export enum Status {
-  'FAILED' = 0,
-  'PASSED' = 1,
-  'WARNING' = 2,
-  'SKIPPED' = 3
+  'FAILED' = 'FAILED',
+  'PASSED' = 'PASSED',
+  'WARNING' = 'WARNING',
+  'SKIPPED' = 'SKIPPED'
 }
 
 export enum Events {

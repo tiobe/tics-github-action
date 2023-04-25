@@ -1,5 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
-import Logger from '../helper/logger';
+import { logger } from '../helper/logger';
 import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis, HttpResponse } from '../helper/interfaces';
 import fetch from 'node-fetch';
@@ -25,46 +25,46 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
     case 200:
       return <T>response.json();
     case 302:
-      Logger.Instance.exit(
+      logger.exit(
         `HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
       );
       break;
     case 400:
-      Logger.Instance.exit(`HTTP request failed with status ${response.status}. ${(<HttpResponse>await response.json()).alertMessages[0].header}`);
+      logger.exit(`HTTP request failed with status ${response.status}. ${(<HttpResponse>await response.json()).alertMessages[0].header}`);
       break;
     case 401:
-      Logger.Instance.exit(
+      logger.exit(
         `HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
       break;
     case 403:
-      Logger.Instance.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
+      logger.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
       break;
     case 404:
-      Logger.Instance.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+      logger.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
       break;
     default:
-      Logger.Instance.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
+      logger.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
       break;
   }
 }
 
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TiCS analysis run.
+ * @param analysis the output of the TICS analysis run.
  */
 export function cliSummary(analysis: Analysis): void {
-  analysis.errorList.forEach(error => Logger.Instance.error(error));
+  analysis.errorList.forEach(error => logger.error(error));
   if (githubConfig.debugger) {
-    analysis.warningList.forEach(warning => Logger.Instance.warning(warning));
+    analysis.warningList.forEach(warning => logger.warning(warning));
   }
 }
 
 /**
- * Creates the TiCS install data from the TiCS Viewer.
+ * Creates the TICS install data from the TICS Viewer.
  * @param url url given in the ticsConfiguration.
  * @param os the OS the runner runs on.
- * @returns the TiCS install url.
+ * @returns the TICS install url.
  */
 export function getInstallTicsApiUrl(url: string, os: string): string {
   const installTicsApi = new URL(ticsConfig.ticsConfiguration);
@@ -87,7 +87,7 @@ export function getTicsWebBaseUrlFromUrl(url: string): string {
   if (url.includes(apiMarker + cfgMarker)) {
     baseUrl = url.split(apiMarker)[0];
   } else {
-    Logger.Instance.exit('Missing configuration api in the TiCS Viewer URL. Please check your workflow configuration.');
+    logger.exit('Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.');
   }
 
   return baseUrl;
@@ -95,7 +95,7 @@ export function getTicsWebBaseUrlFromUrl(url: string): string {
 
 /**
  * Gets query value form a url
- * @param url The TiCS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
+ * @param url The TICS Explorer url (e.g. <ticsUrl>/Explorer.html#axes=Project%28c-demo%29%2CBranch%28main%)
  * @param query the query (e.g. Project)
  * @returns query value (e.g. c-demo)
  **/
@@ -105,7 +105,7 @@ export function getItemFromUrl(url: string, query: string): string {
   let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
 
   if (itemValue && itemValue.length >= 2) {
-    Logger.Instance.debug(`Retrieved ${query} value: ${itemValue[1]}`);
+    logger.debug(`Retrieved ${query} value: ${itemValue[1]}`);
     return itemValue[1];
   }
 
@@ -114,7 +114,7 @@ export function getItemFromUrl(url: string, query: string): string {
 
 /**
  * In case of project auto this returns the project name from the explorer url.
- * @param url the TiCS explorer url.
+ * @param url the TICS explorer url.
  * @returns project name.
  */
 export function getProjectName(url: string): string {

@@ -1,12 +1,12 @@
 import * as exec from '@actions/exec';
 import * as api_helper from '../../src/tics/api_helper';
 import { githubConfig, ticsConfig } from '../../src/configuration';
-import Logger from '../../src/helper/logger';
+import { logger } from '../../src/helper/logger';
 import { runTicsAnalyzer } from '../../src/tics/analyzer';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
-  test('Should call exec with diagnostic TiCS command for Linux', async () => {
+  test('Should call exec with diagnostic TICS command for Linux', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
@@ -23,7 +23,7 @@ describe('test multiple types of configuration', () => {
     });
   });
 
-  test('Should call exec with minimal TiCS command for Linux', async () => {
+  test('Should call exec with minimal TICS command for Linux', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
@@ -40,7 +40,7 @@ describe('test multiple types of configuration', () => {
     });
   });
 
-  test('Should call exec with minimal TiCS command for Windows', async () => {
+  test('Should call exec with minimal TICS command for Windows', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
@@ -56,7 +56,7 @@ describe('test multiple types of configuration', () => {
     });
   });
 
-  test('Should call exec with run TiCS command for Linux', async () => {
+  test('Should call exec with run TICS command for Linux', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
@@ -81,7 +81,7 @@ describe('test multiple types of configuration', () => {
     );
   });
 
-  test('Should call exec with run TiCS command for Windows', async () => {
+  test('Should call exec with run TICS command for Windows', async () => {
     const spy = jest.spyOn(exec, 'exec');
     (exec.exec as any).mockResolvedValueOnce(0);
 
@@ -106,7 +106,7 @@ describe('test multiple types of configuration', () => {
     );
   });
 
-  test('Should call exec with full TiCS command for Linux, trustStrategy self-signed', async () => {
+  test('Should call exec with full TICS command for Linux, trustStrategy self-signed', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: 'url' } }));
     const spy = jest.spyOn(exec, 'exec');
@@ -134,7 +134,7 @@ describe('test multiple types of configuration', () => {
     );
   });
 
-  test('Should call exec with full TiCS command for Windows, no trustStrategy set', async () => {
+  test('Should call exec with full TICS command for Windows, no trustStrategy set', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: 'url' } }));
     const spy = jest.spyOn(exec, 'exec');
@@ -163,7 +163,7 @@ describe('test multiple types of configuration', () => {
   });
 });
 
-test('Should call exec with full TiCS command for Windows, trustStrategy set to all', async () => {
+test('Should call exec with full TICS command for Windows, trustStrategy set to all', async () => {
   (exec.exec as any).mockResolvedValueOnce(0);
   jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: 'url' } }));
   const spy = jest.spyOn(exec, 'exec');
@@ -252,7 +252,7 @@ describe('throwing errors', () => {
 
   test('Should throw error on httpRequest in retrieveInstallTics', async () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
-    const spy = jest.spyOn(Logger.Instance, 'exit');
+    const spy = jest.spyOn(logger, 'exit');
 
     await runTicsAnalyzer('');
 

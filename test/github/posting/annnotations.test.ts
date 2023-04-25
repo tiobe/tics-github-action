@@ -1,13 +1,13 @@
 import { deletePreviousReviewComments } from '../../../src/github/posting/annotations';
 import { octokit } from '../../../src/configuration';
-import Logger from '../../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 describe('deletePreviousReviewComments', () => {
   test('Should call deleteReviewComment once on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([
-      { id: 1, body: ':warning: **TiCS:' },
+      { id: 1, body: ':warning: **TICS:' },
       { id: 2, body: '' }
     ]);
     expect(spy).toBeCalledTimes(1);
@@ -17,8 +17,8 @@ describe('deletePreviousReviewComments', () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([
-      { id: 1, body: ':warning: **TiCS:' },
-      { id: 2, body: ':warning: **TiCS:' }
+      { id: 1, body: ':warning: **TICS:' },
+      { id: 2, body: ':warning: **TICS:' }
     ]);
     expect(spy).toBeCalledTimes(2);
   });
@@ -34,12 +34,12 @@ describe('deletePreviousReviewComments', () => {
   });
 
   test('Should throw an error on deletePreviousReviewComments', async () => {
-    const spy = jest.spyOn(Logger.Instance, 'error');
+    const spy = jest.spyOn(logger, 'error');
 
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    await deletePreviousReviewComments([{ id: 1, body: ':warning: **TiCS:' }]);
+    await deletePreviousReviewComments([{ id: 1, body: ':warning: **TICS:' }]);
 
     expect(spy).toBeCalledTimes(1);
   });

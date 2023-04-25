@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
-import Logger from '../../helper/logger';
+import { logger } from '../../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../../configuration';
 import { ChangedFile } from '../../helper/interfaces';
 
@@ -15,7 +15,7 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
     pull_number: githubConfig.pullRequestNumber
   };
   try {
-    Logger.Instance.header('Retrieving changed files.');
+    logger.header('Retrieving changed files.');
     const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data
         .filter(item => {
@@ -30,14 +30,14 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
         .map(item => {
           // If a file is moved or renamed the status is 'renamed'.
           item.filename = normalize(item.filename);
-          Logger.Instance.debug(item.filename);
+          logger.debug(item.filename);
           return item;
         });
     });
-    Logger.Instance.info('Retrieved changed files.');
+    logger.info('Retrieved changed files.');
     return response;
-  } catch (error: any) {
-    Logger.Instance.exit(`Could not retrieve the changed files: ${error}`);
+  } catch (error: unknown) {
+    logger.exit(`Could not retrieve the changed files: ${error}`);
   }
 }
 
@@ -47,7 +47,7 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
  * @returns Location of the written file.
  */
 export function changedFilesToFile(changedFiles: any[]): string {
-  Logger.Instance.header('Writing changedFiles to file');
+  logger.header('Writing changedFiles to file');
 
   let contents = '';
   changedFiles.forEach(item => {
@@ -57,7 +57,7 @@ export function changedFilesToFile(changedFiles: any[]): string {
   const fileListPath = resolve('changedFiles.txt');
   writeFileSync(fileListPath, contents);
 
-  Logger.Instance.info(`Content written to: ${fileListPath}`);
+  logger.info(`Content written to: ${fileListPath}`);
 
   return fileListPath;
 }

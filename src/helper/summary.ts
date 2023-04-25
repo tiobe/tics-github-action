@@ -1,20 +1,60 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
-import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown } from './markdown';
-import { Condition, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
+import { Analysis, Annotation, ChangedFile, Condition, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
-import Logger from './logger';
+import { logger } from './logger';
+
+export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
+  const failedConditions = extractFailedConditions(qualityGate.gates);
+
+  summary.clear();
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
+  summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
+  failedConditions.forEach(condition => {
+    if (condition.details && condition.details.items.length > 0) {
+      summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+      summary.addBreak();
+      summary.addTable(createConditionTable(condition));
+      summary.addRaw('</details>', true);
+    } else {
+      summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+    }
+  });
+  summary.addEOL();
+
+  if (analysis.explorerUrl) summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
+
+  if (reviewComments && reviewComments.unpostable.length > 0) {
+    summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+  }
+
+  summary.addRaw(createFilesSummary(filesAnalyzed));
+
+  return summary.stringify();
+}
+
+function extractFailedConditions(gates: Gate[]): Condition[] {
+  let failedConditions: Condition[] = [];
+
+  gates.forEach(gate => {
+    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
+  });
+
+  return failedConditions;
+}
 
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
- * @param errorList list containing all the errors found in the TiCS run.
- * @param warningList list containing all the warnings found in the TiCS run.
+ * @param errorList list containing all the errors found in the TICS run.
+ * @param warningList list containing all the warnings found in the TICS run.
  * @returns string containing the error summary.
  */
 export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '## TiCS Quality Gate\r\n\r\n### :x: Failed';
+  let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
 
   if (errorList.length > 0) {
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
@@ -26,15 +66,6 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
   }
 
   return summary;
-}
-
-/**
- * Creates a markdown link summary.
- * @param url Url to the TiCS viewer analysis.
- * @returns Clickable link to the viewer analysis.
- */
-export function createLinkSummary(url: string): string {
-  return `${generateLinkMarkdown('See the results in the TiCS Viewer', url)}\n\n`;
 }
 
 /**
@@ -51,37 +82,6 @@ export function createFilesSummary(fileList: string[]): string {
   });
   body += '</ul>';
   return generateExpandableAreaMarkdown(header, body);
-}
-
-/**
- * Creates a quality gate summary for the TiCS analysis.
- * @param qualityGate quality gate retrieved from the TiCS viewer.
- * @returns Quality gate summary.
- */
-export function createQualityGateSummary(qualityGate: QualityGate): string {
-  let failedConditions: Condition[] = [];
-
-  qualityGate.gates.forEach(gate => {
-    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
-  });
-
-  summary.clear();
-  summary.addHeading('TiCS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(Status[qualityGate.passed ? 1 : 0], true)}`, 3);
-  summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-  failedConditions.forEach(condition => {
-    if (condition.details && condition.details.items.length > 0) {
-      summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-      summary.addBreak();
-      summary.addTable(createConditionTable(condition));
-      summary.addRaw('</details>', true);
-    } else {
-      summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
-    }
-  });
-  summary.addRaw('', true);
-
-  return summary.stringify();
 }
 
 /**
@@ -119,40 +119,41 @@ function createConditionTable(condition: Condition): SummaryTableRow[] {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export async function createReviewComments(annotations: any[], changedFiles: any[]): Promise<ReviewComments> {
-  Logger.Instance.info('Creating review comments from annotations.');
+export function createReviewComments(annotations: Annotation[], changedFiles: ChangedFile[]): ReviewComments {
+  logger.info('Creating review comments from annotations.');
 
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
-  let unpostable: ReviewComment[] = [];
+  let unpostable: Annotation[] = [];
   let postable: ReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-    if (annotation.diffLines.includes(annotation.line)) {
-      Logger.Instance.debug(`Postable: ${JSON.stringify(annotation)}`);
+    if (annotation.diffLines?.includes(annotation.line)) {
+      logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        body: `:warning: **TiCS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
+        title: `${annotation.type}: ${annotation.rule}`,
+        body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
         path: annotation.path,
         line: annotation.line
       });
     } else {
       annotation.displayCount = displayCount;
-      Logger.Instance.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+      logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
       unpostable.push(annotation);
     }
   });
-  Logger.Instance.info('Created review comments from annotations.');
+  logger.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }
 
 /**
  * Sorts annotations based on file name and line number.
- * @param annotations annotations returned by TiCS analyzer.
+ * @param annotations annotations returned by TICS analyzer.
  * @returns sorted anotations.
  */
-function sortAnnotations(annotations: any[]) {
+function sortAnnotations(annotations: Annotation[]): Annotation[] {
   return annotations.sort((a, b) => {
     if (a.fullPath === b.fullPath) return a.line - b.line;
     return a.fullPath > b.fullPath ? 1 : -1;
@@ -165,8 +166,8 @@ function sortAnnotations(annotations: any[]) {
  * @param changedFiles List of files changed in the pull request.
  * @returns grouped annotations.
  */
-function groupAnnotations(annotations: any[], changedFiles: any[]) {
-  let groupedAnnotations: any[] = [];
+function groupAnnotations(annotations: Annotation[], changedFiles: ChangedFile[]): Annotation[] {
+  let groupedAnnotations: Annotation[] = [];
   annotations.forEach(annotation => {
     const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
@@ -188,9 +189,11 @@ function groupAnnotations(annotations: any[], changedFiles: any[]) {
  * @param file file to search the lines changed chunk for.
  * @returns List of all the lines in the diff chunk.
  */
-function fetchDiffLines(file: any) {
+function fetchDiffLines(file: ChangedFile): number[] {
   const regex = /\+(\d+),(\d+)+/g;
   let diffLines: number[] = [];
+
+  if (!file.patch) return [];
 
   let match = regex.exec(file.patch);
   while (match !== null) {
@@ -209,7 +212,7 @@ function fetchDiffLines(file: any) {
  * @param annotation Annotation to find.
  * @returns The index of the annotation found or -1
  */
-function findAnnotationInList(list: any[], annotation: any) {
+function findAnnotationInList(list: Annotation[], annotation: Annotation) {
   return list.findIndex(a => {
     return (
       a.fullPath === annotation.fullPath &&
@@ -218,7 +221,7 @@ function findAnnotationInList(list: any[], annotation: any) {
       a.rule === annotation.rule &&
       a.level === annotation.level &&
       a.category === annotation.category &&
-      a.message === annotation.message
+      a.msg === annotation.msg
     );
   });
 }
@@ -228,8 +231,8 @@ function findAnnotationInList(list: any[], annotation: any) {
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-export function createUnpostableReviewCommentsSummary(unpostableReviewComments: any[]) {
-  let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+export function createUnpostableAnnotationsDetails(unpostableReviewComments: Annotation[]): string {
+  let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
   let body = '';
   let previousPath = '';
 
@@ -240,8 +243,8 @@ export function createUnpostableReviewCommentsSummary(unpostableReviewComments: 
       body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
     }
     body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
-    previousPath = reviewComment.path;
+    previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';
-  return generateExpandableAreaMarkdown(header, body);
+  return generateExpandableAreaMarkdown(label, body);
 }

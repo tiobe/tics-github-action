@@ -1,5 +1,3 @@
-import { Http2ServerResponse } from 'http2';
-
 export interface Analysis {
   completed: boolean;
   statusCode: number;
@@ -63,6 +61,7 @@ export interface AnnotationApiLink {
 }
 
 export interface ReviewComment {
+  title: string;
   body: string;
   path: any;
   line: any;
@@ -70,7 +69,7 @@ export interface ReviewComment {
 
 export interface ReviewComments {
   postable: ReviewComment[];
-  unpostable: any[];
+  unpostable: Annotation[];
 }
 
 export interface ChangedFile {
@@ -103,4 +102,36 @@ export interface AnalyzedFiles {
 export interface HttpResponse {
   data: string;
   alertMessages: { header: string }[];
+}
+
+export interface AnnotationResonse {
+  header: {
+    title: string;
+  };
+  data: Annotation[];
+}
+
+export interface Annotation {
+  fullPath: string;
+  line: number;
+  level: number;
+  category: string;
+  rule: string;
+  msg: string;
+  supp: boolean;
+  type: string;
+  count: number;
+  gateId?: number;
+  displayCount?: string;
+  path?: string;
+  diffLines?: number[];
+}
+
+export interface VersionResponse {
+  buildTime?: string;
+  revision?: string;
+  version: string;
+  fullVersion?: string;
+  projectName?: string;
+  dbversion?: string;
 }
