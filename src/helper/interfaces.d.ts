@@ -61,6 +61,7 @@ export interface AnnotationApiLink {
 }
 
 export interface ReviewComment {
+  title: string;
   body: string;
   path: any;
   line: any;

@@ -1,12 +1,6 @@
-import { githubConfig, ticsConfig } from '../../src/configuration';
-import { ChangedFile, QualityGate } from '../../src/helper/interfaces';
-import {
-  createErrorSummary,
-  createFilesSummary,
-  createSummaryBody,
-  createReviewComments,
-  createUnpostableAnnotationsDetails
-} from '../../src/helper/summary';
+import { githubConfig } from '../../src/configuration';
+import { ChangedFile } from '../../src/helper/interfaces';
+import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../src/helper/summary';
 import '../.setup/extend_jest';
 
 describe('createErrorSummary', () => {
@@ -101,9 +95,10 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TICS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: 'Line: 0: test\r\nLevel: 1, Category: test'
       }
     ];
 
@@ -153,9 +148,10 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TICS: test violation: test**\r\n(2x) Line: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: 'Line: 0: (2x) test\r\nLevel: 1, Category: test'
       }
     ];
 
@@ -216,9 +212,10 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: ':warning: **TICS: test violation: test**\r\nLine: 0, Rule: test, Level: 1, Category: test\r\n'
+        body: 'Line: 0: test\r\nLevel: 1, Category: test'
       }
     ];
 

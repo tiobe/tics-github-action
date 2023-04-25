@@ -133,7 +133,8 @@ export function createReviewComments(annotations: Annotation[], changedFiles: Ch
     if (annotation.diffLines?.includes(annotation.line)) {
       logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        body: `:warning: **TICS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
+        title: `${annotation.type}: ${annotation.rule}`,
+        body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
         path: annotation.path,
         line: annotation.line
       });

@@ -31,7 +31,7 @@ export async function postAnnotations(reviewComments: ReviewComments) {
     logger.warning(reviewComment.body, {
       file: reviewComment.path,
       startLine: reviewComment.line,
-      title: 'TICS annotation'
+      title: reviewComment.title
     });
   });
 }
