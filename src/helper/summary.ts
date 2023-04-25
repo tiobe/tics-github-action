@@ -10,6 +10,7 @@ import { logger } from './logger';
 export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
   const failedConditions = extractFailedConditions(qualityGate.gates);
 
+  summary.clear();
   summary.addHeading('TICS Quality Gate');
   summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
   summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
