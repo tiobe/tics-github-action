@@ -13,7 +13,7 @@ import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
-import { Analysis } from './helper/interfaces';
+import { Analysis, ReviewComments } from './helper/interfaces';
 
 run();
 
@@ -61,13 +61,13 @@ async function main() {
 
       if (!qualityGate) return logger.exit('Quality gate could not be retrieved');
 
-      let reviewComments;
+      let reviewComments: ReviewComments | undefined;
 
       if (ticsConfig.postAnnotations) {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
           reviewComments = await createReviewComments(annotations, changedFiles);
-          if (reviewComments) await postAnnotations(reviewComments);
+          await postAnnotations(reviewComments);
         }
         const previousReviewComments = await getPostedReviewComments();
         if (previousReviewComments && previousReviewComments.length > 0) {

@@ -1,7 +1,6 @@
 import { logger } from '../../helper/logger';
 import { githubConfig, octokit } from '../../configuration';
 import { ReviewComments } from '../../helper/interfaces';
-import path from 'path';
 
 /**
  * Deletes the review comments of previous runs.
