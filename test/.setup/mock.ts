@@ -6,7 +6,7 @@ jest.mock('../../src/configuration', () => {
       projectName: 'project',
       ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
       calc: 'GATE',
-      pullRequestApproval: true,
+      pullRequestApproval: false,
       secretsFilter: []
     },
     githubConfig: {
@@ -50,6 +50,7 @@ jest.mock('@actions/core', () => {
     setFailed: jest.fn(),
     summary: {
       addBreak: jest.fn(() => (summaryOutput += '\n')),
+      addEOL: jest.fn(() => (summaryOutput += '\n')),
       addHeading: jest.fn((heading, level) => (summaryOutput += `${level ? level : 1} ${heading}\n`)),
       addLink: jest.fn((text, link) => (summaryOutput += `[${text}](${link})`)),
       addRaw: jest.fn(raw => (summaryOutput += raw)),

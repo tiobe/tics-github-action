@@ -1,14 +1,4 @@
-import { Events, Status } from './enums';
-
-/**
- * Generates a link with text in markdown.
- * @param text Text for the link.
- * @param link The actual link to.
- * @returns Annotated link in markdown.
- */
-export function generateLinkMarkdown(text: string, link: string): string {
-  return `[${text}](${link})`;
-}
+import { Status } from './enums';
 
 /**
  * Generates a status symbol with optional suffix.

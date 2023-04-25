@@ -7,7 +7,7 @@ import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/posting/review';
-import { createReviewBody, createReviewComments } from './helper/summary';
+import { createSummaryBody, createReviewComments } from './helper/summary';
 import { deletePreviousReviewComments, postAnnotations } from './github/posting/annotations';
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
@@ -75,7 +75,7 @@ async function main() {
         }
       }
 
-      let reviewBody = createReviewBody(analysis, analyzedFiles, qualityGate, reviewComments);
+      let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
 
       if (ticsConfig.pullRequestApproval) {
         await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
@@ -99,7 +99,7 @@ async function main() {
 export function configure() {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
-    if (githubConfig.debugger) logger.warning(warning.message.toString());
+    if (githubConfig.debugger) logger.debug(warning.message.toString());
   });
 
   exportVariable('TICSIDE', 'GITHUB');

@@ -1,18 +1,18 @@
 import { githubConfig, octokit, ticsConfig } from '../../../src/configuration';
 import { postNothingAnalyzedReview, postReview } from '../../../src/github/posting/review';
-import { createReviewBody } from '../../../src/helper/summary';
+import { createSummaryBody } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import { logger } from '../../../src/helper/logger';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
-    createReviewBody: jest.fn()
+    createSummaryBody: jest.fn()
   };
 });
 
 describe('postReview', () => {
   test('Should call createReview once', async () => {
-    (createReviewBody as any).mockReturnValueOnce('ReviewBody...');
+    (createSummaryBody as any).mockReturnValueOnce('ReviewBody...');
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
@@ -30,14 +30,14 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createReviewBody(analysis, [''], qualityGate, undefined);
+    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
     expect(spy).toBeCalledTimes(1);
   });
 
   test('Should call createReview with values passed and no comments', async () => {
-    (createReviewBody as any).mockReturnValueOnce('ReviewBody...');
+    (createSummaryBody as any).mockReturnValueOnce('ReviewBody...');
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
@@ -55,7 +55,7 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createReviewBody(analysis, [''], qualityGate, undefined);
+    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -71,7 +71,7 @@ describe('postReview', () => {
   });
 
   test('Should call createReview with values failed', async () => {
-    (createReviewBody as any).mockReturnValueOnce('ReviewBody...');
+    (createSummaryBody as any).mockReturnValueOnce('ReviewBody...');
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
@@ -91,9 +91,9 @@ describe('postReview', () => {
     };
     const reviewComments = {
       postable: [],
-      unpostable: [{}]
+      unpostable: []
     };
-    let body = createReviewBody(analysis, [''], qualityGate, reviewComments);
+    let body = createSummaryBody(analysis, [''], qualityGate, reviewComments);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -108,7 +108,7 @@ describe('postReview', () => {
   });
 
   test('Should throw an error on createReview', async () => {
-    (createReviewBody as any).mockReturnValueOnce('ReviewBody...');
+    (createSummaryBody as any).mockReturnValueOnce('ReviewBody...');
 
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
@@ -129,7 +129,7 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createReviewBody(analysis, [''], qualityGate, undefined);
+    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 

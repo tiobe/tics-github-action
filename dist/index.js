@@ -520,18 +520,8 @@ exports.logger = new Logger();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = exports.generateLinkMarkdown = void 0;
+exports.generateExpandableAreaMarkdown = exports.generateStatusMarkdown = void 0;
 const enums_1 = __nccwpck_require__(1655);
-/**
- * Generates a link with text in markdown.
- * @param text Text for the link.
- * @param link The actual link to.
- * @returns Annotated link in markdown.
- */
-function generateLinkMarkdown(text, link) {
-    return `[${text}](${link})`;
-}
-exports.generateLinkMarkdown = generateLinkMarkdown;
 /**
  * Generates a status symbol with optional suffix.
  * @param status The status. (Either 'passed', 'failed', 'skipped' or 'warning').
@@ -570,21 +560,46 @@ exports.generateExpandableAreaMarkdown = generateExpandableAreaMarkdown;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createUnpostableReviewCommentsSummary = exports.createReviewComments = exports.createQualityGateSummary = exports.createFilesSummary = exports.createLinkSummary = exports.createErrorSummary = exports.createReviewBody = void 0;
+exports.createUnpostableAnnotationsDetails = exports.createReviewComments = exports.createFilesSummary = exports.createErrorSummary = exports.createSummaryBody = void 0;
 const core_1 = __nccwpck_require__(2186);
 const markdown_1 = __nccwpck_require__(5300);
 const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
-function createReviewBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
-    let body = createQualityGateSummary(qualityGate);
-    body += analysis.explorerUrl ? createLinkSummary(analysis.explorerUrl) : '';
-    body += reviewComments && reviewComments.unpostable.length > 0 ? createUnpostableReviewCommentsSummary(reviewComments.unpostable) : '';
-    body += createFilesSummary(filesAnalyzed);
-    return body;
+function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
+    const failedConditions = extractFailedConditions(qualityGate.gates);
+    core_1.summary.addHeading('TICS Quality Gate');
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
+    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
+    failedConditions.forEach(condition => {
+        if (condition.details && condition.details.items.length > 0) {
+            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+            core_1.summary.addBreak();
+            core_1.summary.addTable(createConditionTable(condition));
+            core_1.summary.addRaw('</details>', true);
+        }
+        else {
+            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+        }
+    });
+    core_1.summary.addEOL();
+    if (analysis.explorerUrl)
+        core_1.summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
+    if (reviewComments && reviewComments.unpostable.length > 0) {
+        core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+    }
+    core_1.summary.addRaw(createFilesSummary(filesAnalyzed));
+    return core_1.summary.stringify();
 }
-exports.createReviewBody = createReviewBody;
+exports.createSummaryBody = createSummaryBody;
+function extractFailedConditions(gates) {
+    let failedConditions = [];
+    gates.forEach(gate => {
+        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
+    });
+    return failedConditions;
+}
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
  * @param errorList list containing all the errors found in the TICS run.
@@ -605,15 +620,6 @@ function createErrorSummary(errorList, warningList) {
 }
 exports.createErrorSummary = createErrorSummary;
 /**
- * Creates a markdown link summary.
- * @param url Url to the TICS viewer analysis.
- * @returns Clickable link to the viewer analysis.
- */
-function createLinkSummary(url) {
-    return `${(0, markdown_1.generateLinkMarkdown)('See the results in the TICS Viewer', url)}\n\n`;
-}
-exports.createLinkSummary = createLinkSummary;
-/**
  * Creates a list of all the files analyzed.
  * @param fileList list of files.
  * @returns Dropdown with all the files analyzed.
@@ -629,35 +635,6 @@ function createFilesSummary(fileList) {
     return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
 }
 exports.createFilesSummary = createFilesSummary;
-/**
- * Creates a quality gate summary for the TICS analysis.
- * @param qualityGate quality gate retrieved from the TICS viewer.
- * @returns Quality gate summary.
- */
-function createQualityGateSummary(qualityGate) {
-    let failedConditions = [];
-    qualityGate.gates.forEach(gate => {
-        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
-    });
-    core_1.summary.clear();
-    core_1.summary.addHeading('TICS Quality Gate');
-    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
-    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-    failedConditions.forEach(condition => {
-        if (condition.details && condition.details.items.length > 0) {
-            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-            core_1.summary.addBreak();
-            core_1.summary.addTable(createConditionTable(condition));
-            core_1.summary.addRaw('</details>', true);
-        }
-        else {
-            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
-        }
-    });
-    core_1.summary.addRaw('', true);
-    return core_1.summary.stringify();
-}
-exports.createQualityGateSummary = createQualityGateSummary;
 /**
  * Creates a table containing a summary for all conditions.
  * @param conditions Conditions of the quality gate
@@ -691,7 +668,7 @@ function createConditionTable(condition) {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-async function createReviewComments(annotations, changedFiles) {
+function createReviewComments(annotations, changedFiles) {
     logger_1.logger.info('Creating review comments from annotations.');
     const sortedAnnotations = sortAnnotations(annotations);
     const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
@@ -699,7 +676,7 @@ async function createReviewComments(annotations, changedFiles) {
     let postable = [];
     groupedAnnotations.forEach(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        if (annotation.diffLines.includes(annotation.line)) {
+        if (annotation.diffLines?.includes(annotation.line)) {
             logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
                 body: `:warning: **TICS: ${annotation.type} violation: ${annotation.msg}**\r\n${displayCount}Line: ${annotation.line}, Rule: ${annotation.rule}, Level: ${annotation.level}, Category: ${annotation.category}\r\n`,
@@ -761,6 +738,8 @@ function groupAnnotations(annotations, changedFiles) {
 function fetchDiffLines(file) {
     const regex = /\+(\d+),(\d+)+/g;
     let diffLines = [];
+    if (!file.patch)
+        return [];
     let match = regex.exec(file.patch);
     while (match !== null) {
         const startLine = parseInt(match[1]);
@@ -784,7 +763,7 @@ function findAnnotationInList(list, annotation) {
             a.rule === annotation.rule &&
             a.level === annotation.level &&
             a.category === annotation.category &&
-            a.message === annotation.message);
+            a.msg === annotation.msg);
     });
 }
 /**
@@ -792,8 +771,8 @@ function findAnnotationInList(list, annotation) {
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
-    let header = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+function createUnpostableAnnotationsDetails(unpostableReviewComments) {
+    let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
     let body = '';
     let previousPath = '';
     unpostableReviewComments.forEach(reviewComment => {
@@ -804,12 +783,12 @@ function createUnpostableReviewCommentsSummary(unpostableReviewComments) {
             body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
         }
         body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
-        previousPath = reviewComment.path;
+        previousPath = reviewComment.path ? reviewComment.path : '';
     });
     body += '</table>';
-    return (0, markdown_1.generateExpandableAreaMarkdown)(header, body);
+    return (0, markdown_1.generateExpandableAreaMarkdown)(label, body);
 }
-exports.createUnpostableReviewCommentsSummary = createUnpostableReviewCommentsSummary;
+exports.createUnpostableAnnotationsDetails = createUnpostableAnnotationsDetails;
 
 
 /***/ }),
@@ -1195,25 +1174,27 @@ function getQualityGateUrl(url) {
  * @returns TICS annotations.
  */
 async function getAnnotations(apiLinks) {
+    let annotations = [];
     logger_1.logger.header('Retrieving annotations.');
     try {
-        let annotations = [];
         await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
             logger_1.logger.debug(`From: ${annotationsUrl}`);
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
-            response.data.forEach((annotation) => {
-                annotation.gateId = index;
-                logger_1.logger.debug(JSON.stringify(annotation));
-                annotations.push(annotation);
-            });
+            if (response) {
+                response.data.forEach((annotation) => {
+                    annotation.gateId = index;
+                    logger_1.logger.debug(JSON.stringify(annotation));
+                    annotations.push(annotation);
+                });
+            }
         }));
         logger_1.logger.info('Retrieved all annotations.');
-        return annotations;
     }
     catch (error) {
         logger_1.logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
     }
+    return annotations;
 }
 exports.getAnnotations = getAnnotations;
 /**
@@ -66060,7 +66041,7 @@ async function main() {
                     await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
                 }
             }
-            let reviewBody = (0, summary_1.createReviewBody)(analysis, analyzedFiles, qualityGate, reviewComments);
+            let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
             if (configuration_1.ticsConfig.pullRequestApproval) {
                 await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             }
@@ -66084,7 +66065,7 @@ function configure() {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
         if (configuration_1.githubConfig.debugger)
-            logger_1.logger.warning(warning.message.toString());
+            logger_1.logger.debug(warning.message.toString());
     });
     (0, core_1.exportVariable)('TICSIDE', 'GITHUB');
     // set ticsAuthToken

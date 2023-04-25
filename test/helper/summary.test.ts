@@ -1,12 +1,11 @@
 import { githubConfig, ticsConfig } from '../../src/configuration';
-import { QualityGate } from '../../src/helper/interfaces';
+import { ChangedFile, QualityGate } from '../../src/helper/interfaces';
 import {
   createErrorSummary,
   createFilesSummary,
-  createLinkSummary,
-  createQualityGateSummary,
+  createSummaryBody,
   createReviewComments,
-  createUnpostableReviewCommentsSummary
+  createUnpostableAnnotationsDetails
 } from '../../src/helper/summary';
 import '../.setup/extend_jest';
 
@@ -44,14 +43,6 @@ describe('createErrorSummary', () => {
   });
 });
 
-describe('createLinkSummary', () => {
-  test('Should return markdown link to url', () => {
-    const response = createLinkSummary('https://url.com');
-
-    expect(response).toEqual('[See the results in the TICS Viewer](https://url.com)\n\n');
-  });
-});
-
 describe('createFilesSummary', () => {
   test('Should return summary list of a single file', () => {
     const response = createFilesSummary(['test.js']);
@@ -73,162 +64,24 @@ describe('createFilesSummary', () => {
   });
 });
 
-describe('createQualityGateSummary', () => {
-  test('Should return summary failed quality gate', () => {
-    const qualityGate: QualityGate = {
-      passed: false,
-      message: 'Project successfully passed all 2 quality gates',
-      url: 'api',
-      gates: [
-        {
-          passed: false,
-          name: 'JavaScript',
-          conditions: [
-            {
-              passed: false,
-              error: false,
-              message: 'Δ Coding Standard Violations for levels 1, 2, 3, 4 should be at most 0 for each file with respect to second-to-last analysis'
-            },
-            {
-              passed: true,
-              error: false,
-              message: 'Δ Maximum Cyclomatic Complexity should be at most 5 for each file with respect to second-to-last analysis'
-            },
-            {
-              passed: true,
-              error: false,
-              message: 'Δ TQI Cyclomatic Complexity should be at most 100.00% for each file with respect to second-to-last analysis'
-            }
-          ]
-        },
-        {
-          passed: true,
-          name: 'SecondTest',
-          conditions: [
-            {
-              passed: true,
-              error: false,
-              message: 'Δ Coding Standard Violations for levels 1, 2, 3, 4 should be at most 0 for each file with respect to second-to-last analysis'
-            }
-          ]
-        }
-      ],
-      annotationsApiV1Links: [
-        {
-          url: 'api'
-        }
-      ]
-    };
-
-    const response = createQualityGateSummary(qualityGate);
-
-    expect(response).toContainTimes(':x:', 2);
-  });
-
-  test('Should return summary failed quality gate', () => {
-    const qualityGate: QualityGate = {
-      passed: false,
-      message: 'Project successfully passed all 2 quality gates',
-      url: 'api',
-      gates: [
-        {
-          passed: false,
-          name: 'JavaScript',
-          conditions: [
-            {
-              passed: false,
-              error: false,
-              message:
-                'Δ Coding Standard Violations for levels 1, 2, 3, 4 should be at most 0 for each file with respect to second-to-last analysis, but was not for 1 file',
-              details: {
-                itemTypes: ['file'],
-                dataKeys: {
-                  actualValue: {
-                    title: 'Coding Standard Violations',
-                    order: 1,
-                    itemType: 'file'
-                  }
-                },
-                itemCount: 1,
-                itemLimit: 100,
-                items: [
-                  {
-                    itemType: 'file',
-                    name: 'src/tics/TicsAnalyzer.js',
-                    link: 'AnnotatedSource.html#axes\u003dLevel(Set(1,2,3,4)),Suppressions(no),Date(1672314064),ClientData(17ILj0tRtP5czHpnwhAOxQ),Project(js%20test%20project),Branch(main),Window(changed,ge,1672314064),File(Path(HIE,js%20test%20project,main,src,tics,TicsAnalyzer.js)),IsNew(yes)\u0026diff\u003dtrue\u0026metrics\u003dDelta(G(Violations(CS),Level(Set(1,2,3,4))),Run(-2))',
-                    data: {
-                      actualValue: {
-                        formattedValue: '+4',
-                        value: 4.0,
-                        classes: ['delta-worse']
-                      }
-                    }
-                  }
-                ]
-              },
-              annotationsApiV1Links: [
-                {
-                  url: 'api/public/v1/Annotations?filters\u003dDate(1672314064),ClientData(17ILj0tRtP5czHpnwhAOxQ),Project(js%20test%20project),Branch(main),Window(-1),Level(Set(1,2,3,4)),Where(Eq(Violations(CS),gt,0)),DeltaDate(Run(-2)),IsNew(yes)\u0026metric\u003dAnnotations(CS)'
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      annotationsApiV1Links: [
-        {
-          url: 'api'
-        }
-      ]
-    };
-
-    const response = createQualityGateSummary(qualityGate);
-
-    expect(response).toContainTimes(':x:', 2);
-  });
-
-  test('Should return summary on skipped quality gate', () => {
-    const qualityGate: QualityGate = {
-      passed: true,
-      message: 'Project successfully passed all 2 quality gates',
-      url: 'api',
-      gates: [
-        {
-          passed: true,
-          name: 'JavaScript',
-          conditions: [
-            {
-              passed: true,
-              skipped: true,
-              error: false,
-              message: ''
-            }
-          ]
-        }
-      ],
-      annotationsApiV1Links: [
-        {
-          url: 'api'
-        }
-      ]
-    };
-
-    const response = createQualityGateSummary(qualityGate);
-
-    expect(response).toContainTimes(':x:', 0);
-  });
-});
-
 describe('createReviewComments', () => {
   test('Should return no review comments on empty input', async () => {
-    const response = await createReviewComments([], []);
+    const response = createReviewComments([], []);
     expect(response).toEqual({ postable: [], unpostable: [] });
   });
 
   test('Should return one postable review comment', async () => {
-    const changedFiles = [
+    const changedFiles: ChangedFile[] = [
       {
+        sha: 'sha',
         filename: 'src/test.js',
+        status: 'modified',
+        additions: 1,
+        deletions: 1,
+        changes: 2,
+        blob_url: 'url',
+        raw_url: 'url',
+        contents_url: 'url',
         patch: '@@ -0,1 +0,1 @@'
       }
     ];
@@ -241,7 +94,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       }
     ];
 
@@ -253,14 +107,22 @@ describe('createReviewComments', () => {
       }
     ];
 
-    const response = await createReviewComments(annotations, changedFiles);
+    const response = createReviewComments(annotations, changedFiles);
     expect(response).toEqual({ postable: expected_postable, unpostable: [] });
   });
 
   test('Should return one combined postable review comment for the same line', async () => {
-    const changedFiles = [
+    const changedFiles: ChangedFile[] = [
       {
+        sha: 'sha',
         filename: 'src/test.js',
+        status: 'modified',
+        additions: 1,
+        deletions: 1,
+        changes: 2,
+        blob_url: 'url',
+        raw_url: 'url',
+        contents_url: 'url',
         patch: '@@ -0,1 +0,1 @@'
       }
     ];
@@ -273,7 +135,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       },
       {
         fullPath: 'c:/src/test.js',
@@ -283,7 +146,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       }
     ];
 
@@ -295,14 +159,22 @@ describe('createReviewComments', () => {
       }
     ];
 
-    const response = await createReviewComments(annotations, changedFiles);
+    const response = createReviewComments(annotations, changedFiles);
     expect(response).toEqual({ postable: expected_postable, unpostable: [] });
   });
 
   test('Should return one postable and one unpostable review comment', async () => {
-    const changedFiles = [
+    const changedFiles: ChangedFile[] = [
       {
+        sha: 'sha',
         filename: 'src/test.js',
+        status: 'modified',
+        additions: 1,
+        deletions: 1,
+        changes: 2,
+        blob_url: 'url',
+        raw_url: 'url',
+        contents_url: 'url',
         patch: '@@ -0,1 +0,1 @@'
       }
     ];
@@ -315,7 +187,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       },
       {
         fullPath: 'HIE://project/branch/src/jest.js',
@@ -325,7 +198,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       },
       {
         fullPath: 'HIE://project/branch/src/zest.js',
@@ -335,7 +209,8 @@ describe('createReviewComments', () => {
         type: 'test',
         rule: 'test',
         msg: 'test',
-        count: 1
+        count: 1,
+        supp: false
       }
     ];
 
@@ -358,6 +233,7 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
+        supp: false,
         displayCount: '',
         diffLines: []
       },
@@ -371,19 +247,20 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
+        supp: false,
         displayCount: '',
         diffLines: []
       }
     ];
 
-    const response = await createReviewComments(annotations, changedFiles);
+    const response = createReviewComments(annotations, changedFiles);
     expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
   });
 });
 
 describe('createUnpostableReviewCommentsSummary', () => {
   test('Should return summary of zero unpostable review comments on empty input', () => {
-    const response = createUnpostableReviewCommentsSummary([]);
+    const response = createUnpostableAnnotationsDetails([]);
     expect(response).toEqual(
       '<details><summary>Quality gate failures that cannot be annotated in <b>Files Changed</b>:</summary>\n</table></details>\n\n'
     );
@@ -392,6 +269,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   test('Should return summary of one unpostable review comment', () => {
     const unpostable = [
       {
+        fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
         level: 1,
@@ -399,11 +277,13 @@ describe('createUnpostableReviewCommentsSummary', () => {
         type: 'test',
         rule: 'test',
         displayCount: '',
-        msg: 'test'
+        msg: 'test',
+        supp: false,
+        count: 0
       }
     ];
 
-    const response = createUnpostableReviewCommentsSummary(unpostable);
+    const response = createUnpostableAnnotationsDetails(unpostable);
     expect(response).toContain(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
       `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
@@ -413,6 +293,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   test('Should return summary of two unpostable review comment for one file', () => {
     const unpostable = [
       {
+        fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
         level: 1,
@@ -420,9 +301,12 @@ describe('createUnpostableReviewCommentsSummary', () => {
         type: 'test',
         rule: 'test',
         displayCount: '',
-        msg: 'test'
+        msg: 'test',
+        supp: false,
+        count: 0
       },
       {
+        fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
         level: 1,
@@ -430,11 +314,13 @@ describe('createUnpostableReviewCommentsSummary', () => {
         type: 'test',
         rule: 'test',
         displayCount: '',
-        msg: 'test'
+        msg: 'test',
+        supp: false,
+        count: 0
       }
     ];
 
-    const response = createUnpostableReviewCommentsSummary(unpostable);
+    const response = createUnpostableAnnotationsDetails(unpostable);
     expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(
       `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
@@ -445,6 +331,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   test('Should return summary of two unpostable review comment for two files', () => {
     const unpostable = [
       {
+        fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
         level: 1,
@@ -452,9 +339,12 @@ describe('createUnpostableReviewCommentsSummary', () => {
         type: 'test',
         rule: 'test',
         displayCount: '',
-        msg: 'test'
+        msg: 'test',
+        supp: false,
+        count: 0
       },
       {
+        fullPath: '/home/src/test.js',
         path: 'src/test.js',
         line: 0,
         level: 1,
@@ -462,11 +352,13 @@ describe('createUnpostableReviewCommentsSummary', () => {
         type: 'test',
         rule: 'test',
         displayCount: '',
-        msg: 'test'
+        msg: 'test',
+        supp: false,
+        count: 0
       }
     ];
 
-    const response = createUnpostableReviewCommentsSummary(unpostable);
+    const response = createUnpostableAnnotationsDetails(unpostable);
     expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[1].path}</th></tr>`, 1);
     expect(response).toContainTimes(

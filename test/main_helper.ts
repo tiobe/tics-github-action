@@ -287,7 +287,8 @@ export const singleAnnotations = [
     type: 'test',
     rule: 'test',
     msg: 'test',
-    count: 1
+    count: 1,
+    supp: false
   }
 ];
 

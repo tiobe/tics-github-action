@@ -187,6 +187,7 @@ describe('postNothingAnalyzedReview', () => {
 
 describe('PostReview checks', () => {
   test('Should call postReview with one file analyzed, qualitygate failed and no annotations', async () => {
+    ticsConfig.pullRequestApproval = true;
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');

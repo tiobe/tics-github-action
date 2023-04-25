@@ -1,5 +1,5 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { AnalyzedFile, AnalyzedFiles, ChangedFile, QualityGate } from '../helper/interfaces';
+import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationResonse, ChangedFile, QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -102,26 +102,28 @@ function getQualityGateUrl(url: string) {
  * @returns TICS annotations.
  */
 export async function getAnnotations(apiLinks: any[]) {
+  let annotations: Annotation[] = [];
   logger.header('Retrieving annotations.');
   try {
-    let annotations: any[] = [];
     await Promise.all(
       apiLinks.map(async (link, index) => {
         const annotationsUrl = `${baseUrl}/${link.url}`;
         logger.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest<any>(annotationsUrl);
-        response.data.forEach((annotation: any) => {
-          annotation.gateId = index;
-          logger.debug(JSON.stringify(annotation));
-          annotations.push(annotation);
-        });
+        const response = await httpRequest<AnnotationResonse>(annotationsUrl);
+        if (response) {
+          response.data.forEach((annotation: Annotation) => {
+            annotation.gateId = index;
+            logger.debug(JSON.stringify(annotation));
+            annotations.push(annotation);
+          });
+        }
       })
     );
     logger.info('Retrieved all annotations.');
-    return annotations;
   } catch (error: any) {
     logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
   }
+  return annotations;
 }
 
 /**

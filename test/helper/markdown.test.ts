@@ -1,5 +1,5 @@
 import { Status } from '../../src/helper/enums';
-import { generateExpandableAreaMarkdown, generateLinkMarkdown, generateStatusMarkdown } from '../../src/helper/markdown';
+import { generateExpandableAreaMarkdown, generateStatusMarkdown } from '../../src/helper/markdown';
 
 describe('generateStatusMarkdown', () => {
   test('Should return failed without prefix', () => {
@@ -40,13 +40,6 @@ describe('generateStatusMarkdown', () => {
   test('Should return skipped with prefix', () => {
     const status = generateStatusMarkdown(Status.SKIPPED, true);
     expect(status).toEqual(':warning: Skipped ');
-  });
-});
-
-describe('generateLinkMarkdown', () => {
-  test('Should return markdown link', () => {
-    const link = generateLinkMarkdown('link', 'url');
-    expect(link).toEqual('[link](url)');
   });
 });
 
