@@ -1203,7 +1203,7 @@ exports.getAnnotations = getAnnotations;
  * @returns Version of the used TICS viewer.
  */
 async function getViewerVersion() {
-    let getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
+    const getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
     try {
         const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
         logger_1.logger.info('Retrieved the Viewer Version.');
@@ -65986,7 +65986,12 @@ const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
 const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
-run();
+run().catch((error) => {
+    let message = 'TICS failed with unknown reason';
+    if (error instanceof Error)
+        message = error.message;
+    logger_1.logger.exit(message);
+});
 // exported for testing purposes
 async function run() {
     configure();
@@ -66013,11 +66018,11 @@ async function main() {
             analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
             if (!analysis.explorerUrl) {
                 if (!analysis.completed) {
-                    (0, comment_1.postErrorComment)(analysis);
+                    await (0, comment_1.postErrorComment)(analysis);
                     logger_1.logger.setFailed('Failed to run TICS Github Action.');
                 }
                 else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                    (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TICS analysis quality gating.');
+                    await (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TICS analysis quality gating.');
                 }
                 else {
                     logger_1.logger.setFailed('Failed to run TICS Github Action.');
@@ -66034,7 +66039,7 @@ async function main() {
             if (configuration_1.ticsConfig.postAnnotations) {
                 const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
                 if (annotations && annotations.length > 0) {
-                    reviewComments = await (0, summary_1.createReviewComments)(annotations, changedFiles);
+                    reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
                     await (0, annotations_1.postAnnotations)(reviewComments);
                 }
                 const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
@@ -66055,8 +66060,7 @@ async function main() {
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {
-        logger_1.logger.error('Failed to run TICS Github Action');
-        logger_1.logger.exit(error.message);
+        throw error;
     }
 }
 /**
@@ -66100,7 +66104,8 @@ async function meetsPrerequisites() {
     let message;
     const viewerVersion = await (0, fetcher_1.getViewerVersion)();
     if (!viewerVersion || !(0, compare_versions_1.satisfies)(viewerVersion.version, '>=2022.4.0')) {
-        message = `Minimum required TICS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
+        const version = viewerVersion ? viewerVersion.version : 'unknown';
+        message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
     }
     else if (configuration_1.ticsConfig.mode === 'diagnostic') {
         // No need for pull_request and checked out repository.

@@ -125,3 +125,12 @@ export interface Annotation {
   path?: string;
   diffLines?: number[];
 }
+
+export interface VersionResponse {
+  buildTime?: string;
+  revision?: string;
+  version: string;
+  fullVersion?: string;
+  projectName?: string;
+  dbversion?: string;
+}

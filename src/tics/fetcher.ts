@@ -1,5 +1,5 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationResonse, ChangedFile, QualityGate } from '../helper/interfaces';
+import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationResonse, ChangedFile, QualityGate, VersionResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -130,10 +130,10 @@ export async function getAnnotations(apiLinks: any[]) {
  * Gets the version of the TICS viewer used.
  * @returns Version of the used TICS viewer.
  */
-export async function getViewerVersion(): Promise<any> {
-  let getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
+export async function getViewerVersion(): Promise<VersionResponse | undefined> {
+  const getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   try {
-    const response = await httpRequest(getViewerVersionUrl.href);
+    const response = await httpRequest<VersionResponse>(getViewerVersionUrl.href);
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));
     return response;

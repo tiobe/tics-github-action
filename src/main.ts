@@ -15,10 +15,14 @@ import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
 
-run();
+run().catch((error: unknown) => {
+  let message = 'TICS failed with unknown reason';
+  if (error instanceof Error) message = error.message;
+  logger.exit(message);
+});
 
 // exported for testing purposes
-export async function run() {
+export async function run(): Promise<void> {
   configure();
 
   const message = await meetsPrerequisites();
@@ -44,10 +48,10 @@ async function main() {
 
       if (!analysis.explorerUrl) {
         if (!analysis.completed) {
-          postErrorComment(analysis);
+          await postErrorComment(analysis);
           logger.setFailed('Failed to run TICS Github Action.');
         } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-          postNothingAnalyzedReview('No changed files applicable for TICS analysis quality gating.');
+          await postNothingAnalyzedReview('No changed files applicable for TICS analysis quality gating.');
         } else {
           logger.setFailed('Failed to run TICS Github Action.');
           analysis.errorList.push('Explorer URL not returned from TICS analysis.');
@@ -66,7 +70,7 @@ async function main() {
       if (ticsConfig.postAnnotations) {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
-          reviewComments = await createReviewComments(annotations, changedFiles);
+          reviewComments = createReviewComments(annotations, changedFiles);
           await postAnnotations(reviewComments);
         }
         const previousReviewComments = await getPostedReviewComments();
@@ -87,16 +91,15 @@ async function main() {
     }
 
     cliSummary(analysis);
-  } catch (error: any) {
-    logger.error('Failed to run TICS Github Action');
-    logger.exit(error.message);
+  } catch (error: unknown) {
+    throw error;
   }
 }
 
 /**
  * Configure the action before running the analysis.
  */
-export function configure() {
+export function configure(): void {
   process.removeAllListeners('warning');
   process.on('warning', warning => {
     if (githubConfig.debugger) logger.debug(warning.message.toString());
@@ -135,13 +138,14 @@ export function configure() {
  * If any of these checks fail it returns a message.
  * @returns Message containing why it failed the prerequisite.
  */
-async function meetsPrerequisites() {
+async function meetsPrerequisites(): Promise<string | undefined> {
   let message;
 
   const viewerVersion = await getViewerVersion();
 
   if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
-    message = `Minimum required TICS Viewer version is 2022.4. Found version ${viewerVersion?.version}.`;
+    const version = viewerVersion ? viewerVersion.version : 'unknown';
+    message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for pull_request and checked out repository.
   } else if (githubConfig.eventName !== 'pull_request') {
@@ -157,7 +161,7 @@ async function meetsPrerequisites() {
  * Checks if a .git directory exists to see if a checkout has been performed.
  * @returns Boolean value if the folder is found or not.
  */
-function isCheckedOut() {
+function isCheckedOut(): boolean {
   if (!existsSync('.git')) {
     logger.error('No git checkout found');
     return false;
