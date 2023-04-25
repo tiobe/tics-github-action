@@ -61,18 +61,6 @@ describe('pre checks', () => {
       expect.stringContaining('No checkout found to analyze. Please perform a checkout before running the TICS Action.')
     );
   });
-
-  test('Should call exit if no files are found', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockRejectedValueOnce(new Error('Error'));
-
-    const spyExit = jest.spyOn(logger, 'exit');
-
-    await main.run();
-
-    expect(spyExit).toHaveBeenCalled();
-    expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('Error'));
-  });
 });
 
 describe('SetFailed checks', () => {

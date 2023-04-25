@@ -36,7 +36,7 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
     });
     logger.info('Retrieved changed files.');
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.exit(`Could not retrieve the changed files: ${error}`);
   }
 }

@@ -119,7 +119,7 @@ describe('getViewerVersion', () => {
 
     const response = await getViewerVersion();
 
-    expect(response.version).toEqual('2022.0.0');
+    expect(response?.version).toEqual('2022.0.0');
   });
 
   test('Should throw error on faulty httpRequest in getViewerVersion', async () => {
