@@ -64,7 +64,7 @@ inputs:
     required: false
     default: true
   pullRequestApproval:
-    description: Set the plugin to approve or deny a pull request, by default this is true. Options are `true` or `false`.
+    description: Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`.
     required: false
     default: false
   secretsFilter:
