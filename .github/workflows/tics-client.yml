@@ -1,3 +1,5 @@
+name: TICS Client
+
 on: [pull_request]
 
 jobs:
