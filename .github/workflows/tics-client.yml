@@ -13,5 +13,5 @@ jobs:
           projectName: tics-github-action
           ticsConfiguration: https://eboit.tiobe.com/tiobeweb/TICS/api/cfg?name=main
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          ticsAuthToken: ${{ secrets.EBOIT_TICSAUTHTOKEN }}
           installTics: true
