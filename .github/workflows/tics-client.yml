@@ -15,3 +15,4 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           ticsAuthToken: ${{ secrets.EBOIT_CLIENT_TOKEN }}
           installTics: true
+          postAnnotations: true
