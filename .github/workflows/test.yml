@@ -5,7 +5,8 @@ on: push
 jobs:
   Jest:
     name: Jest
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'Build dist after push to main') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
