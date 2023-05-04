@@ -56603,13 +56603,8 @@ function resolverFromOptions(vm, options, override, compiler) {
 			}
 			const resolved = customResolver(x, path);
 			if (!resolved) return undefined;
-			if (typeof resolved === 'string') {
-				if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
-				return resolver.loadAsFileOrDirectory(resolved, extList);
-			}
-			const {module=x, path: resolvedPath} = resolved;
-			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolvedPath)));
-			return resolver.loadNodeModules(module, [resolvedPath], extList);
+			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
+			return resolver.loadAsFileOrDirecotry(resolved, extList);
 		};
 	}
 
@@ -56881,7 +56876,7 @@ class DefaultResolver extends Resolver {
 		// 2. If X begins with '/'
 		if (this.pathIsAbsolute(x)) {
 			// a. set Y to be the filesystem root
-			f = this.loadAsFileOrDirectory(x, extList);
+			f = this.loadAsFileOrDirecotry(x, extList);
 			if (f) return f;
 
 			// c. THROW "not found"
@@ -56895,13 +56890,13 @@ class DefaultResolver extends Resolver {
 					for (let i = 0; i < paths.length; i++) {
 						// a. LOAD_AS_FILE(Y + X)
 						// b. LOAD_AS_DIRECTORY(Y + X)
-						f = this.loadAsFileOrDirectory(this.pathConcat(paths[i], x), extList);
+						f = this.loadAsFileOrDirecotry(this.pathConcat(paths[i], x), extList);
 						if (f) return f;
 					}
 				} else if (paths === undefined) {
 					// a. LOAD_AS_FILE(Y + X)
 					// b. LOAD_AS_DIRECTORY(Y + X)
-					f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+					f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 					if (f) return f;
 				} else {
 					throw new VMError('Invalid options.paths option.');
@@ -56909,7 +56904,7 @@ class DefaultResolver extends Resolver {
 			} else {
 				// a. LOAD_AS_FILE(Y + X)
 				// b. LOAD_AS_DIRECTORY(Y + X)
-				f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+				f = this.loadAsFileOrDirecotry(this.pathConcat(path, x), extList);
 				if (f) return f;
 			}
 
@@ -56954,7 +56949,7 @@ class DefaultResolver extends Resolver {
 		return super.resolveFull(mod, x, options, ext, direct);
 	}
 
-	loadAsFileOrDirectory(x, extList) {
+	loadAsFileOrDirecotry(x, extList) {
 		// a. LOAD_AS_FILE(X)
 		const f = this.loadAsFile(x, extList);
 		if (f) return f;
@@ -57194,7 +57189,7 @@ class DefaultResolver extends Resolver {
 		} else {
 			// a. LOAD_AS_FILE(RESOLVED_PATH)
 			// b. LOAD_AS_DIRECTORY(RESOLVED_PATH)
-			f = this.loadAsFileOrDirectory(resolvedPath, extList);
+			f = this.loadAsFileOrDirecotry(resolvedPath, extList);
 		}
 		if (f) return f;
 		// 5. THROW "not found"
@@ -58036,7 +58031,20 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 		if (nodeType === 'CatchClause') {
 			const param = node.param;
 			if (param) {
-				if (param.type === 'Identifier') {
+				if (param.type === 'ObjectPattern') {
+					insertions.push({
+						__proto__: null,
+						pos: node.start,
+						order: TO_RIGHT,
+						code: `catch($tmpname){try{throw ${INTERNAL_STATE_NAME}.handleException($tmpname);}`
+					});
+					insertions.push({
+						__proto__: null,
+						pos: node.body.end,
+						order: TO_LEFT,
+						code: `}`
+					});
+				} else {
 					const name = assertType(param, 'Identifier').name;
 					const cBody = assertType(node.body, 'BlockStatement');
 					if (cBody.body.length > 0) {
@@ -58044,22 +58052,9 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 							__proto__: null,
 							pos: cBody.body[0].start,
 							order: TO_LEFT,
-							coder: () => `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
+							code: `${name}=${INTERNAL_STATE_NAME}.handleException(${name});`
 						});
 					}
-				} else {
-					insertions.push({
-						__proto__: null,
-						pos: node.start,
-						order: TO_RIGHT,
-						coder: () => `catch(${tmpname}){${tmpname}=${INTERNAL_STATE_NAME}.handleException(${tmpname});try{throw ${tmpname};}`
-					});
-					insertions.push({
-						__proto__: null,
-						pos: node.body.end,
-						order: TO_LEFT,
-						coder: () => `}`
-					});
 				}
 			}
 		} else if (nodeType === 'WithStatement') {
@@ -58067,13 +58062,13 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 				__proto__: null,
 				pos: node.object.start,
 				order: TO_LEFT,
-				coder: () => INTERNAL_STATE_NAME + '.wrapWith('
+				code: INTERNAL_STATE_NAME + '.wrapWith('
 			});
 			insertions.push({
 				__proto__: null,
 				pos: node.object.end,
 				order: TO_RIGHT,
-				coder: () => ')'
+				code: ')'
 			});
 		} else if (nodeType === 'Identifier') {
 			if (node.name === INTERNAL_STATE_NAME) {
@@ -58088,7 +58083,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 				__proto__: null,
 				pos: node.start,
 				order: TO_RIGHT,
-				coder: () => INTERNAL_STATE_NAME + '.'
+				code: INTERNAL_STATE_NAME + '.'
 			});
 		}
 	});
@@ -58109,7 +58104,7 @@ function transformer(args, body, isAsync, isGenerator, filename) {
 	let curr = 0;
 	for (let i = 0; i < insertions.length; i++) {
 		const change = insertions[i];
-		ncode += code.substring(curr, change.pos) + change.coder();
+		ncode += code.substring(curr, change.pos) + change.code.replace(/\$tmpname/g, tmpname);
 		curr = change.pos;
 	}
 	ncode += code.substring(curr);

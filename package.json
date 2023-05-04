@@ -1,6 +1,6 @@
 {
   "name": "tics-github-action",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
   "main": "lib/main.js",
   "scripts": {

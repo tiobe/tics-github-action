@@ -276,30 +276,13 @@ if (typeof OriginalCallSite === 'function') {
 				return;
 			}
 			const newWrapped = (error, sst) => {
-				const sandboxSst = ensureThis(sst);
 				if (localArrayIsArray(sst)) {
-					if (sst === sandboxSst) {
-						for (let i=0; i < sst.length; i++) {
-							const cs = sst[i];
-							if (typeof cs === 'object' && localReflectGetPrototypeOf(cs) === OriginalCallSite.prototype) {
-								sst[i] = new CallSite(cs);
-							}
-						}
-					} else {
-						sst = [];
-						for (let i=0; i < sandboxSst.length; i++) {
-							const cs = sandboxSst[i];
-							localReflectDefineProperty(sst, i, {
-								__proto__: null,
-								value: new CallSite(cs),
-								enumerable: true,
-								configurable: true,
-								writable: true
-							});
+					for (let i=0; i < sst.length; i++) {
+						const cs = sst[i];
+						if (typeof cs === 'object' && localReflectGetPrototypeOf(cs) === OriginalCallSite.prototype) {
+							sst[i] = new CallSite(cs);
 						}
 					}
-				} else {
-					sst = sandboxSst;
 				}
 				return value(error, sst);
 			};
@@ -439,36 +422,23 @@ global.eval = new LocalProxy(localEval, EvalHandler);
  * Promise sanitization
  */
 
-if (localPromise) {
+if (localPromise && !allowAsync) {
 
 	const PromisePrototype = localPromise.prototype;
 
-	if (!allowAsync) {
+	overrideWithProxy(PromisePrototype, 'then', PromisePrototype.then, AsyncErrorHandler);
+	// This seems not to work, and will produce
+	// UnhandledPromiseRejectionWarning: TypeError: Method Promise.prototype.then called on incompatible receiver [object Object].
+	// This is likely caused since the host.Promise.prototype.then cannot use the VM Proxy object.
+	// Contextify.connect(host.Promise.prototype.then, Promise.prototype.then);
 
-		overrideWithProxy(PromisePrototype, 'then', PromisePrototype.then, AsyncErrorHandler);
-		// This seems not to work, and will produce
-		// UnhandledPromiseRejectionWarning: TypeError: Method Promise.prototype.then called on incompatible receiver [object Object].
-		// This is likely caused since the host.Promise.prototype.then cannot use the VM Proxy object.
-		// Contextify.connect(host.Promise.prototype.then, Promise.prototype.then);
-
-	} else {
-
-		overrideWithProxy(PromisePrototype, 'then', PromisePrototype.then, {
-			__proto__: null,
-			apply(target, thiz, args) {
-				if (args.length > 1) {
-					const onRejected = args[1];
-					if (typeof onRejected === 'function') {
-						args[1] = function wrapper(error) {
-							error = ensureThis(error);
-							return localReflectApply(onRejected, this, [error]);
-						};
-					}
-				}
-				return localReflectApply(target, thiz, args);
-			}
-		});
-
+	if (PromisePrototype.finally) {
+		overrideWithProxy(PromisePrototype, 'finally', PromisePrototype.finally, AsyncErrorHandler);
+		// Contextify.connect(host.Promise.prototype.finally, Promise.prototype.finally);
+	}
+	if (Promise.prototype.catch) {
+		overrideWithProxy(PromisePrototype, 'catch', PromisePrototype.catch, AsyncErrorHandler);
+		// Contextify.connect(host.Promise.prototype.catch, Promise.prototype.catch);
 	}
 
 }
