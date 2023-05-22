@@ -55545,6 +55545,160 @@ exports.VMError = VMError;
 
 /***/ }),
 
+/***/ 9333:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+const fs = __nccwpck_require__(7147);
+const nmod = __nccwpck_require__(2503);
+const {EventEmitter} = __nccwpck_require__(2361);
+const util = __nccwpck_require__(3837);
+const {VMScript} = __nccwpck_require__(8611);
+const {VM} = __nccwpck_require__(3841);
+
+const eventsModules = new WeakMap();
+
+function defaultBuiltinLoaderEvents(vm) {
+	return eventsModules.get(vm);
+}
+
+let cacheBufferScript;
+
+function defaultBuiltinLoaderBuffer(vm) {
+	if (!cacheBufferScript) {
+		cacheBufferScript = new VMScript('return buffer=>({Buffer: buffer});', {__proto__: null, filename: 'buffer.js'});
+	}
+	const makeBuffer = vm.run(cacheBufferScript, {__proto__: null, strict: true, wrapper: 'none'});
+	return makeBuffer(Buffer);
+}
+
+let cacheUtilScript;
+
+function defaultBuiltinLoaderUtil(vm) {
+	if (!cacheUtilScript) {
+		cacheUtilScript = new VMScript(`return function inherits(ctor, superCtor) {
+			ctor.super_ = superCtor;
+			Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+		}`, {__proto__: null, filename: 'util.js'});
+	}
+	const inherits = vm.run(cacheUtilScript, {__proto__: null, strict: true, wrapper: 'none'});
+	const copy = Object.assign({}, util);
+	copy.inherits = inherits;
+	return vm.readonly(copy);
+}
+
+const BUILTIN_MODULES = (nmod.builtinModules || Object.getOwnPropertyNames(process.binding('natives'))).filter(s=>!s.startsWith('internal/'));
+
+let EventEmitterReferencingAsyncResourceClass = null;
+if (EventEmitter.EventEmitterAsyncResource) {
+	// eslint-disable-next-line global-require
+	const {AsyncResource} = __nccwpck_require__(852);
+	const kEventEmitter = Symbol('kEventEmitter');
+	class EventEmitterReferencingAsyncResource extends AsyncResource {
+		constructor(ee, type, options) {
+			super(type, options);
+			this[kEventEmitter] = ee;
+		}
+		get eventEmitter() {
+			return this[kEventEmitter];
+		}
+	}
+	EventEmitterReferencingAsyncResourceClass = EventEmitterReferencingAsyncResource;
+}
+
+let cacheEventsScript;
+
+const SPECIAL_MODULES = {
+	events: {
+		init(vm) {
+			if (!cacheEventsScript) {
+				const eventsSource = fs.readFileSync(__nccwpck_require__.ab + "events.js", 'utf8');
+				cacheEventsScript = new VMScript(`(function (fromhost) { const module = {}; module.exports={};{ ${eventsSource}
+	} return module.exports;})`, {filename: 'events.js'});
+			}
+			const closure = VM.prototype.run.call(vm, cacheEventsScript);
+			const eventsInstance = closure(vm.readonly({
+				kErrorMonitor: EventEmitter.errorMonitor,
+				once: EventEmitter.once,
+				on: EventEmitter.on,
+				getEventListeners: EventEmitter.getEventListeners,
+				EventEmitterReferencingAsyncResource: EventEmitterReferencingAsyncResourceClass
+			}));
+			eventsModules.set(vm, eventsInstance);
+			vm._addProtoMapping(EventEmitter.prototype, eventsInstance.EventEmitter.prototype);
+		},
+		load: defaultBuiltinLoaderEvents
+	},
+	buffer: defaultBuiltinLoaderBuffer,
+	util: defaultBuiltinLoaderUtil
+};
+
+function addDefaultBuiltin(builtins, key, hostRequire) {
+	if (builtins.has(key)) return;
+	const special = SPECIAL_MODULES[key];
+	builtins.set(key, special ? special : vm => vm.readonly(hostRequire(key)));
+}
+
+
+function makeBuiltinsFromLegacyOptions(builtins, hostRequire, mocks, overrides) {
+	const res = new Map();
+	if (mocks) {
+		const keys = Object.getOwnPropertyNames(mocks);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			res.set(key, (tvm) => tvm.readonly(mocks[key]));
+		}
+	}
+	if (overrides) {
+		const keys = Object.getOwnPropertyNames(overrides);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			res.set(key, overrides[key]);
+		}
+	}
+	if (Array.isArray(builtins)) {
+		const def = builtins.indexOf('*') >= 0;
+		if (def) {
+			for (let i = 0; i < BUILTIN_MODULES.length; i++) {
+				const name = BUILTIN_MODULES[i];
+				if (builtins.indexOf(`-${name}`) === -1) {
+					addDefaultBuiltin(res, name, hostRequire);
+				}
+			}
+		} else {
+			for (let i = 0; i < BUILTIN_MODULES.length; i++) {
+				const name = BUILTIN_MODULES[i];
+				if (builtins.indexOf(name) !== -1) {
+					addDefaultBuiltin(res, name, hostRequire);
+				}
+			}
+		}
+	} else if (builtins) {
+		for (let i = 0; i < BUILTIN_MODULES.length; i++) {
+			const name = BUILTIN_MODULES[i];
+			if (builtins[name]) {
+				addDefaultBuiltin(res, name, hostRequire);
+			}
+		}
+	}
+	return res;
+}
+
+function makeBuiltins(builtins, hostRequire) {
+	const res = new Map();
+	for (let i = 0; i < builtins.length; i++) {
+		const name = builtins[i];
+		addDefaultBuiltin(res, name, hostRequire);
+	}
+	return res;
+}
+
+exports.makeBuiltinsFromLegacyOptions = makeBuiltinsFromLegacyOptions;
+exports.makeBuiltins = makeBuiltins;
+
+
+/***/ }),
+
 /***/ 6400:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -55753,12 +55907,20 @@ const {
 const {
 	VMFileSystem
 } = __nccwpck_require__(1689);
+const {
+	Resolver
+} = __nccwpck_require__(8038);
+const {
+	makeResolverFromLegacyOptions
+} = __nccwpck_require__(1909);
 
 exports.VMError = VMError;
 exports.VMScript = VMScript;
 exports.NodeVM = NodeVM;
 exports.VM = VM;
 exports.VMFileSystem = VMFileSystem;
+exports.Resolver = Resolver;
+exports.makeResolverFromLegacyOptions = makeResolverFromLegacyOptions;
 
 
 /***/ }),
@@ -55786,6 +55948,17 @@ exports.VMFileSystem = VMFileSystem;
  * @return {*} The required module object.
  */
 
+/**
+ * This callback will be called to specify the context to use "per" module. Defaults to 'sandbox' if no return value provided.
+ *
+ * NOTE: many interoperating modules must live in the same context.
+ *
+ * @callback pathContextCallback
+ * @param {string} modulePath - The full path to the module filename being requested.
+ * @param {string} extensionType - The module type (node = native, js = cjs/esm module)
+ * @return {("host"|"sandbox")} The context for this module.
+ */
+
 const fs = __nccwpck_require__(7147);
 const pa = __nccwpck_require__(1017);
 const {
@@ -55807,8 +55980,9 @@ const {
 	VM
 } = __nccwpck_require__(3841);
 const {
-	resolverFromOptions
+	makeResolverFromLegacyOptions
 } = __nccwpck_require__(1909);
+const { Resolver } = __nccwpck_require__(8038);
 
 const objectDefineProperty = Object.defineProperty;
 const objectDefineProperties = Object.defineProperties;
@@ -55854,6 +56028,36 @@ const NESTING_OVERRIDE = Object.freeze({
 	__proto__: null,
 	vm2: vm2NestingLoader
 });
+
+function makeCustomExtensions(vm, resolver, sourceExtensions) {
+	const extensions = { __proto__: null };
+	const loadJS = resolver.makeExtensionHandler(vm, 'loadJS');
+
+	for (let i = 0; i < sourceExtensions.length; i++) {
+		extensions['.' + sourceExtensions[i]] = loadJS;
+	}
+
+	if (!extensions['.json']) extensions['.json'] = resolver.makeExtensionHandler(vm, 'loadJSON');
+	if (!extensions['.node']) extensions['.node'] = resolver.makeExtensionHandler(vm, 'loadNode');
+	return extensions;
+}
+
+function makeSafePaths(unsafePaths) {
+	if (unsafePaths === undefined) return undefined;
+	if (!Array.isArray(unsafePaths)) return true;
+	const paths = [...unsafePaths];
+	if (paths.some(path => typeof path !== 'string')) return true;
+	return paths;
+}
+
+function makeSafeOptions(unsafeOptions) {
+	if (unsafeOptions === undefined || unsafeOptions == null) return unsafeOptions;
+	if (typeof unsafeOptions !== 'object' && typeof unsafeOptions !== 'function') return unsafeOptions;
+	return {
+		unsafeOptions,
+		paths: makeSafePaths(unsafeOptions.paths)
+	};
+}
 
 /**
  * Event caused by a <code>console.debug</code> call if <code>options.console="redirect"</code> is specified.
@@ -55937,7 +56141,7 @@ class NodeVM extends VM {
 	 * Only available for node v10+.
 	 * @param {("inherit"|"redirect"|"off")} [options.console="inherit"] - Sets the behavior of the console in the sandbox.
 	 * <code>inherit</code> to enable console, <code>redirect</code> to redirect to events, <code>off</code> to disable console.
-	 * @param {Object|boolean} [options.require=false] - Allow require inside the sandbox.
+	 * @param {Object|boolean|Resolver} [options.require=false] - Allow require inside the sandbox.
 	 * @param {(boolean|string[]|Object)} [options.require.external=false] - <b>WARNING: When allowing require the option <code>options.require.root</code>
 	 * should be set to restrict the script from requiring any module. Values can be true, an array of allowed external modules or an object.
 	 * @param {(string[])} [options.require.external.modules] - Array of allowed external modules. Also supports wildcards, so specifying ['@scope/*-ver-??],
@@ -55946,14 +56150,16 @@ class NodeVM extends VM {
 	 * @param {string[]} [options.require.builtin=[]] - Array of allowed built-in modules, accepts ["*"] for all.
 	 * @param {(string|string[])} [options.require.root] - Restricted path(s) where local modules can be required. If omitted every path is allowed.
 	 * @param {Object} [options.require.mock] - Collection of mock modules (both external or built-in).
-	 * @param {("host"|"sandbox")} [options.require.context="host"] - <code>host</code> to require modules in host and proxy them to sandbox.
+	 * @param {("host"|"sandbox"|pathContextCallback)} [options.require.context="host"] -
+	 * <code>host</code> to require modules in host and proxy them to sandbox.
 	 * <code>sandbox</code> to load, compile and require modules in sandbox.
+	 * <code>pathContext(modulePath, ext)</code> to choose a mode per module (full path provided).
 	 * Builtin modules except <code>events</code> always required in host and proxied to sandbox.
 	 * @param {string[]} [options.require.import] - Array of modules to be loaded into NodeVM on start.
 	 * @param {resolveCallback} [options.require.resolve] - An additional lookup function in case a module wasn't
 	 * found in one of the traditional node lookup paths.
 	 * @param {customRequire} [options.require.customRequire=require] - Custom require to require host and built-in modules.
-	 * @param {boolean} [option.require.strict=true] - Load required modules in strict mode.
+	 * @param {boolean} [options.require.strict=true] - Load required modules in strict mode.
 	 * @param {boolean} [options.nesting=false] -
 	 * <b>WARNING: Allowing this is a security risk as scripts can create a NodeVM which can require any host module.</b>
 	 * Allow nesting of VMs.
@@ -55990,6 +56196,9 @@ class NodeVM extends VM {
 
 		super({__proto__: null, compiler: compiler, eval: allowEval, wasm});
 
+		const customResolver = requireOpts instanceof Resolver;
+		const resolver = customResolver ? requireOpts : makeResolverFromLegacyOptions(requireOpts, nesting && NESTING_OVERRIDE, this._compiler);
+
 		// This is only here for backwards compatibility.
 		objectDefineProperty(this, 'options', {__proto__: null, value: {
 			console: consoleType,
@@ -56000,9 +56209,7 @@ class NodeVM extends VM {
 			strict
 		}});
 
-		const resolver = resolverFromOptions(this, requireOpts, nesting && NESTING_OVERRIDE, this._compiler);
-
-		objectDefineProperty(this, '_resolver', {__proto__: null, value: resolver});
+		objectDefineProperty(this, 'resolver', {__proto__: null, value: resolver, enumerable: true});
 
 		if (!cacheSandboxScript) {
 			cacheSandboxScript = compileScript(__nccwpck_require__.ab + "setup-node-sandbox.js",
@@ -56011,23 +56218,9 @@ class NodeVM extends VM {
 
 		const closure = this._runScript(cacheSandboxScript);
 
-		const extensions = {
-			__proto__: null
-		};
-
-		const loadJS = (mod, filename) => resolver.loadJS(this, mod, filename);
-
-		for (let i = 0; i < sourceExtensions.length; i++) {
-			extensions['.' + sourceExtensions[i]] = loadJS;
-		}
-
-		if (!extensions['.json']) extensions['.json'] = (mod, filename) => resolver.loadJSON(this, mod, filename);
-		if (!extensions['.node']) extensions['.node'] = (mod, filename) => resolver.loadNode(this, mod, filename);
-
+		const extensions = makeCustomExtensions(this, resolver, sourceExtensions);
 
 		this.readonly(HOST);
-		this.readonly(resolver);
-		this.readonly(this);
 
 		const {
 			Module,
@@ -56039,9 +56232,41 @@ class NodeVM extends VM {
 			argv,
 			env,
 			console: consoleType,
-			vm: this,
-			resolver,
-			extensions
+			extensions,
+			emitArgs: (event, args) => {
+				if (typeof event !== 'string' && typeof event !== 'symbol') throw new Error('Event is not a string');
+				return this.emit(event, ...args);
+			},
+			globalPaths: [...resolver.globalPaths],
+			getLookupPathsFor: (path) => {
+				if (typeof path !== 'string') return [];
+				return [...resolver.genLookupPaths(path)];
+			},
+			resolve: (mod, id, opt, ext, direct) => {
+				if (typeof id !== 'string') throw new Error('Id is not a string');
+				const extList = Object.getOwnPropertyNames(ext);
+				return resolver.resolve(mod, id, makeSafeOptions(opt), extList, !!direct);
+			},
+			lookupPaths: (mod, id) => {
+				if (typeof id !== 'string') throw new Error('Id is not a string');
+				return [...resolver.lookupPaths(mod, id)];
+			},
+			loadBuiltinModule: (id) => {
+				if (typeof id !== 'string') throw new Error('Id is not a string');
+				return resolver.loadBuiltinModule(this, id);
+			},
+			registerModule: (mod, filename, path, parent, direct) => {
+				return resolver.registerModule(mod, filename, path, parent, direct);
+			},
+			builtinModules: [...resolver.getBuiltinModulesList(this)],
+			dirname: (path) => {
+				if (typeof path !== 'string') return path;
+				return resolver.fs.dirname(path);
+			},
+			basename: (path) => {
+				if (typeof path !== 'string') return path;
+				return resolver.fs.basename(path);
+			}
 		});
 
 		objectDefineProperties(this, {
@@ -56061,7 +56286,7 @@ class NodeVM extends VM {
 			this.setGlobals(sandbox);
 		}
 
-		if (requireOpts && requireOpts.import) {
+		if (!customResolver && requireOpts && requireOpts.import) {
 			if (Array.isArray(requireOpts.import)) {
 				for (let i = 0, l = requireOpts.import.length; i < l; i++) {
 					this.require(requireOpts.import[i]);
@@ -56070,6 +56295,14 @@ class NodeVM extends VM {
 				this.require(requireOpts.import);
 			}
 		}
+	}
+
+	/**
+	 * @ignore
+	 * @deprecated
+	 */
+	get _resolver() {
+		return this.resolver;
 	}
 
 	/**
@@ -56100,12 +56333,12 @@ class NodeVM extends VM {
 	 * @throws {*} If the module couldn't be found or loading it threw an error.
 	 */
 	require(module) {
-		const path = this._resolver.pathResolve('.');
+		const path = this.resolver.fs.resolve('.');
 		let mod = this._cacheRequireModule;
 		if (!mod || mod.path !== path) {
-			const filename = this._resolver.pathConcat(path, '/vm.js');
+			const filename = this.resolver.fs.join(path, '/vm.js');
 			mod = new (this._Module)(filename, path);
-			this._resolver.registerModule(mod, filename, path, null, false);
+			this.resolver.registerModule(mod, filename, path, null, false);
 			this._cacheRequireModule = mod;
 		}
 		return this._requireImpl(mod, module, true);
@@ -56160,19 +56393,19 @@ class NodeVM extends VM {
 		if (code instanceof VMScript) {
 			script = strict ? code._compileNodeVMStrict() : code._compileNodeVM();
 			if (!sandboxModule) {
-				const resolvedFilename = this._resolver.pathResolve(code.filename);
-				dirname = this._resolver.pathDirname(resolvedFilename);
+				const resolvedFilename = this.resolver.fs.resolve(code.filename);
+				dirname = this.resolver.fs.dirname(resolvedFilename);
 				sandboxModule = new (this._Module)(resolvedFilename, dirname);
-				this._resolver.registerModule(sandboxModule, resolvedFilename, dirname, null, false);
+				this.resolver.registerModule(sandboxModule, resolvedFilename, dirname, null, false);
 			}
 		} else {
 			const unresolvedFilename = filename || 'vm.js';
 			if (!sandboxModule) {
 				if (filename) {
-					const resolvedFilename = this._resolver.pathResolve(filename);
-					dirname = this._resolver.pathDirname(resolvedFilename);
+					const resolvedFilename = this.resolver.fs.resolve(filename);
+					dirname = this.resolver.fs.dirname(resolvedFilename);
 					sandboxModule = new (this._Module)(resolvedFilename, dirname);
-					this._resolver.registerModule(sandboxModule, resolvedFilename, dirname, null, false);
+					this.resolver.registerModule(sandboxModule, resolvedFilename, dirname, null, false);
 				} else {
 					sandboxModule = new (this._Module)(null, null);
 					sandboxModule.id = unresolvedFilename;
@@ -56262,7 +56495,7 @@ class NodeVM extends VM {
 	}
 }
 
-function vm2NestingLoader(resolver, vm, id) {
+function vm2NestingLoader(vm) {
 	if (!cacheMakeNestingScript) {
 		cacheMakeNestingScript = compileScript('nesting.js', '(vm, nodevm) => ({VM: vm, NodeVM: nodevm})');
 	}
@@ -56282,20 +56515,14 @@ exports.NodeVM = NodeVM;
 
 
 // Translate the old options to the new Resolver functionality.
-
-const fs = __nccwpck_require__(7147);
-const nmod = __nccwpck_require__(2503);
-const {EventEmitter} = __nccwpck_require__(2361);
-const util = __nccwpck_require__(3837);
-
 const {
 	Resolver,
 	DefaultResolver
 } = __nccwpck_require__(8038);
-const {VMScript} = __nccwpck_require__(8611);
-const {VM} = __nccwpck_require__(3841);
 const {VMError} = __nccwpck_require__(2989);
 const {DefaultFileSystem} = __nccwpck_require__(1689);
+const {makeBuiltinsFromLegacyOptions} = __nccwpck_require__(9333);
+const {jsCompiler} = __nccwpck_require__(6400);
 
 /**
  * Require wrapper to be able to annotate require with webpackIgnore.
@@ -56325,11 +56552,66 @@ function makeExternalMatcher(obj) {
 	return new RegExp(`[\\\\/]node_modules[\\\\/]${regexString}(?:[\\\\/](?!(?:.*[\\\\/])?node_modules[\\\\/]).*)?$`);
 }
 
-class LegacyResolver extends DefaultResolver {
+class CustomResolver extends DefaultResolver {
 
-	constructor(fileSystem, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict, externals, allowTransitive) {
-		super(fileSystem, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict);
-		this.externals = externals;
+	constructor(fileSystem, globalPaths, builtinModules, rootPaths, pathContext, customResolver, hostRequire, compiler, strict) {
+		super(fileSystem, globalPaths, builtinModules);
+		this.rootPaths = rootPaths;
+		this.pathContext = pathContext;
+		this.customResolver = customResolver;
+		this.hostRequire = hostRequire;
+		this.compiler = compiler;
+		this.strict = strict;
+	}
+
+	isPathAllowed(filename) {
+		return this.rootPaths === undefined || this.rootPaths.some(path => {
+			if (!filename.startsWith(path)) return false;
+			const len = path.length;
+			if (filename.length === len || (len > 0 && this.fs.isSeparator(path[len-1]))) return true;
+			return this.fs.isSeparator(filename[len]);
+		});
+	}
+
+	loadJS(vm, mod, filename) {
+		if (this.pathContext(filename, 'js') !== 'host') return super.loadJS(vm, mod, filename);
+		const m = this.hostRequire(filename);
+		mod.exports = vm.readonly(m);
+	}
+
+	loadNode(vm, mod, filename) {
+		if (this.pathContext(filename, 'node') !== 'host') return super.loadNode(vm, mod, filename);
+		const m = this.hostRequire(filename);
+		mod.exports = vm.readonly(m);
+	}
+
+	customResolve(x, path, extList) {
+		if (this.customResolver === undefined) return undefined;
+		const resolved = this.customResolver(x, path);
+		if (!resolved) return undefined;
+		if (typeof resolved === 'string') {
+			return this.loadAsFileOrDirectory(resolved, extList);
+		}
+		const {module=x, path: resolvedPath} = resolved;
+		return this.loadNodeModules(module, [resolvedPath], extList);
+	}
+
+	getCompiler(filename) {
+		return this.compiler;
+	}
+
+	isStrict(filename) {
+		return this.strict;
+	}
+
+}
+
+class LegacyResolver extends CustomResolver {
+
+	constructor(fileSystem, globalPaths, builtinModules, rootPaths, pathContext, customResolver, hostRequire, compiler, strict, externals, allowTransitive) {
+		super(fileSystem, globalPaths, builtinModules, rootPaths, pathContext, customResolver, hostRequire, compiler, strict);
+		this.externals = externals.map(makeExternalMatcher);
+		this.externalCache = externals.map(pattern => new RegExp(makeExternalMatcherRegex(pattern)));
 		this.currMod = undefined;
 		this.trustedMods = new WeakMap();
 		this.allowTransitive = allowTransitive;
@@ -56362,23 +56644,21 @@ class LegacyResolver extends DefaultResolver {
 		});
 	}
 
-	resolveFull(mod, x, options, ext, direct) {
+	resolveFull(mod, x, options, extList, direct) {
 		this.currMod = undefined;
-		if (!direct) return super.resolveFull(mod, x, options, ext, false);
+		if (!direct) return super.resolveFull(mod, x, options, extList, false);
 		const trustedMod = this.trustedMods.get(mod);
-		if (!trustedMod || mod.path !== trustedMod.path) return super.resolveFull(mod, x, options, ext, false);
+		if (!trustedMod || mod.path !== trustedMod.path) return super.resolveFull(mod, x, options, extList, false);
 		const paths = [...mod.paths];
-		if (paths.length === trustedMod.length) {
-			for (let i = 0; i < paths.length; i++) {
-				if (paths[i] !== trustedMod.paths[i]) {
-					return super.resolveFull(mod, x, options, ext, false);
-				}
+		if (paths.length !== trustedMod.paths.length) return super.resolveFull(mod, x, options, extList, false);
+		for (let i = 0; i < paths.length; i++) {
+			if (paths[i] !== trustedMod.paths[i]) {
+				return super.resolveFull(mod, x, options, extList, false);
 			}
 		}
-		const extCopy = Object.assign({__proto__: null}, ext);
 		try {
 			this.currMod = trustedMod;
-			return super.resolveFull(trustedMod, x, undefined, extCopy, true);
+			return super.resolveFull(trustedMod, x, options, extList, true);
 		} finally {
 			this.currMod = undefined;
 		}
@@ -56392,170 +56672,43 @@ class LegacyResolver extends DefaultResolver {
 	}
 
 	loadJS(vm, mod, filename) {
-		filename = this.pathResolve(filename);
-		this.checkAccess(mod, filename);
-		if (this.pathContext(filename, 'js') === 'sandbox') {
+		if (this.pathContext(filename, 'js') !== 'host') {
 			const trustedMod = this.trustedMods.get(mod);
 			const script = this.readScript(filename);
-			vm.run(script, {filename, strict: true, module: mod, wrapper: 'none', dirname: trustedMod ? trustedMod.path : mod.path});
+			vm.run(script, {filename, strict: this.isStrict(filename), module: mod, wrapper: 'none', dirname: trustedMod ? trustedMod.path : mod.path});
 		} else {
 			const m = this.hostRequire(filename);
 			mod.exports = vm.readonly(m);
 		}
 	}
 
-}
-
-function defaultBuiltinLoader(resolver, vm, id) {
-	const mod = resolver.hostRequire(id);
-	return vm.readonly(mod);
-}
-
-const eventsModules = new WeakMap();
-
-function defaultBuiltinLoaderEvents(resolver, vm, id) {
-	return eventsModules.get(vm);
-}
-
-let cacheBufferScript;
-
-function defaultBuiltinLoaderBuffer(resolver, vm, id) {
-	if (!cacheBufferScript) {
-		cacheBufferScript = new VMScript('return buffer=>({Buffer: buffer});', {__proto__: null, filename: 'buffer.js'});
-	}
-	const makeBuffer = vm.run(cacheBufferScript, {__proto__: null, strict: true, wrapper: 'none'});
-	return makeBuffer(Buffer);
-}
-
-let cacheUtilScript;
-
-function defaultBuiltinLoaderUtil(resolver, vm, id) {
-	if (!cacheUtilScript) {
-		cacheUtilScript = new VMScript(`return function inherits(ctor, superCtor) {
-			ctor.super_ = superCtor;
-			Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
-		}`, {__proto__: null, filename: 'util.js'});
-	}
-	const inherits = vm.run(cacheUtilScript, {__proto__: null, strict: true, wrapper: 'none'});
-	const copy = Object.assign({}, util);
-	copy.inherits = inherits;
-	return vm.readonly(copy);
-}
-
-const BUILTIN_MODULES = (nmod.builtinModules || Object.getOwnPropertyNames(process.binding('natives'))).filter(s=>!s.startsWith('internal/'));
-
-let EventEmitterReferencingAsyncResourceClass = null;
-if (EventEmitter.EventEmitterAsyncResource) {
-	// eslint-disable-next-line global-require
-	const {AsyncResource} = __nccwpck_require__(852);
-	const kEventEmitter = Symbol('kEventEmitter');
-	class EventEmitterReferencingAsyncResource extends AsyncResource {
-		constructor(ee, type, options) {
-			super(type, options);
-			this[kEventEmitter] = ee;
+	customResolve(x, path, extList) {
+		if (this.customResolver === undefined) return undefined;
+		if (!(this.pathIsAbsolute(x) || this.pathIsRelative(x))) {
+			if (!this.externalCache.some(regex => regex.test(x))) return undefined;
 		}
-		get eventEmitter() {
-			return this[kEventEmitter];
+		const resolved = this.customResolver(x, path);
+		if (!resolved) return undefined;
+		if (typeof resolved === 'string') {
+			this.externals.push(new RegExp('^' + escapeRegExp(resolved)));
+			return this.loadAsFileOrDirectory(resolved, extList);
 		}
+		const {module=x, path: resolvedPath} = resolved;
+		this.externals.push(new RegExp('^' + escapeRegExp(resolvedPath)));
+		return this.loadNodeModules(module, [resolvedPath], extList);
 	}
-	EventEmitterReferencingAsyncResourceClass = EventEmitterReferencingAsyncResource;
-}
 
-let cacheEventsScript;
-
-const SPECIAL_MODULES = {
-	events(vm) {
-		if (!cacheEventsScript) {
-			const eventsSource = fs.readFileSync(__nccwpck_require__.ab + "events.js", 'utf8');
-			cacheEventsScript = new VMScript(`(function (fromhost) { const module = {}; module.exports={};{ ${eventsSource}
-} return module.exports;})`, {filename: 'events.js'});
-		}
-		const closure = VM.prototype.run.call(vm, cacheEventsScript);
-		const eventsInstance = closure(vm.readonly({
-			kErrorMonitor: EventEmitter.errorMonitor,
-			once: EventEmitter.once,
-			on: EventEmitter.on,
-			getEventListeners: EventEmitter.getEventListeners,
-			EventEmitterReferencingAsyncResource: EventEmitterReferencingAsyncResourceClass
-		}));
-		eventsModules.set(vm, eventsInstance);
-		vm._addProtoMapping(EventEmitter.prototype, eventsInstance.EventEmitter.prototype);
-		return defaultBuiltinLoaderEvents;
-	},
-	buffer(vm) {
-		return defaultBuiltinLoaderBuffer;
-	},
-	util(vm) {
-		return defaultBuiltinLoaderUtil;
-	}
-};
-
-function addDefaultBuiltin(builtins, key, vm) {
-	if (builtins[key]) return;
-	const special = SPECIAL_MODULES[key];
-	builtins[key] = special ? special(vm) : defaultBuiltinLoader;
-}
-
-
-function genBuiltinsFromOptions(vm, builtinOpt, mockOpt, override) {
-	const builtins = {__proto__: null};
-	if (mockOpt) {
-		const keys = Object.getOwnPropertyNames(mockOpt);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
-			builtins[key] = (resolver, tvm, id) => tvm.readonly(mockOpt[key]);
-		}
-	}
-	if (override) {
-		const keys = Object.getOwnPropertyNames(override);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
-			builtins[key] = override[key];
-		}
-	}
-	if (Array.isArray(builtinOpt)) {
-		const def = builtinOpt.indexOf('*') >= 0;
-		if (def) {
-			for (let i = 0; i < BUILTIN_MODULES.length; i++) {
-				const name = BUILTIN_MODULES[i];
-				if (builtinOpt.indexOf(`-${name}`) === -1) {
-					addDefaultBuiltin(builtins, name, vm);
-				}
-			}
-		} else {
-			for (let i = 0; i < BUILTIN_MODULES.length; i++) {
-				const name = BUILTIN_MODULES[i];
-				if (builtinOpt.indexOf(name) !== -1) {
-					addDefaultBuiltin(builtins, name, vm);
-				}
-			}
-		}
-	} else if (builtinOpt) {
-		for (let i = 0; i < BUILTIN_MODULES.length; i++) {
-			const name = BUILTIN_MODULES[i];
-			if (builtinOpt[name]) {
-				addDefaultBuiltin(builtins, name, vm);
-			}
-		}
-	}
-	return builtins;
-}
-
-function defaultCustomResolver() {
-	return undefined;
 }
 
 const DEFAULT_FS = new DefaultFileSystem();
 
-const DENY_RESOLVER = new Resolver(DEFAULT_FS, {__proto__: null}, [], id => {
-	throw new VMError(`Access denied to require '${id}'`, 'EDENIED');
-});
+const DENY_RESOLVER = new Resolver(DEFAULT_FS, [], new Map());
 
-function resolverFromOptions(vm, options, override, compiler) {
+function makeResolverFromLegacyOptions(options, override, compiler) {
 	if (!options) {
 		if (!override) return DENY_RESOLVER;
-		const builtins = genBuiltinsFromOptions(vm, undefined, undefined, override);
-		return new Resolver(DEFAULT_FS, builtins, [], defaultRequire);
+		const builtins = makeBuiltinsFromLegacyOptions(undefined, defaultRequire, undefined, override);
+		return new Resolver(DEFAULT_FS, [], builtins);
 	}
 
 	const {
@@ -56570,65 +56723,32 @@ function resolverFromOptions(vm, options, override, compiler) {
 		fs: fsOpt = DEFAULT_FS,
 	} = options;
 
-	const builtins = genBuiltinsFromOptions(vm, builtinOpt, mockOpt, override);
+	const builtins = makeBuiltinsFromLegacyOptions(builtinOpt, hostRequire, mockOpt, override);
 
-	if (!externalOpt) return new Resolver(fsOpt, builtins, [], hostRequire);
+	if (!externalOpt) return new Resolver(fsOpt, [], builtins);
 
-	let checkPath;
-	if (rootPaths) {
-		const checkedRootPaths = (Array.isArray(rootPaths) ? rootPaths : [rootPaths]).map(f => fsOpt.resolve(f));
-		checkPath = (filename) => {
-			return checkedRootPaths.some(path => {
-				if (!filename.startsWith(path)) return false;
-				const len = path.length;
-				if (filename.length === len || (len > 0 && fsOpt.isSeparator(path[len-1]))) return true;
-				return fsOpt.isSeparator(filename[len]);
-			});
-		};
-	} else {
-		checkPath = () => true;
-	}
+	if (!compiler) compiler = jsCompiler;
 
-	let newCustomResolver = defaultCustomResolver;
-	let externals = undefined;
-	let external = undefined;
-	if (customResolver) {
-		let externalCache;
-		newCustomResolver = (resolver, x, path, extList) => {
-			if (external && !(resolver.pathIsAbsolute(x) || resolver.pathIsRelative(x))) {
-				if (!externalCache) {
-					externalCache = external.map(ext => new RegExp(makeExternalMatcherRegex(ext)));
-				}
-				if (!externalCache.some(regex => regex.test(x))) return undefined;
-			}
-			const resolved = customResolver(x, path);
-			if (!resolved) return undefined;
-			if (typeof resolved === 'string') {
-				if (externals) externals.push(new RegExp('^' + escapeRegExp(resolved)));
-				return resolver.loadAsFileOrDirectory(resolved, extList);
-			}
-			const {module=x, path: resolvedPath} = resolved;
-			if (externals) externals.push(new RegExp('^' + escapeRegExp(resolvedPath)));
-			return resolver.loadNodeModules(module, [resolvedPath], extList);
-		};
-	}
+	const checkedRootPaths = rootPaths ? (Array.isArray(rootPaths) ? rootPaths : [rootPaths]).map(f => fsOpt.resolve(f)) : undefined;
+
+	const pathContext = typeof context === 'function' ? context : (() => context);
 
 	if (typeof externalOpt !== 'object') {
-		return new DefaultResolver(fsOpt, builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict);
+		return new CustomResolver(fsOpt, [], builtins, checkedRootPaths, pathContext, customResolver, hostRequire, compiler, strict);
 	}
 
 	let transitive = false;
+	let external = undefined;
 	if (Array.isArray(externalOpt)) {
 		external = externalOpt;
 	} else {
 		external = externalOpt.modules;
-		transitive = context === 'sandbox' && externalOpt.transitive;
+		transitive = context !== 'host' && externalOpt.transitive;
 	}
-	externals = external.map(makeExternalMatcher);
-	return new LegacyResolver(fsOpt, builtins, checkPath, [], () => context, newCustomResolver, hostRequire, compiler, strict, externals, transitive);
+	return new LegacyResolver(fsOpt, [], builtins, checkedRootPaths, pathContext, customResolver, hostRequire, compiler, strict, external, transitive);
 }
 
-exports.resolverFromOptions = resolverFromOptions;
+exports.makeResolverFromLegacyOptions = makeResolverFromLegacyOptions;
 
 
 /***/ }),
@@ -56645,6 +56765,7 @@ const {
 	VMError
 } = __nccwpck_require__(2989);
 const { VMScript } = __nccwpck_require__(8611);
+const { jsCopmiler } = __nccwpck_require__(6400);
 
 // This should match. Note that '\', '%' are invalid characters
 // 1. name/.*
@@ -56660,19 +56781,24 @@ function isArrayIndex(key) {
 
 class Resolver {
 
-	constructor(fs, builtinModules, globalPaths, hostRequire) {
+	constructor(fs, globalPaths, builtins) {
 		this.fs = fs;
-		this.builtinModules = builtinModules;
 		this.globalPaths = globalPaths;
-		this.hostRequire = hostRequire;
+		this.builtins = builtins;
 	}
 
 	init(vm) {
 
 	}
 
-	pathResolve(path) {
-		return this.fs.resolve(path);
+	isPathAllowed(path) {
+		return false;
+	}
+
+	checkAccess(mod, filename) {
+		if (!this.isPathAllowed(filename)) {
+			throw new VMError(`Module '${filename}' is not allowed to be required. The path is outside the border!`, 'EDENIED');
+		}
 	}
 
 	pathIsRelative(path) {
@@ -56687,31 +56813,45 @@ class Resolver {
 		return path !== '' && (this.fs.isSeparator(path[0]) || this.fs.isAbsolute(path));
 	}
 
-	pathConcat(...paths) {
-		return this.fs.join(...paths);
-	}
-
-	pathBasename(path) {
-		return this.fs.basename(path);
-	}
-
-	pathDirname(path) {
-		return this.fs.dirname(path);
-	}
-
 	lookupPaths(mod, id) {
-		if (typeof id === 'string') throw new Error('Id is not a string');
 		if (this.pathIsRelative(id)) return [mod.path || '.'];
 		return [...mod.paths, ...this.globalPaths];
 	}
 
-	getBuiltinModulesList() {
-		return Object.getOwnPropertyNames(this.builtinModules);
+	getBuiltinModulesList(vm) {
+		if (this.builtins === undefined) return [];
+		const res = [];
+		this.builtins.forEach((value, key) => {
+			if (typeof value === 'object') value.init(vm);
+			res.push(key);
+		});
+		return res;
 	}
 
 	loadBuiltinModule(vm, id) {
-		const handler = this.builtinModules[id];
-		return handler && handler(this, vm, id);
+		if (this.builtins === undefined) return undefined;
+		const builtin = this.builtins.get(id);
+		if (!builtin) return undefined;
+		if (typeof builtin === 'function') return builtin(vm);
+		return builtin.load(vm);
+	}
+
+	makeExtensionHandler(vm, name) {
+		return (mod, filename) => {
+			filename = this.fs.resolve(filename);
+			this.checkAccess(mod, filename);
+			this[name](vm, mod, filename);
+		};
+	}
+
+	getExtensions(vm) {
+		return {
+			// eslint-disable-next-line quote-props
+			__proto__: null,
+			'.js': this.makeExtensionHandler(vm, 'loadJS'),
+			'.json': this.makeExtensionHandler(vm, 'loadJSON'),
+			' .node': this.makeExtensionHandler(vm, 'loadNode'),
+		};
 	}
 
 	loadJS(vm, mod, filename) {
@@ -56730,19 +56870,17 @@ class Resolver {
 
 	}
 
-	resolve(mod, x, options, ext, direct) {
-		if (typeof x !== 'string') throw new Error('Id is not a string');
-
-		if (x.startsWith('node:') || this.builtinModules[x]) {
+	resolve(mod, x, options, extList, direct) {
+		if (x.startsWith('node:') || this.builtins.has(x)) {
 			// a. return the core module
 			// b. STOP
 			return x;
 		}
 
-		return this.resolveFull(mod, x, options, ext, direct);
+		return this.resolveFull(mod, x, options, extList, direct);
 	}
 
-	resolveFull(mod, x, options, ext, direct) {
+	resolveFull(mod, x, options, extList, direct) {
 		// 7. THROW "not found"
 		throw new VMError(`Cannot find module '${x}'`, 'ENOTFOUND');
 	}
@@ -56755,14 +56893,14 @@ class Resolver {
 		const dirs = [];
 		// 4. while I >= 0,
 		while (true) {
-			const name = this.pathBasename(path);
+			const name = this.fs.basename(path);
 			// a. if PARTS[I] = "node_modules" CONTINUE
 			if (name !== 'node_modules') {
 				// b. DIR = path join(PARTS[0 .. I] + "node_modules")
 				// c. DIRS = DIR + DIRS // Note: this seems wrong. Should be DIRS + DIR
-				dirs.push(this.pathConcat(path, 'node_modules'));
+				dirs.push(this.fs.join(path, 'node_modules'));
 			}
-			const dir = this.pathDirname(path);
+			const dir = this.fs.dirname(path);
 			if (dir == path) break;
 			// d. let I = I - 1
 			path = dir;
@@ -56775,96 +56913,79 @@ class Resolver {
 
 }
 
+function pathTestIsDirectory(fs, path) {
+	try {
+		const stat = fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
+		return stat && stat.isDirectory();
+	} catch (e) {
+		return false;
+	}
+}
+
+function pathTestIsFile(fs, path) {
+	try {
+		const stat = fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
+		return stat && stat.isFile();
+	} catch (e) {
+		return false;
+	}
+}
+
+function readFile(fs, path) {
+	return fs.readFileSync(path, {encoding: 'utf8'});
+}
+
+function readFileWhenExists(fs, path) {
+	return pathTestIsFile(fs, path) ? readFile(fs, path) : undefined;
+}
+
 class DefaultResolver extends Resolver {
 
-	constructor(fs, builtinModules, checkPath, globalPaths, pathContext, customResolver, hostRequire, compiler, strict) {
-		super(fs, builtinModules, globalPaths, hostRequire);
-		this.checkPath = checkPath;
-		this.pathContext = pathContext;
-		this.customResolver = customResolver;
-		this.compiler = compiler;
-		this.strict = strict;
-		this.packageCache = {__proto__: null};
-		this.scriptCache = {__proto__: null};
+	constructor(fs, globalPaths, builtins) {
+		super(fs, globalPaths, builtins);
+		this.packageCache = new Map();
+		this.scriptCache = new Map();
 	}
 
-	isPathAllowed(path) {
-		return this.checkPath(path);
+	getCompiler(filename) {
+		return jsCopmiler;
 	}
 
-	pathTestIsDirectory(path) {
-		try {
-			const stat = this.fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
-			return stat && stat.isDirectory();
-		} catch (e) {
-			return false;
-		}
-	}
-
-	pathTestIsFile(path) {
-		try {
-			const stat = this.fs.statSync(path, {__proto__: null, throwIfNoEntry: false});
-			return stat && stat.isFile();
-		} catch (e) {
-			return false;
-		}
-	}
-
-	readFile(path) {
-		return this.fs.readFileSync(path, {encoding: 'utf8'});
-	}
-
-	readFileWhenExists(path) {
-		return this.pathTestIsFile(path) ? this.readFile(path) : undefined;
+	isStrict(filename) {
+		return true;
 	}
 
 	readScript(filename) {
-		let script = this.scriptCache[filename];
+		let script = this.scriptCache.get(filename);
 		if (!script) {
-			script = new VMScript(this.readFile(filename), {filename, compiler: this.compiler});
-			this.scriptCache[filename] = script;
+			script = new VMScript(readFile(this.fs, filename), {filename, compiler: this.getCompiler(filename)});
+			this.scriptCache.set(filename, script);
 		}
 		return script;
 	}
 
-	checkAccess(mod, filename) {
-		if (!this.isPathAllowed(filename)) {
-			throw new VMError(`Module '${filename}' is not allowed to be required. The path is outside the border!`, 'EDENIED');
-		}
-	}
-
 	loadJS(vm, mod, filename) {
-		filename = this.pathResolve(filename);
-		this.checkAccess(mod, filename);
-		if (this.pathContext(filename, 'js') === 'sandbox') {
-			const script = this.readScript(filename);
-			vm.run(script, {filename, strict: this.strict, module: mod, wrapper: 'none', dirname: mod.path});
-		} else {
-			const m = this.hostRequire(filename);
-			mod.exports = vm.readonly(m);
-		}
+		const script = this.readScript(filename);
+		vm.run(script, {filename, strict: this.isStrict(filename), module: mod, wrapper: 'none', dirname: mod.path});
 	}
 
 	loadJSON(vm, mod, filename) {
-		filename = this.pathResolve(filename);
-		this.checkAccess(mod, filename);
-		const json = this.readFile(filename);
+		const json = readFile(this.fs, filename);
 		mod.exports = vm._jsonParse(json);
 	}
 
 	loadNode(vm, mod, filename) {
-		filename = this.pathResolve(filename);
-		this.checkAccess(mod, filename);
-		if (this.pathContext(filename, 'node') === 'sandbox') throw new VMError('Native modules can be required only with context set to \'host\'.');
-		const m = this.hostRequire(filename);
-		mod.exports = vm.readonly(m);
+		throw new VMError('Native modules can be required only with context set to \'host\'.');
+	}
+
+	customResolve(x, path, extList) {
+		return undefined;
 	}
 
 	// require(X) from module at path Y
-	resolveFull(mod, x, options, ext, direct) {
+	resolveFull(mod, x, options, extList, direct) {
 		// Note: core module handled by caller
 
-		const extList = Object.getOwnPropertyNames(ext);
 		const path = mod.path || '.';
 
 		// 5. LOAD_PACKAGE_SELF(X, dirname(Y))
@@ -56895,13 +57016,13 @@ class DefaultResolver extends Resolver {
 					for (let i = 0; i < paths.length; i++) {
 						// a. LOAD_AS_FILE(Y + X)
 						// b. LOAD_AS_DIRECTORY(Y + X)
-						f = this.loadAsFileOrDirectory(this.pathConcat(paths[i], x), extList);
+						f = this.loadAsFileOrDirectory(this.fs.join(paths[i], x), extList);
 						if (f) return f;
 					}
 				} else if (paths === undefined) {
 					// a. LOAD_AS_FILE(Y + X)
 					// b. LOAD_AS_DIRECTORY(Y + X)
-					f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+					f = this.loadAsFileOrDirectory(this.fs.join(path, x), extList);
 					if (f) return f;
 				} else {
 					throw new VMError('Invalid options.paths option.');
@@ -56909,7 +57030,7 @@ class DefaultResolver extends Resolver {
 			} else {
 				// a. LOAD_AS_FILE(Y + X)
 				// b. LOAD_AS_DIRECTORY(Y + X)
-				f = this.loadAsFileOrDirectory(this.pathConcat(path, x), extList);
+				f = this.loadAsFileOrDirectory(this.fs.join(path, x), extList);
 				if (f) return f;
 			}
 
@@ -56948,10 +57069,10 @@ class DefaultResolver extends Resolver {
 		f = this.loadNodeModules(x, dirs, extList);
 		if (f) return f;
 
-		f = this.customResolver(this, x, path, extList);
+		f = this.customResolve(x, path, extList);
 		if (f) return f;
 
-		return super.resolveFull(mod, x, options, ext, direct);
+		return super.resolveFull(mod, x, options, extList, direct);
 	}
 
 	loadAsFileOrDirectory(x, extList) {
@@ -56963,14 +57084,14 @@ class DefaultResolver extends Resolver {
 	}
 
 	tryFile(x) {
-		x = this.pathResolve(x);
-		return this.isPathAllowed(x) && this.pathTestIsFile(x) ? x : undefined;
+		x = this.fs.resolve(x);
+		return this.isPathAllowed(x) && pathTestIsFile(this.fs, x) ? x : undefined;
 	}
 
 	tryWithExtension(x, extList) {
 		for (let i = 0; i < extList.length; i++) {
 			const ext = extList[i];
-			if (ext !== this.pathBasename(ext)) continue;
+			if (ext !== this.fs.basename(ext)) continue;
 			const f = this.tryFile(x + ext);
 			if (f) return f;
 		}
@@ -56978,15 +57099,15 @@ class DefaultResolver extends Resolver {
 	}
 
 	readPackage(path) {
-		const packagePath = this.pathResolve(this.pathConcat(path, 'package.json'));
+		const packagePath = this.fs.resolve(this.fs.join(path, 'package.json'));
 
-		const cache = this.packageCache[packagePath];
+		const cache = this.packageCache.get(packagePath);
 		if (cache !== undefined) return cache;
 
 		if (!this.isPathAllowed(packagePath)) return undefined;
-		const content = this.readFileWhenExists(packagePath);
+		const content = readFileWhenExists(this.fs, packagePath);
 		if (!content) {
-			this.packageCache[packagePath] = false;
+			this.packageCache.set(packagePath, false);
 			return false;
 		}
 
@@ -57006,15 +57127,15 @@ class DefaultResolver extends Resolver {
 			imports: parsed.imports,
 			type: parsed.type
 		};
-		this.packageCache[packagePath] = filtered;
+		this.packageCache.set(packagePath, filtered);
 		return filtered;
 	}
 
 	readPackageScope(path) {
 		while (true) {
-			const dir = this.pathDirname(path);
+			const dir = this.fs.dirname(path);
 			if (dir === path) break;
-			const basename = this.pathBasename(dir);
+			const basename = this.fs.basename(dir);
 			if (basename === 'node_modules') break;
 			const pack = this.readPackage(dir);
 			if (pack) return {data: pack, scope: dir};
@@ -57039,7 +57160,7 @@ class DefaultResolver extends Resolver {
 		// 1. If X/index.js is a file, load X/index.js as JavaScript text. STOP
 		// 2. If X/index.json is a file, parse X/index.json to a JavaScript object. STOP
 		// 3. If X/index.node is a file, load X/index.node as binary addon. STOP
-		return this.tryWithExtension(this.pathConcat(x, 'index'), extList);
+		return this.tryWithExtension(this.fs.join(x, 'index'), extList);
 	}
 
 	// LOAD_AS_DIRECTORY(X)
@@ -57051,7 +57172,7 @@ class DefaultResolver extends Resolver {
 			// b. If "main" is a falsy value, GOTO 2.
 			if (typeof pack.main === 'string') {
 				// c. let M = X + (json main field)
-				const m = this.pathConcat(x, pack.main);
+				const m = this.fs.join(x, pack.main);
 				// d. LOAD_AS_FILE(M)
 				let f = this.loadAsFile(m, extList);
 				if (f) return f;
@@ -57146,7 +57267,7 @@ class DefaultResolver extends Resolver {
 		// 2. If X does not match this pattern or DIR/NAME/package.json is not a file,
 		//    return.
 		if (!res) return undefined;
-		const scope = this.pathConcat(dir, res[1]);
+		const scope = this.fs.join(dir, res[1]);
 		const pack = this.readPackage(scope);
 		if (!pack) return undefined;
 		// 3. Parse DIR/NAME/package.json, and look for "exports" field.
@@ -57346,7 +57467,7 @@ class DefaultResolver extends Resolver {
 							return this.packageResolve(target.replace(/\*/g, subpath), packageURL, conditions, extList);
 						}
 						// b. Return PACKAGE_RESOLVE(target + subpath, packageURL + "/").
-						return this.packageResolve(this.pathConcat(target, subpath), packageURL, conditions, extList);
+						return this.packageResolve(this.fs.join(target, subpath), packageURL, conditions, extList);
 					}
 				}
 				// Otherwise, throw an Invalid Package Target error.
@@ -57359,7 +57480,7 @@ class DefaultResolver extends Resolver {
 				throw new VMError(`Invalid package target for '${subpath}'`, 'ERR_INVALID_PACKAGE_TARGET');
 			}
 			// d. Let resolvedTarget be the URL resolution of the concatenation of packageURL and target.
-			const resolvedTarget = this.pathConcat(packageURL, target);
+			const resolvedTarget = this.fs.join(packageURL, target);
 			// e. Assert: resolvedTarget is contained in packageURL.
 			subpath = decodeURI(subpath);
 			// f. If subpath split on "/" or "\" contains any ".", ".." or "node_modules" segments, case insensitive and including percent
@@ -57374,7 +57495,7 @@ class DefaultResolver extends Resolver {
 			}
 			// h. Otherwise,
 			// 1. Return the URL resolution of the concatenation of subpath and resolvedTarget.
-			return this.pathConcat(resolvedTarget, subpath);
+			return this.fs.join(resolvedTarget, subpath);
 		// 3. Otherwise, if target is an Array, then
 		} else if (Array.isArray(target)) {
 			// a. If target.length is zero, return null.
@@ -57445,7 +57566,7 @@ class DefaultResolver extends Resolver {
 			throw new VMError(`Invalid package specifier '${packageSpecifier}'`, 'ERR_INVALID_MODULE_SPECIFIER');
 		}
 		// 3. If packageSpecifier is a Node.js builtin module name, then
-		if (this.builtinModules[packageSpecifier]) {
+		if (this.builtins.has(packageSpecifier)) {
 			// a. Return the string "node:" concatenated with packageSpecifier.
 			return 'node:' + packageSpecifier;
 		}
@@ -57484,11 +57605,11 @@ class DefaultResolver extends Resolver {
 		let packageURL;
 		while (true) {
 			// a. Let packageURL be the URL resolution of "node_modules/" concatenated with packageSpecifier, relative to parentURL.
-			packageURL = this.pathResolve(this.pathConcat(parentURL, 'node_modules', packageSpecifier));
+			packageURL = this.fs.resolve(this.fs.join(parentURL, 'node_modules', packageSpecifier));
 			// b. Set parentURL to the parent folder URL of parentURL.
-			const parentParentURL = this.pathDirname(parentURL);
+			const parentParentURL = this.fs.dirname(parentURL);
 			// c. If the folder at packageURL does not exist, then
-			if (this.isPathAllowed(packageURL) && this.pathTestIsDirectory(packageURL)) break;
+			if (this.isPathAllowed(packageURL) && pathTestIsDirectory(this.fs, packageURL)) break;
 			// 1. Continue the next loop iteration.
 			if (parentParentURL === parentURL) {
 				// 12. Throw a Module Not Found error.
@@ -57511,7 +57632,7 @@ class DefaultResolver extends Resolver {
 		}
 		// g. Otherwise,
 		// 1. Return the URL resolution of packageSubpath in packageURL.
-		return this.pathConcat(packageURL, packageSubpath);
+		return this.fs.join(packageURL, packageSubpath);
 	}
 
 }
@@ -58173,6 +58294,9 @@ const {
 const {
 	VMScript
 } = __nccwpck_require__(8611);
+const {
+	inspect
+} = __nccwpck_require__(3837);
 
 const objectDefineProperties = Object.defineProperties;
 
@@ -58493,6 +58617,8 @@ class VM extends EventEmitter {
 			_compiler: {__proto__: null, value: resolvedCompiler},
 			_allowAsync: {__proto__: null, value: allowAsync}
 		});
+
+		this.readonly(inspect);
 
 		// prepare global sandbox
 		if (sandbox) {
