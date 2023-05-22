@@ -1,6 +1,6 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { getOctokit } from '@actions/github';
-import ProxyAgent from 'proxy-agent';
+import { ProxyAgent } from 'proxy-agent';
 import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
