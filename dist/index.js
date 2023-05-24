@@ -1253,8 +1253,9 @@ async function getQualityGate(url) {
     logger_1.logger.header('Retrieving the quality gates.');
     const qualityGateUrl = getQualityGateUrl(url);
     logger_1.logger.debug(`From: ${qualityGateUrl}`);
+    let response = undefined;
     try {
-        const response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
+        response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
         logger_1.logger.info('Retrieved the quality gates.');
         logger_1.logger.debug(JSON.stringify(response));
         return response;
@@ -1265,6 +1266,7 @@ async function getQualityGate(url) {
             message = error.message;
         logger_1.logger.exit(`There was an error retrieving the quality gates: ${message}`);
     }
+    return response;
 }
 exports.getQualityGate = getQualityGate;
 /**

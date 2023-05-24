@@ -69,8 +69,10 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);
 
+  let response: QualityGate | undefined = undefined;
+
   try {
-    const response = await httpRequest<QualityGate>(qualityGateUrl);
+    response = await httpRequest<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
     return response;
@@ -79,6 +81,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
     if (error instanceof Error) message = error.message;
     logger.exit(`There was an error retrieving the quality gates: ${message}`);
   }
+  return response;
 }
 
 /**
