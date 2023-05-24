@@ -11,6 +11,7 @@ import * as fetcher from '../src/tics/fetcher';
 import * as review from '../src/github/posting/review';
 import * as calling_annotations from '../src/github/calling/annotations';
 import * as posting_annotations from '../src/github/posting/annotations';
+import * as calling_comments from '../src/github/calling/comments';
 
 import {
   analysisFailedNoUrl,
@@ -131,6 +132,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGateFailed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
@@ -148,6 +150,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGatePassed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
@@ -182,6 +185,7 @@ describe('PostReview checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGateFailed);
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
@@ -197,6 +201,7 @@ describe('PostReview checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGatePassed);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
@@ -214,6 +219,7 @@ describe('PostReview checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce([]);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -232,6 +238,7 @@ describe('PostReview checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -252,6 +259,7 @@ describe('DeletePreviousReviewComments check', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockImplementationOnce((): any => singlePreviousReviewComments);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyDelete = jest.spyOn(posting_annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());
