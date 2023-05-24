@@ -1,5 +1,5 @@
 import { logger } from '../../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../../configuration';
+import { githubConfig, octokit } from '../../configuration';
 import { Events, Status } from '../../helper/enums';
 import { generateStatusMarkdown } from '../../helper/markdown';
 
@@ -8,8 +8,8 @@ import { generateStatusMarkdown } from '../../helper/markdown';
  * @param body Body containing the summary of the review
  * @param event Either approve or request changes in the review.
  */
-export async function postReview(body: string, event: Events) {
-  const params: any = {
+export async function postReview(body: string, event: Events): Promise<void> {
+  const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
@@ -21,8 +21,10 @@ export async function postReview(body: string, event: Events) {
     logger.header('Posting a review for this pull request.');
     await octokit.rest.pulls.createReview(params);
     logger.info('Posted review for this pull request.');
-  } catch (error: any) {
-    logger.error(`Posting the review failed: ${error.message}`);
+  } catch (error: unknown) {
+    let message = 'reason unkown';
+    if (error instanceof Error) message = error.message;
+    logger.error(`Posting the review failed: ${message}`);
   }
 }
 
@@ -30,10 +32,10 @@ export async function postReview(body: string, event: Events) {
  * Create review on the pull request with a body and approval.
  * @param message Message to display in the body of the review.
  */
-export async function postNothingAnalyzedReview(message: string) {
+export async function postNothingAnalyzedReview(message: string): Promise<void> {
   const body = `## TICS Analysis\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
 
-  const params: any = {
+  const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
@@ -45,7 +47,9 @@ export async function postNothingAnalyzedReview(message: string) {
     logger.header('Posting a review for this pull request.');
     await octokit.rest.pulls.createReview(params);
     logger.info('Posted review for this pull request.');
-  } catch (error: any) {
-    logger.error(`Posting the review failed: ${error.message}`);
+  } catch (error: unknown) {
+    let message = 'reason unkown';
+    if (error instanceof Error) message = error.message;
+    logger.error(`Posting the review failed: ${message}`);
   }
 }

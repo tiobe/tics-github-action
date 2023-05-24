@@ -3,7 +3,7 @@ import { ticsConfig } from '../configuration';
 import { AnnotationProperties } from '@actions/core';
 
 class Logger {
-  called: string = '';
+  called = '';
   matched: string[] = [];
 
   /**

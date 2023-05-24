@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { postComment, postErrorComment } from './github/posting/comment';
+import { deletePreviousComments, postComment, postErrorComment } from './github/posting/comments';
 import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import { logger } from './helper/logger';
@@ -14,6 +14,7 @@ import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
+import { getPostedComments } from './github/calling/comments';
 
 run().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
@@ -71,17 +72,19 @@ async function main() {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
           reviewComments = createReviewComments(annotations, changedFiles);
-          await postAnnotations(reviewComments);
+          postAnnotations(reviewComments);
         }
         const previousReviewComments = await getPostedReviewComments();
         if (previousReviewComments && previousReviewComments.length > 0) {
-          await deletePreviousReviewComments(previousReviewComments);
+          deletePreviousReviewComments(previousReviewComments);
         }
       }
 
       let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
 
-      if (ticsConfig.pullRequestApproval) {
+      deletePreviousComments(await getPostedComments());
+
+      if (ticsConfig.pullRequestApproval && ticsConfig.postToConversation) {
         await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
       } else {
         await postComment(reviewBody);

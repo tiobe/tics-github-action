@@ -2,20 +2,40 @@
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 5527:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.viewerUrl = exports.baseUrl = exports.requestInit = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
+const github = __importStar(__nccwpck_require__(5438));
 const proxy_agent_1 = __nccwpck_require__(8391);
-const fs_1 = __nccwpck_require__(7147);
 const api_helper_1 = __nccwpck_require__(3823);
 const os_1 = __nccwpck_require__(2037);
-const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
-const pullRequestNumber = payload.pull_request ? payload.pull_request.number : '';
 exports.githubConfig = {
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
@@ -25,9 +45,21 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-    pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? parseInt(process.env.PULL_REQUEST_NUMBER) : pullRequestNumber,
+    pullRequestNumber: getPullRequestNumber(),
     debugger: (0, core_1.isDebug)()
 };
+function getPullRequestNumber() {
+    if (github.context.payload.pull_request) {
+        return github.context.payload.pull_request.number;
+    }
+    else if (process.env.PULL_REQUEST_NUMBER) {
+        return parseInt(process.env.PULL_REQUEST_NUMBER);
+    }
+    else {
+        (0, core_1.warning)('Pull request number could not be found');
+        return 0;
+    }
+}
 function getSecretsFilter(secretsFilter) {
     const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
     const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
@@ -53,6 +85,7 @@ exports.ticsConfig = {
     nocalc: (0, core_1.getInput)('nocalc'),
     norecalc: (0, core_1.getInput)('norecalc'),
     postAnnotations: (0, core_1.getBooleanInput)('postAnnotations'),
+    postToConversation: (0, core_1.getBooleanInput)('postToConversation'),
     pullRequestApproval: (0, core_1.getBooleanInput)('pullRequestApproval'),
     recalc: (0, core_1.getInput)('recalc'),
     ticsAuthToken: (0, core_1.getInput)('ticsAuthToken'),
@@ -61,7 +94,7 @@ exports.ticsConfig = {
     secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter')),
     viewerUrl: (0, core_1.getInput)('viewerUrl')
 };
-exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken);
+exports.octokit = github.getOctokit(exports.ticsConfig.githubToken);
 exports.requestInit = { agent: new proxy_agent_1.ProxyAgent(), headers: {} };
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
@@ -83,6 +116,7 @@ const configuration_1 = __nccwpck_require__(5527);
  * @returns List of reviews posted on the pull request.
  */
 async function getPostedReviewComments() {
+    let response = [];
     try {
         logger_1.logger.info('Retrieving posted review comments.');
         const params = {
@@ -90,13 +124,54 @@ async function getPostedReviewComments() {
             repo: configuration_1.githubConfig.reponame,
             pull_number: configuration_1.githubConfig.pullRequestNumber
         };
-        return await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
     }
     catch (error) {
-        logger_1.logger.error(`Could not retrieve the review comments: ${error.message}`);
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Could not retrieve the review comments: ${message}`);
     }
+    return response;
 }
 exports.getPostedReviewComments = getPostedReviewComments;
+
+
+/***/ }),
+
+/***/ 4822:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPostedComments = void 0;
+const logger_1 = __nccwpck_require__(6440);
+const configuration_1 = __nccwpck_require__(5527);
+/**
+ * Gets a list of all comments on the pull request.
+ * @returns List of comments on the pull request.
+ */
+async function getPostedComments() {
+    let response = [];
+    try {
+        logger_1.logger.info('Retrieving posted review comments.');
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            issue_number: configuration_1.githubConfig.pullRequestNumber
+        };
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.issues.listComments, params);
+    }
+    catch (error) {
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Could not retrieve the comments: ${message}`);
+    }
+    return response;
+}
+exports.getPostedComments = getPostedComments;
 
 
 /***/ }),
@@ -146,7 +221,10 @@ async function getChangedFiles() {
         return response;
     }
     catch (error) {
-        logger_1.logger.exit(`Could not retrieve the changed files: ${error}`);
+        let message = 'error unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
     }
 }
 exports.getChangedFiles = getChangedFiles;
@@ -184,7 +262,7 @@ const configuration_1 = __nccwpck_require__(5527);
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-async function deletePreviousReviewComments(postedReviewComments) {
+function deletePreviousReviewComments(postedReviewComments) {
     logger_1.logger.header('Deleting review comments of previous runs.');
     postedReviewComments.map(async (reviewComment) => {
         if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
@@ -197,14 +275,17 @@ async function deletePreviousReviewComments(postedReviewComments) {
                 await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
             }
             catch (error) {
-                logger_1.logger.error(`Could not delete review comment: ${error.message}`);
+                let message = 'reason unkown';
+                if (error instanceof Error)
+                    message = error.message;
+                logger_1.logger.error(`Could not delete review comment: ${message}`);
             }
         }
     });
     logger_1.logger.info('Deleted review comments of previous runs.');
 }
 exports.deletePreviousReviewComments = deletePreviousReviewComments;
-async function postAnnotations(reviewComments) {
+function postAnnotations(reviewComments) {
     logger_1.logger.header('Posting annotations.');
     reviewComments.postable.forEach(reviewComment => {
         logger_1.logger.warning(reviewComment.body, {
@@ -219,13 +300,13 @@ exports.postAnnotations = postAnnotations;
 
 /***/ }),
 
-/***/ 5436:
+/***/ 6587:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postComment = exports.postNothingAnalyzedComment = exports.postErrorComment = void 0;
+exports.deletePreviousComments = exports.postComment = exports.postNothingAnalyzedComment = exports.postErrorComment = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const summary_1 = __nccwpck_require__(1502);
@@ -273,6 +354,29 @@ async function postComment(body) {
     }
 }
 exports.postComment = postComment;
+function deletePreviousComments(comments) {
+    logger_1.logger.header('Deleting comments of previous runs.');
+    comments.map(async (comment) => {
+        if (comment.body?.startsWith('<h1>TICS Quality Gate</h1>')) {
+            try {
+                const params = {
+                    owner: configuration_1.githubConfig.owner,
+                    repo: configuration_1.githubConfig.reponame,
+                    comment_id: comment.id
+                };
+                await configuration_1.octokit.rest.issues.deleteComment(params);
+            }
+            catch (error) {
+                let message = 'reason unkown';
+                if (error instanceof Error)
+                    message = error.message;
+                logger_1.logger.error(`Removing a comment failed: ${message}`);
+            }
+        }
+    });
+    logger_1.logger.info('Deleted review comments of previous runs.');
+}
+exports.deletePreviousComments = deletePreviousComments;
 
 
 /***/ }),
@@ -307,7 +411,10 @@ async function postReview(body, event) {
         logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        logger_1.logger.error(`Posting the review failed: ${error.message}`);
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Posting the review failed: ${message}`);
     }
 }
 exports.postReview = postReview;
@@ -330,7 +437,10 @@ async function postNothingAnalyzedReview(message) {
         logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        logger_1.logger.error(`Posting the review failed: ${error.message}`);
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Posting the review failed: ${message}`);
     }
 }
 exports.postNothingAnalyzedReview = postNothingAnalyzedReview;
@@ -566,7 +676,6 @@ const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
 function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
     const failedConditions = extractFailedConditions(qualityGate.gates);
-    core_1.summary.clear();
     core_1.summary.addHeading('TICS Quality Gate');
     core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
     core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
@@ -775,13 +884,15 @@ function createUnpostableAnnotationsDetails(unpostableReviewComments) {
     let body = '';
     let previousPath = '';
     unpostableReviewComments.forEach(reviewComment => {
+        let path = reviewComment.path ? reviewComment.path : '';
+        let displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
         if (previousPath === '') {
-            body += `<table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
+            body += `<table><tr><th colspan='3'>${path}</th></tr>`;
         }
-        else if (previousPath !== reviewComment.path) {
-            body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
+        else if (previousPath !== path) {
+            body += `</table><table><tr><th colspan='3'>${path}</th></tr>`;
         }
-        body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+        body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
         previousPath = reviewComment.path ? reviewComment.path : '';
     });
     body += '</table>';
@@ -838,19 +949,18 @@ async function runTicsAnalyzer(fileListPath) {
         completed = true;
     }
     catch (error) {
-        logger_1.logger.debug(error.message);
+        if (error instanceof Error)
+            logger_1.logger.debug(error.message);
         completed = false;
         statusCode = -1;
     }
-    finally {
-        return {
-            completed: completed,
-            statusCode: statusCode,
-            explorerUrl: explorerUrl,
-            errorList: errorList,
-            warningList: warningList
-        };
-    }
+    return {
+        completed: completed,
+        statusCode: statusCode,
+        explorerUrl: explorerUrl,
+        errorList: errorList,
+        warningList: warningList
+    };
 }
 exports.runTicsAnalyzer = runTicsAnalyzer;
 /**
@@ -871,6 +981,8 @@ async function getInstallTics() {
     if (!configuration_1.ticsConfig.installTics)
         return '';
     const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
+    if (!installTicsUrl)
+        return;
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         let trustStrategy = '';
         if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
@@ -912,11 +1024,17 @@ async function retrieveInstallTics(os) {
         logger_1.logger.info('Trying to retrieve configuration information from TICS.');
         const ticsInstallApiBaseUrl = (0, api_helper_1.getInstallTicsApiUrl)(configuration_1.baseUrl, os);
         const data = await (0, api_helper_1.httpRequest)(ticsInstallApiBaseUrl);
-        return configuration_1.baseUrl + '/' + data.links.installTics;
+        if (data?.links.installTics) {
+            return configuration_1.baseUrl + '/' + data.links.installTics;
+        }
     }
     catch (error) {
-        logger_1.logger.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
+        let message = 'reason unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`An error occurred when trying to retrieve configuration information: ${message}`);
     }
+    return;
 }
 /**
  * Builds the TICS calculate command based on the fileListPath and the ticsConfig set.
@@ -1191,7 +1309,10 @@ async function getAnnotations(apiLinks) {
         logger_1.logger.info('Retrieved all annotations.');
     }
     catch (error) {
-        logger_1.logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
+        let message = 'reason unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
     }
     return annotations;
 }
@@ -1209,7 +1330,10 @@ async function getViewerVersion() {
         return response;
     }
     catch (error) {
-        logger_1.logger.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+        let message = 'reason unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`There was an error retrieving the Viewer version: ${message}`);
     }
 }
 exports.getViewerVersion = getViewerVersion;
@@ -58984,7 +59108,7 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configure = exports.run = void 0;
 const fs_1 = __nccwpck_require__(7147);
-const comment_1 = __nccwpck_require__(5436);
+const comments_1 = __nccwpck_require__(6587);
 const configuration_1 = __nccwpck_require__(5527);
 const pulls_1 = __nccwpck_require__(5857);
 const logger_1 = __nccwpck_require__(6440);
@@ -58998,6 +59122,7 @@ const annotations_2 = __nccwpck_require__(7829);
 const enums_1 = __nccwpck_require__(1655);
 const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
+const comments_2 = __nccwpck_require__(4822);
 run().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
@@ -59030,7 +59155,7 @@ async function main() {
             analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
             if (!analysis.explorerUrl) {
                 if (!analysis.completed) {
-                    await (0, comment_1.postErrorComment)(analysis);
+                    await (0, comments_1.postErrorComment)(analysis);
                     logger_1.logger.setFailed('Failed to run TICS Github Action.');
                 }
                 else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
@@ -59052,19 +59177,20 @@ async function main() {
                 const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
                 if (annotations && annotations.length > 0) {
                     reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
-                    await (0, annotations_1.postAnnotations)(reviewComments);
+                    (0, annotations_1.postAnnotations)(reviewComments);
                 }
                 const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
                 if (previousReviewComments && previousReviewComments.length > 0) {
-                    await (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+                    (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
                 }
             }
             let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
-            if (configuration_1.ticsConfig.pullRequestApproval) {
+            (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
+            if (configuration_1.ticsConfig.pullRequestApproval && configuration_1.ticsConfig.postToConversation) {
                 await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             }
             else {
-                await (0, comment_1.postComment)(reviewBody);
+                await (0, comments_1.postComment)(reviewBody);
             }
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);

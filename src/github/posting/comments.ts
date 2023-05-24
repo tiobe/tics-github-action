@@ -4,6 +4,7 @@ import { Analysis } from '../../helper/interfaces';
 import { createErrorSummary } from '../../helper/summary';
 import { generateStatusMarkdown } from '../../helper/markdown';
 import { Status } from '../../helper/enums';
+import { Comment } from '../interfaces/interfaces';
 
 /**
  * Create error comment on the pull request from the analysis given.
@@ -46,4 +47,25 @@ export async function postComment(body: string): Promise<void> {
     if (error instanceof Error) message = error.message;
     logger.error(`Posting the comment failed: ${message}`);
   }
+}
+
+export function deletePreviousComments(comments: Comment[]): void {
+  logger.header('Deleting comments of previous runs.');
+  comments.map(async comment => {
+    if (comment.body?.startsWith('<h1>TICS Quality Gate</h1>')) {
+      try {
+        const params = {
+          owner: githubConfig.owner,
+          repo: githubConfig.reponame,
+          comment_id: comment.id
+        };
+        await octokit.rest.issues.deleteComment(params);
+      } catch (error: unknown) {
+        let message = 'reason unkown';
+        if (error instanceof Error) message = error.message;
+        logger.error(`Removing a comment failed: ${message}`);
+      }
+    }
+  });
+  logger.info('Deleted review comments of previous runs.');
 }

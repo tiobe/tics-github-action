@@ -6,7 +6,7 @@ import { Status } from './enums';
  * @param hasSuffix if the status needs a suffix for the issue. (Default is false).
  * @returns Status symbol in markdown.
  */
-export function generateStatusMarkdown(status: Status, hasSuffix: boolean = false): string {
+export function generateStatusMarkdown(status: Status, hasSuffix = false): string {
   switch (status) {
     case Status.FAILED:
       return ':x: ' + (hasSuffix ? 'Failed ' : '');
