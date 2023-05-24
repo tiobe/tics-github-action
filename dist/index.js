@@ -59173,15 +59173,15 @@ async function main() {
             if (!qualityGate)
                 return logger_1.logger.exit('Quality gate could not be retrieved');
             let reviewComments;
+            const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+            if (previousReviewComments && previousReviewComments.length > 0) {
+                (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+            }
             if (configuration_1.ticsConfig.postAnnotations) {
                 const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
                 if (annotations && annotations.length > 0) {
                     reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
                     (0, annotations_1.postAnnotations)(reviewComments);
-                }
-                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-                if (previousReviewComments && previousReviewComments.length > 0) {
-                    (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
                 }
             }
             let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);

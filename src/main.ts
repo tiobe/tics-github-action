@@ -68,15 +68,16 @@ async function main() {
 
       let reviewComments: ReviewComments | undefined;
 
+      const previousReviewComments = await getPostedReviewComments();
+      if (previousReviewComments && previousReviewComments.length > 0) {
+        deletePreviousReviewComments(previousReviewComments);
+      }
+
       if (ticsConfig.postAnnotations) {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
           reviewComments = createReviewComments(annotations, changedFiles);
           postAnnotations(reviewComments);
-        }
-        const previousReviewComments = await getPostedReviewComments();
-        if (previousReviewComments && previousReviewComments.length > 0) {
-          deletePreviousReviewComments(previousReviewComments);
         }
       }
 
