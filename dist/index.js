@@ -381,11 +381,11 @@ function commentIncludesTicsTitle(body) {
     const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
     if (!body)
         return false;
-    titles.forEach(title => {
+    let includesTitle = titles.forEach(title => {
         if (body.startsWith(title))
             return true;
     });
-    return false;
+    return includesTitle !== null;
 }
 
 

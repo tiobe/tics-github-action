@@ -75,9 +75,9 @@ function commentIncludesTicsTitle(body?: string): boolean {
 
   if (!body) return false;
 
-  titles.forEach(title => {
+  let includesTitle = titles.forEach(title => {
     if (body.startsWith(title)) return true;
   });
 
-  return false;
+  return includesTitle !== null;
 }
