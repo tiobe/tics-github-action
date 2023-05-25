@@ -326,7 +326,7 @@ exports.postErrorComment = postErrorComment;
  * @param message Message to display in the body of the comment.
  */
 async function postNothingAnalyzedComment(message) {
-    const body = `## TICS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
+    const body = `<h1>TICS Quality Gate</h1>\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
     await postComment(body);
 }
 exports.postNothingAnalyzedComment = postNothingAnalyzedComment;
@@ -357,7 +357,7 @@ exports.postComment = postComment;
 function deletePreviousComments(comments) {
     logger_1.logger.header('Deleting comments of previous runs.');
     comments.map(async (comment) => {
-        if (comment.body?.startsWith('<h1>TICS Quality Gate</h1>')) {
+        if (commentIncludesTicsTitle(comment.body)) {
             try {
                 const params = {
                     owner: configuration_1.githubConfig.owner,
@@ -377,6 +377,16 @@ function deletePreviousComments(comments) {
     logger_1.logger.info('Deleted review comments of previous runs.');
 }
 exports.deletePreviousComments = deletePreviousComments;
+function commentIncludesTicsTitle(body) {
+    const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
+    if (!body)
+        return false;
+    titles.forEach(title => {
+        if (body.startsWith(title))
+            return true;
+    });
+    return false;
+}
 
 
 /***/ }),
@@ -423,7 +433,7 @@ exports.postReview = postReview;
  * @param message Message to display in the body of the review.
  */
 async function postNothingAnalyzedReview(message) {
-    const body = `## TICS Analysis\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
+    const body = `<h1>TICS Quality Gate</h1>\n\n### ${(0, markdown_1.generateStatusMarkdown)(enums_1.Status.PASSED, true)}\n\n${message}`;
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
@@ -714,7 +724,7 @@ function extractFailedConditions(gates) {
  * @returns string containing the error summary.
  */
 function createErrorSummary(errorList, warningList) {
-    let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+    let summary = '<h1>TICS Quality Gate</h1>\r\n\r\n### :x: Failed';
     if (errorList.length > 0) {
         summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
         errorList.forEach(error => (summary += `> :x: ${error}\r\n`));

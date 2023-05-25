@@ -53,7 +53,7 @@ function extractFailedConditions(gates: Gate[]): Condition[] {
  * @returns string containing the error summary.
  */
 export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+  let summary = '<h1>TICS Quality Gate</h1>\r\n\r\n### :x: Failed';
 
   if (errorList.length > 0) {
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';

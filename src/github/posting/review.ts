@@ -33,7 +33,7 @@ export async function postReview(body: string, event: Events): Promise<void> {
  * @param message Message to display in the body of the review.
  */
 export async function postNothingAnalyzedReview(message: string): Promise<void> {
-  const body = `## TICS Analysis\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
+  const body = `<h1>TICS Quality Gate</h1>\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
 
   const params = {
     owner: githubConfig.owner,

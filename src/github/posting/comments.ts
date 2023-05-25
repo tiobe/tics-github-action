@@ -21,7 +21,7 @@ export async function postErrorComment(analysis: Analysis): Promise<void> {
  * @param message Message to display in the body of the comment.
  */
 export async function postNothingAnalyzedComment(message: string): Promise<void> {
-  const body = `## TICS Analysis\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
+  const body = `<h1>TICS Quality Gate</h1>\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
 
   await postComment(body);
 }
@@ -52,7 +52,7 @@ export async function postComment(body: string): Promise<void> {
 export function deletePreviousComments(comments: Comment[]): void {
   logger.header('Deleting comments of previous runs.');
   comments.map(async comment => {
-    if (comment.body?.startsWith('<h1>TICS Quality Gate</h1>')) {
+    if (commentIncludesTicsTitle(comment.body)) {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -68,4 +68,16 @@ export function deletePreviousComments(comments: Comment[]): void {
     }
   });
   logger.info('Deleted review comments of previous runs.');
+}
+
+function commentIncludesTicsTitle(body?: string): boolean {
+  const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
+
+  if (!body) return false;
+
+  titles.forEach(title => {
+    if (body.startsWith(title)) return true;
+  });
+
+  return false;
 }
