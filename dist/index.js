@@ -381,11 +381,12 @@ function commentIncludesTicsTitle(body) {
     const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
     if (!body)
         return false;
-    let includesTitle = titles.forEach(title => {
+    let includesTitle = false;
+    titles.forEach(title => {
         if (body.startsWith(title))
-            return true;
+            includesTitle = true;
     });
-    return includesTitle !== null;
+    return includesTitle;
 }
 
 
@@ -59171,7 +59172,7 @@ async function main() {
                     logger_1.logger.setFailed('Failed to run TICS Github Action.');
                 }
                 else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-                    await (0, review_1.postNothingAnalyzedReview)('No changed files applicable for TICS analysis quality gating.');
+                    await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
                 }
                 else {
                     logger_1.logger.setFailed('Failed to run TICS Github Action.');
@@ -59198,14 +59199,7 @@ async function main() {
             }
             let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
             (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
-            if (configuration_1.ticsConfig.postToConversation) {
-                if (configuration_1.ticsConfig.pullRequestApproval) {
-                    await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
-                }
-                else {
-                    await (0, comments_1.postComment)(reviewBody);
-                }
-            }
+            await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);
         }
@@ -59213,6 +59207,32 @@ async function main() {
     }
     catch (error) {
         throw error;
+    }
+}
+/**
+ * Function to combine the posting to conversation in a single location.
+ * @param isGate if posting is done on a quality gate result.
+ * @param body body of the summary to post.
+ * @param event in case of posting a review an event should be given.
+ */
+async function postToConversation(isGate, body, event = enums_1.Events.COMMENT) {
+    if (configuration_1.ticsConfig.postToConversation) {
+        if (isGate) {
+            if (configuration_1.ticsConfig.pullRequestApproval) {
+                await (0, review_1.postReview)(body, event);
+            }
+            else {
+                await (0, comments_1.postComment)(body);
+            }
+        }
+        else {
+            if (configuration_1.ticsConfig.pullRequestApproval) {
+                await (0, review_1.postNothingAnalyzedReview)(body);
+            }
+            else {
+                await (0, comments_1.postNothingAnalyzedComment)(body);
+            }
+        }
     }
 }
 /**

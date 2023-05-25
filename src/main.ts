@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { deletePreviousComments, postComment, postErrorComment } from './github/posting/comments';
+import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment } from './github/posting/comments';
 import { githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
 import { logger } from './helper/logger';
@@ -52,7 +52,7 @@ async function main() {
           await postErrorComment(analysis);
           logger.setFailed('Failed to run TICS Github Action.');
         } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-          await postNothingAnalyzedReview('No changed files applicable for TICS analysis quality gating.');
+          await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
         } else {
           logger.setFailed('Failed to run TICS Github Action.');
           analysis.errorList.push('Explorer URL not returned from TICS analysis.');
@@ -85,13 +85,7 @@ async function main() {
 
       deletePreviousComments(await getPostedComments());
 
-      if (ticsConfig.postToConversation) {
-        if (ticsConfig.pullRequestApproval) {
-          await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
-        } else {
-          await postComment(reviewBody);
-        }
-      }
+      await postToConversation(true, reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
 
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
@@ -99,6 +93,30 @@ async function main() {
     cliSummary(analysis);
   } catch (error: unknown) {
     throw error;
+  }
+}
+
+/**
+ * Function to combine the posting to conversation in a single location.
+ * @param isGate if posting is done on a quality gate result.
+ * @param body body of the summary to post.
+ * @param event in case of posting a review an event should be given.
+ */
+async function postToConversation(isGate: boolean, body: string, event: Events = Events.COMMENT): Promise<void> {
+  if (ticsConfig.postToConversation) {
+    if (isGate) {
+      if (ticsConfig.pullRequestApproval) {
+        await postReview(body, event);
+      } else {
+        await postComment(body);
+      }
+    } else {
+      if (ticsConfig.pullRequestApproval) {
+        await postNothingAnalyzedReview(body);
+      } else {
+        await postNothingAnalyzedComment(body);
+      }
+    }
   }
 }
 
