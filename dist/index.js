@@ -59188,11 +59188,13 @@ async function main() {
             }
             let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
             (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
-            if (configuration_1.ticsConfig.pullRequestApproval && configuration_1.ticsConfig.postToConversation) {
-                await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
-            }
-            else {
-                await (0, comments_1.postComment)(reviewBody);
+            if (configuration_1.ticsConfig.postToConversation) {
+                if (configuration_1.ticsConfig.pullRequestApproval) {
+                    await (0, review_1.postReview)(reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
+                }
+                else {
+                    await (0, comments_1.postComment)(reviewBody);
+                }
             }
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);

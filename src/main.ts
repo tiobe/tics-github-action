@@ -85,10 +85,12 @@ async function main() {
 
       deletePreviousComments(await getPostedComments());
 
-      if (ticsConfig.pullRequestApproval && ticsConfig.postToConversation) {
-        await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
-      } else {
-        await postComment(reviewBody);
+      if (ticsConfig.postToConversation) {
+        if (ticsConfig.pullRequestApproval) {
+          await postReview(reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+        } else {
+          await postComment(reviewBody);
+        }
       }
 
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
