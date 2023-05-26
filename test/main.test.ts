@@ -12,6 +12,7 @@ import * as review from '../src/github/posting/review';
 import * as calling_annotations from '../src/github/calling/annotations';
 import * as posting_annotations from '../src/github/posting/annotations';
 import * as calling_comments from '../src/github/calling/comments';
+import * as posting_comments from '../src/github/posting/comments';
 
 import {
   analysisFailedNoUrl,
@@ -160,7 +161,7 @@ describe('SetFailed checks', () => {
   });
 });
 
-describe('postNothingAnalyzedReview', () => {
+describe('postNothingAnalyzed', () => {
   test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
@@ -169,6 +170,22 @@ describe('postNothingAnalyzedReview', () => {
 
     const spyReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
 
+    ticsConfig.pullRequestApproval = true;
+    await main.run();
+
+    expect(spyReview).toHaveBeenCalled();
+    expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
+  });
+
+  test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
+    (existsSync as any).mockReturnValueOnce(true);
+    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
+
+    const spyReview = jest.spyOn(posting_comments, 'postNothingAnalyzedComment').mockImplementationOnce(() => Promise.resolve());
+
+    ticsConfig.pullRequestApproval = false;
     await main.run();
 
     expect(spyReview).toHaveBeenCalled();

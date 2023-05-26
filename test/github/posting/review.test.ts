@@ -157,7 +157,7 @@ describe('postNothingAnalyzedReview', () => {
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
       event: Events.APPROVE,
-      body: '## TICS Analysis\n\n### :heavy_check_mark: Passed \n\nmessage'
+      body: '<h1>TICS Quality Gate</h1>\n\n### :heavy_check_mark: Passed \n\nmessage'
     };
     expect(spy).toBeCalledWith(calledWith);
   });
