@@ -687,6 +687,7 @@ const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
 function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
     const failedConditions = extractFailedConditions(qualityGate.gates);
+    logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
     core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
     core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
@@ -708,6 +709,7 @@ function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments)
         core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
     }
     core_1.summary.addRaw(createFilesSummary(filesAnalyzed));
+    logger_1.logger.info('Created summary.');
     return core_1.summary.stringify();
 }
 exports.createSummaryBody = createSummaryBody;
