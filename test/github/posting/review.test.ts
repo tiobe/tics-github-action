@@ -30,7 +30,7 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
+    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
     expect(spy).toBeCalledTimes(1);
@@ -55,7 +55,7 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
+    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -93,7 +93,7 @@ describe('postReview', () => {
       postable: [],
       unpostable: []
     };
-    let body = createSummaryBody(analysis, [''], qualityGate, reviewComments);
+    let body = await createSummaryBody(analysis, [''], qualityGate, reviewComments);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -129,7 +129,7 @@ describe('postReview', () => {
       gates: [],
       annotationsApiV1Links: []
     };
-    let body = createSummaryBody(analysis, [''], qualityGate, undefined);
+    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
     let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
