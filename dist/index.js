@@ -38443,7 +38443,9 @@ class PacProxyAgent extends agent_base_1.Agent {
                     const servername = opts.servername || opts.host;
                     socket = tls.connect({
                         ...opts,
-                        servername: (!servername || net.isIP(servername)) ? undefined : servername,
+                        servername: !servername || net.isIP(servername)
+                            ? undefined
+                            : servername,
                     });
                 }
                 else {
@@ -38616,42 +38618,46 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Agent = void 0;
 const http = __importStar(__nccwpck_require__(3685));
 __exportStar(__nccwpck_require__(8887), exports);
-function isSecureEndpoint() {
-    const { stack } = new Error();
-    if (typeof stack !== 'string')
-        return false;
-    return stack
-        .split('\n')
-        .some((l) => l.indexOf('(https.js:') !== -1 ||
-        l.indexOf('node:https:') !== -1);
-}
 const INTERNAL = Symbol('AgentBaseInternalState');
 class Agent extends http.Agent {
     constructor(opts) {
         super(opts);
         this[INTERNAL] = {};
     }
-    createSocket(req, options, cb) {
-        // Need to determine whether this is an `http` or `https` request.
-        // First check the `secureEndpoint` property explicitly, since this
-        // means that a parent `Agent` is "passing through" to this instance.
-        let secureEndpoint = typeof options.secureEndpoint === 'boolean'
-            ? options.secureEndpoint
-            : undefined;
-        // If no explicit `secure` endpoint, check if `protocol` property is
-        // set. This will usually be the case since using a full string URL
-        // or `URL` instance should be the most common case.
-        if (typeof secureEndpoint === 'undefined' &&
-            typeof options.protocol === 'string') {
-            secureEndpoint = options.protocol === 'https:';
+    /**
+     * Determine whether this is an `http` or `https` request.
+     */
+    isSecureEndpoint(options) {
+        if (options) {
+            // First check the `secureEndpoint` property explicitly, since this
+            // means that a parent `Agent` is "passing through" to this instance.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (typeof options.secureEndpoint === 'boolean') {
+                return options.secureEndpoint;
+            }
+            // If no explicit `secure` endpoint, check if `protocol` property is
+            // set. This will usually be the case since using a full string URL
+            // or `URL` instance should be the most common usage.
+            if (typeof options.protocol === 'string') {
+                return options.protocol === 'https:';
+            }
         }
         // Finally, if no `protocol` property was set, then fall back to
         // checking the stack trace of the current call stack, and try to
         // detect the "https" module.
-        if (typeof secureEndpoint === 'undefined') {
-            secureEndpoint = isSecureEndpoint();
-        }
-        const connectOpts = { ...options, secureEndpoint };
+        const { stack } = new Error();
+        if (typeof stack !== 'string')
+            return false;
+        return stack
+            .split('\n')
+            .some((l) => l.indexOf('(https.js:') !== -1 ||
+            l.indexOf('node:https:') !== -1);
+    }
+    createSocket(req, options, cb) {
+        const connectOpts = {
+            ...options,
+            secureEndpoint: this.isSecureEndpoint(options),
+        };
         Promise.resolve()
             .then(() => this.connect(req, connectOpts))
             .then((socket) => {
@@ -38682,7 +38688,8 @@ class Agent extends http.Agent {
         }
     }
     get protocol() {
-        return (this[INTERNAL].protocol ?? (isSecureEndpoint() ? 'https:' : 'http:'));
+        return (this[INTERNAL].protocol ??
+            (this.isSecureEndpoint() ? 'https:' : 'http:'));
     }
     set protocol(v) {
         if (this[INTERNAL]) {
@@ -38734,17 +38741,11 @@ const debug_1 = __importDefault(__nccwpck_require__(8237));
 const events_1 = __nccwpck_require__(2361);
 const agent_base_1 = __nccwpck_require__(2270);
 const debug = (0, debug_1.default)('http-proxy-agent');
-function isHTTPS(protocol) {
-    return typeof protocol === 'string' ? /^https:?$/i.test(protocol) : false;
-}
 /**
  * The `HttpProxyAgent` implements an HTTP Agent subclass that connects
  * to the specified "HTTP proxy server" in order to proxy HTTP requests.
  */
 class HttpProxyAgent extends agent_base_1.Agent {
-    get secureProxy() {
-        return isHTTPS(this.proxy.protocol);
-    }
     constructor(proxy, opts) {
         super(opts);
         this.proxy = typeof proxy === 'string' ? new URL(proxy) : proxy;
@@ -38754,7 +38755,7 @@ class HttpProxyAgent extends agent_base_1.Agent {
         const host = (this.proxy.hostname || this.proxy.host).replace(/^\[|\]$/g, '');
         const port = this.proxy.port
             ? parseInt(this.proxy.port, 10)
-            : this.secureProxy
+            : this.proxy.protocol === 'https:'
                 ? 443
                 : 80;
         this.connectOpts = {
@@ -38763,7 +38764,13 @@ class HttpProxyAgent extends agent_base_1.Agent {
             port,
         };
     }
-    async connect(req, opts) {
+    addRequest(req, opts) {
+        req._header = null;
+        this.setRequestProps(req, opts);
+        // @ts-expect-error `addRequest()` isn't defined in `@types/node`
+        super.addRequest(req, opts);
+    }
+    setRequestProps(req, opts) {
         const { proxy } = this;
         const protocol = opts.secureEndpoint ? 'https:' : 'http:';
         const hostname = req.getHeader('host') || 'localhost';
@@ -38776,7 +38783,6 @@ class HttpProxyAgent extends agent_base_1.Agent {
         // to the absolute path of the URL that will be requested.
         req.path = String(url);
         // Inject the `Proxy-Authorization` header if necessary.
-        req._header = null;
         const headers = typeof this.proxyHeaders === 'function'
             ? this.proxyHeaders()
             : { ...this.proxyHeaders };
@@ -38795,15 +38801,11 @@ class HttpProxyAgent extends agent_base_1.Agent {
                 req.setHeader(name, value);
             }
         }
-        // Create a socket connection to the proxy server.
-        let socket;
-        if (this.secureProxy) {
-            debug('Creating `tls.Socket`: %o', this.connectOpts);
-            socket = tls.connect(this.connectOpts);
-        }
-        else {
-            debug('Creating `net.Socket`: %o', this.connectOpts);
-            socket = net.connect(this.connectOpts);
+    }
+    async connect(req, opts) {
+        req._header = null;
+        if (!req.path.includes('://')) {
+            this.setRequestProps(req, opts);
         }
         // At this point, the http ClientRequest's internal `_header` field
         // might have already been set. If this is the case then we'll need
@@ -38813,13 +38815,22 @@ class HttpProxyAgent extends agent_base_1.Agent {
         debug('Regenerating stored HTTP header string for request');
         req._implicitHeader();
         if (req.outputData && req.outputData.length > 0) {
-            // Node >= 12
             debug('Patching connection write() output buffer with updated header');
             first = req.outputData[0].data;
             endOfHeaders = first.indexOf('\r\n\r\n') + 4;
             req.outputData[0].data =
                 req._header + first.substring(endOfHeaders);
             debug('Output buffer: %o', req.outputData[0].data);
+        }
+        // Create a socket connection to the proxy server.
+        let socket;
+        if (this.proxy.protocol === 'https:') {
+            debug('Creating `tls.Socket`: %o', this.connectOpts);
+            socket = tls.connect(this.connectOpts);
+        }
+        else {
+            debug('Creating `net.Socket`: %o', this.connectOpts);
+            socket = net.connect(this.connectOpts);
         }
         // Wait for the socket's `connect` event, so that this `callback()`
         // function throws instead of the `http` request machinery. This is
@@ -38898,9 +38909,6 @@ const debug = (0, debug_1.default)('https-proxy-agent');
  * the connection to the proxy server has been established.
  */
 class HttpsProxyAgent extends agent_base_1.Agent {
-    get secureProxy() {
-        return isHTTPS(this.proxy.protocol);
-    }
     constructor(proxy, opts) {
         super(opts);
         this.options = { path: undefined };
@@ -38911,7 +38919,7 @@ class HttpsProxyAgent extends agent_base_1.Agent {
         const host = (this.proxy.hostname || this.proxy.host).replace(/^\[|\]$/g, '');
         const port = this.proxy.port
             ? parseInt(this.proxy.port, 10)
-            : this.secureProxy
+            : this.proxy.protocol === 'https:'
                 ? 443
                 : 80;
         this.connectOpts = {
@@ -38927,13 +38935,13 @@ class HttpsProxyAgent extends agent_base_1.Agent {
      * new HTTP request.
      */
     async connect(req, opts) {
-        const { proxy, secureProxy } = this;
+        const { proxy } = this;
         if (!opts.host) {
             throw new TypeError('No "host" provided');
         }
         // Create a socket connection to the proxy server.
         let socket;
-        if (secureProxy) {
+        if (proxy.protocol === 'https:') {
             debug('Creating `tls.Socket`: %o', this.connectOpts);
             socket = tls.connect(this.connectOpts);
         }
@@ -39011,9 +39019,6 @@ exports.HttpsProxyAgent = HttpsProxyAgent;
 function resume(socket) {
     socket.resume();
 }
-function isHTTPS(protocol) {
-    return typeof protocol === 'string' ? /^https:?$/i.test(protocol) : false;
-}
 function omit(obj, ...keys) {
     const ret = {};
     let key;
@@ -39058,14 +39063,12 @@ function parseProxyResponse(socket) {
         function cleanup() {
             socket.removeListener('end', onend);
             socket.removeListener('error', onerror);
-            socket.removeListener('close', onclose);
             socket.removeListener('readable', read);
         }
-        function onclose(err) {
-            debug('onclose had error %o', err);
-        }
         function onend() {
+            cleanup();
             debug('onend');
+            reject(new Error('Proxy connection ended before receiving CONNECT response'));
         }
         function onerror(err) {
             cleanup();
@@ -39086,7 +39089,8 @@ function parseProxyResponse(socket) {
             const headerParts = buffered.toString('ascii').split('\r\n');
             const firstLine = headerParts.shift();
             if (!firstLine) {
-                throw new Error('No header received');
+                socket.destroy();
+                return reject(new Error('No header received from proxy CONNECT response'));
             }
             const firstLineParts = firstLine.split(' ');
             const statusCode = +firstLineParts[1];
@@ -39097,7 +39101,8 @@ function parseProxyResponse(socket) {
                     continue;
                 const firstColon = header.indexOf(':');
                 if (firstColon === -1) {
-                    throw new Error(`Invalid header: "${header}"`);
+                    socket.destroy();
+                    return reject(new Error(`Invalid header from proxy CONNECT response: "${header}"`));
                 }
                 const key = header.slice(0, firstColon).toLowerCase();
                 const value = header.slice(firstColon + 1).trimStart();
@@ -39112,7 +39117,7 @@ function parseProxyResponse(socket) {
                     headers[key] = value;
                 }
             }
-            debug('got proxy server response: %o', firstLine);
+            debug('got proxy server response: %o %o', firstLine, headers);
             cleanup();
             resolve({
                 connect: {
@@ -39124,7 +39129,6 @@ function parseProxyResponse(socket) {
             });
         }
         socket.on('error', onerror);
-        socket.on('close', onclose);
         socket.on('end', onend);
         read();
     });
@@ -40000,7 +40004,14 @@ class ProxyAgent extends agent_base_1.Agent {
     }
     async connect(req, opts) {
         const { secureEndpoint } = opts;
-        const protocol = secureEndpoint ? 'https:' : 'http:';
+        const isWebSocket = req.getHeader('upgrade') === 'websocket';
+        const protocol = secureEndpoint
+            ? isWebSocket
+                ? 'wss:'
+                : 'https:'
+            : isWebSocket
+                ? 'ws:'
+                : 'http:';
         const host = req.getHeader('host');
         const url = new URL(req.path, `${protocol}//${host}`).href;
         const proxy = this.getProxyForUrl(url);
@@ -40019,7 +40030,7 @@ class ProxyAgent extends agent_base_1.Agent {
             if (!isValidProtocol(proxyProto)) {
                 throw new Error(`Unsupported protocol for proxy URL: ${proxy}`);
             }
-            const ctor = exports.proxies[proxyProto][secureEndpoint ? 1 : 0];
+            const ctor = exports.proxies[proxyProto][secureEndpoint || isWebSocket ? 1 : 0];
             // @ts-expect-error meh…
             agent = new ctor(proxy, this.connectOpts);
             this.cache.set(cacheKey, agent);
@@ -40149,42 +40160,46 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Agent = void 0;
 const http = __importStar(__nccwpck_require__(3685));
 __exportStar(__nccwpck_require__(1124), exports);
-function isSecureEndpoint() {
-    const { stack } = new Error();
-    if (typeof stack !== 'string')
-        return false;
-    return stack
-        .split('\n')
-        .some((l) => l.indexOf('(https.js:') !== -1 ||
-        l.indexOf('node:https:') !== -1);
-}
 const INTERNAL = Symbol('AgentBaseInternalState');
 class Agent extends http.Agent {
     constructor(opts) {
         super(opts);
         this[INTERNAL] = {};
     }
-    createSocket(req, options, cb) {
-        // Need to determine whether this is an `http` or `https` request.
-        // First check the `secureEndpoint` property explicitly, since this
-        // means that a parent `Agent` is "passing through" to this instance.
-        let secureEndpoint = typeof options.secureEndpoint === 'boolean'
-            ? options.secureEndpoint
-            : undefined;
-        // If no explicit `secure` endpoint, check if `protocol` property is
-        // set. This will usually be the case since using a full string URL
-        // or `URL` instance should be the most common case.
-        if (typeof secureEndpoint === 'undefined' &&
-            typeof options.protocol === 'string') {
-            secureEndpoint = options.protocol === 'https:';
+    /**
+     * Determine whether this is an `http` or `https` request.
+     */
+    isSecureEndpoint(options) {
+        if (options) {
+            // First check the `secureEndpoint` property explicitly, since this
+            // means that a parent `Agent` is "passing through" to this instance.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (typeof options.secureEndpoint === 'boolean') {
+                return options.secureEndpoint;
+            }
+            // If no explicit `secure` endpoint, check if `protocol` property is
+            // set. This will usually be the case since using a full string URL
+            // or `URL` instance should be the most common usage.
+            if (typeof options.protocol === 'string') {
+                return options.protocol === 'https:';
+            }
         }
         // Finally, if no `protocol` property was set, then fall back to
         // checking the stack trace of the current call stack, and try to
         // detect the "https" module.
-        if (typeof secureEndpoint === 'undefined') {
-            secureEndpoint = isSecureEndpoint();
-        }
-        const connectOpts = { ...options, secureEndpoint };
+        const { stack } = new Error();
+        if (typeof stack !== 'string')
+            return false;
+        return stack
+            .split('\n')
+            .some((l) => l.indexOf('(https.js:') !== -1 ||
+            l.indexOf('node:https:') !== -1);
+    }
+    createSocket(req, options, cb) {
+        const connectOpts = {
+            ...options,
+            secureEndpoint: this.isSecureEndpoint(options),
+        };
         Promise.resolve()
             .then(() => this.connect(req, connectOpts))
             .then((socket) => {
@@ -40215,7 +40230,8 @@ class Agent extends http.Agent {
         }
     }
     get protocol() {
-        return (this[INTERNAL].protocol ?? (isSecureEndpoint() ? 'https:' : 'http:'));
+        return (this[INTERNAL].protocol ??
+            (this.isSecureEndpoint() ? 'https:' : 'http:'));
     }
     set protocol(v) {
         if (this[INTERNAL]) {
@@ -40267,17 +40283,11 @@ const debug_1 = __importDefault(__nccwpck_require__(8237));
 const events_1 = __nccwpck_require__(2361);
 const agent_base_1 = __nccwpck_require__(9511);
 const debug = (0, debug_1.default)('http-proxy-agent');
-function isHTTPS(protocol) {
-    return typeof protocol === 'string' ? /^https:?$/i.test(protocol) : false;
-}
 /**
  * The `HttpProxyAgent` implements an HTTP Agent subclass that connects
  * to the specified "HTTP proxy server" in order to proxy HTTP requests.
  */
 class HttpProxyAgent extends agent_base_1.Agent {
-    get secureProxy() {
-        return isHTTPS(this.proxy.protocol);
-    }
     constructor(proxy, opts) {
         super(opts);
         this.proxy = typeof proxy === 'string' ? new URL(proxy) : proxy;
@@ -40287,7 +40297,7 @@ class HttpProxyAgent extends agent_base_1.Agent {
         const host = (this.proxy.hostname || this.proxy.host).replace(/^\[|\]$/g, '');
         const port = this.proxy.port
             ? parseInt(this.proxy.port, 10)
-            : this.secureProxy
+            : this.proxy.protocol === 'https:'
                 ? 443
                 : 80;
         this.connectOpts = {
@@ -40296,7 +40306,13 @@ class HttpProxyAgent extends agent_base_1.Agent {
             port,
         };
     }
-    async connect(req, opts) {
+    addRequest(req, opts) {
+        req._header = null;
+        this.setRequestProps(req, opts);
+        // @ts-expect-error `addRequest()` isn't defined in `@types/node`
+        super.addRequest(req, opts);
+    }
+    setRequestProps(req, opts) {
         const { proxy } = this;
         const protocol = opts.secureEndpoint ? 'https:' : 'http:';
         const hostname = req.getHeader('host') || 'localhost';
@@ -40309,7 +40325,6 @@ class HttpProxyAgent extends agent_base_1.Agent {
         // to the absolute path of the URL that will be requested.
         req.path = String(url);
         // Inject the `Proxy-Authorization` header if necessary.
-        req._header = null;
         const headers = typeof this.proxyHeaders === 'function'
             ? this.proxyHeaders()
             : { ...this.proxyHeaders };
@@ -40328,15 +40343,11 @@ class HttpProxyAgent extends agent_base_1.Agent {
                 req.setHeader(name, value);
             }
         }
-        // Create a socket connection to the proxy server.
-        let socket;
-        if (this.secureProxy) {
-            debug('Creating `tls.Socket`: %o', this.connectOpts);
-            socket = tls.connect(this.connectOpts);
-        }
-        else {
-            debug('Creating `net.Socket`: %o', this.connectOpts);
-            socket = net.connect(this.connectOpts);
+    }
+    async connect(req, opts) {
+        req._header = null;
+        if (!req.path.includes('://')) {
+            this.setRequestProps(req, opts);
         }
         // At this point, the http ClientRequest's internal `_header` field
         // might have already been set. If this is the case then we'll need
@@ -40346,13 +40357,22 @@ class HttpProxyAgent extends agent_base_1.Agent {
         debug('Regenerating stored HTTP header string for request');
         req._implicitHeader();
         if (req.outputData && req.outputData.length > 0) {
-            // Node >= 12
             debug('Patching connection write() output buffer with updated header');
             first = req.outputData[0].data;
             endOfHeaders = first.indexOf('\r\n\r\n') + 4;
             req.outputData[0].data =
                 req._header + first.substring(endOfHeaders);
             debug('Output buffer: %o', req.outputData[0].data);
+        }
+        // Create a socket connection to the proxy server.
+        let socket;
+        if (this.proxy.protocol === 'https:') {
+            debug('Creating `tls.Socket`: %o', this.connectOpts);
+            socket = tls.connect(this.connectOpts);
+        }
+        else {
+            debug('Creating `net.Socket`: %o', this.connectOpts);
+            socket = net.connect(this.connectOpts);
         }
         // Wait for the socket's `connect` event, so that this `callback()`
         // function throws instead of the `http` request machinery. This is
@@ -40431,9 +40451,6 @@ const debug = (0, debug_1.default)('https-proxy-agent');
  * the connection to the proxy server has been established.
  */
 class HttpsProxyAgent extends agent_base_1.Agent {
-    get secureProxy() {
-        return isHTTPS(this.proxy.protocol);
-    }
     constructor(proxy, opts) {
         super(opts);
         this.options = { path: undefined };
@@ -40444,7 +40461,7 @@ class HttpsProxyAgent extends agent_base_1.Agent {
         const host = (this.proxy.hostname || this.proxy.host).replace(/^\[|\]$/g, '');
         const port = this.proxy.port
             ? parseInt(this.proxy.port, 10)
-            : this.secureProxy
+            : this.proxy.protocol === 'https:'
                 ? 443
                 : 80;
         this.connectOpts = {
@@ -40460,13 +40477,13 @@ class HttpsProxyAgent extends agent_base_1.Agent {
      * new HTTP request.
      */
     async connect(req, opts) {
-        const { proxy, secureProxy } = this;
+        const { proxy } = this;
         if (!opts.host) {
             throw new TypeError('No "host" provided');
         }
         // Create a socket connection to the proxy server.
         let socket;
-        if (secureProxy) {
+        if (proxy.protocol === 'https:') {
             debug('Creating `tls.Socket`: %o', this.connectOpts);
             socket = tls.connect(this.connectOpts);
         }
@@ -40544,9 +40561,6 @@ exports.HttpsProxyAgent = HttpsProxyAgent;
 function resume(socket) {
     socket.resume();
 }
-function isHTTPS(protocol) {
-    return typeof protocol === 'string' ? /^https:?$/i.test(protocol) : false;
-}
 function omit(obj, ...keys) {
     const ret = {};
     let key;
@@ -40591,14 +40605,12 @@ function parseProxyResponse(socket) {
         function cleanup() {
             socket.removeListener('end', onend);
             socket.removeListener('error', onerror);
-            socket.removeListener('close', onclose);
             socket.removeListener('readable', read);
         }
-        function onclose(err) {
-            debug('onclose had error %o', err);
-        }
         function onend() {
+            cleanup();
             debug('onend');
+            reject(new Error('Proxy connection ended before receiving CONNECT response'));
         }
         function onerror(err) {
             cleanup();
@@ -40619,7 +40631,8 @@ function parseProxyResponse(socket) {
             const headerParts = buffered.toString('ascii').split('\r\n');
             const firstLine = headerParts.shift();
             if (!firstLine) {
-                throw new Error('No header received');
+                socket.destroy();
+                return reject(new Error('No header received from proxy CONNECT response'));
             }
             const firstLineParts = firstLine.split(' ');
             const statusCode = +firstLineParts[1];
@@ -40630,7 +40643,8 @@ function parseProxyResponse(socket) {
                     continue;
                 const firstColon = header.indexOf(':');
                 if (firstColon === -1) {
-                    throw new Error(`Invalid header: "${header}"`);
+                    socket.destroy();
+                    return reject(new Error(`Invalid header from proxy CONNECT response: "${header}"`));
                 }
                 const key = header.slice(0, firstColon).toLowerCase();
                 const value = header.slice(firstColon + 1).trimStart();
@@ -40645,7 +40659,7 @@ function parseProxyResponse(socket) {
                     headers[key] = value;
                 }
             }
-            debug('got proxy server response: %o', firstLine);
+            debug('got proxy server response: %o %o', firstLine, headers);
             cleanup();
             resolve({
                 connect: {
@@ -40657,7 +40671,6 @@ function parseProxyResponse(socket) {
             });
         }
         socket.on('error', onerror);
-        socket.on('close', onclose);
         socket.on('end', onend);
         read();
     });
@@ -42434,42 +42447,46 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Agent = void 0;
 const http = __importStar(__nccwpck_require__(3685));
 __exportStar(__nccwpck_require__(1244), exports);
-function isSecureEndpoint() {
-    const { stack } = new Error();
-    if (typeof stack !== 'string')
-        return false;
-    return stack
-        .split('\n')
-        .some((l) => l.indexOf('(https.js:') !== -1 ||
-        l.indexOf('node:https:') !== -1);
-}
 const INTERNAL = Symbol('AgentBaseInternalState');
 class Agent extends http.Agent {
     constructor(opts) {
         super(opts);
         this[INTERNAL] = {};
     }
-    createSocket(req, options, cb) {
-        // Need to determine whether this is an `http` or `https` request.
-        // First check the `secureEndpoint` property explicitly, since this
-        // means that a parent `Agent` is "passing through" to this instance.
-        let secureEndpoint = typeof options.secureEndpoint === 'boolean'
-            ? options.secureEndpoint
-            : undefined;
-        // If no explicit `secure` endpoint, check if `protocol` property is
-        // set. This will usually be the case since using a full string URL
-        // or `URL` instance should be the most common case.
-        if (typeof secureEndpoint === 'undefined' &&
-            typeof options.protocol === 'string') {
-            secureEndpoint = options.protocol === 'https:';
+    /**
+     * Determine whether this is an `http` or `https` request.
+     */
+    isSecureEndpoint(options) {
+        if (options) {
+            // First check the `secureEndpoint` property explicitly, since this
+            // means that a parent `Agent` is "passing through" to this instance.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (typeof options.secureEndpoint === 'boolean') {
+                return options.secureEndpoint;
+            }
+            // If no explicit `secure` endpoint, check if `protocol` property is
+            // set. This will usually be the case since using a full string URL
+            // or `URL` instance should be the most common usage.
+            if (typeof options.protocol === 'string') {
+                return options.protocol === 'https:';
+            }
         }
         // Finally, if no `protocol` property was set, then fall back to
         // checking the stack trace of the current call stack, and try to
         // detect the "https" module.
-        if (typeof secureEndpoint === 'undefined') {
-            secureEndpoint = isSecureEndpoint();
-        }
-        const connectOpts = { ...options, secureEndpoint };
+        const { stack } = new Error();
+        if (typeof stack !== 'string')
+            return false;
+        return stack
+            .split('\n')
+            .some((l) => l.indexOf('(https.js:') !== -1 ||
+            l.indexOf('node:https:') !== -1);
+    }
+    createSocket(req, options, cb) {
+        const connectOpts = {
+            ...options,
+            secureEndpoint: this.isSecureEndpoint(options),
+        };
         Promise.resolve()
             .then(() => this.connect(req, connectOpts))
             .then((socket) => {
@@ -42500,7 +42517,8 @@ class Agent extends http.Agent {
         }
     }
     get protocol() {
-        return (this[INTERNAL].protocol ?? (isSecureEndpoint() ? 'https:' : 'http:'));
+        return (this[INTERNAL].protocol ??
+            (this.isSecureEndpoint() ? 'https:' : 'http:'));
     }
     set protocol(v) {
         if (this[INTERNAL]) {
