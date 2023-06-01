@@ -81,7 +81,7 @@ async function main() {
         }
       }
 
-      let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
+      let reviewBody = await createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
 
       deletePreviousComments(await getPostedComments());
 

@@ -7,11 +7,16 @@ import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
-export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
+export async function createSummaryBody(
+  analysis: Analysis,
+  filesAnalyzed: string[],
+  qualityGate: QualityGate,
+  reviewComments?: ReviewComments
+): Promise<string> {
   const failedConditions = extractFailedConditions(qualityGate.gates);
 
   logger.header('Creating summary.');
-  summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
+  await summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
   summary.addHeading('TICS Quality Gate');
   summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
   summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);

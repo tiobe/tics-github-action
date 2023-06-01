@@ -685,10 +685,10 @@ const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
-function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
+async function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
     const failedConditions = extractFailedConditions(qualityGate.gates);
     logger_1.logger.header('Creating summary.');
-    core_1.summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
+    await core_1.summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
     core_1.summary.addHeading('TICS Quality Gate');
     core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
     core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
@@ -59200,7 +59200,7 @@ async function main() {
                     (0, annotations_1.postAnnotations)(reviewComments);
                 }
             }
-            let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
+            let reviewBody = await (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
             (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
             await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             if (!qualityGate.passed)
