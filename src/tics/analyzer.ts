@@ -2,6 +2,7 @@ import { exec } from '@actions/exec';
 import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { getInstallTicsApiUrl, httpRequest } from './api_helper';
+import { Analysis, ArtifactsResponse } from '../helper/interfaces';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -13,7 +14,7 @@ let completed: boolean;
  * Runs TICS based on the configuration set in a workflow.
  * @param fileListPath Path to changedFiles.txt.
  */
-export async function runTicsAnalyzer(fileListPath: string) {
+export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
   logger.header(`Analyzing for project ${ticsConfig.projectName}`);
 
   const command = await buildRunCommand(fileListPath);
@@ -39,19 +40,19 @@ export async function runTicsAnalyzer(fileListPath: string) {
       }
     });
     completed = true;
-  } catch (error: any) {
-    logger.debug(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) logger.debug(error.message);
     completed = false;
     statusCode = -1;
-  } finally {
-    return {
-      completed: completed,
-      statusCode: statusCode,
-      explorerUrl: explorerUrl,
-      errorList: errorList,
-      warningList: warningList
-    };
   }
+
+  return {
+    completed: completed,
+    statusCode: statusCode,
+    explorerUrl: explorerUrl,
+    errorList: errorList,
+    warningList: warningList
+  };
 }
 
 /**
@@ -59,7 +60,7 @@ export async function runTicsAnalyzer(fileListPath: string) {
  * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
-async function buildRunCommand(fileListPath: string) {
+async function buildRunCommand(fileListPath: string): Promise<string> {
   if (githubConfig.runnerOS === 'Linux') {
     return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
   }
@@ -69,10 +70,12 @@ async function buildRunCommand(fileListPath: string) {
 /**
  * Get the command to install TICS with.
  */
-async function getInstallTics() {
+async function getInstallTics(): Promise<string> {
   if (!ticsConfig.installTics) return '';
 
   const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
+
+  if (!installTicsUrl) return '';
 
   if (githubConfig.runnerOS === 'Linux') {
     let trustStrategy = '';
@@ -94,7 +97,7 @@ async function getInstallTics() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findInStdOutOrErr(data: string) {
+function findInStdOutOrErr(data: string): void {
   const error = data.toString().match(/\[ERROR.*/g);
   if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
 
@@ -102,7 +105,10 @@ function findInStdOutOrErr(data: string) {
   if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
-  if (!explorerUrl && findExplorerUrl) explorerUrl = viewerUrl + findExplorerUrl.slice(-1).pop();
+  if (!explorerUrl && findExplorerUrl) {
+    const urlPath = findExplorerUrl.slice(-1).pop();
+    if (urlPath) explorerUrl = viewerUrl + urlPath;
+  }
 }
 
 /**
@@ -110,18 +116,23 @@ function findInStdOutOrErr(data: string) {
  * @param os the OS the runner runs on.
  * @returns the TICS install url.
  */
-async function retrieveInstallTics(os: string) {
+async function retrieveInstallTics(os: string): Promise<string | undefined> {
   try {
     logger.info('Trying to retrieve configuration information from TICS.');
 
     const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
 
-    const data = await httpRequest<any>(ticsInstallApiBaseUrl);
+    const data = await httpRequest<ArtifactsResponse>(ticsInstallApiBaseUrl);
 
-    return baseUrl + '/' + data.links.installTics;
-  } catch (error: any) {
-    logger.exit(`An error occurred when trying to retrieve configuration information: ${error.message}`);
+    if (data?.links.installTics) {
+      return baseUrl + '/' + data.links.installTics;
+    }
+  } catch (error: unknown) {
+    let message = 'reason unknown';
+    if (error instanceof Error) message = error.message;
+    logger.exit(`An error occurred when trying to retrieve configuration information: ${message}`);
   }
+  return;
 }
 
 /**

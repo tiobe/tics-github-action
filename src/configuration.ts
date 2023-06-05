@@ -1,12 +1,8 @@
-import { getBooleanInput, getInput, isDebug } from '@actions/core';
-import { getOctokit } from '@actions/github';
+import { getBooleanInput, getInput, isDebug, warning } from '@actions/core';
+import * as github from '@actions/github';
 import { ProxyAgent } from 'proxy-agent';
-import { readFileSync } from 'fs';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
-
-const payload = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : '';
-const pullRequestNumber: number = payload.pull_request ? payload.pull_request.number : '';
 
 export const githubConfig = {
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
@@ -17,9 +13,20 @@ export const githubConfig = {
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
-  pullRequestNumber: process.env.PULL_REQUEST_NUMBER ? parseInt(process.env.PULL_REQUEST_NUMBER) : pullRequestNumber,
+  pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
 };
+
+function getPullRequestNumber() {
+  if (github.context.payload.pull_request) {
+    return github.context.payload.pull_request.number;
+  } else if (process.env.PULL_REQUEST_NUMBER) {
+    return parseInt(process.env.PULL_REQUEST_NUMBER);
+  } else {
+    warning('Pull request number could not be found');
+    return 0;
+  }
+}
 
 function getSecretsFilter(secretsFilter: string | undefined) {
   const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token'];
@@ -48,6 +55,7 @@ export const ticsConfig = {
   nocalc: getInput('nocalc'),
   norecalc: getInput('norecalc'),
   postAnnotations: getBooleanInput('postAnnotations'),
+  postToConversation: getBooleanInput('postToConversation'),
   pullRequestApproval: getBooleanInput('pullRequestApproval'),
   recalc: getInput('recalc'),
   ticsAuthToken: getInput('ticsAuthToken'),
@@ -57,7 +65,7 @@ export const ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-export const octokit = getOctokit(ticsConfig.githubToken);
+export const octokit = github.getOctokit(ticsConfig.githubToken);
 export const requestInit = { agent: new ProxyAgent(), headers: {} };
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

@@ -3,6 +3,7 @@ import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFiles } from '../../../src/github/calling/pulls';
 import { octokit, ticsConfig } from '../../../src/configuration';
 import { logger } from '../../../src/helper/logger';
+import { ChangedFile } from '../../../src/helper/interfaces';
 
 describe('getChangedFiles', () => {
   test('Should return single file on getChangedFiles', async () => {
@@ -80,7 +81,7 @@ describe('changedFilesToFile', () => {
   test('Should return file location on changedFilesToFile', () => {
     (resolve as any).mockReturnValueOnce('/path/to/changedFiles.txt');
 
-    const response = changedFilesToFile([{ filename: 'test.js' }]);
+    const response = changedFilesToFile([changedFile]);
     expect(response).toEqual('/path/to/changedFiles.txt');
   });
 
@@ -95,7 +96,19 @@ describe('changedFilesToFile', () => {
     (resolve as any).mockReturnValueOnce('/path/to/changedFiles.txt');
     const spy = jest.spyOn(fs, 'writeFileSync');
 
-    changedFilesToFile([{ filename: 'test.js' }, { filename: 'test.js' }]);
+    changedFilesToFile([changedFile, changedFile]);
     expect(spy).toHaveBeenCalledWith('/path/to/changedFiles.txt', 'test.js\ntest.js\n');
   });
 });
+
+const changedFile: ChangedFile = {
+  sha: '',
+  filename: 'test.js',
+  status: 'renamed',
+  additions: 0,
+  deletions: 0,
+  changes: 1,
+  blob_url: '',
+  raw_url: '',
+  contents_url: ''
+};

@@ -1,5 +1,14 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationResonse, ChangedFile, QualityGate, VersionResponse } from '../helper/interfaces';
+import {
+  AnalyzedFile,
+  AnalyzedFiles,
+  Annotation,
+  AnnotationApiLink,
+  AnnotationResonse,
+  ChangedFile,
+  QualityGate,
+  VersionResponse
+} from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -60,8 +69,10 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);
 
+  let response: QualityGate | undefined = undefined;
+
   try {
-    const response = await httpRequest<QualityGate>(qualityGateUrl);
+    response = await httpRequest<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
     return response;
@@ -70,6 +81,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
     if (error instanceof Error) message = error.message;
     logger.exit(`There was an error retrieving the quality gates: ${message}`);
   }
+  return response;
 }
 
 /**
@@ -101,7 +113,7 @@ function getQualityGateUrl(url: string) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-export async function getAnnotations(apiLinks: any[]) {
+export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Annotation[]> {
   let annotations: Annotation[] = [];
   logger.header('Retrieving annotations.');
   try {
@@ -120,8 +132,10 @@ export async function getAnnotations(apiLinks: any[]) {
       })
     );
     logger.info('Retrieved all annotations.');
-  } catch (error: any) {
-    logger.exit(`An error occured when trying to retrieve annotations: ${error.message}`);
+  } catch (error: unknown) {
+    let message = 'reason unknown';
+    if (error instanceof Error) message = error.message;
+    logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
   }
   return annotations;
 }
@@ -137,7 +151,9 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));
     return response;
-  } catch (error: any) {
-    logger.exit(`There was an error retrieving the Viewer version: ${error.message}`);
+  } catch (error: unknown) {
+    let message = 'reason unknown';
+    if (error instanceof Error) message = error.message;
+    logger.exit(`There was an error retrieving the Viewer version: ${message}`);
   }
 }

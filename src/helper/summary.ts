@@ -10,7 +10,7 @@ import { logger } from './logger';
 export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
   const failedConditions = extractFailedConditions(qualityGate.gates);
 
-  summary.clear();
+  logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
   summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
   summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
@@ -33,6 +33,7 @@ export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], q
   }
 
   summary.addRaw(createFilesSummary(filesAnalyzed));
+  logger.info('Created summary.');
 
   return summary.stringify();
 }
@@ -54,7 +55,7 @@ function extractFailedConditions(gates: Gate[]): Condition[] {
  * @returns string containing the error summary.
  */
 export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '## TICS Quality Gate\r\n\r\n### :x: Failed';
+  let summary = '<h1>TICS Quality Gate</h1>\r\n\r\n### :x: Failed';
 
   if (errorList.length > 0) {
     summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
@@ -237,12 +238,14 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ann
   let previousPath = '';
 
   unpostableReviewComments.forEach(reviewComment => {
+    let path = reviewComment.path ? reviewComment.path : '';
+    let displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
     if (previousPath === '') {
-      body += `<table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
-    } else if (previousPath !== reviewComment.path) {
-      body += `</table><table><tr><th colspan='3'>${reviewComment.path}</th></tr>`;
+      body += `<table><tr><th colspan='3'>${path}</th></tr>`;
+    } else if (previousPath !== path) {
+      body += `</table><table><tr><th colspan='3'>${path}</th></tr>`;
     }
-    body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${reviewComment.displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';

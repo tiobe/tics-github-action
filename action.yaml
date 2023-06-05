@@ -63,6 +63,10 @@ inputs:
     description: Show the latest TICS annotations directly in the GitHub Pull Request review.
     required: false
     default: true
+  postToConversation:
+    description: Post the summary to the conversation page of the pull request. Options are `true` (default) or `false`.
+    required: false
+    default: true
   pullRequestApproval:
     description: Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between 2.0.0 and 2.5.0).
     required: false

@@ -11,6 +11,8 @@ import * as fetcher from '../src/tics/fetcher';
 import * as review from '../src/github/posting/review';
 import * as calling_annotations from '../src/github/calling/annotations';
 import * as posting_annotations from '../src/github/posting/annotations';
+import * as calling_comments from '../src/github/calling/comments';
+import * as posting_comments from '../src/github/posting/comments';
 
 import {
   analysisFailedNoUrl,
@@ -131,6 +133,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGateFailed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
@@ -148,6 +151,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGatePassed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
@@ -157,7 +161,7 @@ describe('SetFailed checks', () => {
   });
 });
 
-describe('postNothingAnalyzedReview', () => {
+describe('postNothingAnalyzed', () => {
   test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
@@ -166,6 +170,22 @@ describe('postNothingAnalyzedReview', () => {
 
     const spyReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
 
+    ticsConfig.pullRequestApproval = true;
+    await main.run();
+
+    expect(spyReview).toHaveBeenCalled();
+    expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
+  });
+
+  test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
+    (existsSync as any).mockReturnValueOnce(true);
+    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
+    jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
+
+    const spyReview = jest.spyOn(posting_comments, 'postNothingAnalyzedComment').mockImplementationOnce(() => Promise.resolve());
+
+    ticsConfig.pullRequestApproval = false;
     await main.run();
 
     expect(spyReview).toHaveBeenCalled();
@@ -182,6 +202,7 @@ describe('PostReview checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGateFailed);
+    jest.spyOn(calling_comments, 'getPostedComments').mockResolvedValue([]);
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
@@ -197,6 +218,7 @@ describe('PostReview checks', () => {
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(singleFileQualityGatePassed);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
@@ -214,6 +236,7 @@ describe('PostReview checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce([]);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -232,6 +255,7 @@ describe('PostReview checks', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -252,6 +276,7 @@ describe('DeletePreviousReviewComments check', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(doubleFileQualityGatePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(calling_annotations, 'getPostedReviewComments').mockImplementationOnce((): any => singlePreviousReviewComments);
+    jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
     const spyDelete = jest.spyOn(posting_annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());

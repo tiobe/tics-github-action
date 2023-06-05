@@ -7,7 +7,8 @@ jest.mock('../../src/configuration', () => {
       ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
       calc: 'GATE',
       pullRequestApproval: false,
-      secretsFilter: []
+      secretsFilter: [],
+      postToConversation: true
     },
     githubConfig: {
       repo: 'test',
@@ -30,7 +31,9 @@ jest.mock('../../src/configuration', () => {
           deleteReviewComment: jest.fn()
         },
         issues: {
-          createComment: jest.fn()
+          listComments: jest.fn(),
+          createComment: jest.fn(),
+          deleteComment: jest.fn()
         }
       }
     },
@@ -58,7 +61,8 @@ jest.mock('@actions/core', () => {
       clear: jest.fn(() => (summaryOutput = '')),
       stringify: jest.fn(() => {
         return summaryOutput;
-      })
+      }),
+      write: jest.fn(() => {})
     }
   };
 });

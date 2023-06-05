@@ -63,8 +63,8 @@ export interface AnnotationApiLink {
 export interface ReviewComment {
   title: string;
   body: string;
-  path: any;
-  line: any;
+  path?: string;
+  line: number;
 }
 
 export interface ReviewComments {
@@ -134,4 +134,15 @@ export interface VersionResponse {
   fullVersion?: string;
   projectName?: string;
   dbversion?: string;
+}
+
+export interface ArtifactsResponse {
+  links: Links;
+}
+
+export interface Links {
+  setPropPath: string;
+  queryArtifact: string;
+  uploadArtifact: string;
+  installTics?: string;
 }

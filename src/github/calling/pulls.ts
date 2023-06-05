@@ -37,7 +37,9 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
     logger.info('Retrieved changed files.');
     return response;
   } catch (error: unknown) {
-    logger.exit(`Could not retrieve the changed files: ${error}`);
+    let message = 'error unknown';
+    if (error instanceof Error) message = error.message;
+    logger.exit(`Could not retrieve the changed files: ${message}`);
   }
 }
 
@@ -46,7 +48,7 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
  * @param changedFiles List of changed files.
  * @returns Location of the written file.
  */
-export function changedFilesToFile(changedFiles: any[]): string {
+export function changedFilesToFile(changedFiles: ChangedFile[]): string {
   logger.header('Writing changedFiles to file');
 
   let contents = '';
