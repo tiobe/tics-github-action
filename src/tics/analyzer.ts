@@ -60,7 +60,7 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
  * @param fileListPath Path to changedFiles.txt.
  * @returns Command to run.
  */
-async function buildRunCommand(fileListPath: string) {
+async function buildRunCommand(fileListPath: string): Promise<string> {
   if (githubConfig.runnerOS === 'Linux') {
     return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
   }
@@ -70,12 +70,12 @@ async function buildRunCommand(fileListPath: string) {
 /**
  * Get the command to install TICS with.
  */
-async function getInstallTics() {
+async function getInstallTics(): Promise<string> {
   if (!ticsConfig.installTics) return '';
 
   const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
 
-  if (!installTicsUrl) return;
+  if (!installTicsUrl) return '';
 
   if (githubConfig.runnerOS === 'Linux') {
     let trustStrategy = '';
@@ -97,7 +97,7 @@ async function getInstallTics() {
  * Push warnings or errors to a list to summarize them on exit.
  * @param data stdout or stderr
  */
-function findInStdOutOrErr(data: string) {
+function findInStdOutOrErr(data: string): void {
   const error = data.toString().match(/\[ERROR.*/g);
   if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
 
@@ -105,7 +105,10 @@ function findInStdOutOrErr(data: string) {
   if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
-  if (!explorerUrl && findExplorerUrl) explorerUrl = viewerUrl + findExplorerUrl.slice(-1).pop();
+  if (!explorerUrl && findExplorerUrl) {
+    const urlPath = findExplorerUrl.slice(-1).pop();
+    if (urlPath) explorerUrl = viewerUrl + urlPath;
+  }
 }
 
 /**

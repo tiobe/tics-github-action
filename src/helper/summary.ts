@@ -7,12 +7,7 @@ import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
-export async function createSummaryBody(
-  analysis: Analysis,
-  filesAnalyzed: string[],
-  qualityGate: QualityGate,
-  reviewComments?: ReviewComments
-): Promise<string> {
+export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
   const failedConditions = extractFailedConditions(qualityGate.gates);
 
   logger.header('Creating summary.');

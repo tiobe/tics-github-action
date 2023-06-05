@@ -685,7 +685,7 @@ const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
-async function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
+function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
     const failedConditions = extractFailedConditions(qualityGate.gates);
     logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
@@ -995,7 +995,7 @@ async function getInstallTics() {
         return '';
     const installTicsUrl = await retrieveInstallTics(configuration_1.githubConfig.runnerOS.toLowerCase());
     if (!installTicsUrl)
-        return;
+        return '';
     if (configuration_1.githubConfig.runnerOS === 'Linux') {
         let trustStrategy = '';
         if (configuration_1.ticsConfig.trustStrategy === 'self-signed' || configuration_1.ticsConfig.trustStrategy === 'all') {
@@ -1024,8 +1024,11 @@ function findInStdOutOrErr(data) {
     if (warning && !warningList.find(w => w === warning?.toString()))
         warningList.push(warning.toString());
     const findExplorerUrl = data.match(/\/Explorer.*/g);
-    if (!explorerUrl && findExplorerUrl)
-        explorerUrl = configuration_1.viewerUrl + findExplorerUrl.slice(-1).pop();
+    if (!explorerUrl && findExplorerUrl) {
+        const urlPath = findExplorerUrl.slice(-1).pop();
+        if (urlPath)
+            explorerUrl = configuration_1.viewerUrl + urlPath;
+    }
 }
 /**
  * Retrieves the the TICS install url from the ticsConfiguration.
@@ -59199,13 +59202,14 @@ async function main() {
                     (0, annotations_1.postAnnotations)(reviewComments);
                 }
             }
-            let reviewBody = await (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
+            let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
             (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
             await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);
         }
-        core_1.summary.write();
+        // Write the summary made to the action summary.
+        await core_1.summary.write({ overwrite: true });
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {

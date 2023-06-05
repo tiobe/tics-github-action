@@ -81,7 +81,7 @@ async function main() {
         }
       }
 
-      let reviewBody = await createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
+      let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
 
       deletePreviousComments(await getPostedComments());
 
@@ -90,7 +90,8 @@ async function main() {
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
 
-    summary.write();
+    // Write the summary made to the action summary.
+    await summary.write({ overwrite: true });
     cliSummary(analysis);
   } catch (error: unknown) {
     throw error;

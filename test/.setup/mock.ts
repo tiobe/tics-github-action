@@ -61,7 +61,8 @@ jest.mock('@actions/core', () => {
       clear: jest.fn(() => (summaryOutput = '')),
       stringify: jest.fn(() => {
         return summaryOutput;
-      })
+      }),
+      write: jest.fn(() => {})
     }
   };
 });
