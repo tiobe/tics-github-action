@@ -16,7 +16,6 @@ export async function createSummaryBody(
   const failedConditions = extractFailedConditions(qualityGate.gates);
 
   logger.header('Creating summary.');
-  await summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
   summary.addHeading('TICS Quality Gate');
   summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
   summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);

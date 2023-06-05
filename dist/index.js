@@ -688,7 +688,6 @@ const logger_1 = __nccwpck_require__(6440);
 async function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
     const failedConditions = extractFailedConditions(qualityGate.gates);
     logger_1.logger.header('Creating summary.');
-    await core_1.summary.clear(); // leave this in, otherwise the summary won't be shown in GitHub
     core_1.summary.addHeading('TICS Quality Gate');
     core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
     core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
@@ -59206,6 +59205,7 @@ async function main() {
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);
         }
+        core_1.summary.write();
         (0, api_helper_1.cliSummary)(analysis);
     }
     catch (error) {

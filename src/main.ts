@@ -12,7 +12,7 @@ import { deletePreviousReviewComments, postAnnotations } from './github/posting/
 import { getPostedReviewComments } from './github/calling/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
-import { exportVariable } from '@actions/core';
+import { exportVariable, summary } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
 import { getPostedComments } from './github/calling/comments';
 
@@ -90,6 +90,7 @@ async function main() {
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
 
+    summary.write();
     cliSummary(analysis);
   } catch (error: unknown) {
     throw error;
