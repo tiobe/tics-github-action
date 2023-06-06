@@ -5,7 +5,7 @@ import { logger } from '../../helper/logger';
 import { readdirSync } from 'fs';
 import { join } from 'canonical-path';
 
-export async function uploadArtifact() {
+export async function uploadArtifact(): Promise<void> {
   const artifactClient = create();
 
   try {
@@ -23,7 +23,7 @@ export async function uploadArtifact() {
   }
 }
 
-export function getTmpDir() {
+export function getTmpDir(): string {
   if (ticsConfig.tmpDir) {
     return ticsConfig.tmpDir;
   } else if (githubConfig.debugger) {

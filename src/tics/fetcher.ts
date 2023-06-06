@@ -146,14 +146,15 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ann
  */
 export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   const getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
+  let response;
   try {
-    const response = await httpRequest<VersionResponse>(getViewerVersionUrl.href);
+    response = await httpRequest<VersionResponse>(getViewerVersionUrl.href);
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));
-    return response;
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
     logger.exit(`There was an error retrieving the Viewer version: ${message}`);
   }
+  return response;
 }

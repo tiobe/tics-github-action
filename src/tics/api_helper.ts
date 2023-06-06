@@ -23,7 +23,7 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
   switch (response.status) {
     case 200:
-      return <T>response.json();
+      return <T>(<unknown>response.json());
     case 302:
       logger.exit(
         `HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
@@ -47,6 +47,7 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
       logger.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
       break;
   }
+  return;
 }
 
 /**

@@ -92,7 +92,7 @@ async function main() {
     }
 
     if (ticsConfig.tmpDir || githubConfig.debugger) {
-      uploadArtifact();
+      await uploadArtifact();
     }
 
     // Write the summary made to the action summary.

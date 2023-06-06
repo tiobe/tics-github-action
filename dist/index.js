@@ -263,9 +263,10 @@ async function getChangedFiles() {
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber
     };
+    let response;
     try {
         logger_1.logger.header('Retrieving changed files.');
-        const response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             return response.data
                 .filter(item => {
                 if (item.status === 'renamed') {
@@ -284,7 +285,6 @@ async function getChangedFiles() {
             });
         });
         logger_1.logger.info('Retrieved changed files.');
-        return response;
     }
     catch (error) {
         let message = 'error unknown';
@@ -292,6 +292,7 @@ async function getChangedFiles() {
             message = error.message;
         logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
     }
+    return response;
 }
 exports.getChangedFiles = getChangedFiles;
 /**
@@ -1198,6 +1199,7 @@ async function httpRequest(url) {
             logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
             break;
     }
+    return;
 }
 exports.httpRequest = httpRequest;
 /**
@@ -1408,11 +1410,11 @@ exports.getAnnotations = getAnnotations;
  */
 async function getViewerVersion() {
     const getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
+    let response;
     try {
-        const response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
+        response = await (0, api_helper_1.httpRequest)(getViewerVersionUrl.href);
         logger_1.logger.info('Retrieved the Viewer Version.');
         logger_1.logger.debug(JSON.stringify(response));
-        return response;
     }
     catch (error) {
         let message = 'reason unknown';
@@ -1420,6 +1422,7 @@ async function getViewerVersion() {
             message = error.message;
         logger_1.logger.exit(`There was an error retrieving the Viewer version: ${message}`);
     }
+    return response;
 }
 exports.getViewerVersion = getViewerVersion;
 
@@ -66015,7 +66018,7 @@ async function main() {
                 logger_1.logger.setFailed(qualityGate.message);
         }
         if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
-            (0, artifacts_1.uploadArtifact)();
+            await (0, artifacts_1.uploadArtifact)();
         }
         // Write the summary made to the action summary.
         await core_1.summary.write({ overwrite: true });

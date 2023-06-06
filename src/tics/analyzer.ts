@@ -3,7 +3,6 @@ import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 import { Analysis, ArtifactsResponse } from '../helper/interfaces';
-import { tmpdir } from 'os';
 import { getTmpDir } from '../github/artifacts/artifacts';
 
 let errorList: string[] = [];
