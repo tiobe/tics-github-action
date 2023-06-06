@@ -91,7 +91,7 @@ async function main() {
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
 
-    if (githubConfig.debugger) {
+    if (ticsConfig.tmpDir || githubConfig.debugger) {
       uploadArtifact();
     }
 

@@ -119,7 +119,7 @@ async function uploadArtifact() {
     const artifactClient = (0, artifact_1.create)();
     try {
         logger_1.logger.header('Uploading artifact');
-        const tmpDir = getTmpDir();
+        const tmpDir = getTmpDir() + '/ticstmpdir';
         const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
         if (response.failedItems.length > 0) {
             logger_1.logger.debug(`Failed to upload artifact: ${response.failedItems.join(', ')}`);
@@ -138,7 +138,7 @@ function getTmpDir() {
         return configuration_1.ticsConfig.tmpDir;
     }
     else if (configuration_1.githubConfig.debugger) {
-        return `${(0, os_1.tmpdir)()}/ticstmpdir`;
+        return `${(0, os_1.tmpdir)()}/tics`;
     }
     else {
         return '';
@@ -66014,7 +66014,7 @@ async function main() {
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);
         }
-        if (configuration_1.githubConfig.debugger) {
+        if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
             (0, artifacts_1.uploadArtifact)();
         }
         // Write the summary made to the action summary.

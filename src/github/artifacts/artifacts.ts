@@ -10,7 +10,7 @@ export async function uploadArtifact() {
 
   try {
     logger.header('Uploading artifact');
-    const tmpDir = getTmpDir();
+    const tmpDir = getTmpDir() + '/ticstmpdir';
     const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
 
     if (response.failedItems.length > 0) {
@@ -27,7 +27,7 @@ export function getTmpDir() {
   if (ticsConfig.tmpDir) {
     return ticsConfig.tmpDir;
   } else if (githubConfig.debugger) {
-    return `${tmpdir()}/ticstmpdir`;
+    return `${tmpdir()}/tics`;
   } else {
     return '';
   }
