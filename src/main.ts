@@ -15,6 +15,7 @@ import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
 import { getPostedComments } from './github/calling/comments';
+import { uploadArtifact } from './github/artifacts/artifacts';
 
 run().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
@@ -88,6 +89,10 @@ async function main() {
       await postToConversation(true, reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
 
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
+    }
+
+    if (githubConfig.debugger) {
+      uploadArtifact();
     }
 
     // Write the summary made to the action summary.
