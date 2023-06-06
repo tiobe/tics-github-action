@@ -113,11 +113,14 @@ const os_1 = __nccwpck_require__(2037);
 const configuration_1 = __nccwpck_require__(5527);
 const artifact_1 = __nccwpck_require__(2605);
 const logger_1 = __nccwpck_require__(6440);
+const fs_1 = __nccwpck_require__(7147);
+const canonical_path_1 = __nccwpck_require__(5806);
 async function uploadArtifact() {
     const artifactClient = (0, artifact_1.create)();
     try {
         logger_1.logger.header('Uploading artifact');
-        const response = await artifactClient.uploadArtifact('ticstmpdir', [getTmpDir()], '.');
+        const tmpDir = getTmpDir();
+        const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
         if (response.failedItems.length > 0) {
             logger_1.logger.debug(`Failed to upload artifact: ${response.failedItems.join(', ')}`);
         }
@@ -142,6 +145,25 @@ function getTmpDir() {
     }
 }
 exports.getTmpDir = getTmpDir;
+function getFilesInFolder(directory) {
+    const files = [];
+    function traverseDirectory(dir) {
+        const entries = (0, fs_1.readdirSync)(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = (0, canonical_path_1.join)(dir, entry.name);
+            if (entry.isDirectory()) {
+                // Recursively traverse subdirectories
+                traverseDirectory(fullPath);
+            }
+            else {
+                // Add file path to the list
+                files.push(fullPath);
+            }
+        }
+    }
+    traverseDirectory(directory);
+    return files;
+}
 
 
 /***/ }),
