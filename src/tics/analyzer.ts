@@ -3,6 +3,7 @@ import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { getInstallTicsApiUrl, httpRequest } from './api_helper';
 import { Analysis, ArtifactsResponse } from '../helper/interfaces';
+import { getTmpDir } from '../github/artifacts/artifacts';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -153,7 +154,7 @@ function getTicsCommand(fileListPath: string) {
     execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
     execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
     execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
-    execString += ticsConfig.tmpDir ? `-tmpdir '${ticsConfig.tmpDir}' ` : '';
+    execString += ticsConfig.tmpDir || githubConfig.debugger ? `-tmpdir '${getTmpDir()}' ` : '';
   }
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
   // Add TICS debug flag when in debug mode, if this flag was not already set.

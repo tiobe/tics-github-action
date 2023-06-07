@@ -14,9 +14,10 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber
   };
+  let response;
   try {
     logger.header('Retrieving changed files.');
-    const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
+    response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return response.data
         .filter(item => {
           if (item.status === 'renamed') {
@@ -35,12 +36,12 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
         });
     });
     logger.info('Retrieved changed files.');
-    return response;
   } catch (error: unknown) {
     let message = 'error unknown';
     if (error instanceof Error) message = error.message;
     logger.exit(`Could not retrieve the changed files: ${message}`);
   }
+  return response;
 }
 
 /**
