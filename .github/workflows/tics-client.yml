@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.5.2
+        uses: actions/setup-node@v3.6.0
       - run: npm ci
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
