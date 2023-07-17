@@ -79,6 +79,7 @@ exports.ticsConfig = {
     codetype: (0, core_1.getInput)('codetype'),
     calc: (0, core_1.getInput)('calc'),
     excludeMovedFiles: (0, core_1.getBooleanInput)('excludeMovedFiles'),
+    filelist: (0, core_1.getInput)('filelist'),
     hostnameVerification: (0, core_1.getInput)('hostnameVerification'),
     installTics: (0, core_1.getBooleanInput)('installTics'),
     mode: (0, core_1.getInput)('mode'),
@@ -248,7 +249,7 @@ exports.getPostedComments = getPostedComments;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.changedFilesToFile = exports.getChangedFiles = void 0;
+exports.filelistToList = exports.changedFilesToFile = exports.getChangedFiles = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __nccwpck_require__(6440);
@@ -312,6 +313,23 @@ function changedFilesToFile(changedFiles) {
     return fileListPath;
 }
 exports.changedFilesToFile = changedFilesToFile;
+/**
+ * Takes a filelist file and turns it into an array of files.
+ * @param filelist Path of the file containing the filelist.
+ * @returns Filelist as an array.
+ */
+function filelistToList(filelist) {
+    try {
+        let files = (0, fs_1.readFileSync)(filelist).toString().split(/\r?\n/);
+        return files.map((file) => {
+            return { filename: file };
+        });
+    }
+    catch (error) {
+        throw error;
+    }
+}
+exports.filelistToList = filelistToList;
 
 
 /***/ }),
@@ -65932,7 +65950,7 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configure = exports.run = void 0;
+exports.configure = exports.main = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const comments_1 = __nccwpck_require__(6587);
 const configuration_1 = __nccwpck_require__(5527);
@@ -65950,35 +65968,42 @@ const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
 const comments_2 = __nccwpck_require__(4822);
 const artifacts_1 = __nccwpck_require__(5647);
-run().catch((error) => {
+main().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
         message = error.message;
     logger_1.logger.exit(message);
 });
 // exported for testing purposes
-async function run() {
+async function main() {
     configure();
     const message = await meetsPrerequisites();
     if (message)
         return logger_1.logger.exit(message);
-    await main();
+    await run();
 }
-exports.run = run;
-async function main() {
+exports.main = main;
+async function run() {
     try {
         let analysis;
         if (configuration_1.ticsConfig.mode === 'diagnostic') {
-            logger_1.logger.header('Running action in diagnostic mode');
-            analysis = await (0, analyzer_1.runTicsAnalyzer)('');
-            if (analysis.statusCode !== 0)
-                logger_1.logger.setFailed('Diagnostic run has failed.');
+            analysis = await diagnosticAnalysis();
         }
         else {
-            const changedFiles = await (0, pulls_1.getChangedFiles)();
-            if (!changedFiles || changedFiles.length <= 0)
-                return logger_1.logger.info('No changed files found to analyze.');
-            const changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+            let changedFilesFilePath = undefined;
+            let changedFiles = undefined;
+            if (configuration_1.ticsConfig.filelist) {
+                changedFilesFilePath = configuration_1.ticsConfig.filelist;
+                changedFiles = (0, pulls_1.filelistToList)(changedFilesFilePath);
+            }
+            else {
+                changedFiles = await (0, pulls_1.getChangedFiles)();
+                if (!changedFiles || changedFiles.length <= 0) {
+                    logger_1.logger.info('No changed files found to analyze.');
+                    return;
+                }
+                changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
+            }
             analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
             if (!analysis.explorerUrl) {
                 if (!analysis.completed) {
@@ -65999,11 +66024,14 @@ async function main() {
             const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
             if (!qualityGate)
                 return logger_1.logger.exit('Quality gate could not be retrieved');
-            let reviewComments;
-            const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
-            if (previousReviewComments && previousReviewComments.length > 0) {
-                (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+            // If not run on a pull request no review comments have to be deleted
+            if (configuration_1.githubConfig.eventName === 'pull_request') {
+                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+                if (previousReviewComments && previousReviewComments.length > 0) {
+                    (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
+                }
             }
+            let reviewComments;
             if (configuration_1.ticsConfig.postAnnotations) {
                 const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
                 if (annotations && annotations.length > 0) {
@@ -66012,8 +66040,12 @@ async function main() {
                 }
             }
             let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
-            (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
-            await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
+            // If not run on a pull request no comments have to be deleted
+            // and there is no conversation to post to.
+            if (configuration_1.githubConfig.eventName === 'pull_request') {
+                (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
+                await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
+            }
             if (!qualityGate.passed)
                 logger_1.logger.setFailed(qualityGate.message);
         }
@@ -66027,6 +66059,18 @@ async function main() {
     catch (error) {
         throw error;
     }
+}
+/**
+ * Function for running the action in diagnostic mode.
+ * @returns Analysis result from a diagnostic run.
+ */
+async function diagnosticAnalysis() {
+    logger_1.logger.header('Running action in diagnostic mode');
+    let analysis = await (0, analyzer_1.runTicsAnalyzer)('');
+    if (analysis.statusCode !== 0) {
+        logger_1.logger.setFailed('Diagnostic run has failed.');
+    }
+    return analysis;
 }
 /**
  * Function to combine the posting to conversation in a single location.
@@ -66101,8 +66145,8 @@ async function meetsPrerequisites() {
     else if (configuration_1.ticsConfig.mode === 'diagnostic') {
         // No need for pull_request and checked out repository.
     }
-    else if (configuration_1.githubConfig.eventName !== 'pull_request') {
-        message = 'This action can only run on pull requests.';
+    else if (configuration_1.githubConfig.eventName !== 'pull_request' && !configuration_1.ticsConfig.filelist) {
+        message = 'If the the action is run outside a pull request it should be run with a filelist.';
     }
     else if (!isCheckedOut()) {
         message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';

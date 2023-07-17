@@ -49,6 +49,7 @@ export const ticsConfig = {
   codetype: getInput('codetype'),
   calc: getInput('calc'),
   excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
+  filelist: getInput('filelist'),
   hostnameVerification: getInput('hostnameVerification'),
   installTics: getBooleanInput('installTics'),
   mode: getInput('mode'),

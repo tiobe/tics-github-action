@@ -73,15 +73,15 @@ export interface ReviewComments {
 }
 
 export interface ChangedFile {
-  sha: string;
+  sha?: string;
   filename: string;
-  status: 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged';
-  additions: number;
-  deletions: number;
-  changes: number;
-  blob_url: string;
-  raw_url: string;
-  contents_url: string;
+  status?: 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged';
+  additions?: number;
+  deletions?: number;
+  changes?: number;
+  blob_url?: string;
+  raw_url?: string;
+  contents_url?: string;
   patch?: string | undefined;
   previous_filename?: string | undefined;
 }

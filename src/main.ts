@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment } from './github/posting/comments';
 import { githubConfig, ticsConfig } from './configuration';
-import { changedFilesToFile, getChangedFiles } from './github/calling/pulls';
+import { changedFilesToFile, filelistToList, getChangedFiles } from './github/calling/pulls';
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
@@ -17,35 +17,45 @@ import { Analysis, ReviewComments } from './helper/interfaces';
 import { getPostedComments } from './github/calling/comments';
 import { uploadArtifact } from './github/artifacts/artifacts';
 
-run().catch((error: unknown) => {
+main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
   if (error instanceof Error) message = error.message;
   logger.exit(message);
 });
 
 // exported for testing purposes
-export async function run(): Promise<void> {
+export async function main(): Promise<void> {
   configure();
 
   const message = await meetsPrerequisites();
   if (message) return logger.exit(message);
 
-  await main();
+  await run();
 }
 
-async function main() {
+async function run() {
   try {
     let analysis: Analysis | undefined;
 
     if (ticsConfig.mode === 'diagnostic') {
-      logger.header('Running action in diagnostic mode');
-      analysis = await runTicsAnalyzer('');
-      if (analysis.statusCode !== 0) logger.setFailed('Diagnostic run has failed.');
+      analysis = await diagnosticAnalysis();
     } else {
-      const changedFiles = await getChangedFiles();
-      if (!changedFiles || changedFiles.length <= 0) return logger.info('No changed files found to analyze.');
+      let changedFilesFilePath = undefined;
+      let changedFiles = undefined;
 
-      const changedFilesFilePath = changedFilesToFile(changedFiles);
+      if (ticsConfig.filelist) {
+        changedFilesFilePath = ticsConfig.filelist;
+        changedFiles = filelistToList(changedFilesFilePath);
+      } else {
+        changedFiles = await getChangedFiles();
+        if (!changedFiles || changedFiles.length <= 0) {
+          logger.info('No changed files found to analyze.');
+          return;
+        }
+
+        changedFilesFilePath = changedFilesToFile(changedFiles);
+      }
+
       analysis = await runTicsAnalyzer(changedFilesFilePath);
 
       if (!analysis.explorerUrl) {
@@ -67,13 +77,15 @@ async function main() {
 
       if (!qualityGate) return logger.exit('Quality gate could not be retrieved');
 
-      let reviewComments: ReviewComments | undefined;
-
-      const previousReviewComments = await getPostedReviewComments();
-      if (previousReviewComments && previousReviewComments.length > 0) {
-        deletePreviousReviewComments(previousReviewComments);
+      // If not run on a pull request no review comments have to be deleted
+      if (githubConfig.eventName === 'pull_request') {
+        const previousReviewComments = await getPostedReviewComments();
+        if (previousReviewComments && previousReviewComments.length > 0) {
+          deletePreviousReviewComments(previousReviewComments);
+        }
       }
 
+      let reviewComments: ReviewComments | undefined;
       if (ticsConfig.postAnnotations) {
         const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
@@ -84,9 +96,13 @@ async function main() {
 
       let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
 
-      deletePreviousComments(await getPostedComments());
+      // If not run on a pull request no comments have to be deleted
+      // and there is no conversation to post to.
+      if (githubConfig.eventName === 'pull_request') {
+        deletePreviousComments(await getPostedComments());
 
-      await postToConversation(true, reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+        await postToConversation(true, reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+      }
 
       if (!qualityGate.passed) logger.setFailed(qualityGate.message);
     }
@@ -101,6 +117,20 @@ async function main() {
   } catch (error: unknown) {
     throw error;
   }
+}
+
+/**
+ * Function for running the action in diagnostic mode.
+ * @returns Analysis result from a diagnostic run.
+ */
+async function diagnosticAnalysis(): Promise<Analysis> {
+  logger.header('Running action in diagnostic mode');
+  let analysis = await runTicsAnalyzer('');
+  if (analysis.statusCode !== 0) {
+    logger.setFailed('Diagnostic run has failed.');
+  }
+
+  return analysis;
 }
 
 /**
@@ -179,8 +209,8 @@ async function meetsPrerequisites(): Promise<string | undefined> {
     message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for pull_request and checked out repository.
-  } else if (githubConfig.eventName !== 'pull_request') {
-    message = 'This action can only run on pull requests.';
+  } else if (githubConfig.eventName !== 'pull_request' && !ticsConfig.filelist) {
+    message = 'If the the action is run outside a pull request it should be run with a filelist.';
   } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
   }

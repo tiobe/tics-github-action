@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 import { logger } from '../../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../../configuration';
@@ -63,4 +63,20 @@ export function changedFilesToFile(changedFiles: ChangedFile[]): string {
   logger.info(`Content written to: ${fileListPath}`);
 
   return fileListPath;
+}
+
+/**
+ * Takes a filelist file and turns it into an array of files.
+ * @param filelist Path of the file containing the filelist.
+ * @returns Filelist as an array.
+ */
+export function filelistToList(filelist: string): ChangedFile[] {
+  try {
+    let files = readFileSync(filelist).toString().split(/\r?\n/);
+    return files.map((file: string) => {
+      return { filename: file };
+    });
+  } catch (error: unknown) {
+    throw error;
+  }
 }
