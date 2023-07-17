@@ -12,6 +12,7 @@ export const githubConfig = {
   basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+  commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
   pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
@@ -23,7 +24,6 @@ function getPullRequestNumber() {
   } else if (process.env.PULL_REQUEST_NUMBER) {
     return parseInt(process.env.PULL_REQUEST_NUMBER);
   } else {
-    warning('Pull request number could not be found');
     return 0;
   }
 }

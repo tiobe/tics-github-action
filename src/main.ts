@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment } from './github/posting/comments';
 import { githubConfig, ticsConfig } from './configuration';
-import { changedFilesToFile, filelistToList, getChangedFiles } from './github/calling/pulls';
+import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/calling/pulls';
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
@@ -16,6 +16,7 @@ import { exportVariable, summary } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
 import { getPostedComments } from './github/calling/comments';
 import { uploadArtifact } from './github/artifacts/artifacts';
+import { getChangedFilesOfCommit } from './github/calling/commits';
 
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
@@ -45,14 +46,18 @@ async function run() {
 
       if (ticsConfig.filelist) {
         changedFilesFilePath = ticsConfig.filelist;
-        changedFiles = filelistToList(changedFilesFilePath);
+
+        if (githubConfig.eventName === 'pull_request') {
+          changedFiles = await getChangedFilesOfPullRequest();
+        } else {
+          changedFiles = await getChangedFilesOfCommit();
+        }
       } else {
-        changedFiles = await getChangedFiles();
-        if (!changedFiles || changedFiles.length <= 0) {
+        changedFiles = await getChangedFilesOfPullRequest();
+        if (changedFiles.length <= 0) {
           logger.info('No changed files found to analyze.');
           return;
         }
-
         changedFilesFilePath = changedFilesToFile(changedFiles);
       }
 

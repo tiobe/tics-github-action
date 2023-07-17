@@ -70,7 +70,7 @@ describe('pre checks', () => {
 describe('SetFailed checks', () => {
   test('Should call info if no files are found', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce([]);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce([]);
 
     const spyInfo = jest.spyOn(logger, 'info');
 
@@ -82,7 +82,7 @@ describe('SetFailed checks', () => {
 
   test('Should call setFailed if no Explorer URL and analysis failed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
@@ -96,7 +96,7 @@ describe('SetFailed checks', () => {
 
   test('Should call setFailed if no Explorer URL and analysis passed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrl);
 
@@ -112,7 +112,7 @@ describe('SetFailed checks', () => {
 
   test('Should call exit if analysis passed and quality gate undefined', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce([]);
@@ -129,7 +129,7 @@ describe('SetFailed checks', () => {
 
   test('Should call setFailed if analysis passed and quality gate failed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
@@ -147,7 +147,7 @@ describe('SetFailed checks', () => {
 
   test('Should not call setFailed if analysis passed and quality gate passed', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
@@ -166,7 +166,7 @@ describe('SetFailed checks', () => {
 describe('postNothingAnalyzed', () => {
   test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
 
@@ -181,7 +181,7 @@ describe('postNothingAnalyzed', () => {
 
   test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
 
@@ -199,7 +199,7 @@ describe('PostReview checks', () => {
   test('Should call postReview with one file analyzed, qualitygate failed and no annotations', async () => {
     ticsConfig.pullRequestApproval = true;
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
@@ -215,7 +215,7 @@ describe('PostReview checks', () => {
 
   test('Should call postReview with one file analyzed, qualitygate passed and no annotations', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(singleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(singleAnalyzedFiles);
@@ -231,7 +231,7 @@ describe('PostReview checks', () => {
 
   test('Should call postReview when postAnnotations is true with no annotations and no previously posted review comments', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(doubleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(doubleAnalyzedFiles);
@@ -250,7 +250,7 @@ describe('PostReview checks', () => {
 
   test('Should call postReview when postAnnotations is true with one annotation and no previously posted review comment', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(doubleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(doubleAnalyzedFiles);
@@ -271,7 +271,7 @@ describe('PostReview checks', () => {
 describe('DeletePreviousReviewComments check', () => {
   test('Should call deletePreviousReviewComments when postAnnotations is true with one annotation and one previously posted review comment', async () => {
     (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFiles').mockResolvedValueOnce(doubleChangedFiles);
+    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(doubleAnalyzedFiles);

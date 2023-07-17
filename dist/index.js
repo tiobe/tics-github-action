@@ -44,6 +44,7 @@ exports.githubConfig = {
     basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
+    commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
     pullRequestNumber: getPullRequestNumber(),
     debugger: (0, core_1.isDebug)()
@@ -56,7 +57,6 @@ function getPullRequestNumber() {
         return parseInt(process.env.PULL_REQUEST_NUMBER);
     }
     else {
-        (0, core_1.warning)('Pull request number could not be found');
         return 0;
     }
 }
@@ -243,13 +243,72 @@ exports.getPostedComments = getPostedComments;
 
 /***/ }),
 
+/***/ 2797:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getChangedFilesOfCommit = void 0;
+const canonical_path_1 = __nccwpck_require__(5806);
+const logger_1 = __nccwpck_require__(6440);
+const configuration_1 = __nccwpck_require__(5527);
+/**
+ * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
+ * @returns List of changed files within the GitHub Pull request.
+ */
+async function getChangedFilesOfCommit() {
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        ref: configuration_1.githubConfig.commitSha
+    };
+    let response = [];
+    try {
+        logger_1.logger.header('Retrieving changed files.');
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.repos.getCommit, params, response => {
+            if (response.data.files) {
+                return response.data.files
+                    .filter(item => {
+                    if (item.status === 'renamed') {
+                        // If a files has been moved without changes or if moved files are excluded, exclude them.
+                        if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                    .map(item => {
+                    // If a file is moved or renamed the status is 'renamed'.
+                    item.filename = (0, canonical_path_1.normalize)(item.filename);
+                    logger_1.logger.debug(item.filename);
+                    return item;
+                });
+            }
+            return [];
+        });
+        logger_1.logger.info('Retrieved changed files.');
+    }
+    catch (error) {
+        let message = 'error unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
+    }
+    return response;
+}
+exports.getChangedFilesOfCommit = getChangedFilesOfCommit;
+
+
+/***/ }),
+
 /***/ 5857:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.filelistToList = exports.changedFilesToFile = exports.getChangedFiles = void 0;
+exports.changedFilesToFile = exports.getChangedFilesOfPullRequest = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __nccwpck_require__(6440);
@@ -258,17 +317,17 @@ const configuration_1 = __nccwpck_require__(5527);
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
-async function getChangedFiles() {
+async function getChangedFilesOfPullRequest() {
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
         pull_number: configuration_1.githubConfig.pullRequestNumber
     };
-    let response;
+    let response = [];
     try {
         logger_1.logger.header('Retrieving changed files.');
         response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
-            return response.data
+            let files = response.data
                 .filter(item => {
                 if (item.status === 'renamed') {
                     // If a files has been moved without changes or if moved files are excluded, exclude them.
@@ -284,6 +343,7 @@ async function getChangedFiles() {
                 logger_1.logger.debug(item.filename);
                 return item;
             });
+            return files ? files : [];
         });
         logger_1.logger.info('Retrieved changed files.');
     }
@@ -295,7 +355,7 @@ async function getChangedFiles() {
     }
     return response;
 }
-exports.getChangedFiles = getChangedFiles;
+exports.getChangedFilesOfPullRequest = getChangedFilesOfPullRequest;
 /**
  * Creates a file containing all the changed files based on the given changedFiles.
  * @param changedFiles List of changed files.
@@ -313,23 +373,6 @@ function changedFilesToFile(changedFiles) {
     return fileListPath;
 }
 exports.changedFilesToFile = changedFilesToFile;
-/**
- * Takes a filelist file and turns it into an array of files.
- * @param filelist Path of the file containing the filelist.
- * @returns Filelist as an array.
- */
-function filelistToList(filelist) {
-    try {
-        let files = (0, fs_1.readFileSync)(filelist).toString().split(/\r?\n/);
-        return files.map((file) => {
-            return { filename: file };
-        });
-    }
-    catch (error) {
-        throw error;
-    }
-}
-exports.filelistToList = filelistToList;
 
 
 /***/ }),
@@ -65968,6 +66011,7 @@ const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
 const comments_2 = __nccwpck_require__(4822);
 const artifacts_1 = __nccwpck_require__(5647);
+const commits_1 = __nccwpck_require__(2797);
 main().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
@@ -65994,11 +66038,16 @@ async function run() {
             let changedFiles = undefined;
             if (configuration_1.ticsConfig.filelist) {
                 changedFilesFilePath = configuration_1.ticsConfig.filelist;
-                changedFiles = (0, pulls_1.filelistToList)(changedFilesFilePath);
+                if (configuration_1.githubConfig.eventName === 'pull_request') {
+                    changedFiles = await (0, pulls_1.getChangedFilesOfPullRequest)();
+                }
+                else {
+                    changedFiles = await (0, commits_1.getChangedFilesOfCommit)();
+                }
             }
             else {
-                changedFiles = await (0, pulls_1.getChangedFiles)();
-                if (!changedFiles || changedFiles.length <= 0) {
+                changedFiles = await (0, pulls_1.getChangedFilesOfPullRequest)();
+                if (changedFiles.length <= 0) {
                     logger_1.logger.info('No changed files found to analyze.');
                     return;
                 }

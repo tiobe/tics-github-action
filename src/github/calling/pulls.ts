@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 import { logger } from '../../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../../configuration';
@@ -8,17 +8,17 @@ import { ChangedFile } from '../../helper/interfaces';
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
-export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
+export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber
   };
-  let response;
+  let response: ChangedFile[] = [];
   try {
     logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
-      return response.data
+      let files = response.data
         .filter(item => {
           if (item.status === 'renamed') {
             // If a files has been moved without changes or if moved files are excluded, exclude them.
@@ -34,6 +34,8 @@ export async function getChangedFiles(): Promise<ChangedFile[] | undefined> {
           logger.debug(item.filename);
           return item;
         });
+
+      return files ? files : [];
     });
     logger.info('Retrieved changed files.');
   } catch (error: unknown) {
@@ -63,20 +65,4 @@ export function changedFilesToFile(changedFiles: ChangedFile[]): string {
   logger.info(`Content written to: ${fileListPath}`);
 
   return fileListPath;
-}
-
-/**
- * Takes a filelist file and turns it into an array of files.
- * @param filelist Path of the file containing the filelist.
- * @returns Filelist as an array.
- */
-export function filelistToList(filelist: string): ChangedFile[] {
-  try {
-    let files = readFileSync(filelist).toString().split(/\r?\n/);
-    return files.map((file: string) => {
-      return { filename: file };
-    });
-  } catch (error: unknown) {
-    throw error;
-  }
 }
