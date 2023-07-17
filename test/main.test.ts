@@ -2,17 +2,15 @@ import { existsSync } from 'fs';
 
 import { githubConfig, ticsConfig } from '../src/configuration';
 import { Events } from '../src/helper/enums';
-import * as main from '../src/main';
 import { logger } from '../src/helper/logger';
 
-import * as pulls from '../src/github/calling/pulls';
+import * as main from '../src/main';
+import * as pulls from '../src/github/pulls';
 import * as analyzer from '../src/tics/analyzer';
 import * as fetcher from '../src/tics/fetcher';
-import * as review from '../src/github/posting/review';
-import * as calling_annotations from '../src/github/calling/annotations';
-import * as posting_annotations from '../src/github/posting/annotations';
-import * as calling_comments from '../src/github/calling/comments';
-import * as posting_comments from '../src/github/posting/comments';
+import * as review from '../src/github/review';
+import * as calling_annotations from '../src/github/annotations';
+import * as calling_comments from '../src/github/comments';
 
 import {
   analysisFailedNoUrl,
@@ -185,7 +183,7 @@ describe('postNothingAnalyzed', () => {
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
 
-    const spyReview = jest.spyOn(posting_comments, 'postNothingAnalyzedComment').mockImplementationOnce(() => Promise.resolve());
+    const spyReview = jest.spyOn(calling_comments, 'postNothingAnalyzedComment').mockImplementationOnce(() => Promise.resolve());
 
     ticsConfig.pullRequestApproval = false;
     await main.main();
@@ -281,7 +279,7 @@ describe('DeletePreviousReviewComments check', () => {
     jest.spyOn(calling_comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     ticsConfig.postAnnotations = true;
-    const spyDelete = jest.spyOn(posting_annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());
+    const spyDelete = jest.spyOn(calling_annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());
 
     await main.main();
 

@@ -1,22 +1,20 @@
 import { existsSync } from 'fs';
-import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment } from './github/posting/comments';
+import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment, getPostedComments } from './github/comments';
 import { githubConfig, ticsConfig } from './configuration';
-import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/calling/pulls';
+import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls';
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
-import { postNothingAnalyzedReview, postReview } from './github/posting/review';
+import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody, createReviewComments } from './helper/summary';
-import { deletePreviousReviewComments, postAnnotations } from './github/posting/annotations';
-import { getPostedReviewComments } from './github/calling/annotations';
+import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
-import { getPostedComments } from './github/calling/comments';
-import { uploadArtifact } from './github/artifacts/artifacts';
-import { getChangedFilesOfCommit } from './github/calling/commits';
+import { uploadArtifact } from './github/artifacts';
+import { getChangedFilesOfCommit } from './github/commits';
 
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';

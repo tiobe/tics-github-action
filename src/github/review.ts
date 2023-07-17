@@ -1,7 +1,7 @@
-import { logger } from '../../helper/logger';
-import { githubConfig, octokit } from '../../configuration';
-import { Events, Status } from '../../helper/enums';
-import { generateStatusMarkdown } from '../../helper/markdown';
+import { logger } from '../helper/logger';
+import { githubConfig, octokit } from '../configuration';
+import { Events, Status } from '../helper/enums';
+import { generateStatusMarkdown } from '../helper/markdown';
 
 /**
  * Create review on the pull request from the analysis given.

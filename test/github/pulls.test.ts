@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import { resolve } from 'canonical-path';
-import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../../src/github/calling/pulls';
-import { octokit, ticsConfig } from '../../../src/configuration';
-import { logger } from '../../../src/helper/logger';
-import { ChangedFile } from '../../../src/helper/interfaces';
+import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../src/github/pulls';
+import { octokit, ticsConfig } from '../../src/configuration';
+import { logger } from '../../src/helper/logger';
+import { changedFile } from './objects/pulls';
 
 describe('getChangedFilesOfPullRequest', () => {
   test('Should return single file on getChangedFilesOfPullRequest', async () => {
@@ -100,15 +100,3 @@ describe('changedFilesToFile', () => {
     expect(spy).toHaveBeenCalledWith('/path/to/changedFiles.txt', 'test.js\ntest.js\n');
   });
 });
-
-const changedFile: ChangedFile = {
-  sha: '',
-  filename: 'test.js',
-  status: 'renamed',
-  additions: 0,
-  deletions: 0,
-  changes: 1,
-  blob_url: '',
-  raw_url: '',
-  contents_url: ''
-};

@@ -103,7 +103,86 @@ exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.
 
 /***/ }),
 
-/***/ 5647:
+/***/ 1058:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.deletePreviousReviewComments = exports.postAnnotations = exports.getPostedReviewComments = void 0;
+const logger_1 = __nccwpck_require__(6440);
+const configuration_1 = __nccwpck_require__(5527);
+/**
+ * Gets a list of all reviews posted on the pull request.
+ * @returns List of reviews posted on the pull request.
+ */
+async function getPostedReviewComments() {
+    let response = [];
+    try {
+        logger_1.logger.info('Retrieving posted review comments.');
+        const params = {
+            owner: configuration_1.githubConfig.owner,
+            repo: configuration_1.githubConfig.reponame,
+            pull_number: configuration_1.githubConfig.pullRequestNumber
+        };
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
+    }
+    catch (error) {
+        let message = 'reason unkown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.error(`Could not retrieve the review comments: ${message}`);
+    }
+    return response;
+}
+exports.getPostedReviewComments = getPostedReviewComments;
+/**
+ * Deletes the review comments of previous runs.
+ * @param postedReviewComments Previously posted review comments.
+ */
+function postAnnotations(reviewComments) {
+    logger_1.logger.header('Posting annotations.');
+    reviewComments.postable.forEach(reviewComment => {
+        logger_1.logger.warning(reviewComment.body, {
+            file: reviewComment.path,
+            startLine: reviewComment.line,
+            title: reviewComment.title
+        });
+    });
+}
+exports.postAnnotations = postAnnotations;
+/**
+ * Deletes the review comments of previous runs.
+ * @param postedReviewComments Previously posted review comments.
+ */
+function deletePreviousReviewComments(postedReviewComments) {
+    logger_1.logger.header('Deleting review comments of previous runs.');
+    postedReviewComments.map(async (reviewComment) => {
+        if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
+            try {
+                const params = {
+                    owner: configuration_1.githubConfig.owner,
+                    repo: configuration_1.githubConfig.reponame,
+                    comment_id: reviewComment.id
+                };
+                await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
+            }
+            catch (error) {
+                let message = 'reason unkown';
+                if (error instanceof Error)
+                    message = error.message;
+                logger_1.logger.error(`Could not delete review comment: ${message}`);
+            }
+        }
+    });
+    logger_1.logger.info('Deleted review comments of previous runs.');
+}
+exports.deletePreviousReviewComments = deletePreviousReviewComments;
+
+
+/***/ }),
+
+/***/ 5734:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -169,52 +248,18 @@ function getFilesInFolder(directory) {
 
 /***/ }),
 
-/***/ 7829:
+/***/ 6572:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPostedReviewComments = void 0;
+exports.deletePreviousComments = exports.postComment = exports.postNothingAnalyzedComment = exports.postErrorComment = exports.getPostedComments = void 0;
 const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
-/**
- * Gets a list of all reviews posted on the pull request.
- * @returns List of reviews posted on the pull request.
- */
-async function getPostedReviewComments() {
-    let response = [];
-    try {
-        logger_1.logger.info('Retrieving posted review comments.');
-        const params = {
-            owner: configuration_1.githubConfig.owner,
-            repo: configuration_1.githubConfig.reponame,
-            pull_number: configuration_1.githubConfig.pullRequestNumber
-        };
-        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
-    }
-    catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
-        logger_1.logger.error(`Could not retrieve the review comments: ${message}`);
-    }
-    return response;
-}
-exports.getPostedReviewComments = getPostedReviewComments;
-
-
-/***/ }),
-
-/***/ 4822:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPostedComments = void 0;
-const logger_1 = __nccwpck_require__(6440);
-const configuration_1 = __nccwpck_require__(5527);
+const summary_1 = __nccwpck_require__(1502);
+const markdown_1 = __nccwpck_require__(5300);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Gets a list of all comments on the pull request.
  * @returns List of comments on the pull request.
@@ -239,207 +284,6 @@ async function getPostedComments() {
     return response;
 }
 exports.getPostedComments = getPostedComments;
-
-
-/***/ }),
-
-/***/ 2797:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getChangedFilesOfCommit = void 0;
-const canonical_path_1 = __nccwpck_require__(5806);
-const logger_1 = __nccwpck_require__(6440);
-const configuration_1 = __nccwpck_require__(5527);
-/**
- * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
- * @returns List of changed files within the GitHub Pull request.
- */
-async function getChangedFilesOfCommit() {
-    const params = {
-        owner: configuration_1.githubConfig.owner,
-        repo: configuration_1.githubConfig.reponame,
-        ref: configuration_1.githubConfig.commitSha
-    };
-    let response = [];
-    try {
-        logger_1.logger.header('Retrieving changed files.');
-        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.repos.getCommit, params, response => {
-            if (response.data.files) {
-                return response.data.files
-                    .filter(item => {
-                    if (item.status === 'renamed') {
-                        // If a files has been moved without changes or if moved files are excluded, exclude them.
-                        if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
-                            return false;
-                        }
-                    }
-                    return true;
-                })
-                    .map(item => {
-                    // If a file is moved or renamed the status is 'renamed'.
-                    item.filename = (0, canonical_path_1.normalize)(item.filename);
-                    logger_1.logger.debug(item.filename);
-                    return item;
-                });
-            }
-            return [];
-        });
-        logger_1.logger.info('Retrieved changed files.');
-    }
-    catch (error) {
-        let message = 'error unknown';
-        if (error instanceof Error)
-            message = error.message;
-        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
-    }
-    return response;
-}
-exports.getChangedFilesOfCommit = getChangedFilesOfCommit;
-
-
-/***/ }),
-
-/***/ 5857:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.changedFilesToFile = exports.getChangedFilesOfPullRequest = void 0;
-const fs_1 = __nccwpck_require__(7147);
-const canonical_path_1 = __nccwpck_require__(5806);
-const logger_1 = __nccwpck_require__(6440);
-const configuration_1 = __nccwpck_require__(5527);
-/**
- * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
- * @returns List of changed files within the GitHub Pull request.
- */
-async function getChangedFilesOfPullRequest() {
-    const params = {
-        owner: configuration_1.githubConfig.owner,
-        repo: configuration_1.githubConfig.reponame,
-        pull_number: configuration_1.githubConfig.pullRequestNumber
-    };
-    let response = [];
-    try {
-        logger_1.logger.header('Retrieving changed files.');
-        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
-            let files = response.data
-                .filter(item => {
-                if (item.status === 'renamed') {
-                    // If a files has been moved without changes or if moved files are excluded, exclude them.
-                    if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
-                        return false;
-                    }
-                }
-                return true;
-            })
-                .map(item => {
-                // If a file is moved or renamed the status is 'renamed'.
-                item.filename = (0, canonical_path_1.normalize)(item.filename);
-                logger_1.logger.debug(item.filename);
-                return item;
-            });
-            return files ? files : [];
-        });
-        logger_1.logger.info('Retrieved changed files.');
-    }
-    catch (error) {
-        let message = 'error unknown';
-        if (error instanceof Error)
-            message = error.message;
-        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
-    }
-    return response;
-}
-exports.getChangedFilesOfPullRequest = getChangedFilesOfPullRequest;
-/**
- * Creates a file containing all the changed files based on the given changedFiles.
- * @param changedFiles List of changed files.
- * @returns Location of the written file.
- */
-function changedFilesToFile(changedFiles) {
-    logger_1.logger.header('Writing changedFiles to file');
-    let contents = '';
-    changedFiles.forEach(item => {
-        contents += item.filename + '\n';
-    });
-    const fileListPath = (0, canonical_path_1.resolve)('changedFiles.txt');
-    (0, fs_1.writeFileSync)(fileListPath, contents);
-    logger_1.logger.info(`Content written to: ${fileListPath}`);
-    return fileListPath;
-}
-exports.changedFilesToFile = changedFilesToFile;
-
-
-/***/ }),
-
-/***/ 9757:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postAnnotations = exports.deletePreviousReviewComments = void 0;
-const logger_1 = __nccwpck_require__(6440);
-const configuration_1 = __nccwpck_require__(5527);
-/**
- * Deletes the review comments of previous runs.
- * @param postedReviewComments Previously posted review comments.
- */
-function deletePreviousReviewComments(postedReviewComments) {
-    logger_1.logger.header('Deleting review comments of previous runs.');
-    postedReviewComments.map(async (reviewComment) => {
-        if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
-            try {
-                const params = {
-                    owner: configuration_1.githubConfig.owner,
-                    repo: configuration_1.githubConfig.reponame,
-                    comment_id: reviewComment.id
-                };
-                await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
-            }
-            catch (error) {
-                let message = 'reason unkown';
-                if (error instanceof Error)
-                    message = error.message;
-                logger_1.logger.error(`Could not delete review comment: ${message}`);
-            }
-        }
-    });
-    logger_1.logger.info('Deleted review comments of previous runs.');
-}
-exports.deletePreviousReviewComments = deletePreviousReviewComments;
-function postAnnotations(reviewComments) {
-    logger_1.logger.header('Posting annotations.');
-    reviewComments.postable.forEach(reviewComment => {
-        logger_1.logger.warning(reviewComment.body, {
-            file: reviewComment.path,
-            startLine: reviewComment.line,
-            title: reviewComment.title
-        });
-    });
-}
-exports.postAnnotations = postAnnotations;
-
-
-/***/ }),
-
-/***/ 6587:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deletePreviousComments = exports.postComment = exports.postNothingAnalyzedComment = exports.postErrorComment = void 0;
-const configuration_1 = __nccwpck_require__(5527);
-const logger_1 = __nccwpck_require__(6440);
-const summary_1 = __nccwpck_require__(1502);
-const markdown_1 = __nccwpck_require__(5300);
-const enums_1 = __nccwpck_require__(1655);
 /**
  * Create error comment on the pull request from the analysis given.
  * @param analysis Analysis object returned from TICS analysis.
@@ -520,7 +364,141 @@ function commentIncludesTicsTitle(body) {
 
 /***/ }),
 
-/***/ 8973:
+/***/ 5759:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getChangedFilesOfCommit = void 0;
+const canonical_path_1 = __nccwpck_require__(5806);
+const logger_1 = __nccwpck_require__(6440);
+const configuration_1 = __nccwpck_require__(5527);
+/**
+ * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
+ * @returns List of changed files within the GitHub Pull request.
+ */
+async function getChangedFilesOfCommit() {
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        ref: configuration_1.githubConfig.commitSha
+    };
+    let response = [];
+    try {
+        logger_1.logger.header('Retrieving changed files.');
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.repos.getCommit, params, response => {
+            if (response.data.files) {
+                return response.data.files
+                    .filter(item => {
+                    if (item.status === 'renamed') {
+                        // If a files has been moved without changes or if moved files are excluded, exclude them.
+                        if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                    .map(item => {
+                    // If a file is moved or renamed the status is 'renamed'.
+                    item.filename = (0, canonical_path_1.normalize)(item.filename);
+                    logger_1.logger.debug(item.filename);
+                    return item;
+                });
+            }
+            return [];
+        });
+        logger_1.logger.info('Retrieved changed files.');
+    }
+    catch (error) {
+        let message = 'error unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
+    }
+    return response;
+}
+exports.getChangedFilesOfCommit = getChangedFilesOfCommit;
+
+
+/***/ }),
+
+/***/ 8808:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.changedFilesToFile = exports.getChangedFilesOfPullRequest = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const canonical_path_1 = __nccwpck_require__(5806);
+const logger_1 = __nccwpck_require__(6440);
+const configuration_1 = __nccwpck_require__(5527);
+/**
+ * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
+ * @returns List of changed files within the GitHub Pull request.
+ */
+async function getChangedFilesOfPullRequest() {
+    const params = {
+        owner: configuration_1.githubConfig.owner,
+        repo: configuration_1.githubConfig.reponame,
+        pull_number: configuration_1.githubConfig.pullRequestNumber
+    };
+    let response = [];
+    try {
+        logger_1.logger.header('Retrieving changed files.');
+        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
+            let files = response.data
+                .filter(item => {
+                if (item.status === 'renamed') {
+                    // If a files has been moved without changes or if moved files are excluded, exclude them.
+                    if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                        return false;
+                    }
+                }
+                return true;
+            })
+                .map(item => {
+                // If a file is moved or renamed the status is 'renamed'.
+                item.filename = (0, canonical_path_1.normalize)(item.filename);
+                logger_1.logger.debug(item.filename);
+                return item;
+            });
+            return files ? files : [];
+        });
+        logger_1.logger.info('Retrieved changed files.');
+    }
+    catch (error) {
+        let message = 'error unknown';
+        if (error instanceof Error)
+            message = error.message;
+        logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
+    }
+    return response;
+}
+exports.getChangedFilesOfPullRequest = getChangedFilesOfPullRequest;
+/**
+ * Creates a file containing all the changed files based on the given changedFiles.
+ * @param changedFiles List of changed files.
+ * @returns Location of the written file.
+ */
+function changedFilesToFile(changedFiles) {
+    logger_1.logger.header('Writing changedFiles to file');
+    let contents = '';
+    changedFiles.forEach(item => {
+        contents += item.filename + '\n';
+    });
+    const fileListPath = (0, canonical_path_1.resolve)('changedFiles.txt');
+    (0, fs_1.writeFileSync)(fileListPath, contents);
+    logger_1.logger.info(`Content written to: ${fileListPath}`);
+    return fileListPath;
+}
+exports.changedFilesToFile = changedFilesToFile;
+
+
+/***/ }),
+
+/***/ 2691:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1055,7 +1033,7 @@ const exec_1 = __nccwpck_require__(1514);
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
-const artifacts_1 = __nccwpck_require__(5647);
+const artifacts_1 = __nccwpck_require__(5734);
 let errorList = [];
 let warningList = [];
 let explorerUrl;
@@ -65995,23 +65973,21 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configure = exports.main = void 0;
 const fs_1 = __nccwpck_require__(7147);
-const comments_1 = __nccwpck_require__(6587);
+const comments_1 = __nccwpck_require__(6572);
 const configuration_1 = __nccwpck_require__(5527);
-const pulls_1 = __nccwpck_require__(5857);
+const pulls_1 = __nccwpck_require__(8808);
 const logger_1 = __nccwpck_require__(6440);
 const analyzer_1 = __nccwpck_require__(9099);
 const api_helper_1 = __nccwpck_require__(3823);
 const fetcher_1 = __nccwpck_require__(1559);
-const review_1 = __nccwpck_require__(8973);
+const review_1 = __nccwpck_require__(2691);
 const summary_1 = __nccwpck_require__(1502);
-const annotations_1 = __nccwpck_require__(9757);
-const annotations_2 = __nccwpck_require__(7829);
+const annotations_1 = __nccwpck_require__(1058);
 const enums_1 = __nccwpck_require__(1655);
 const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
-const comments_2 = __nccwpck_require__(4822);
-const artifacts_1 = __nccwpck_require__(5647);
-const commits_1 = __nccwpck_require__(2797);
+const artifacts_1 = __nccwpck_require__(5734);
+const commits_1 = __nccwpck_require__(5759);
 main().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
@@ -66075,7 +66051,7 @@ async function run() {
                 return logger_1.logger.exit('Quality gate could not be retrieved');
             // If not run on a pull request no review comments have to be deleted
             if (configuration_1.githubConfig.eventName === 'pull_request') {
-                const previousReviewComments = await (0, annotations_2.getPostedReviewComments)();
+                const previousReviewComments = await (0, annotations_1.getPostedReviewComments)();
                 if (previousReviewComments && previousReviewComments.length > 0) {
                     (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
                 }
@@ -66092,7 +66068,7 @@ async function run() {
             // If not run on a pull request no comments have to be deleted
             // and there is no conversation to post to.
             if (configuration_1.githubConfig.eventName === 'pull_request') {
-                (0, comments_1.deletePreviousComments)(await (0, comments_2.getPostedComments)());
+                (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
                 await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
             }
             if (!qualityGate.passed)

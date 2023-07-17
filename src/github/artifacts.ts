@@ -1,7 +1,7 @@
 import { tmpdir } from 'os';
-import { githubConfig, ticsConfig } from '../../configuration';
+import { githubConfig, ticsConfig } from '../configuration';
 import { create } from '@actions/artifact';
-import { logger } from '../../helper/logger';
+import { logger } from '../helper/logger';
 import { readdirSync } from 'fs';
 import { join } from 'canonical-path';
 

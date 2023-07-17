@@ -1,7 +1,8 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { Analysis, Annotation, ChangedFile, Condition, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { Analysis, Annotation, Condition, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';

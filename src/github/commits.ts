@@ -1,7 +1,7 @@
 import { normalize } from 'canonical-path';
-import { logger } from '../../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../../configuration';
-import { ChangedFile } from '../../helper/interfaces';
+import { logger } from '../helper/logger';
+import { githubConfig, octokit, ticsConfig } from '../configuration';
+import { ChangedFile } from './interfaces';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.

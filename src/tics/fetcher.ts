@@ -1,14 +1,6 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import {
-  AnalyzedFile,
-  AnalyzedFiles,
-  Annotation,
-  AnnotationApiLink,
-  AnnotationResonse,
-  ChangedFile,
-  QualityGate,
-  VersionResponse
-} from '../helper/interfaces';
+import { ChangedFile } from '../github/interfaces';
+import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationApiLink, AnnotationResonse, QualityGate, VersionResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
