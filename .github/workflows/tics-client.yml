@@ -13,7 +13,7 @@ jobs:
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:
-          projectName: tics-github-action
+          projectName: GitHub
           ticsConfiguration: https://eboit.tiobe.com/tiobeweb/TICS/api/cfg?name=main
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           ticsAuthToken: ${{ secrets.EBOIT_CLIENT_TOKEN }}
