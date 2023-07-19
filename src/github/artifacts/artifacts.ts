@@ -25,9 +25,9 @@ export async function uploadArtifact(): Promise<void> {
 
 export function getTmpDir(): string {
   if (ticsConfig.tmpDir) {
-    return ticsConfig.tmpDir;
+    return `${ticsConfig.tmpDir}/${githubConfig.id}`;
   } else if (githubConfig.debugger) {
-    return `${tmpdir()}/tics`;
+    return `${tmpdir()}/${githubConfig.id}/tics`;
   } else {
     return '';
   }
