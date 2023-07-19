@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, isDebug, warning } from '@actions/core';
+import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import * as github from '@actions/github';
 import { ProxyAgent } from 'proxy-agent';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
