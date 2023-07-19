@@ -1,9 +1,9 @@
 name: TICS Analyzer
 
 on:
-#   schedule:
-#     - cron:  '00 00 * * *'
-  workflow_dispatch
+  workflow_dispatch:
+  schedule:
+    - cron: '00 00 * * *'
 
 jobs:
   TICSQServer:
@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.5.2
+        uses: actions/setup-node@v3.7.0
       - run: npm ci
       - run: npm run test-coverage
       - name: Install and run TICSQSERVER
@@ -19,5 +19,4 @@ jobs:
           TICSAUTHTOKEN: ${{ secrets.EBOIT_ANALYZER_TOKEN }}
         run: |
           . <(curl --silent --show-error "https://eboit.tiobe.com/tiobeweb/TICS/api/public/v1/fapi/installtics/Script?cfg=main&platform=linux&url=https://eboit.tiobe.com/tiobeweb/TICS/")
-          TICSQServer -project 'tics-github-action' -branchdir .
-        
+          TICSQServer -project 'GitHub' -branchdir .
