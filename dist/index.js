@@ -103,7 +103,7 @@ exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.
 
 /***/ }),
 
-/***/ 5647:
+/***/ 5734:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -121,9 +121,10 @@ async function uploadArtifact() {
     try {
         logger_1.logger.header('Uploading artifact');
         const tmpDir = getTmpDir() + '/ticstmpdir';
+        logger_1.logger.info(`Logs written to ${tmpDir}`);
         const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
         if (response.failedItems.length > 0) {
-            logger_1.logger.debug(`Failed to upload artifact: ${response.failedItems.join(', ')}`);
+            logger_1.logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
         }
     }
     catch (error) {
@@ -139,7 +140,7 @@ function getTmpDir() {
         return `${configuration_1.ticsConfig.tmpDir}/${configuration_1.githubConfig.id}`;
     }
     else if (configuration_1.githubConfig.debugger) {
-        return `${(0, os_1.tmpdir)()}/${configuration_1.githubConfig.id}/tics`;
+        return `${(0, os_1.tmpdir)()}/tics/${configuration_1.githubConfig.id}`;
     }
     else {
         return '';
@@ -598,7 +599,6 @@ class Logger {
     }
     /**
      * Uses core.info to print to the console.
-     *
      * @param string
      */
     info(string) {
@@ -608,7 +608,6 @@ class Logger {
     }
     /**
      * Uses core.debug to print to the console.
-     *
      * @param string
      */
     debug(string) {
@@ -618,7 +617,6 @@ class Logger {
     }
     /**
      * Uses core.warning to print to the console.
-     *
      * @param string
      */
     warning(string, properties) {
@@ -628,7 +626,6 @@ class Logger {
     }
     /**
      * Uses core.error to print to the console with a red color.
-     *
      * @param error
      */
     error(error, properties) {
@@ -639,7 +636,6 @@ class Logger {
     }
     /**
      * Uses core.setFailed to exit with error.
-     *
      * @param error
      */
     setFailed(error) {
@@ -650,7 +646,6 @@ class Logger {
     }
     /**
      * Uses core.setFailed to exit with error.
-     *
      * @param error
      */
     exit(error) {
@@ -995,7 +990,7 @@ const exec_1 = __nccwpck_require__(1514);
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
-const artifacts_1 = __nccwpck_require__(5647);
+const artifacts_1 = __nccwpck_require__(5734);
 let errorList = [];
 let warningList = [];
 let explorerUrl;
@@ -57994,7 +57989,7 @@ const enums_1 = __nccwpck_require__(1655);
 const compare_versions_1 = __nccwpck_require__(4773);
 const core_1 = __nccwpck_require__(2186);
 const comments_2 = __nccwpck_require__(4822);
-const artifacts_1 = __nccwpck_require__(5647);
+const artifacts_1 = __nccwpck_require__(5734);
 run().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)

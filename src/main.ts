@@ -15,7 +15,7 @@ import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
 import { Analysis, ReviewComments } from './helper/interfaces';
 import { getPostedComments } from './github/calling/comments';
-import { uploadArtifact } from './github/artifacts/artifacts';
+import { uploadArtifact } from './github/artifacts';
 
 run().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
