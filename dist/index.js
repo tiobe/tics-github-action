@@ -386,7 +386,7 @@ async function getChangedFilesOfCommit() {
     };
     let response = [];
     try {
-        logger_1.logger.header('Retrieving changed files.');
+        logger_1.logger.header('Retrieving changed files from commit.');
         response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.repos.getCommit, params, response => {
             if (response.data.files) {
                 return response.data.files
@@ -446,7 +446,7 @@ async function getChangedFilesOfPullRequest() {
     };
     let response = [];
     try {
-        logger_1.logger.header('Retrieving changed files.');
+        logger_1.logger.header('Retrieving changed files from pull request.');
         response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
             let files = response.data
                 .filter(item => {

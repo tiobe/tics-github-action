@@ -16,7 +16,7 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
   };
   let response: ChangedFile[] = [];
   try {
-    logger.header('Retrieving changed files.');
+    logger.header('Retrieving changed files from pull request.');
     response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       let files = response.data
         .filter(item => {

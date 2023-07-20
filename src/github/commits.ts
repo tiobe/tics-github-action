@@ -15,7 +15,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
   };
   let response: ChangedFile[] = [];
   try {
-    logger.header('Retrieving changed files.');
+    logger.header('Retrieving changed files from commit.');
     response = await octokit.paginate(octokit.rest.repos.getCommit, params, response => {
       if (response.data.files) {
         return response.data.files
