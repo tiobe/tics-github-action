@@ -58063,21 +58063,21 @@ async function run() {
         let changedFiles = undefined;
         if (configuration_1.ticsConfig.filelist) {
             changedFilesFilePath = configuration_1.ticsConfig.filelist;
-            if (configuration_1.githubConfig.eventName === 'pull_request') {
-                changedFiles = await (0, pulls_1.getChangedFilesOfPullRequest)();
-            }
-            else {
-                changedFiles = await (0, commits_1.getChangedFilesOfCommit)();
-            }
+        }
+        if (configuration_1.githubConfig.eventName === 'pull_request') {
+            changedFiles = await (0, pulls_1.getChangedFilesOfPullRequest)();
         }
         else {
-            changedFiles = await (0, pulls_1.getChangedFilesOfPullRequest)();
+            changedFiles = await (0, commits_1.getChangedFilesOfCommit)();
+        }
+        if (!configuration_1.ticsConfig.filelist) {
             if (changedFiles.length <= 0) {
-                logger_1.logger.info('No changed files found to analyze.');
-                return;
+                return logger_1.logger.info('No changed files found to analyze.');
             }
             changedFilesFilePath = (0, pulls_1.changedFilesToFile)(changedFiles);
         }
+        if (!changedFilesFilePath)
+            return logger_1.logger.error('No filepath for changedfiles list.');
         analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
         if (!analysis.explorerUrl) {
             if (!analysis.completed) {
@@ -58213,10 +58213,7 @@ async function meetsPrerequisites() {
         message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
     }
     else if (configuration_1.ticsConfig.mode === 'diagnostic') {
-        // No need for pull_request and checked out repository.
-    }
-    else if (configuration_1.githubConfig.eventName !== 'pull_request' && !configuration_1.ticsConfig.filelist) {
-        message = 'If the the action is run outside a pull request it should be run with a filelist.';
+        // No need for checked out repository.
     }
     else if (!isCheckedOut()) {
         message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';

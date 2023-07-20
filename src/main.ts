@@ -49,21 +49,22 @@ async function run() {
 
     if (ticsConfig.filelist) {
       changedFilesFilePath = ticsConfig.filelist;
+    }
 
-      if (githubConfig.eventName === 'pull_request') {
-        changedFiles = await getChangedFilesOfPullRequest();
-      } else {
-        changedFiles = await getChangedFilesOfCommit();
-      }
-    } else {
+    if (githubConfig.eventName === 'pull_request') {
       changedFiles = await getChangedFilesOfPullRequest();
+    } else {
+      changedFiles = await getChangedFilesOfCommit();
+    }
+
+    if (!ticsConfig.filelist) {
       if (changedFiles.length <= 0) {
-        logger.info('No changed files found to analyze.');
-        return;
+        return logger.info('No changed files found to analyze.');
       }
       changedFilesFilePath = changedFilesToFile(changedFiles);
     }
 
+    if (!changedFilesFilePath) return logger.error('No filepath for changedfiles list.');
     analysis = await runTicsAnalyzer(changedFilesFilePath);
 
     if (!analysis.explorerUrl) {
@@ -213,9 +214,7 @@ async function meetsPrerequisites(): Promise<string | undefined> {
     const version = viewerVersion ? viewerVersion.version : 'unknown';
     message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
   } else if (ticsConfig.mode === 'diagnostic') {
-    // No need for pull_request and checked out repository.
-  } else if (githubConfig.eventName !== 'pull_request' && !ticsConfig.filelist) {
-    message = 'If the the action is run outside a pull request it should be run with a filelist.';
+    // No need for checked out repository.
   } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
   }

@@ -44,7 +44,7 @@ inputs:
     required: false
     default: false
   filelist:
-    description: Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path. This has to be set when the action is run outside of a pull request.
+    description: Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path.
     required: false
   hostnameVerification:
     description: Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).
