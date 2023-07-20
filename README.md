@@ -14,7 +14,6 @@ The TICS Github action integrates TICS Client analysis to measure your code qual
 
 ### Action Restrictions
 
-- It will only be triggered on a pull request event.
 - It is not working for forked repositories.
 - It is not working for TICS installations using the legacy deployment architecture.
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
