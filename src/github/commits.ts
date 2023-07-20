@@ -15,7 +15,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
   };
   let response: ChangedFile[] = [];
   try {
-    logger.header('Retrieving changed files from commit.');
+    logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.repos.getCommit, params, response => {
       if (response.data.files) {
         return response.data.files
@@ -37,7 +37,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
       }
       return [];
     });
-    logger.info('Retrieved changed files.');
+    logger.info('Retrieved changed files from commit.');
   } catch (error: unknown) {
     let message = 'error unknown';
     if (error instanceof Error) message = error.message;

@@ -16,7 +16,7 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
   };
   let response: ChangedFile[] = [];
   try {
-    logger.header('Retrieving changed files from pull request.');
+    logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       let files = response.data
         .filter(item => {
@@ -37,7 +37,7 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
 
       return files ? files : [];
     });
-    logger.info('Retrieved changed files.');
+    logger.info('Retrieved changed files from pull request.');
   } catch (error: unknown) {
     let message = 'error unknown';
     if (error instanceof Error) message = error.message;
