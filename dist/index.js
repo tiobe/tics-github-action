@@ -1170,7 +1170,7 @@ function getTicsCommand(fileListPath) {
         execString += '-help ';
     }
     else {
-        execString += `@${fileListPath} -viewer `;
+        execString += `'@${fileListPath}' -viewer `;
         execString += `-project '${configuration_1.ticsConfig.projectName}' `;
         execString += `-calc ${configuration_1.ticsConfig.calc} `;
         execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
