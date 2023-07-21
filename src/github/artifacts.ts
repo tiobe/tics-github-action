@@ -1,7 +1,7 @@
 import { tmpdir } from 'os';
-import { githubConfig, ticsConfig } from '../../configuration';
+import { githubConfig, ticsConfig } from '../configuration';
 import { create } from '@actions/artifact';
-import { logger } from '../../helper/logger';
+import { logger } from '../helper/logger';
 import { readdirSync } from 'fs';
 import { join } from 'canonical-path';
 
@@ -11,10 +11,11 @@ export async function uploadArtifact(): Promise<void> {
   try {
     logger.header('Uploading artifact');
     const tmpDir = getTmpDir() + '/ticstmpdir';
+    logger.info(`Logs written to ${tmpDir}`);
     const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
 
     if (response.failedItems.length > 0) {
-      logger.debug(`Failed to upload artifact: ${response.failedItems.join(', ')}`);
+      logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
     }
   } catch (error: unknown) {
     let message = 'reason unknown';
@@ -25,9 +26,9 @@ export async function uploadArtifact(): Promise<void> {
 
 export function getTmpDir(): string {
   if (ticsConfig.tmpDir) {
-    return ticsConfig.tmpDir;
+    return `${ticsConfig.tmpDir}/${githubConfig.id}`;
   } else if (githubConfig.debugger) {
-    return `${tmpdir()}/tics`;
+    return `${tmpdir()}/tics/${githubConfig.id}`;
   } else {
     return '';
   }

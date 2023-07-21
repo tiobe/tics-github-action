@@ -1,10 +1,9 @@
 import { existsSync } from 'fs';
-
 import { githubConfig, ticsConfig } from '../src/configuration';
 import { Events } from '../src/helper/enums';
-import * as main from '../src/main';
 import { logger } from '../src/helper/logger';
 
+import * as main from '../src/main';
 import * as pulls from '../src/github/calling/pulls';
 import * as analyzer from '../src/tics/analyzer';
 import * as fetcher from '../src/tics/fetcher';
@@ -37,7 +36,6 @@ describe('pre checks', () => {
 
     await main.run();
 
-    expect(spyExit).toHaveBeenCalled();
     expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
@@ -48,7 +46,6 @@ describe('pre checks', () => {
 
     await main.run();
 
-    expect(spyExit).toHaveBeenCalled();
     expect(spyExit).toHaveBeenCalledWith(expect.stringContaining('This action can only run on pull requests.'));
   });
 
@@ -58,7 +55,6 @@ describe('pre checks', () => {
 
     await main.run();
 
-    expect(spyExit).toHaveBeenCalled();
     expect(spyExit).toHaveBeenCalledWith(
       expect.stringContaining('No checkout found to analyze. Please perform a checkout before running the TICS Action.')
     );
@@ -74,7 +70,6 @@ describe('SetFailed checks', () => {
 
     await main.run();
 
-    expect(spyInfo).toHaveBeenCalled();
     expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
 
@@ -88,7 +83,6 @@ describe('SetFailed checks', () => {
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TICS Github Action.'));
   });
 
@@ -103,7 +97,6 @@ describe('SetFailed checks', () => {
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TICS Github Action.'));
     expect(spyError).toHaveBeenCalledWith(expect.stringContaining('Explorer URL not returned from TICS analysis.'));
   });
@@ -121,7 +114,6 @@ describe('SetFailed checks', () => {
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith('Quality gate could not be retrieved');
   });
 
@@ -139,7 +131,6 @@ describe('SetFailed checks', () => {
 
     await main.run();
 
-    expect(spySetFailed).toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
   });
 
@@ -173,7 +164,6 @@ describe('postNothingAnalyzed', () => {
     ticsConfig.pullRequestApproval = true;
     await main.run();
 
-    expect(spyReview).toHaveBeenCalled();
     expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
   });
 
@@ -188,7 +178,6 @@ describe('postNothingAnalyzed', () => {
     ticsConfig.pullRequestApproval = false;
     await main.run();
 
-    expect(spyReview).toHaveBeenCalled();
     expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
   });
 });
