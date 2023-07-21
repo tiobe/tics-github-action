@@ -43,8 +43,9 @@ exports.githubConfig = {
     branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
     basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-    eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
     commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
+    eventName: github.context.eventName,
+    id: `${github.context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
     runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
     pullRequestNumber: getPullRequestNumber(),
     debugger: (0, core_1.isDebug)()
@@ -200,9 +201,10 @@ async function uploadArtifact() {
     try {
         logger_1.logger.header('Uploading artifact');
         const tmpDir = getTmpDir() + '/ticstmpdir';
+        logger_1.logger.info(`Logs written to ${tmpDir}`);
         const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
         if (response.failedItems.length > 0) {
-            logger_1.logger.debug(`Failed to upload artifact: ${response.failedItems.join(', ')}`);
+            logger_1.logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
         }
     }
     catch (error) {
@@ -215,10 +217,10 @@ async function uploadArtifact() {
 exports.uploadArtifact = uploadArtifact;
 function getTmpDir() {
     if (configuration_1.ticsConfig.tmpDir) {
-        return configuration_1.ticsConfig.tmpDir;
+        return `${configuration_1.ticsConfig.tmpDir}/${configuration_1.githubConfig.id}`;
     }
     else if (configuration_1.githubConfig.debugger) {
-        return `${(0, os_1.tmpdir)()}/tics`;
+        return `${(0, os_1.tmpdir)()}/tics/${configuration_1.githubConfig.id}`;
     }
     else {
         return '';
@@ -636,7 +638,6 @@ class Logger {
     }
     /**
      * Uses core.info to print to the console.
-     *
      * @param string
      */
     info(string) {
@@ -646,7 +647,6 @@ class Logger {
     }
     /**
      * Uses core.debug to print to the console.
-     *
      * @param string
      */
     debug(string) {
@@ -656,7 +656,6 @@ class Logger {
     }
     /**
      * Uses core.warning to print to the console.
-     *
      * @param string
      */
     warning(string, properties) {
@@ -666,7 +665,6 @@ class Logger {
     }
     /**
      * Uses core.error to print to the console with a red color.
-     *
      * @param error
      */
     error(error, properties) {
@@ -677,7 +675,6 @@ class Logger {
     }
     /**
      * Uses core.setFailed to exit with error.
-     *
      * @param error
      */
     setFailed(error) {
@@ -688,7 +685,6 @@ class Logger {
     }
     /**
      * Uses core.setFailed to exit with error.
-     *
      * @param error
      */
     exit(error) {

@@ -19,7 +19,9 @@ jest.mock('../../src/configuration', () => {
       branchdir: '',
       eventName: '',
       runnerOS: '',
-      pullRequestNumber: '1'
+      pullRequestNumber: '1',
+      id: '123-1',
+      commitSha: 'asdfghjk'
     },
     octokit: {
       paginate: jest.fn(),
@@ -73,25 +75,33 @@ jest.mock('@actions/exec', () => {
 });
 jest.mock('@actions/artifact', () => {
   return {
-    create: {
-      uploadArtifact: jest.fn()
-    }
+    create: jest.fn(() => {
+      return { uploadArtifact: jest.fn() };
+    })
   };
 });
 jest.mock('node-fetch', () => jest.fn());
 jest.mock('fs', () => {
   return {
     writeFileSync: jest.fn(),
-    existsSync: jest.fn()
+    existsSync: jest.fn(),
+    readdirSync: jest.fn()
   };
 });
 jest.mock('canonical-path', () => {
   return {
     resolve: jest.fn(data => data),
-    normalize: jest.fn(data => data)
+    normalize: jest.fn(data => data),
+    join: jest.fn((one, two) => `${one}/${two}`)
   };
 });
 jest.mock('proxy-agent', () => {
   return jest.fn();
 });
+jest.mock('os', () => {
+  return {
+    tmpdir: jest.fn(() => '/tmp')
+  };
+});
+
 jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);

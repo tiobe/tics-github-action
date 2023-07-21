@@ -19,7 +19,6 @@ class Logger {
 
   /**
    * Uses core.info to print to the console.
-   *
    * @param string
    */
   info(string: string): void {
@@ -30,7 +29,6 @@ class Logger {
 
   /**
    * Uses core.debug to print to the console.
-   *
    * @param string
    */
   debug(string: string): void {
@@ -41,7 +39,6 @@ class Logger {
 
   /**
    * Uses core.warning to print to the console.
-   *
    * @param string
    */
   warning(string: string, properties?: AnnotationProperties): void {
@@ -52,7 +49,6 @@ class Logger {
 
   /**
    * Uses core.error to print to the console with a red color.
-   *
    * @param error
    */
   error(error: string, properties?: AnnotationProperties): void {
@@ -64,7 +60,6 @@ class Logger {
 
   /**
    * Uses core.setFailed to exit with error.
-   *
    * @param error
    */
   setFailed(error: string): void {
@@ -76,7 +71,6 @@ class Logger {
 
   /**
    * Uses core.setFailed to exit with error.
-   *
    * @param error
    */
   exit(error: string): void {

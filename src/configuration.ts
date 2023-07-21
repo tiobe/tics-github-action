@@ -11,8 +11,9 @@ export const githubConfig = {
   branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
   basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
-  eventName: process.env.GITHUB_EVENT_NAME ? process.env.GITHUB_EVENT_NAME : '',
   commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
+  eventName: github.context.eventName,
+  id: `${github.context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
   pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
