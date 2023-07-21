@@ -215,6 +215,8 @@ async function meetsPrerequisites(): Promise<string | undefined> {
     message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for checked out repository.
+  } else if (githubConfig.eventName !== 'pull_request' && !ticsConfig.filelist) {
+    message = 'If the the action is run outside a pull request it should be run with a filelist.';
   } else if (!isCheckedOut()) {
     message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
   }

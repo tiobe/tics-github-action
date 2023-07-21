@@ -1170,7 +1170,12 @@ function getTicsCommand(fileListPath) {
         execString += '-help ';
     }
     else {
-        execString += `'@${fileListPath}' -viewer `;
+        if (fileListPath === '.') {
+            execString += '. -viewer ';
+        }
+        else {
+            execString += `'@${fileListPath}' -viewer `;
+        }
         execString += `-project '${configuration_1.ticsConfig.projectName}' `;
         execString += `-calc ${configuration_1.ticsConfig.calc} `;
         execString += configuration_1.ticsConfig.nocalc ? `-nocalc ${configuration_1.ticsConfig.nocalc} ` : '';
@@ -58214,6 +58219,9 @@ async function meetsPrerequisites() {
     }
     else if (configuration_1.ticsConfig.mode === 'diagnostic') {
         // No need for checked out repository.
+    }
+    else if (configuration_1.githubConfig.eventName !== 'pull_request' && !configuration_1.ticsConfig.filelist) {
+        message = 'If the the action is run outside a pull request it should be run with a filelist.';
     }
     else if (!isCheckedOut()) {
         message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';

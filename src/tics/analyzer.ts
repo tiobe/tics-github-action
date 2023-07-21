@@ -146,7 +146,11 @@ function getTicsCommand(fileListPath: string) {
   if (ticsConfig.mode === 'diagnostic') {
     execString += '-help ';
   } else {
-    execString += `'@${fileListPath}' -viewer `;
+    if (fileListPath === '.') {
+      execString += '. -viewer ';
+    } else {
+      execString += `'@${fileListPath}' -viewer `;
+    }
     execString += `-project '${ticsConfig.projectName}' `;
     execString += `-calc ${ticsConfig.calc} `;
     execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
