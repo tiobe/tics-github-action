@@ -1,8 +1,8 @@
 import { ticsConfig } from '../../src/configuration';
-import { ChangedFile } from '../../src/helper/interfaces';
 import { logger } from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
+import { changedFiles } from './objects/fetcher';
 
 describe('getAnalyzedFiles', () => {
   test('Should return one analyzed file from viewer', async () => {
@@ -132,28 +132,3 @@ describe('getViewerVersion', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });
-
-const changedFiles: ChangedFile[] = [
-  {
-    sha: 'sha',
-    filename: 'file.js',
-    status: 'added',
-    additions: 0,
-    deletions: 1,
-    changes: 1,
-    blob_url: 'url',
-    raw_url: 'url',
-    contents_url: 'url'
-  },
-  {
-    sha: 'sha',
-    filename: 'files.js',
-    status: 'added',
-    additions: 0,
-    deletions: 1,
-    changes: 1,
-    blob_url: 'url',
-    raw_url: 'url',
-    contents_url: 'url'
-  }
-];

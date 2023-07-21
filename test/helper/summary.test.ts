@@ -1,5 +1,5 @@
 import { githubConfig } from '../../src/configuration';
-import { ChangedFile } from '../../src/helper/interfaces';
+import { ChangedFile } from '../../src/github/interfaces';
 import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../src/helper/summary';
 import '../.setup/extend_jest';
 

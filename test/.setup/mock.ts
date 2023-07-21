@@ -20,7 +20,8 @@ jest.mock('../../src/configuration', () => {
       eventName: '',
       runnerOS: '',
       pullRequestNumber: '1',
-      id: '123-1'
+      id: '123-1',
+      commitSha: 'asdfghjk'
     },
     octokit: {
       paginate: jest.fn(),

@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, isDebug, warning } from '@actions/core';
+import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import * as github from '@actions/github';
 import { ProxyAgent } from 'proxy-agent';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
@@ -11,6 +11,7 @@ export const githubConfig = {
   branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
   basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
+  commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
   eventName: github.context.eventName,
   id: `${github.context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
   runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
@@ -24,7 +25,6 @@ function getPullRequestNumber() {
   } else if (process.env.PULL_REQUEST_NUMBER) {
     return parseInt(process.env.PULL_REQUEST_NUMBER);
   } else {
-    warning('Pull request number could not be found');
     return 0;
   }
 }
@@ -50,6 +50,7 @@ export const ticsConfig = {
   codetype: getInput('codetype'),
   calc: getInput('calc'),
   excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
+  filelist: getInput('filelist'),
   hostnameVerification: getInput('hostnameVerification'),
   installTics: getBooleanInput('installTics'),
   mode: getInput('mode'),
