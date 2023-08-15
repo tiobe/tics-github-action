@@ -18,7 +18,7 @@ jobs:
           git config user.email ${{ secrets.TIOBE_EMAIL }}
           git pull
       - name: Build
-        uses: actions/setup-node@v3.8.0
+        uses: actions/setup-node@v3
         with:
           node-version: 16
       - run: |
