@@ -2,7 +2,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { logger } from '../helper/logger';
 import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis, HttpResponse } from '../helper/interfaces';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 
 /**
  * Executes a GET request to the given url.
@@ -19,11 +19,17 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
   requestInit.headers = headers;
 
-  const response = await fetch(url, requestInit);
+  const response: Response = await fetch(url, requestInit);
 
   switch (response.status) {
     case 200:
-      return <T>(<unknown>response.json());
+      const text = await response.text();
+      try {
+        return <T>JSON.parse(text);
+      } catch (error: unknown) {
+        logger.exit(`${error}: ${text}`);
+      }
+      break;
     case 302:
       logger.exit(
         `HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`

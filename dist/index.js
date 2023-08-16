@@ -1219,7 +1219,14 @@ async function httpRequest(url) {
     const response = await (0, node_fetch_1.default)(url, configuration_1.requestInit);
     switch (response.status) {
         case 200:
-            return response.json();
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            }
+            catch (error) {
+                logger_1.logger.exit(`${error}: ${text}`);
+            }
+            break;
         case 302:
             logger_1.logger.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
             break;
