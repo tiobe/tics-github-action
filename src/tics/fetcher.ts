@@ -9,7 +9,7 @@ import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[]): Promise<string[]> {
+export async function getAnalyzedFiles(url: string): Promise<string[]> {
   logger.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
   let analyzedFiles: string[] = [];
@@ -18,15 +18,10 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
   try {
     const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
     if (response) {
-      logger.debug(JSON.stringify(response));
-      analyzedFiles = response.data
-        .filter((file: AnalyzedFile) => {
-          return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
-        })
-        .map((file: AnalyzedFile) => {
-          logger.debug(file.formattedValue);
-          return file.formattedValue;
-        });
+      analyzedFiles = response.data.map((file: AnalyzedFile) => {
+        logger.debug(file.formattedValue);
+        return file.formattedValue;
+      });
       logger.info('Retrieved the analyzed files.');
     }
   } catch (error: unknown) {

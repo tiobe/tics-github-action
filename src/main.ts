@@ -81,7 +81,7 @@ async function run() {
       return;
     }
 
-    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl, changedFiles);
+    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
     const qualityGate = await getQualityGate(analysis.explorerUrl);
 
     if (!qualityGate) return logger.exit('Quality gate could not be retrieved');

@@ -1335,7 +1335,7 @@ const api_helper_1 = __nccwpck_require__(3823);
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-async function getAnalyzedFiles(url, changedFiles) {
+async function getAnalyzedFiles(url) {
     logger_1.logger.header('Retrieving analyzed files.');
     const analyzedFilesUrl = getAnalyzedFilesUrl(url);
     let analyzedFiles = [];
@@ -1343,12 +1343,7 @@ async function getAnalyzedFiles(url, changedFiles) {
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
         if (response) {
-            logger_1.logger.debug(JSON.stringify(response));
-            analyzedFiles = response.data
-                .filter((file) => {
-                return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
-            })
-                .map((file) => {
+            analyzedFiles = response.data.map((file) => {
                 logger_1.logger.debug(file.formattedValue);
                 return file.formattedValue;
             });
@@ -58103,7 +58098,7 @@ async function run() {
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
-        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl, changedFiles);
+        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         if (!qualityGate)
             return logger_1.logger.exit('Quality gate could not be retrieved');
