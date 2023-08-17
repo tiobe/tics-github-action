@@ -901,8 +901,8 @@ function createReviewComments(annotations, changedFiles) {
         if (annotation.diffLines?.includes(annotation.line)) {
             logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
-                title: `${annotation.type}: ${annotation.rule}`,
-                body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
+                title: `${annotation.annotationName ? annotation.annotationName : annotation.type}: ${annotation.rule}`,
+                body: createBody(annotation, displayCount),
                 path: annotation.path,
                 line: annotation.line
             });
@@ -917,6 +917,12 @@ function createReviewComments(annotations, changedFiles) {
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
+function createBody(annotation, displayCount) {
+    let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
+    body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
+    body += annotation.ruleHelp ? `\r\n[rulehelp](${annotation.ruleHelp})` : '';
+    return body;
+}
 /**
  * Sorts annotations based on file name and line number.
  * @param annotations annotations returned by TICS analyzer.
@@ -1337,6 +1343,7 @@ async function getAnalyzedFiles(url, changedFiles) {
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
         if (response) {
+            logger_1.logger.debug(JSON.stringify(response));
             analyzedFiles = response.data
                 .filter((file) => {
                 return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
@@ -1422,9 +1429,10 @@ async function getAnnotations(apiLinks) {
     logger_1.logger.header('Retrieving annotations.');
     try {
         await Promise.all(apiLinks.map(async (link, index) => {
-            const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
+            const annotationsUrl = new URL(`${configuration_1.baseUrl}/${link.url}`);
+            annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
             logger_1.logger.debug(`From: ${annotationsUrl}`);
-            const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
+            const response = await (0, api_helper_1.httpRequest)(annotationsUrl.href);
             if (response) {
                 response.data.forEach((annotation) => {
                     annotation.gateId = index;

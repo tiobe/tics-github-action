@@ -135,8 +135,8 @@ export function createReviewComments(annotations: Annotation[], changedFiles: Ch
     if (annotation.diffLines?.includes(annotation.line)) {
       logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        title: `${annotation.type}: ${annotation.rule}`,
-        body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
+        title: `${annotation.annotationName ? annotation.annotationName : annotation.type}: ${annotation.rule}`,
+        body: createBody(annotation, displayCount),
         path: annotation.path,
         line: annotation.line
       });
@@ -148,6 +148,14 @@ export function createReviewComments(annotations: Annotation[], changedFiles: Ch
   });
   logger.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
+}
+
+function createBody(annotation: Annotation, displayCount: string) {
+  let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
+  body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
+  body += annotation.ruleHelp ? `\r\n[rulehelp](${annotation.ruleHelp})` : '';
+
+  return body;
 }
 
 /**

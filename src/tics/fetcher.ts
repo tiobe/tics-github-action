@@ -18,6 +18,7 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
   try {
     const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
     if (response) {
+      logger.debug(JSON.stringify(response));
       analyzedFiles = response.data
         .filter((file: AnalyzedFile) => {
           return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
@@ -111,9 +112,10 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ann
   try {
     await Promise.all(
       apiLinks.map(async (link, index) => {
-        const annotationsUrl = `${baseUrl}/${link.url}`;
+        const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
+        annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
         logger.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest<AnnotationResonse>(annotationsUrl);
+        const response = await httpRequest<AnnotationResonse>(annotationsUrl.href);
         if (response) {
           response.data.forEach((annotation: Annotation) => {
             annotation.gateId = index;

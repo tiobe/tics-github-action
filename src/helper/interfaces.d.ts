@@ -111,6 +111,9 @@ export interface Annotation {
   displayCount?: string;
   path?: string;
   diffLines?: number[];
+  ruleHelp?: string;
+  synopsis?: string;
+  annotationName?: string;
 }
 
 export interface VersionResponse {
