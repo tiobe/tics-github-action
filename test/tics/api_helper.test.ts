@@ -7,13 +7,23 @@ import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTi
 describe('httpRequest', () => {
   test('Should return response on status 200', async () => {
     // testing without setting TICS Auth Token at least once
-    const resJson = jest.fn(() => Promise.resolve({ data: 'body' }));
+    const resJson = jest.fn(() => Promise.resolve('{ "data": "body" }'));
     const exit = jest.spyOn(logger, 'exit');
-    (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, json: resJson }));
+    (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, text: resJson }));
 
     const response = await httpRequest<any>('url');
     expect(response.data).toEqual('body');
     expect(exit).toHaveBeenCalledTimes(0);
+  });
+
+  test('Should return response on status 200 wrong json', async () => {
+    // testing without setting TICS Auth Token at least once
+    const resJson = jest.fn(() => Promise.resolve('{ data: "body" }'));
+    const exit = jest.spyOn(logger, 'exit');
+    (fetch as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ status: 200, text: resJson }));
+
+    await httpRequest<any>('url');
+    expect(exit).toHaveBeenCalledTimes(1);
   });
 
   test('Should return undefined response and call exit on status 302', async () => {
