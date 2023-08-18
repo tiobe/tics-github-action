@@ -1224,7 +1224,7 @@ async function httpRequest(url) {
                 return JSON.parse(text);
             }
             catch (error) {
-                logger_1.logger.exit(`${error}: ${text}`);
+                logger_1.logger.exit(`${error}. Tried to parse response: ${text}`);
             }
             break;
         case 302:

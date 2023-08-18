@@ -27,7 +27,7 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
       try {
         return <T>JSON.parse(text);
       } catch (error: unknown) {
-        logger.exit(`${error}: ${text}`);
+        logger.exit(`${error}. Tried to parse response: ${text}`);
       }
       break;
     case 302:
