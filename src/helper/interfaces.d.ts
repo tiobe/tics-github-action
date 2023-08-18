@@ -69,7 +69,7 @@ export interface ReviewComment {
 
 export interface ReviewComments {
   postable: ReviewComment[];
-  unpostable: Annotation[];
+  unpostable: ExtendedAnnotation[];
 }
 
 export interface AnalyzedFile {
@@ -94,7 +94,13 @@ export interface AnnotationResonse {
   header: {
     title: string;
   };
+  annotationType?: any;
   data: Annotation[];
+}
+
+export interface annotationType {
+  metricName: string;
+  instanceName: string;
 }
 
 export interface Annotation {
@@ -113,7 +119,10 @@ export interface Annotation {
   diffLines?: number[];
   ruleHelp?: string;
   synopsis?: string;
-  annotationName?: string;
+}
+
+export interface ExtendedAnnotation extends Annotation {
+  instanceName: string;
 }
 
 export interface VersionResponse {

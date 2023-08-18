@@ -1,6 +1,14 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { ChangedFile } from '../github/interfaces';
-import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationApiLink, AnnotationResonse, QualityGate, VersionResponse } from '../helper/interfaces';
+import {
+  AnalyzedFile,
+  AnalyzedFiles,
+  Annotation,
+  AnnotationApiLink,
+  AnnotationResonse,
+  ExtendedAnnotation,
+  QualityGate,
+  VersionResponse
+} from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -101,8 +109,8 @@ function getQualityGateUrl(url: string) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Annotation[]> {
-  let annotations: Annotation[] = [];
+export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
+  let annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
   try {
     await Promise.all(
@@ -113,9 +121,13 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ann
         const response = await httpRequest<AnnotationResonse>(annotationsUrl.href);
         if (response) {
           response.data.forEach((annotation: Annotation) => {
+            const extendedAnnotation: ExtendedAnnotation = {
+              ...annotation,
+              instanceName: response.annotationType ? response.annotationType[annotation.type] : annotation.type
+            };
             annotation.gateId = index;
             logger.debug(JSON.stringify(annotation));
-            annotations.push(annotation);
+            annotations.push(extendedAnnotation);
           });
         }
       })

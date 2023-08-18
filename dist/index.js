@@ -901,7 +901,7 @@ function createReviewComments(annotations, changedFiles) {
         if (annotation.diffLines?.includes(annotation.line)) {
             logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
-                title: `${annotation.annotationName ? annotation.annotationName : annotation.type}: ${annotation.rule}`,
+                title: `${annotation.instanceName}: ${annotation.rule}`,
                 body: createBody(annotation, displayCount),
                 path: annotation.path,
                 line: annotation.line
@@ -1430,9 +1430,13 @@ async function getAnnotations(apiLinks) {
             const response = await (0, api_helper_1.httpRequest)(annotationsUrl.href);
             if (response) {
                 response.data.forEach((annotation) => {
+                    const extendedAnnotation = {
+                        ...annotation,
+                        instanceName: response.annotationType ? response.annotationType[annotation.type] : annotation.type
+                    };
                     annotation.gateId = index;
                     logger_1.logger.debug(JSON.stringify(annotation));
-                    annotations.push(annotation);
+                    annotations.push(extendedAnnotation);
                 });
             }
         }));

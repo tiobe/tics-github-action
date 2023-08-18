@@ -1,7 +1,7 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { Analysis, Annotation, Condition, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { Analysis, Annotation, Condition, ExtendedAnnotation, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
@@ -121,13 +121,13 @@ function createConditionTable(condition: Condition): SummaryTableRow[] {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export function createReviewComments(annotations: Annotation[], changedFiles: ChangedFile[]): ReviewComments {
+export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ReviewComments {
   logger.info('Creating review comments from annotations.');
 
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
-  let unpostable: Annotation[] = [];
+  let unpostable: ExtendedAnnotation[] = [];
   let postable: ReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
@@ -135,7 +135,7 @@ export function createReviewComments(annotations: Annotation[], changedFiles: Ch
     if (annotation.diffLines?.includes(annotation.line)) {
       logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
-        title: `${annotation.annotationName ? annotation.annotationName : annotation.type}: ${annotation.rule}`,
+        title: `${annotation.instanceName}: ${annotation.rule}`,
         body: createBody(annotation, displayCount),
         path: annotation.path,
         line: annotation.line
@@ -163,7 +163,7 @@ function createBody(annotation: Annotation, displayCount: string) {
  * @param annotations annotations returned by TICS analyzer.
  * @returns sorted anotations.
  */
-function sortAnnotations(annotations: Annotation[]): Annotation[] {
+function sortAnnotations(annotations: ExtendedAnnotation[]): ExtendedAnnotation[] {
   return annotations.sort((a, b) => {
     if (a.fullPath === b.fullPath) return a.line - b.line;
     return a.fullPath > b.fullPath ? 1 : -1;
@@ -176,8 +176,8 @@ function sortAnnotations(annotations: Annotation[]): Annotation[] {
  * @param changedFiles List of files changed in the pull request.
  * @returns grouped annotations.
  */
-function groupAnnotations(annotations: Annotation[], changedFiles: ChangedFile[]): Annotation[] {
-  let groupedAnnotations: Annotation[] = [];
+function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ExtendedAnnotation[] {
+  let groupedAnnotations: ExtendedAnnotation[] = [];
   annotations.forEach(annotation => {
     const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
@@ -222,7 +222,7 @@ function fetchDiffLines(file: ChangedFile): number[] {
  * @param annotation Annotation to find.
  * @returns The index of the annotation found or -1
  */
-function findAnnotationInList(list: Annotation[], annotation: Annotation) {
+function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAnnotation) {
   return list.findIndex(a => {
     return (
       a.fullPath === annotation.fullPath &&
@@ -241,7 +241,7 @@ function findAnnotationInList(list: Annotation[], annotation: Annotation) {
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
-export function createUnpostableAnnotationsDetails(unpostableReviewComments: Annotation[]): string {
+export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
   let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
   let body = '';
   let previousPath = '';
