@@ -711,7 +711,7 @@ class Logger {
      */
     maskSecrets(data) {
         // Find secrets value and add them to this.matched
-        configuration_1.ticsConfig.secretsFilter.forEach(secret => {
+        configuration_1.ticsConfig.secretsFilter.forEach((secret) => {
             if (data.match(new RegExp(secret, 'gi'))) {
                 const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
                 let match = null;
@@ -920,7 +920,7 @@ exports.createReviewComments = createReviewComments;
 function createBody(annotation, displayCount) {
     let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
     body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
-    body += annotation.ruleHelp ? `\r\n[rulehelp](${annotation.ruleHelp})` : '';
+    body += annotation.ruleHelp ? `\r\nrulehelp: ${annotation.ruleHelp}` : '';
     return body;
 }
 /**
@@ -58088,6 +58088,7 @@ async function run() {
             return logger_1.logger.error('No filepath for changedfiles list.');
         analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
         if (!analysis.explorerUrl) {
+            (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
             if (!analysis.completed) {
                 await (0, comments_1.postErrorComment)(analysis);
                 logger_1.logger.setFailed('Failed to run TICS Github Action.');
@@ -58098,6 +58099,7 @@ async function run() {
             else {
                 logger_1.logger.setFailed('Failed to run TICS Github Action.');
                 analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+                await (0, comments_1.postErrorComment)(analysis);
             }
             (0, api_helper_1.cliSummary)(analysis);
             return;
