@@ -1,5 +1,6 @@
 import { githubConfig } from '../../src/configuration';
 import { ChangedFile } from '../../src/github/interfaces';
+import { ExtendedAnnotation } from '../../src/helper/interfaces';
 import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../src/helper/summary';
 import '../.setup/extend_jest';
 
@@ -89,7 +90,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       }
     ];
 
@@ -131,7 +133,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       },
       {
         fullPath: 'c:/src/test.js',
@@ -142,7 +145,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       }
     ];
 
@@ -184,7 +188,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       },
       {
         fullPath: 'HIE://project/branch/src/jest.js',
@@ -195,7 +200,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       },
       {
         fullPath: 'HIE://project/branch/src/zest.js',
@@ -206,7 +212,8 @@ describe('createReviewComments', () => {
         rule: 'test',
         msg: 'test',
         count: 1,
-        supp: false
+        supp: false,
+        instanceName: 'test'
       }
     ];
 
@@ -232,7 +239,8 @@ describe('createReviewComments', () => {
         count: 1,
         supp: false,
         displayCount: '',
-        diffLines: []
+        diffLines: [],
+        instanceName: 'test'
       },
       {
         path: 'src/zest.js',
@@ -246,7 +254,8 @@ describe('createReviewComments', () => {
         count: 1,
         supp: false,
         displayCount: '',
-        diffLines: []
+        diffLines: [],
+        instanceName: 'test'
       }
     ];
 
@@ -264,7 +273,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   });
 
   test('Should return summary of one unpostable review comment', () => {
-    const unpostable = [
+    const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
@@ -276,7 +285,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         displayCount: '',
         msg: 'test',
         supp: false,
-        count: 0
+        count: 0,
+        instanceName: 'test'
       }
     ];
 
@@ -300,7 +310,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         displayCount: '',
         msg: 'test',
         supp: false,
-        count: 0
+        count: 0,
+        instanceName: 'test'
       },
       {
         fullPath: '/home/src/hello.js',
@@ -313,7 +324,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         displayCount: '',
         msg: 'test',
         supp: false,
-        count: 0
+        count: 0,
+        instanceName: 'test'
       }
     ];
 
@@ -338,7 +350,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         displayCount: '',
         msg: 'test',
         supp: false,
-        count: 0
+        count: 0,
+        instanceName: 'test'
       },
       {
         fullPath: '/home/src/test.js',
@@ -351,7 +364,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         displayCount: '',
         msg: 'test',
         supp: false,
-        count: 0
+        count: 0,
+        instanceName: 'test'
       }
     ];
 

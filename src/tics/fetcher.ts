@@ -125,8 +125,8 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
               ...annotation,
               instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
             };
-            annotation.gateId = index;
-            logger.debug(JSON.stringify(annotation));
+            extendedAnnotation.gateId = index;
+            logger.debug(JSON.stringify(extendedAnnotation));
             annotations.push(extendedAnnotation);
           });
         }

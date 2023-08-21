@@ -1434,8 +1434,8 @@ async function getAnnotations(apiLinks) {
                         ...annotation,
                         instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
                     };
-                    annotation.gateId = index;
-                    logger_1.logger.debug(JSON.stringify(annotation));
+                    extendedAnnotation.gateId = index;
+                    logger_1.logger.debug(JSON.stringify(extendedAnnotation));
                     annotations.push(extendedAnnotation);
                 });
             }
