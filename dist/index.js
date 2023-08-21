@@ -1432,7 +1432,7 @@ async function getAnnotations(apiLinks) {
                 response.data.forEach((annotation) => {
                     const extendedAnnotation = {
                         ...annotation,
-                        instanceName: response.annotationType ? response.annotationType[annotation.type] : annotation.type
+                        instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
                     };
                     annotation.gateId = index;
                     logger_1.logger.debug(JSON.stringify(annotation));

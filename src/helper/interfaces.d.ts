@@ -94,11 +94,11 @@ export interface AnnotationResonse {
   header: {
     title: string;
   };
-  annotationType?: any;
+  annotationTypes?: Record<string, AnnotationType>;
   data: Annotation[];
 }
 
-export interface annotationType {
+export interface AnnotationType {
   metricName: string;
   instanceName: string;
 }
