@@ -68,6 +68,7 @@ async function run() {
     analysis = await runTicsAnalyzer(changedFilesFilePath);
 
     if (!analysis.explorerUrl) {
+      deletePreviousComments(await getPostedComments());
       if (!analysis.completed) {
         await postErrorComment(analysis);
         logger.setFailed('Failed to run TICS Github Action.');
@@ -76,12 +77,13 @@ async function run() {
       } else {
         logger.setFailed('Failed to run TICS Github Action.');
         analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+        await postErrorComment(analysis);
       }
       cliSummary(analysis);
       return;
     }
 
-    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl, changedFiles);
+    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
     const qualityGate = await getQualityGate(analysis.explorerUrl);
 
     if (!qualityGate) return logger.exit('Quality gate could not be retrieved');
