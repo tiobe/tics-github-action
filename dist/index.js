@@ -920,7 +920,7 @@ exports.createReviewComments = createReviewComments;
 function createBody(annotation, displayCount) {
     let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
     body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
-    body += annotation.ruleHelp ? `\r\nrulehelp: ${annotation.ruleHelp}` : '';
+    body += annotation.ruleHelp ? `\r\nRule help: ${annotation.ruleHelp}` : '';
     return body;
 }
 /**
