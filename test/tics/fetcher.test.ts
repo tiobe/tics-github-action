@@ -2,7 +2,6 @@ import { ticsConfig } from '../../src/configuration';
 import { logger } from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
-import { changedFiles } from './objects/fetcher';
 
 describe('getAnalyzedFiles', () => {
   test('Should return one analyzed file from viewer', async () => {
@@ -12,7 +11,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'debug');
 
-    const response = await getAnalyzedFiles('url', changedFiles);
+    const response = await getAnalyzedFiles('url');
 
     expect(response).toEqual(['file.js']);
     expect(spy).toHaveBeenCalledTimes(2);
@@ -27,25 +26,10 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'debug');
 
-    const response = await getAnalyzedFiles('url', changedFiles);
+    const response = await getAnalyzedFiles('url');
 
     expect(spy).toHaveBeenCalledTimes(3);
     expect(response).toEqual(['file.js', 'files.js']);
-  });
-
-  test('Should return one analyzed files from viewer', async () => {
-    jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
-    jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest
-      .spyOn(api_helper, 'httpRequest')
-      .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'filed.js' }] }));
-
-    const spy = jest.spyOn(logger, 'debug');
-
-    const response = await getAnalyzedFiles('url', changedFiles);
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(response).toEqual(['file.js']);
   });
 
   test('Should throw error on faulty httpRequest in getAnalyzedFiles', async () => {
@@ -55,7 +39,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    await getAnalyzedFiles('url', changedFiles);
+    await getAnalyzedFiles('url');
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -96,9 +80,10 @@ describe('getAnnotations', () => {
 
     const response = await getAnnotations([{ url: 'url' }, { url: 'url' }]);
 
+    console.log(response);
     expect(response).toEqual([
-      { annotation: 'anno_1', gateId: 0 },
-      { annotation: 'anno_2', gateId: 1 }
+      { annotation: 'anno_1', gateId: 0, instanceName: undefined },
+      { annotation: 'anno_2', gateId: 1, instanceName: undefined }
     ]);
   });
 
