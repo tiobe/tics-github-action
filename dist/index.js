@@ -711,7 +711,7 @@ class Logger {
      */
     maskSecrets(data) {
         // Find secrets value and add them to this.matched
-        configuration_1.ticsConfig.secretsFilter.forEach(secret => {
+        configuration_1.ticsConfig.secretsFilter.forEach((secret) => {
             if (data.match(new RegExp(secret, 'gi'))) {
                 const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
                 let match = null;
@@ -901,8 +901,8 @@ function createReviewComments(annotations, changedFiles) {
         if (annotation.diffLines?.includes(annotation.line)) {
             logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
             postable.push({
-                title: `${annotation.type}: ${annotation.rule}`,
-                body: `Line: ${annotation.line}: ${displayCount}${annotation.msg}\r\nLevel: ${annotation.level}, Category: ${annotation.category}`,
+                title: `${annotation.instanceName}: ${annotation.rule}`,
+                body: createBody(annotation, displayCount),
                 path: annotation.path,
                 line: annotation.line
             });
@@ -917,6 +917,12 @@ function createReviewComments(annotations, changedFiles) {
     return { postable: postable, unpostable: unpostable };
 }
 exports.createReviewComments = createReviewComments;
+function createBody(annotation, displayCount) {
+    let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
+    body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
+    body += annotation.ruleHelp ? `\r\nrulehelp: ${annotation.ruleHelp}` : '';
+    return body;
+}
 /**
  * Sorts annotations based on file name and line number.
  * @param annotations annotations returned by TICS analyzer.
@@ -1336,7 +1342,7 @@ const api_helper_1 = __nccwpck_require__(3823);
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-async function getAnalyzedFiles(url, changedFiles) {
+async function getAnalyzedFiles(url) {
     logger_1.logger.header('Retrieving analyzed files.');
     const analyzedFilesUrl = getAnalyzedFilesUrl(url);
     let analyzedFiles = [];
@@ -1344,11 +1350,7 @@ async function getAnalyzedFiles(url, changedFiles) {
     try {
         const response = await (0, api_helper_1.httpRequest)(analyzedFilesUrl);
         if (response) {
-            analyzedFiles = response.data
-                .filter((file) => {
-                return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
-            })
-                .map((file) => {
+            analyzedFiles = response.data.map((file) => {
                 logger_1.logger.debug(file.formattedValue);
                 return file.formattedValue;
             });
@@ -1429,14 +1431,19 @@ async function getAnnotations(apiLinks) {
     logger_1.logger.header('Retrieving annotations.');
     try {
         await Promise.all(apiLinks.map(async (link, index) => {
-            const annotationsUrl = `${configuration_1.baseUrl}/${link.url}`;
+            const annotationsUrl = new URL(`${configuration_1.baseUrl}/${link.url}`);
+            annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
             logger_1.logger.debug(`From: ${annotationsUrl}`);
-            const response = await (0, api_helper_1.httpRequest)(annotationsUrl);
+            const response = await (0, api_helper_1.httpRequest)(annotationsUrl.href);
             if (response) {
                 response.data.forEach((annotation) => {
-                    annotation.gateId = index;
-                    logger_1.logger.debug(JSON.stringify(annotation));
-                    annotations.push(annotation);
+                    const extendedAnnotation = {
+                        ...annotation,
+                        instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
+                    };
+                    extendedAnnotation.gateId = index;
+                    logger_1.logger.debug(JSON.stringify(extendedAnnotation));
+                    annotations.push(extendedAnnotation);
                 });
             }
         }));
@@ -58088,6 +58095,7 @@ async function run() {
             return logger_1.logger.error('No filepath for changedfiles list.');
         analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
         if (!analysis.explorerUrl) {
+            (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
             if (!analysis.completed) {
                 await (0, comments_1.postErrorComment)(analysis);
                 logger_1.logger.setFailed('Failed to run TICS Github Action.');
@@ -58098,11 +58106,12 @@ async function run() {
             else {
                 logger_1.logger.setFailed('Failed to run TICS Github Action.');
                 analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+                await (0, comments_1.postErrorComment)(analysis);
             }
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
-        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl, changedFiles);
+        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
         const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
         if (!qualityGate)
             return logger_1.logger.exit('Quality gate could not be retrieved');

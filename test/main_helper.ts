@@ -1,4 +1,4 @@
-import { QualityGate } from '../src/helper/interfaces';
+import { ExtendedAnnotation, QualityGate } from '../src/helper/interfaces';
 
 interface changedFile {
   sha: string;
@@ -278,7 +278,7 @@ export const doubleFileQualityGatePassed: QualityGate = {
   ]
 };
 
-export const singleAnnotations = [
+export const singleAnnotations: ExtendedAnnotation[] = [
   {
     fullPath: 'c:/src/test.js',
     line: 0,
@@ -288,7 +288,8 @@ export const singleAnnotations = [
     rule: 'test',
     msg: 'test',
     count: 1,
-    supp: false
+    supp: false,
+    instanceName: 'CS'
   }
 ];
 

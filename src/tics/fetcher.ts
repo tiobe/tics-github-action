@@ -1,6 +1,14 @@
 import { baseUrl, ticsConfig } from '../configuration';
-import { ChangedFile } from '../github/interfaces';
-import { AnalyzedFile, AnalyzedFiles, Annotation, AnnotationApiLink, AnnotationResonse, QualityGate, VersionResponse } from '../helper/interfaces';
+import {
+  AnalyzedFile,
+  AnalyzedFiles,
+  Annotation,
+  AnnotationApiLink,
+  AnnotationResonse,
+  ExtendedAnnotation,
+  QualityGate,
+  VersionResponse
+} from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
@@ -9,7 +17,7 @@ import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[]): Promise<string[]> {
+export async function getAnalyzedFiles(url: string): Promise<string[]> {
   logger.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
   let analyzedFiles: string[] = [];
@@ -18,14 +26,10 @@ export async function getAnalyzedFiles(url: string, changedFiles: ChangedFile[])
   try {
     const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
     if (response) {
-      analyzedFiles = response.data
-        .filter((file: AnalyzedFile) => {
-          return changedFiles.find(cf => cf.filename === file.formattedValue) ? true : false;
-        })
-        .map((file: AnalyzedFile) => {
-          logger.debug(file.formattedValue);
-          return file.formattedValue;
-        });
+      analyzedFiles = response.data.map((file: AnalyzedFile) => {
+        logger.debug(file.formattedValue);
+        return file.formattedValue;
+      });
       logger.info('Retrieved the analyzed files.');
     }
   } catch (error: unknown) {
@@ -105,20 +109,25 @@ function getQualityGateUrl(url: string) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Annotation[]> {
-  let annotations: Annotation[] = [];
+export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
+  let annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
   try {
     await Promise.all(
       apiLinks.map(async (link, index) => {
-        const annotationsUrl = `${baseUrl}/${link.url}`;
+        const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
+        annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
         logger.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest<AnnotationResonse>(annotationsUrl);
+        const response = await httpRequest<AnnotationResonse>(annotationsUrl.href);
         if (response) {
           response.data.forEach((annotation: Annotation) => {
-            annotation.gateId = index;
-            logger.debug(JSON.stringify(annotation));
-            annotations.push(annotation);
+            const extendedAnnotation: ExtendedAnnotation = {
+              ...annotation,
+              instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
+            };
+            extendedAnnotation.gateId = index;
+            logger.debug(JSON.stringify(extendedAnnotation));
+            annotations.push(extendedAnnotation);
           });
         }
       })
