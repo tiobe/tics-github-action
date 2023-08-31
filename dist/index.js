@@ -787,30 +787,34 @@ const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
-function createSummaryBody(analysis, filesAnalyzed, qualityGate, reviewComments) {
-    const failedConditions = extractFailedConditions(qualityGate.gates);
+function createSummaryBody(analysis, analysisResults, reviewComments) {
     logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
-    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(qualityGate.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
-    core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-    failedConditions.forEach(condition => {
-        if (condition.details && condition.details.items.length > 0) {
-            core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-            core_1.summary.addBreak();
-            core_1.summary.addTable(createConditionTable(condition));
-            core_1.summary.addRaw('</details>', true);
-        }
-        else {
-            core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(analysisResults.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
+    analysisResults.projectResults.forEach(projectResult => {
+        if (projectResult.qualityGate) {
+            const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+            core_1.summary.addHeading(projectResult.project, 3);
+            core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 4);
+            failedConditions.forEach(condition => {
+                if (condition.details && condition.details.items.length > 0) {
+                    core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+                    core_1.summary.addBreak();
+                    core_1.summary.addTable(createConditionTable(condition));
+                    core_1.summary.addRaw('</details>', true);
+                }
+                else {
+                    core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+                }
+            });
+            core_1.summary.addEOL();
+            core_1.summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
+            if (reviewComments && reviewComments.unpostable.length > 0) {
+                core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+            }
+            core_1.summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
         }
     });
-    core_1.summary.addEOL();
-    if (analysis.explorerUrl)
-        core_1.summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
-    if (reviewComments && reviewComments.unpostable.length > 0) {
-        core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
-    }
-    core_1.summary.addRaw(createFilesSummary(filesAnalyzed));
     logger_1.logger.info('Created summary.');
     return core_1.summary.stringify();
 }
@@ -1079,7 +1083,7 @@ async function runTicsAnalyzer(fileListPath) {
     return {
         completed: completed,
         statusCode: statusCode,
-        explorerUrl: explorerUrl,
+        explorerUrls: explorerUrl,
         errorList: errorList,
         warningList: warningList
     };
@@ -1133,10 +1137,11 @@ function findInStdOutOrErr(data) {
     if (warning && !warningList.find(w => w === warning?.toString()))
         warningList.push(warning.toString());
     const findExplorerUrl = data.match(/\/Explorer.*/g);
-    if (!explorerUrl && findExplorerUrl) {
+    if (findExplorerUrl) {
         const urlPath = findExplorerUrl.slice(-1).pop();
-        if (urlPath)
-            explorerUrl = configuration_1.viewerUrl + urlPath;
+        if (urlPath) {
+            explorerUrl.push(configuration_1.viewerUrl + urlPath);
+        }
     }
 }
 /**
@@ -1333,10 +1338,38 @@ exports.getProjectName = getProjectName;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = void 0;
+exports.getViewerVersion = exports.getAnnotations = exports.getAnalysisResults = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
+async function getAnalysisResults(explorerUrls) {
+    let analysisResults = {
+        passed: true,
+        message: '',
+        missesQualityGate: false,
+        projectResults: []
+    };
+    explorerUrls.forEach(async (url) => {
+        let analysisResult = {
+            project: (0, api_helper_1.getProjectName)(url),
+            explorerUrl: url,
+            analyzedFiles: await getAnalyzedFiles(url)
+        };
+        const qualityGate = await getQualityGate(url);
+        if (!qualityGate) {
+            analysisResults.passed = false;
+            analysisResults.missesQualityGate = true;
+        }
+        if (qualityGate && !qualityGate.passed) {
+            analysisResults.passed = false;
+            analysisResults.message += qualityGate.message + ' ';
+        }
+        analysisResult.qualityGate = qualityGate;
+        analysisResults.projectResults.push(analysisResult);
+    });
+    return analysisResults;
+}
+exports.getAnalysisResults = getAnalysisResults;
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
  * @param url The TICS explorer url.
@@ -1365,7 +1398,6 @@ async function getAnalyzedFiles(url) {
     }
     return analyzedFiles;
 }
-exports.getAnalyzedFiles = getAnalyzedFiles;
 /**
  * Returns the url to get the analyzed files with from the TICS.
  * @param url The TICS explorer url.
@@ -1392,7 +1424,6 @@ async function getQualityGate(url) {
         response = await (0, api_helper_1.httpRequest)(qualityGateUrl);
         logger_1.logger.info('Retrieved the quality gates.');
         logger_1.logger.debug(JSON.stringify(response));
-        return response;
     }
     catch (error) {
         let message = 'reason unknown';
@@ -1402,7 +1433,6 @@ async function getQualityGate(url) {
     }
     return response;
 }
-exports.getQualityGate = getQualityGate;
 /**
  * Builds the quality gate url from the explorer url.
  * @param url The TICS Explorer url.
@@ -1426,9 +1456,15 @@ function getQualityGateUrl(url) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-async function getAnnotations(apiLinks) {
+async function getAnnotations(analysisResults) {
     let annotations = [];
     logger_1.logger.header('Retrieving annotations.');
+    let apiLinks = [];
+    analysisResults.projectResults.forEach((analysis) => {
+        if (analysis.qualityGate) {
+            apiLinks.push(...analysis.qualityGate.annotationsApiV1Links);
+        }
+    });
     try {
         await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = new URL(`${configuration_1.baseUrl}/${link.url}`);
@@ -19959,27 +19995,11 @@ module.exports.canonical = canonical;
      * ```
      */
     const validate = (version) => typeof version === 'string' && /^[v\d]/.test(version) && semver.test(version);
-    /**
-     * Validate [semver](https://semver.org/) version strings strictly. Will not accept wildcards and version ranges.
-     *
-     * @param version Version number to validate
-     * @returns `true` if the version number is a valid semver version number `false` otherwise
-     *
-     * @example
-     * ```
-     * validate('1.0.0-rc.1'); // return true
-     * validate('1.0-rc.1'); // return false
-     * validate('foo'); // return false
-     * ```
-     */
-    const validateStrict = (version) => typeof version === 'string' &&
-        /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/.test(version);
 
     exports.compare = compare;
     exports.compareVersions = compareVersions;
     exports.satisfies = satisfies;
     exports.validate = validate;
-    exports.validateStrict = validateStrict;
 
 }));
 //# sourceMappingURL=index.js.map
@@ -58110,7 +58130,7 @@ async function run() {
         if (!changedFilesFilePath)
             return logger_1.logger.error('No filepath for changedfiles list.');
         analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFilesFilePath);
-        if (!analysis.explorerUrl) {
+        if (analysis.explorerUrls.length === 0) {
             (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
             if (!analysis.completed) {
                 await (0, comments_1.postErrorComment)(analysis);
@@ -58127,10 +58147,9 @@ async function run() {
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
-        const analyzedFiles = await (0, fetcher_1.getAnalyzedFiles)(analysis.explorerUrl);
-        const qualityGate = await (0, fetcher_1.getQualityGate)(analysis.explorerUrl);
-        if (!qualityGate)
-            return logger_1.logger.exit('Quality gate could not be retrieved');
+        const analysisResults = await (0, fetcher_1.getAnalysisResults)(analysis.explorerUrls);
+        if (analysisResults.missesQualityGate)
+            return logger_1.logger.exit('Some quality gates could not be retrieved');
         // If not run on a pull request no review comments have to be deleted
         if (configuration_1.githubConfig.eventName === 'pull_request') {
             const previousReviewComments = await (0, annotations_1.getPostedReviewComments)();
@@ -58140,21 +58159,21 @@ async function run() {
         }
         let reviewComments;
         if (configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await (0, fetcher_1.getAnnotations)(qualityGate.annotationsApiV1Links);
+            const annotations = await (0, fetcher_1.getAnnotations)(analysisResults);
             if (annotations && annotations.length > 0) {
                 reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
                 (0, annotations_1.postAnnotations)(reviewComments);
             }
         }
-        let reviewBody = (0, summary_1.createSummaryBody)(analysis, analyzedFiles, qualityGate, reviewComments);
+        let reviewBody = (0, summary_1.createSummaryBody)(analysis, analysisResults, reviewComments);
         // If not run on a pull request no comments have to be deleted
         // and there is no conversation to post to.
         if (configuration_1.githubConfig.eventName === 'pull_request') {
             (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
-            await postToConversation(true, reviewBody, qualityGate.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
+            await postToConversation(true, reviewBody, analysisResults.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
         }
-        if (!qualityGate.passed)
-            logger_1.logger.setFailed(qualityGate.message);
+        if (!analysisResults.passed)
+            logger_1.logger.setFailed(analysisResults.message);
     }
     if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
         await (0, artifacts_1.uploadArtifact)();

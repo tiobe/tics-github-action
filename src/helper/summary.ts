@@ -1,39 +1,46 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { Analysis, Annotation, Condition, ExtendedAnnotation, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { Analysis, AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
-export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
-  const failedConditions = extractFailedConditions(qualityGate.gates);
-
+export function createSummaryBody(analysis: Analysis, analysisResults: AnalysisResults, reviewComments?: ReviewComments): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
-  summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-  failedConditions.forEach(condition => {
-    if (condition.details && condition.details.items.length > 0) {
-      summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-      summary.addBreak();
-      summary.addTable(createConditionTable(condition));
-      summary.addRaw('</details>', true);
-    } else {
-      summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+  summary.addHeading(`${generateStatusMarkdown(analysisResults.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
+
+  analysisResults.projectResults.forEach(projectResult => {
+    if (projectResult.qualityGate) {
+      const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+
+      summary.addHeading(projectResult.project, 3);
+      summary.addHeading(`${failedConditions.length} Condition(s) failed`, 4);
+      failedConditions.forEach(condition => {
+        if (condition.details && condition.details.items.length > 0) {
+          summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+          summary.addBreak();
+          summary.addTable(createConditionTable(condition));
+          summary.addRaw('</details>', true);
+        } else {
+          summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+        }
+      });
+      summary.addEOL();
+
+      summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
+
+      if (reviewComments && reviewComments.unpostable.length > 0) {
+        summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+      }
+
+      summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
-  summary.addEOL();
 
-  if (analysis.explorerUrl) summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
-
-  if (reviewComments && reviewComments.unpostable.length > 0) {
-    summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
-  }
-
-  summary.addRaw(createFilesSummary(filesAnalyzed));
   logger.info('Created summary.');
 
   return summary.stringify();

@@ -1,5 +1,7 @@
 import { baseUrl, ticsConfig } from '../configuration';
 import {
+  ProjectResult,
+  AnalysisResults,
   AnalyzedFile,
   AnalyzedFiles,
   Annotation,
@@ -12,12 +14,47 @@ import {
 import { logger } from '../helper/logger';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
+export async function getAnalysisResults(explorerUrls: string[]): Promise<AnalysisResults> {
+  let analysisResults: AnalysisResults = {
+    passed: true,
+    message: '',
+    missesQualityGate: false,
+    projectResults: []
+  };
+
+  explorerUrls.forEach(async (url: string) => {
+    let analysisResult: ProjectResult = {
+      project: getProjectName(url),
+      explorerUrl: url,
+      analyzedFiles: await getAnalyzedFiles(url)
+    };
+
+    const qualityGate = await getQualityGate(url);
+
+    if (!qualityGate) {
+      analysisResults.passed = false;
+      analysisResults.missesQualityGate = true;
+    }
+
+    if (qualityGate && !qualityGate.passed) {
+      analysisResults.passed = false;
+      analysisResults.message += qualityGate.message + ' ';
+    }
+
+    analysisResult.qualityGate = qualityGate;
+
+    analysisResults.projectResults.push(analysisResult);
+  });
+
+  return analysisResults;
+}
+
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-export async function getAnalyzedFiles(url: string): Promise<string[]> {
+async function getAnalyzedFiles(url: string): Promise<string[]> {
   logger.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
   let analyzedFiles: string[] = [];
@@ -60,7 +97,7 @@ function getAnalyzedFilesUrl(url: string) {
  * @param url The TICS explorer url.
  * @returns the quality gates
  */
-export async function getQualityGate(url: string): Promise<QualityGate | undefined> {
+async function getQualityGate(url: string): Promise<QualityGate | undefined> {
   logger.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);
@@ -71,12 +108,12 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
     response = await httpRequest<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
-    return response;
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
     logger.exit(`There was an error retrieving the quality gates: ${message}`);
   }
+
   return response;
 }
 
@@ -109,9 +146,17 @@ function getQualityGateUrl(url: string) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
+export async function getAnnotations(analysisResults: AnalysisResults): Promise<ExtendedAnnotation[]> {
   let annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
+
+  let apiLinks: AnnotationApiLink[] = [];
+  analysisResults.projectResults.forEach((analysis: ProjectResult) => {
+    if (analysis.qualityGate) {
+      apiLinks.push(...analysis.qualityGate.annotationsApiV1Links);
+    }
+  });
+
   try {
     await Promise.all(
       apiLinks.map(async (link, index) => {

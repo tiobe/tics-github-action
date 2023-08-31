@@ -3,7 +3,21 @@ export interface Analysis {
   statusCode: number;
   errorList: string[];
   warningList: string[];
-  explorerUrl?: string;
+  explorerUrls: string[];
+}
+
+export interface AnalysisResults {
+  passed: boolean;
+  message: string;
+  missesQualityGate: boolean;
+  projectResults: ProjectResult[];
+}
+
+export interface ProjectResult {
+  project: string;
+  explorerUrl: string;
+  qualityGate?: QualityGate;
+  analyzedFiles: string[];
 }
 
 export interface QualityGate {

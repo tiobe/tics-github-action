@@ -7,7 +7,7 @@ import { getTmpDir } from '../github/artifacts';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
-let explorerUrl: string | undefined;
+let explorerUrl: string[];
 let statusCode: number;
 let completed: boolean;
 
@@ -50,7 +50,7 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
   return {
     completed: completed,
     statusCode: statusCode,
-    explorerUrl: explorerUrl,
+    explorerUrls: explorerUrl,
     errorList: errorList,
     warningList: warningList
   };
@@ -106,9 +106,11 @@ function findInStdOutOrErr(data: string): void {
   if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
-  if (!explorerUrl && findExplorerUrl) {
+  if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
-    if (urlPath) explorerUrl = viewerUrl + urlPath;
+    if (urlPath) {
+      explorerUrl.push(viewerUrl + urlPath);
+    }
   }
 }
 
