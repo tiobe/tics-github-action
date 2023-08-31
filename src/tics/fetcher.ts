@@ -54,7 +54,7 @@ export async function getAnalysisResults(explorerUrls: string[]): Promise<Analys
  * @param url The TICS explorer url.
  * @returns the analyzed files.
  */
-async function getAnalyzedFiles(url: string): Promise<string[]> {
+export async function getAnalyzedFiles(url: string): Promise<string[]> {
   logger.header('Retrieving analyzed files.');
   const analyzedFilesUrl = getAnalyzedFilesUrl(url);
   let analyzedFiles: string[] = [];
@@ -97,7 +97,7 @@ function getAnalyzedFilesUrl(url: string) {
  * @param url The TICS explorer url.
  * @returns the quality gates
  */
-async function getQualityGate(url: string): Promise<QualityGate | undefined> {
+export async function getQualityGate(url: string): Promise<QualityGate | undefined> {
   logger.header('Retrieving the quality gates.');
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);

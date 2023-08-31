@@ -1,4 +1,4 @@
-import { ExtendedAnnotation, QualityGate } from '../src/helper/interfaces';
+import { AnalysisResults, ExtendedAnnotation, QualityGate } from '../src/helper/interfaces';
 
 interface changedFile {
   sha: string;
@@ -14,7 +14,6 @@ interface changedFile {
   previous_filename?: string | undefined;
 }
 
-export const singleAnalyzedFiles: string[] = ['test.js'];
 export const singleChangedFiles: changedFile[] = [
   {
     sha: 'test',
@@ -31,7 +30,6 @@ export const singleChangedFiles: changedFile[] = [
   }
 ];
 
-export const doubleAnalyzedFiles: string[] = ['test.js', 'jest.js'];
 export const doubleChangedFiles: changedFile[] = [
   {
     sha: 'test',
@@ -64,7 +62,7 @@ export const doubleChangedFiles: changedFile[] = [
 export const analysisFailedNoUrl = {
   completed: false,
   statusCode: 1,
-  explorerUrl: undefined,
+  explorerUrls: [],
   errorList: ['Error'],
   warningList: []
 };
@@ -72,7 +70,7 @@ export const analysisFailedNoUrl = {
 export const analysisPassedNoUrl = {
   completed: true,
   statusCode: 0,
-  explorerUrl: undefined,
+  explorerUrls: [],
   errorList: ['Error'],
   warningList: []
 };
@@ -80,7 +78,7 @@ export const analysisPassedNoUrl = {
 export const analysisPassedNoUrlWarning5057 = {
   completed: true,
   statusCode: 0,
-  explorerUrl: undefined,
+  explorerUrls: [],
   errorList: ['Error'],
   warningList: ['[WARNING 5057] No url ...']
 };
@@ -88,7 +86,7 @@ export const analysisPassedNoUrlWarning5057 = {
 export const analysisPassed = {
   completed: true,
   statusCode: 0,
-  explorerUrl: 'explorerUrl',
+  explorerUrls: ['explorerUrl'],
   errorList: ['Error'],
   warningList: []
 };
@@ -96,12 +94,12 @@ export const analysisPassed = {
 export const analysisPassedNoUrlWarning = {
   completed: true,
   statusCode: 0,
-  explorerUrl: undefined,
+  explorerUrls: [],
   errorList: ['Error'],
   warningList: ['[WARNING 5057] No files have been analyzed.']
 };
 
-export const singleFileQualityGateFailed: QualityGate = {
+const singleFileQualityGateFailed: QualityGate = {
   passed: false,
   message: 'Project failed 2 out of 2 quality gates',
   url: 'api',
@@ -156,7 +154,7 @@ export const singleFileQualityGateFailed: QualityGate = {
   ]
 };
 
-export const singleFileQualityGatePassed: QualityGate = {
+const singleFileQualityGatePassed: QualityGate = {
   passed: true,
   message: 'Project passed 2 out of 2 quality gates',
   url: 'api',
@@ -211,7 +209,7 @@ export const singleFileQualityGatePassed: QualityGate = {
   ]
 };
 
-export const doubleFileQualityGatePassed: QualityGate = {
+const doubleFileQualityGatePassed: QualityGate = {
   passed: true,
   message: 'Project passed 2 out of 2 quality gates',
   url: 'api',
@@ -308,4 +306,53 @@ export const singleExpectedPostable = {
     }
   ],
   unpostable: []
+};
+
+export const analysisResultsPassedNoUrl: AnalysisResults = {
+  passed: false,
+  message: '',
+  missesQualityGate: true,
+  projectResults: []
+};
+
+export const analysisResultsSingleFileFailed: AnalysisResults = {
+  passed: false,
+  message: 'Project failed 2 out of 2 quality gates',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      analyzedFiles: ['test.js'],
+      explorerUrl: 'url',
+      project: 'project',
+      qualityGate: singleFileQualityGateFailed
+    }
+  ]
+};
+
+export const analysisResultsSingleFilePassed: AnalysisResults = {
+  passed: true,
+  message: 'Project failed 2 out of 2 quality gates',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      analyzedFiles: ['test.js'],
+      explorerUrl: 'url',
+      project: 'project',
+      qualityGate: singleFileQualityGatePassed
+    }
+  ]
+};
+
+export const analysisResultsDoubleFilePassed: AnalysisResults = {
+  passed: true,
+  message: 'Project failed 2 out of 2 quality gates',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      analyzedFiles: ['test.js', 'jest.js'],
+      explorerUrl: 'url',
+      project: 'project',
+      qualityGate: doubleFileQualityGatePassed
+    }
+  ]
 };

@@ -1338,7 +1338,7 @@ exports.getProjectName = getProjectName;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getViewerVersion = exports.getAnnotations = exports.getAnalysisResults = void 0;
+exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = exports.getAnalysisResults = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const api_helper_1 = __nccwpck_require__(3823);
@@ -1398,6 +1398,7 @@ async function getAnalyzedFiles(url) {
     }
     return analyzedFiles;
 }
+exports.getAnalyzedFiles = getAnalyzedFiles;
 /**
  * Returns the url to get the analyzed files with from the TICS.
  * @param url The TICS explorer url.
@@ -1433,6 +1434,7 @@ async function getQualityGate(url) {
     }
     return response;
 }
+exports.getQualityGate = getQualityGate;
 /**
  * Builds the quality gate url from the explorer url.
  * @param url The TICS Explorer url.
