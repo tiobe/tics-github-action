@@ -851,7 +851,7 @@ exports.createErrorSummary = createErrorSummary;
  * @returns Dropdown with all the files analyzed.
  */
 function createFilesSummary(fileList) {
-    let header = 'The following files have been checked for this project:';
+    let header = 'The following files have been checked for this project';
     let body = '<ul>';
     fileList.sort();
     fileList.forEach(file => {
@@ -1005,7 +1005,7 @@ function findAnnotationInList(list, annotation) {
  * @returns Summary of all the review comments that could not be posted.
  */
 function createUnpostableAnnotationsDetails(unpostableReviewComments) {
-    let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+    let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
     let body = '';
     let previousPath = '';
     unpostableReviewComments.forEach(reviewComment => {
