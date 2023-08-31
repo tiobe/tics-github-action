@@ -1042,7 +1042,7 @@ const api_helper_1 = __nccwpck_require__(3823);
 const artifacts_1 = __nccwpck_require__(5734);
 let errorList = [];
 let warningList = [];
-let explorerUrl;
+let explorerUrls = [];
 let statusCode;
 let completed;
 /**
@@ -1083,7 +1083,7 @@ async function runTicsAnalyzer(fileListPath) {
     return {
         completed: completed,
         statusCode: statusCode,
-        explorerUrls: explorerUrl,
+        explorerUrls: explorerUrls,
         errorList: errorList,
         warningList: warningList
     };
@@ -1140,7 +1140,7 @@ function findInStdOutOrErr(data) {
     if (findExplorerUrl) {
         const urlPath = findExplorerUrl.slice(-1).pop();
         if (urlPath) {
-            explorerUrl.push(configuration_1.viewerUrl + urlPath);
+            explorerUrls.push(configuration_1.viewerUrl + urlPath);
         }
     }
 }
