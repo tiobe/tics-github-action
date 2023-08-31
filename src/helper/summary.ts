@@ -17,8 +17,8 @@ export function createSummaryBody(analysis: Analysis, analysisResults: AnalysisR
     if (projectResult.qualityGate) {
       const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
 
-      summary.addHeading(projectResult.project, 3);
-      summary.addHeading(`${failedConditions.length} Condition(s) failed`, 4);
+      summary.addHeading(projectResult.project, 2);
+      summary.addHeading(`${failedConditions.length} Condition(s) failed`, 3);
       failedConditions.forEach(condition => {
         if (condition.details && condition.details.items.length > 0) {
           summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
@@ -83,7 +83,7 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
  * @returns Dropdown with all the files analyzed.
  */
 export function createFilesSummary(fileList: string[]): string {
-  let header = 'The following files have been checked:';
+  let header = 'The following files have been checked for this project:';
   let body = '<ul>';
   fileList.sort();
   fileList.forEach(file => {
