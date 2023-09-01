@@ -1,4 +1,5 @@
 import { baseUrl, ticsConfig } from '../configuration';
+import { ChangedFile } from '../github/interfaces';
 import {
   ProjectResult,
   AnalysisResults,
@@ -12,9 +13,10 @@ import {
   VersionResponse
 } from '../helper/interfaces';
 import { logger } from '../helper/logger';
+import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
-export async function getAnalysisResults(explorerUrls: string[]): Promise<AnalysisResults> {
+export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
   let analysisResults: AnalysisResults = {
     passed: true,
     message: '',
@@ -39,6 +41,13 @@ export async function getAnalysisResults(explorerUrls: string[]): Promise<Analys
     if (qualityGate && !qualityGate.passed) {
       analysisResults.passed = false;
       analysisResults.message += qualityGate.message + ' ';
+    }
+
+    if (qualityGate && ticsConfig.postAnnotations) {
+      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+      if (annotations && annotations.length > 0) {
+        analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
+      }
     }
 
     analysisResult.qualityGate = qualityGate;
@@ -146,16 +155,9 @@ function getQualityGateUrl(url: string) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-export async function getAnnotations(analysisResults: AnalysisResults): Promise<ExtendedAnnotation[]> {
+export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
   let annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
-
-  let apiLinks: AnnotationApiLink[] = [];
-  analysisResults.projectResults.forEach((analysis: ProjectResult) => {
-    if (analysis.qualityGate) {
-      apiLinks.push(...analysis.qualityGate.annotationsApiV1Links);
-    }
-  });
 
   try {
     await Promise.all(
@@ -183,6 +185,7 @@ export async function getAnnotations(analysisResults: AnalysisResults): Promise<
     if (error instanceof Error) message = error.message;
     logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
   }
+
   return annotations;
 }
 

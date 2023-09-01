@@ -17,14 +17,6 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: ['url']
-    };
-
     const analysisResults: AnalysisResults = {
       passed: true,
       message: '',
@@ -45,7 +37,7 @@ describe('postReview', () => {
       ]
     };
 
-    let body = createSummaryBody(analysis, analysisResults, undefined);
+    let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
     expect(spy).toBeCalledTimes(1);
@@ -56,14 +48,6 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: ['url']
-    };
-
     const analysisResults: AnalysisResults = {
       passed: true,
       message: '',
@@ -84,7 +68,7 @@ describe('postReview', () => {
       ]
     };
 
-    let body = createSummaryBody(analysis, analysisResults, undefined);
+    let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -104,14 +88,6 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: ['url']
-    };
-
     const analysisResults: AnalysisResults = {
       passed: false,
       message: '',
@@ -127,17 +103,16 @@ describe('postReview', () => {
             url: 'url',
             gates: [],
             annotationsApiV1Links: []
+          },
+          reviewComments: {
+            postable: [],
+            unpostable: []
           }
         }
       ]
     };
 
-    const reviewComments = {
-      postable: [],
-      unpostable: []
-    };
-
-    let body = createSummaryBody(analysis, analysisResults, reviewComments);
+    let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
@@ -159,14 +134,6 @@ describe('postReview', () => {
     });
     const spy = jest.spyOn(logger, 'error');
 
-    const analysis = {
-      completed: false,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: []
-    };
-
     const analysisResults: AnalysisResults = {
       passed: false,
       message: '',
@@ -187,7 +154,7 @@ describe('postReview', () => {
       ]
     };
 
-    let body = createSummaryBody(analysis, analysisResults, undefined);
+    let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 

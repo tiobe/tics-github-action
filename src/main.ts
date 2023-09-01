@@ -5,14 +5,14 @@ import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalysisResults, getAnnotations, getViewerVersion } from './tics/fetcher';
+import { getAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
-import { createSummaryBody, createReviewComments } from './helper/summary';
+import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis, ReviewComments } from './helper/interfaces';
+import { Analysis } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 
@@ -83,7 +83,7 @@ async function run() {
       return;
     }
 
-    const analysisResults = await getAnalysisResults(analysis.explorerUrls);
+    const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles);
 
     if (analysisResults.missesQualityGate) return logger.exit('Some quality gates could not be retrieved');
 
@@ -95,16 +95,11 @@ async function run() {
       }
     }
 
-    let reviewComments: ReviewComments | undefined;
     if (ticsConfig.postAnnotations) {
-      const annotations = await getAnnotations(analysisResults);
-      if (annotations && annotations.length > 0) {
-        reviewComments = createReviewComments(annotations, changedFiles);
-        postAnnotations(reviewComments);
-      }
+      postAnnotations(analysisResults);
     }
 
-    let reviewBody = createSummaryBody(analysis, analysisResults, reviewComments);
+    let reviewBody = createSummaryBody(analysisResults);
 
     // If not run on a pull request no comments have to be deleted
     // and there is no conversation to post to.

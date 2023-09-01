@@ -141,9 +141,15 @@ exports.getPostedReviewComments = getPostedReviewComments;
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-function postAnnotations(reviewComments) {
+function postAnnotations(analysisResult) {
     logger_1.logger.header('Posting annotations.');
-    reviewComments.postable.forEach(reviewComment => {
+    let postableReviewComments = [];
+    analysisResult.projectResults.forEach(projectResult => {
+        if (projectResult.reviewComments) {
+            postableReviewComments.push(...projectResult.reviewComments.postable);
+        }
+    });
+    postableReviewComments.forEach(reviewComment => {
         logger_1.logger.warning(reviewComment.body, {
             file: reviewComment.path,
             startLine: reviewComment.line,
@@ -393,6 +399,7 @@ async function getChangedFilesOfCommit() {
             if (response.data.files) {
                 return response.data.files
                     .filter(item => {
+                    // If a file is moved or renamed the status is 'renamed'.
                     if (item.status === 'renamed') {
                         // If a files has been moved without changes or if moved files are excluded, exclude them.
                         if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
@@ -402,7 +409,6 @@ async function getChangedFilesOfCommit() {
                     return true;
                 })
                     .map(item => {
-                    // If a file is moved or renamed the status is 'renamed'.
                     item.filename = (0, canonical_path_1.normalize)(item.filename);
                     logger_1.logger.debug(item.filename);
                     return item;
@@ -787,7 +793,7 @@ const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const underscore_1 = __nccwpck_require__(5067);
 const logger_1 = __nccwpck_require__(6440);
-function createSummaryBody(analysis, analysisResults, reviewComments) {
+function createSummaryBody(analysisResults) {
     logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
     core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(analysisResults.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
@@ -809,8 +815,8 @@ function createSummaryBody(analysis, analysisResults, reviewComments) {
             });
             core_1.summary.addEOL();
             core_1.summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
-            if (reviewComments && reviewComments.unpostable.length > 0) {
-                core_1.summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+            if (projectResult.reviewComments) {
+                core_1.summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
             }
             core_1.summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
         }
@@ -1341,8 +1347,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = exports.getAnalysisResults = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
+const summary_1 = __nccwpck_require__(1502);
 const api_helper_1 = __nccwpck_require__(3823);
-async function getAnalysisResults(explorerUrls) {
+async function getAnalysisResults(explorerUrls, changedFiles) {
     let analysisResults = {
         passed: true,
         message: '',
@@ -1363,6 +1370,12 @@ async function getAnalysisResults(explorerUrls) {
         if (qualityGate && !qualityGate.passed) {
             analysisResults.passed = false;
             analysisResults.message += qualityGate.message + ' ';
+        }
+        if (qualityGate && configuration_1.ticsConfig.postAnnotations) {
+            const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+            if (annotations && annotations.length > 0) {
+                analysisResult.reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
+            }
         }
         analysisResult.qualityGate = qualityGate;
         analysisResults.projectResults.push(analysisResult);
@@ -1458,15 +1471,9 @@ function getQualityGateUrl(url) {
  * @param apiLinks annotationsApiLinks url.
  * @returns TICS annotations.
  */
-async function getAnnotations(analysisResults) {
+async function getAnnotations(apiLinks) {
     let annotations = [];
     logger_1.logger.header('Retrieving annotations.');
-    let apiLinks = [];
-    analysisResults.projectResults.forEach((analysis) => {
-        if (analysis.qualityGate) {
-            apiLinks.push(...analysis.qualityGate.annotationsApiV1Links);
-        }
-    });
     try {
         await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = new URL(`${configuration_1.baseUrl}/${link.url}`);
@@ -58149,7 +58156,7 @@ async function run() {
             (0, api_helper_1.cliSummary)(analysis);
             return;
         }
-        const analysisResults = await (0, fetcher_1.getAnalysisResults)(analysis.explorerUrls);
+        const analysisResults = await (0, fetcher_1.getAnalysisResults)(analysis.explorerUrls, changedFiles);
         if (analysisResults.missesQualityGate)
             return logger_1.logger.exit('Some quality gates could not be retrieved');
         // If not run on a pull request no review comments have to be deleted
@@ -58159,15 +58166,10 @@ async function run() {
                 (0, annotations_1.deletePreviousReviewComments)(previousReviewComments);
             }
         }
-        let reviewComments;
         if (configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await (0, fetcher_1.getAnnotations)(analysisResults);
-            if (annotations && annotations.length > 0) {
-                reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
-                (0, annotations_1.postAnnotations)(reviewComments);
-            }
+            (0, annotations_1.postAnnotations)(analysisResults);
         }
-        let reviewBody = (0, summary_1.createSummaryBody)(analysis, analysisResults, reviewComments);
+        let reviewBody = (0, summary_1.createSummaryBody)(analysisResults);
         // If not run on a pull request no comments have to be deleted
         // and there is no conversation to post to.
         if (configuration_1.githubConfig.eventName === 'pull_request') {

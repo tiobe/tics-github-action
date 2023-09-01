@@ -1,5 +1,4 @@
 import { ticsConfig } from '../../src/configuration';
-import { AnalysisResults, ProjectResult, QualityGate } from '../../src/helper/interfaces';
 import { logger } from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
 import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
@@ -79,27 +78,7 @@ describe('getAnnotations', () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_1' }] }));
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_2' }] }));
 
-    const analysisResults: AnalysisResults = {
-      passed: false,
-      message: '',
-      missesQualityGate: false,
-      projectResults: [
-        {
-          project: '',
-          explorerUrl: 'url',
-          analyzedFiles: [],
-          qualityGate: {
-            passed: false,
-            message: '',
-            url: '',
-            gates: [],
-            annotationsApiV1Links: [{ url: 'url' }, { url: 'url' }]
-          }
-        }
-      ]
-    };
-
-    const response = await getAnnotations(analysisResults);
+    const response = await getAnnotations([{ url: 'url' }, { url: 'url' }]);
 
     console.log(response);
     expect(response).toEqual([
@@ -113,27 +92,7 @@ describe('getAnnotations', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    const analysisResults: AnalysisResults = {
-      passed: false,
-      message: '',
-      missesQualityGate: false,
-      projectResults: [
-        {
-          project: '',
-          explorerUrl: 'url',
-          analyzedFiles: [],
-          qualityGate: {
-            passed: false,
-            message: '',
-            url: '',
-            gates: [],
-            annotationsApiV1Links: [{ url: 'url' }]
-          }
-        }
-      ]
-    };
-
-    await getAnnotations(analysisResults);
+    await getAnnotations([{ url: 'url' }]);
 
     expect(spy).toHaveBeenCalledTimes(1);
   });

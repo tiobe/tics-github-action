@@ -1,14 +1,14 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { Analysis, AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, TicsReviewComment, TicsReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
-export function createSummaryBody(analysis: Analysis, analysisResults: AnalysisResults, reviewComments?: ReviewComments): string {
+export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
   summary.addHeading(`${generateStatusMarkdown(analysisResults.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
@@ -33,8 +33,8 @@ export function createSummaryBody(analysis: Analysis, analysisResults: AnalysisR
 
       summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
-      if (reviewComments && reviewComments.unpostable.length > 0) {
-        summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
+      if (projectResult.reviewComments) {
+        summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
       }
 
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
@@ -128,14 +128,14 @@ function createConditionTable(condition: Condition): SummaryTableRow[] {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ReviewComments {
+export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): TicsReviewComments {
   logger.info('Creating review comments from annotations.');
 
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
   let unpostable: ExtendedAnnotation[] = [];
-  let postable: ReviewComment[] = [];
+  let postable: TicsReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;

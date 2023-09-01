@@ -18,6 +18,7 @@ export interface ProjectResult {
   explorerUrl: string;
   qualityGate?: QualityGate;
   analyzedFiles: string[];
+  reviewComments?: TicsReviewComments;
 }
 
 export interface QualityGate {
@@ -74,15 +75,15 @@ export interface AnnotationApiLink {
   url: string;
 }
 
-export interface ReviewComment {
+export interface TicsReviewComment {
   title: string;
   body: string;
   path?: string;
   line: number;
 }
 
-export interface ReviewComments {
-  postable: ReviewComment[];
+export interface TicsReviewComments {
+  postable: TicsReviewComment[];
   unpostable: ExtendedAnnotation[];
 }
 
