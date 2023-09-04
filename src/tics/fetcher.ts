@@ -16,6 +16,12 @@ import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
 
+/**
+ * Retrieve all analysis results from the viewer in one convenient object.
+ * @param explorerUrls All the explorer urls gotten from the TICS analysis.
+ * @param changedFiles The changed files gotten from GitHub.
+ * @returns Object containing the results of the analysis.
+ */
 export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
   let analysisResults: AnalysisResults = {
     passed: true,
@@ -24,14 +30,20 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     projectResults: []
   };
 
-  explorerUrls.forEach(async (url: string) => {
+  if (explorerUrls.length === 0) {
+    analysisResults.passed = false;
+    analysisResults.message = 'No Explorer url found';
+    analysisResults.missesQualityGate = true;
+  }
+
+  for (const url of explorerUrls) {
     let analysisResult: ProjectResult = {
       project: getProjectName(url),
       explorerUrl: url,
-      analyzedFiles: await getAnalyzedFiles(url)
+      analyzedFiles: await exports.getAnalyzedFiles(url) // export is used for testing
     };
 
-    const qualityGate = await getQualityGate(url);
+    const qualityGate = await exports.getQualityGate(url); // export is used for testing
 
     if (!qualityGate) {
       analysisResults.passed = false;
@@ -44,7 +56,7 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     }
 
     if (qualityGate && ticsConfig.postAnnotations) {
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+      const annotations = await exports.getAnnotations(qualityGate.annotationsApiV1Links); // export is used for testing
       if (annotations && annotations.length > 0) {
         analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
       }
@@ -53,7 +65,7 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     analysisResult.qualityGate = qualityGate;
 
     analysisResults.projectResults.push(analysisResult);
-  });
+  }
 
   return analysisResults;
 }

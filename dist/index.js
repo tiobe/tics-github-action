@@ -1349,6 +1349,12 @@ const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const summary_1 = __nccwpck_require__(1502);
 const api_helper_1 = __nccwpck_require__(3823);
+/**
+ * Retrieve all analysis results from the viewer in one convenient object.
+ * @param explorerUrls All the explorer urls gotten from the TICS analysis.
+ * @param changedFiles The changed files gotten from GitHub.
+ * @returns Object containing the results of the analysis.
+ */
 async function getAnalysisResults(explorerUrls, changedFiles) {
     let analysisResults = {
         passed: true,
@@ -1356,13 +1362,18 @@ async function getAnalysisResults(explorerUrls, changedFiles) {
         missesQualityGate: false,
         projectResults: []
     };
-    explorerUrls.forEach(async (url) => {
+    if (explorerUrls.length === 0) {
+        analysisResults.passed = false;
+        analysisResults.message = 'No Explorer url found';
+        analysisResults.missesQualityGate = true;
+    }
+    for (const url of explorerUrls) {
         let analysisResult = {
             project: (0, api_helper_1.getProjectName)(url),
             explorerUrl: url,
-            analyzedFiles: await getAnalyzedFiles(url)
+            analyzedFiles: await exports.getAnalyzedFiles(url) // export is used for testing
         };
-        const qualityGate = await getQualityGate(url);
+        const qualityGate = await exports.getQualityGate(url); // export is used for testing
         if (!qualityGate) {
             analysisResults.passed = false;
             analysisResults.missesQualityGate = true;
@@ -1372,14 +1383,14 @@ async function getAnalysisResults(explorerUrls, changedFiles) {
             analysisResults.message += qualityGate.message + ' ';
         }
         if (qualityGate && configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+            const annotations = await exports.getAnnotations(qualityGate.annotationsApiV1Links); // export is used for testing
             if (annotations && annotations.length > 0) {
                 analysisResult.reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
             }
         }
         analysisResult.qualityGate = qualityGate;
         analysisResults.projectResults.push(analysisResult);
-    });
+    }
     return analysisResults;
 }
 exports.getAnalysisResults = getAnalysisResults;
@@ -20004,11 +20015,27 @@ module.exports.canonical = canonical;
      * ```
      */
     const validate = (version) => typeof version === 'string' && /^[v\d]/.test(version) && semver.test(version);
+    /**
+     * Validate [semver](https://semver.org/) version strings strictly. Will not accept wildcards and version ranges.
+     *
+     * @param version Version number to validate
+     * @returns `true` if the version number is a valid semver version number `false` otherwise
+     *
+     * @example
+     * ```
+     * validate('1.0.0-rc.1'); // return true
+     * validate('1.0-rc.1'); // return false
+     * validate('foo'); // return false
+     * ```
+     */
+    const validateStrict = (version) => typeof version === 'string' &&
+        /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/.test(version);
 
     exports.compare = compare;
     exports.compareVersions = compareVersions;
     exports.satisfies = satisfies;
     exports.validate = validate;
+    exports.validateStrict = validateStrict;
 
 }));
 //# sourceMappingURL=index.js.map
