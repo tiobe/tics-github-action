@@ -43,7 +43,7 @@
     "@types/jest": "^29.5.3",
     "@types/node": "^20.5.7",
     "@types/node-fetch": "^2.6.4",
-    "@types/underscore": "^1.11.8",
+    "@types/underscore": "^1.11.9",
     "@typescript-eslint/parser": "^6.5.0",
     "@vercel/ncc": "^0.36.1",
     "eslint": "^8.48.0",
