@@ -13,6 +13,18 @@ describe('getChangedFilesOfCommit', () => {
     expect(response).toEqual(changedFiles);
   });
 
+  test('Should return empty array on undefined files', async () => {
+    const spy = jest.spyOn(logger, 'debug');
+    await getChangedFilesOfCommit();
+
+    (octokit.paginate as any).mock.calls[0][2]({
+      data: { files: undefined }
+    });
+
+    await getChangedFilesOfCommit();
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+
   test('Should include changed moved file', async () => {
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();

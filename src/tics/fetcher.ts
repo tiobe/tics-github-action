@@ -52,7 +52,7 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
 
     if (qualityGate && !qualityGate.passed) {
       analysisResults.passed = false;
-      analysisResults.message += qualityGate.message + ' ';
+      analysisResults.message += qualityGate.message + '; ';
     }
 
     if (qualityGate && ticsConfig.postAnnotations) {
@@ -66,6 +66,9 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
 
     analysisResults.projectResults.push(analysisResult);
   }
+
+  // Remove trailing space from the message
+  analysisResults.message = analysisResults.message.trimEnd();
 
   return analysisResults;
 }
