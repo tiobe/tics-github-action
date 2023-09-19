@@ -124,7 +124,8 @@ describe('cliSummary', () => {
       completed: false,
       statusCode: -1,
       errorList: ['error', 'error', 'warning'],
-      warningList: ['warning', 'warning']
+      warningList: ['warning', 'warning'],
+      explorerUrls: []
     };
     cliSummary(analysis);
 
@@ -142,7 +143,8 @@ describe('cliSummary', () => {
       completed: false,
       statusCode: -1,
       errorList: ['error', 'error', 'warning'],
-      warningList: ['warning', 'warning']
+      warningList: ['warning', 'warning'],
+      explorerUrls: []
     };
     cliSummary(analysis);
 

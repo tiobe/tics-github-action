@@ -3,7 +3,22 @@ export interface Analysis {
   statusCode: number;
   errorList: string[];
   warningList: string[];
-  explorerUrl?: string;
+  explorerUrls: string[];
+}
+
+export interface AnalysisResults {
+  passed: boolean;
+  message: string;
+  missesQualityGate: boolean;
+  projectResults: ProjectResult[];
+}
+
+export interface ProjectResult {
+  project: string;
+  explorerUrl: string;
+  qualityGate?: QualityGate;
+  analyzedFiles: string[];
+  reviewComments?: TicsReviewComments;
 }
 
 export interface QualityGate {
@@ -60,15 +75,15 @@ export interface AnnotationApiLink {
   url: string;
 }
 
-export interface ReviewComment {
+export interface TicsReviewComment {
   title: string;
   body: string;
   path?: string;
   line: number;
 }
 
-export interface ReviewComments {
-  postable: ReviewComment[];
+export interface TicsReviewComments {
+  postable: TicsReviewComment[];
   unpostable: ExtendedAnnotation[];
 }
 

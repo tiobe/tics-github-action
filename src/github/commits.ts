@@ -20,6 +20,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
       if (response.data.files) {
         return response.data.files
           .filter(item => {
+            // If a file is moved or renamed the status is 'renamed'.
             if (item.status === 'renamed') {
               // If a files has been moved without changes or if moved files are excluded, exclude them.
               if (ticsConfig.excludeMovedFiles || item.changes === 0) {
@@ -29,7 +30,6 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
             return true;
           })
           .map(item => {
-            // If a file is moved or renamed the status is 'renamed'.
             item.filename = normalize(item.filename);
             logger.debug(item.filename);
             return item;

@@ -3,6 +3,7 @@ import { postNothingAnalyzedReview, postReview } from '../../src/github/review';
 import { createSummaryBody } from '../../src/helper/summary';
 import { Events } from '../../src/helper/enums';
 import { logger } from '../../src/helper/logger';
+import { AnalysisResults } from '../../src/helper/interfaces';
 
 jest.mock('../../src/helper/summary', () => {
   return {
@@ -16,22 +17,28 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrl: 'url'
-    };
-    const qualityGate = {
+    const analysisResults: AnalysisResults = {
       passed: true,
-      message: 'message',
-      url: 'url',
-      gates: [],
-      annotationsApiV1Links: []
+      message: '',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: '',
+          explorerUrl: 'url',
+          analyzedFiles: [],
+          qualityGate: {
+            passed: true,
+            message: 'message',
+            url: 'url',
+            gates: [],
+            annotationsApiV1Links: []
+          }
+        }
+      ]
     };
-    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
-    let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
+
+    let body = createSummaryBody(analysisResults);
+    let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
     expect(spy).toBeCalledTimes(1);
   });
@@ -41,22 +48,28 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrl: 'url'
-    };
-    const qualityGate = {
+    const analysisResults: AnalysisResults = {
       passed: true,
-      message: 'message',
-      url: 'url',
-      gates: [],
-      annotationsApiV1Links: []
+      message: '',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: '',
+          explorerUrl: 'url',
+          analyzedFiles: [],
+          qualityGate: {
+            passed: true,
+            message: 'message',
+            url: 'url',
+            gates: [],
+            annotationsApiV1Links: []
+          }
+        }
+      ]
     };
-    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
-    let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
+
+    let body = createSummaryBody(analysisResults);
+    let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
     const calledWith = {
@@ -75,26 +88,32 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrl: 'url'
-    };
-    const qualityGate = {
+    const analysisResults: AnalysisResults = {
       passed: false,
-      message: 'message',
-      url: 'url',
-      gates: [],
-      annotationsApiV1Links: []
+      message: '',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: '',
+          explorerUrl: 'url',
+          analyzedFiles: [],
+          qualityGate: {
+            passed: false,
+            message: 'message',
+            url: 'url',
+            gates: [],
+            annotationsApiV1Links: []
+          },
+          reviewComments: {
+            postable: [],
+            unpostable: []
+          }
+        }
+      ]
     };
-    const reviewComments = {
-      postable: [],
-      unpostable: []
-    };
-    let body = await createSummaryBody(analysis, [''], qualityGate, reviewComments);
-    let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
+
+    let body = createSummaryBody(analysisResults);
+    let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
     const calledWith = {
@@ -115,22 +134,28 @@ describe('postReview', () => {
     });
     const spy = jest.spyOn(logger, 'error');
 
-    const analysis = {
-      completed: false,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrl: undefined
+    const analysisResults: AnalysisResults = {
+      passed: false,
+      message: '',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: '',
+          explorerUrl: 'url',
+          analyzedFiles: [],
+          qualityGate: {
+            passed: false,
+            message: 'message',
+            url: 'url',
+            gates: [],
+            annotationsApiV1Links: []
+          }
+        }
+      ]
     };
-    const qualityGate = {
-      passed: true,
-      message: 'message',
-      url: 'url',
-      gates: [],
-      annotationsApiV1Links: []
-    };
-    let body = await createSummaryBody(analysis, [''], qualityGate, undefined);
-    let event = qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
+
+    let body = createSummaryBody(analysisResults);
+    let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
     expect(spy).toBeCalledTimes(1);

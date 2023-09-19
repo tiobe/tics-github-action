@@ -1,7 +1,9 @@
 import { ticsConfig } from '../../src/configuration';
 import { logger } from '../../src/helper/logger';
 import * as api_helper from '../../src/tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from '../../src/tics/fetcher';
+import * as fetcher from '../../src/tics/fetcher';
+import * as summary from '../../src/helper/summary';
+import { ticsReviewComments, annotations, failedQualityGate, passedQualityGate } from './objects/fetcher';
 
 describe('getAnalyzedFiles', () => {
   test('Should return one analyzed file from viewer', async () => {
@@ -11,7 +13,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'debug');
 
-    const response = await getAnalyzedFiles('url');
+    const response = await fetcher.getAnalyzedFiles('url');
 
     expect(response).toEqual(['file.js']);
     expect(spy).toHaveBeenCalledTimes(2);
@@ -26,7 +28,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'debug');
 
-    const response = await getAnalyzedFiles('url');
+    const response = await fetcher.getAnalyzedFiles('url');
 
     expect(spy).toHaveBeenCalledTimes(3);
     expect(response).toEqual(['file.js', 'files.js']);
@@ -39,7 +41,7 @@ describe('getAnalyzedFiles', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    await getAnalyzedFiles('url');
+    await fetcher.getAnalyzedFiles('url');
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -53,7 +55,7 @@ describe('getQualityGate', () => {
 
     ticsConfig.branchName = 'main';
 
-    const response = await getQualityGate('url');
+    const response = await fetcher.getQualityGate('url');
 
     expect(response).toEqual({ data: 'data' });
   });
@@ -65,7 +67,7 @@ describe('getQualityGate', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    await getQualityGate('url');
+    await fetcher.getQualityGate('url');
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -74,13 +76,11 @@ describe('getQualityGate', () => {
 describe('getAnnotations', () => {
   test('Should return analyzed files from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
-    jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_1' }] }));
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_2' }] }));
 
-    const response = await getAnnotations([{ url: 'url' }, { url: 'url' }]);
+    const response = await fetcher.getAnnotations([{ url: 'url' }, { url: 'url' }]);
 
-    console.log(response);
     expect(response).toEqual([
       { annotation: 'anno_1', gateId: 0, instanceName: undefined },
       { annotation: 'anno_2', gateId: 1, instanceName: undefined }
@@ -92,7 +92,7 @@ describe('getAnnotations', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    await getAnnotations([{ url: 'url' }]);
+    await fetcher.getAnnotations([{ url: 'url' }]);
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -102,7 +102,7 @@ describe('getViewerVersion', () => {
   test('Should version of the viewer', async () => {
     jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ version: '2022.0.0' }));
 
-    const response = await getViewerVersion();
+    const response = await fetcher.getViewerVersion();
 
     expect(response?.version).toEqual('2022.0.0');
   });
@@ -112,8 +112,148 @@ describe('getViewerVersion', () => {
 
     const spy = jest.spyOn(logger, 'exit');
 
-    await getViewerVersion();
+    await fetcher.getViewerVersion();
 
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Should be executed last due to spying rules
+describe('getAnalysisResults', () => {
+  // For multiproject run with project auto
+  ticsConfig.projectName = 'auto';
+
+  test('Should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {
+    const result = await fetcher.getAnalysisResults([], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: 'No Explorer url found',
+      missesQualityGate: true,
+      projectResults: []
+    });
+  });
+
+  test('Should return on no quality gate', async () => {
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(undefined);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: '',
+      missesQualityGate: true,
+      projectResults: [
+        {
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
+          analyzedFiles: ['file'],
+          qualityGate: undefined
+        }
+      ]
+    });
+  });
+
+  test('Should return on failed quality gate on single url', async () => {
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: 'failed;',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
+          analyzedFiles: ['file'],
+          qualityGate: failedQualityGate
+        }
+      ]
+    });
+  });
+
+  test('Should return on one failed quality gate on multiple urls', async () => {
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValue(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: 'failed;',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
+          analyzedFiles: ['file'],
+          qualityGate: failedQualityGate
+        },
+        {
+          project: 'projectName',
+          explorerUrl: 'https://url.com/Project(projectName)',
+          analyzedFiles: ['file'],
+          qualityGate: passedQualityGate
+        }
+      ]
+    });
+  });
+
+  test('Should return on all failed quality gates on multiple urls', async () => {
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValue(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValue(failedQualityGate);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: 'failed; failed;',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
+          analyzedFiles: ['file'],
+          qualityGate: failedQualityGate
+        },
+        {
+          project: 'projectName',
+          explorerUrl: 'https://url.com/Project(projectName)',
+          analyzedFiles: ['file'],
+          qualityGate: failedQualityGate
+        }
+      ]
+    });
+  });
+
+  test('Should return on failed quality gate with annotations', async () => {
+    ticsConfig.postAnnotations = true;
+
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
+    jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(annotations);
+    jest.spyOn(summary, 'createReviewComments').mockReturnValueOnce(ticsReviewComments);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+
+    expect(result).toEqual({
+      passed: false,
+      message: 'failed;',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
+          analyzedFiles: ['file'],
+          qualityGate: failedQualityGate,
+          reviewComments: ticsReviewComments
+        }
+      ]
+    });
   });
 });

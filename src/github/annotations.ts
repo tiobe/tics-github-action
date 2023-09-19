@@ -1,7 +1,7 @@
 import { logger } from '../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 import { ReviewComment } from './interfaces';
-import { ReviewComments } from '../helper/interfaces';
+import { AnalysisResults, TicsReviewComment } from '../helper/interfaces';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -29,9 +29,18 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function postAnnotations(reviewComments: ReviewComments): void {
+export function postAnnotations(analysisResult: AnalysisResults): void {
   logger.header('Posting annotations.');
-  reviewComments.postable.forEach(reviewComment => {
+
+  let postableReviewComments: TicsReviewComment[] = [];
+
+  analysisResult.projectResults.forEach(projectResult => {
+    if (projectResult.reviewComments) {
+      postableReviewComments.push(...projectResult.reviewComments.postable);
+    }
+  });
+
+  postableReviewComments.forEach(reviewComment => {
     logger.warning(reviewComment.body, {
       file: reviewComment.path,
       startLine: reviewComment.line,

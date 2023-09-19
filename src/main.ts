@@ -5,14 +5,14 @@ import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalyzedFiles, getAnnotations, getQualityGate, getViewerVersion } from './tics/fetcher';
+import { getAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
-import { createSummaryBody, createReviewComments } from './helper/summary';
+import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events } from './helper/enums';
 import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis, ReviewComments } from './helper/interfaces';
+import { Analysis } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 
@@ -67,7 +67,7 @@ async function run() {
     if (!changedFilesFilePath) return logger.error('No filepath for changedfiles list.');
     analysis = await runTicsAnalyzer(changedFilesFilePath);
 
-    if (!analysis.explorerUrl) {
+    if (analysis.explorerUrls.length === 0) {
       deletePreviousComments(await getPostedComments());
       if (!analysis.completed) {
         await postErrorComment(analysis);
@@ -83,10 +83,9 @@ async function run() {
       return;
     }
 
-    const analyzedFiles = await getAnalyzedFiles(analysis.explorerUrl);
-    const qualityGate = await getQualityGate(analysis.explorerUrl);
+    const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles);
 
-    if (!qualityGate) return logger.exit('Quality gate could not be retrieved');
+    if (analysisResults.missesQualityGate) return logger.exit('Some quality gates could not be retrieved');
 
     // If not run on a pull request no review comments have to be deleted
     if (githubConfig.eventName === 'pull_request') {
@@ -96,26 +95,21 @@ async function run() {
       }
     }
 
-    let reviewComments: ReviewComments | undefined;
     if (ticsConfig.postAnnotations) {
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-      if (annotations && annotations.length > 0) {
-        reviewComments = createReviewComments(annotations, changedFiles);
-        postAnnotations(reviewComments);
-      }
+      postAnnotations(analysisResults);
     }
 
-    let reviewBody = createSummaryBody(analysis, analyzedFiles, qualityGate, reviewComments);
+    let reviewBody = createSummaryBody(analysisResults);
 
     // If not run on a pull request no comments have to be deleted
     // and there is no conversation to post to.
     if (githubConfig.eventName === 'pull_request') {
       deletePreviousComments(await getPostedComments());
 
-      await postToConversation(true, reviewBody, qualityGate.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+      await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
     }
 
-    if (!qualityGate.passed) logger.setFailed(qualityGate.message);
+    if (!analysisResults.passed) logger.setFailed(analysisResults.message);
   }
 
   if (ticsConfig.tmpDir || githubConfig.debugger) {

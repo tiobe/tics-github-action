@@ -36,6 +36,9 @@ jest.mock('../../src/configuration', () => {
           listComments: jest.fn(),
           createComment: jest.fn(),
           deleteComment: jest.fn()
+        },
+        repos: {
+          getCommit: jest.fn()
         }
       }
     },

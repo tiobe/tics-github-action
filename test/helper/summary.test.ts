@@ -42,12 +42,9 @@ describe('createFilesSummary', () => {
   test('Should return summary list of a single file', () => {
     const response = createFilesSummary(['test.js']);
 
-    expect(response).toEqual('<details><summary>The following files have been checked:</summary>\n<ul><li>test.js</li></ul></details>\n\n');
-  });
-
-  test('Should return summary list of a single file', () => {
-    const response = createFilesSummary(['test.js']);
-
+    expect(response).toEqual(
+      '<details><summary>The following files have been checked for this project</summary>\n<ul><li>test.js</li></ul></details>\n\n'
+    );
     expect(response).toContainTimes('<li>test.js</li>', 1);
   });
 
@@ -268,7 +265,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   test('Should return summary of zero unpostable review comments on empty input', () => {
     const response = createUnpostableAnnotationsDetails([]);
     expect(response).toEqual(
-      '<details><summary>Quality gate failures that cannot be annotated in <b>Files Changed</b>:</summary>\n</table></details>\n\n'
+      '<details><summary>Quality gate failures that cannot be annotated in <b>Files Changed</b></summary>\n</table></details>\n\n'
     );
   });
 

@@ -1,39 +1,46 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { Analysis, Annotation, Condition, ExtendedAnnotation, Gate, QualityGate, ReviewComment, ReviewComments } from './interfaces';
+import { AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, TicsReviewComment, TicsReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 
-export function createSummaryBody(analysis: Analysis, filesAnalyzed: string[], qualityGate: QualityGate, reviewComments?: ReviewComments): string {
-  const failedConditions = extractFailedConditions(qualityGate.gates);
-
+export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(qualityGate.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
-  summary.addHeading(`${failedConditions.length} Condition(s) failed`, 2);
-  failedConditions.forEach(condition => {
-    if (condition.details && condition.details.items.length > 0) {
-      summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
-      summary.addBreak();
-      summary.addTable(createConditionTable(condition));
-      summary.addRaw('</details>', true);
-    } else {
-      summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+  summary.addHeading(`${generateStatusMarkdown(analysisResults.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
+
+  analysisResults.projectResults.forEach(projectResult => {
+    if (projectResult.qualityGate) {
+      const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+
+      summary.addHeading(projectResult.project, 2);
+      summary.addHeading(`${failedConditions.length} Condition(s) failed`, 3);
+      failedConditions.forEach(condition => {
+        if (condition.details && condition.details.items.length > 0) {
+          summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+          summary.addBreak();
+          summary.addTable(createConditionTable(condition));
+          summary.addRaw('</details>', true);
+        } else {
+          summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+        }
+      });
+      summary.addEOL();
+
+      summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
+
+      if (projectResult.reviewComments) {
+        summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
+      }
+
+      summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
-  summary.addEOL();
 
-  if (analysis.explorerUrl) summary.addLink('See the results in the TICS Viewer', analysis.explorerUrl);
-
-  if (reviewComments && reviewComments.unpostable.length > 0) {
-    summary.addRaw(createUnpostableAnnotationsDetails(reviewComments.unpostable));
-  }
-
-  summary.addRaw(createFilesSummary(filesAnalyzed));
   logger.info('Created summary.');
 
   return summary.stringify();
@@ -76,7 +83,7 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
  * @returns Dropdown with all the files analyzed.
  */
 export function createFilesSummary(fileList: string[]): string {
-  let header = 'The following files have been checked:';
+  let header = 'The following files have been checked for this project';
   let body = '<ul>';
   fileList.sort();
   fileList.forEach(file => {
@@ -121,14 +128,14 @@ function createConditionTable(condition: Condition): SummaryTableRow[] {
  * @param changedFiles List of files changed in the pull request.
  * @returns List of the review comments.
  */
-export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ReviewComments {
+export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): TicsReviewComments {
   logger.info('Creating review comments from annotations.');
 
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
   let unpostable: ExtendedAnnotation[] = [];
-  let postable: ReviewComment[] = [];
+  let postable: TicsReviewComment[] = [];
 
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
@@ -242,7 +249,7 @@ function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAn
  * @returns Summary of all the review comments that could not be posted.
  */
 export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
-  let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>:';
+  let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
   let body = '';
   let previousPath = '';
 

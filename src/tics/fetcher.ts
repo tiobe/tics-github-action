@@ -1,5 +1,8 @@
 import { baseUrl, ticsConfig } from '../configuration';
+import { ChangedFile } from '../github/interfaces';
 import {
+  ProjectResult,
+  AnalysisResults,
   AnalyzedFile,
   AnalyzedFiles,
   Annotation,
@@ -10,7 +13,65 @@ import {
   VersionResponse
 } from '../helper/interfaces';
 import { logger } from '../helper/logger';
+import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
+
+/**
+ * Retrieve all analysis results from the viewer in one convenient object.
+ * @param explorerUrls All the explorer urls gotten from the TICS analysis.
+ * @param changedFiles The changed files gotten from GitHub.
+ * @returns Object containing the results of the analysis.
+ */
+export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
+  let analysisResults: AnalysisResults = {
+    passed: true,
+    message: '',
+    missesQualityGate: false,
+    projectResults: []
+  };
+
+  if (explorerUrls.length === 0) {
+    analysisResults.passed = false;
+    analysisResults.message = 'No Explorer url found';
+    analysisResults.missesQualityGate = true;
+  }
+
+  for (const url of explorerUrls) {
+    let analysisResult: ProjectResult = {
+      project: getProjectName(url),
+      explorerUrl: url,
+      analyzedFiles: await exports.getAnalyzedFiles(url) // export is used for testing
+    };
+
+    const qualityGate = await exports.getQualityGate(url); // export is used for testing
+
+    if (!qualityGate) {
+      analysisResults.passed = false;
+      analysisResults.missesQualityGate = true;
+    }
+
+    if (qualityGate && !qualityGate.passed) {
+      analysisResults.passed = false;
+      analysisResults.message += qualityGate.message + '; ';
+    }
+
+    if (qualityGate && ticsConfig.postAnnotations) {
+      const annotations = await exports.getAnnotations(qualityGate.annotationsApiV1Links); // export is used for testing
+      if (annotations && annotations.length > 0) {
+        analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
+      }
+    }
+
+    analysisResult.qualityGate = qualityGate;
+
+    analysisResults.projectResults.push(analysisResult);
+  }
+
+  // Remove trailing space from the message
+  analysisResults.message = analysisResults.message.trimEnd();
+
+  return analysisResults;
+}
 
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
@@ -71,12 +132,12 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
     response = await httpRequest<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
-    return response;
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
     logger.exit(`There was an error retrieving the quality gates: ${message}`);
   }
+
   return response;
 }
 
@@ -112,6 +173,7 @@ function getQualityGateUrl(url: string) {
 export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
   let annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
+
   try {
     await Promise.all(
       apiLinks.map(async (link, index) => {
@@ -138,6 +200,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
     if (error instanceof Error) message = error.message;
     logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
   }
+
   return annotations;
 }
 

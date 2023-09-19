@@ -268,7 +268,7 @@ describe('test callback functions', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     const response = await runTicsAnalyzer('/path/to');
 
-    expect(response.explorerUrl).toEqual('<url>/Explorer.html#axes=ClientData');
+    expect(response.explorerUrls[0]).toEqual('<url>/Explorer.html#axes=ClientData');
   });
 });
 

@@ -51,7 +51,8 @@ describe('postErrorComment', () => {
       completed: true,
       errorList: ['error1'],
       warningList: [],
-      statusCode: 0
+      statusCode: 0,
+      explorerUrls: []
     };
     await postErrorComment(analysis);
     expect(spy).toBeCalledTimes(1);
@@ -64,7 +65,8 @@ describe('postErrorComment', () => {
       completed: true,
       errorList: ['error1'],
       warningList: [],
-      statusCode: 0
+      statusCode: 0,
+      explorerUrls: []
     };
     await postErrorComment(analysis);
     const calledWith = {
@@ -87,7 +89,8 @@ describe('postErrorComment', () => {
       completed: false,
       errorList: ['error1'],
       warningList: [],
-      statusCode: 0
+      statusCode: 0,
+      explorerUrls: []
     };
     await postErrorComment(analysis);
 
