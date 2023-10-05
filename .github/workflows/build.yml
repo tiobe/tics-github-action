@@ -1,8 +1,12 @@
 name: Build
+
 on:
   push:
     branches:
       - main
+
+concurrency: build.yml
+
 jobs:
   build:
     name: build
