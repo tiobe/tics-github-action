@@ -79,6 +79,6 @@ const ignoreSslError: boolean =
   ticsConfig.trustStrategy === 'all';
 
 export const octokit = new myOctokit({ auth: ticsConfig.githubToken, request: { retries: 25 } });
-export const httpClient = new HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 25, ignoreSslError: ignoreSslError });
+export const httpClient = new HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
