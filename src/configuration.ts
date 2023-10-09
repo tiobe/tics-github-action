@@ -1,6 +1,5 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
-import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
-import { context } from '@actions/github';
+import { context, getOctokit } from '@actions/github';
 import { HttpClient } from '@actions/http-client';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
@@ -68,14 +67,13 @@ export const ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-const myOctokit = GitHub.plugin(require('@octokit/plugin-retry').retry);
 const ignoreSslError: boolean =
   ticsConfig.hostnameVerification === '0' ||
   ticsConfig.hostnameVerification === 'false' ||
   ticsConfig.trustStrategy === 'self-signed' ||
   ticsConfig.trustStrategy === 'all';
 
-export const octokit = new myOctokit(getOctokitOptions(ticsConfig.githubToken, { request: { retries: 25 } }));
+export const octokit = getOctokit(ticsConfig.githubToken, { request: { retries: 25 } }, require('@octokit/plugin-retry').retry);
 export const httpClient = new HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
