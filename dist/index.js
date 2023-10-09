@@ -7,7 +7,7 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.octokit = exports.httpClient = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const http_client_1 = __nccwpck_require__(6255);
@@ -82,11 +82,8 @@ const ignoreSslError = exports.ticsConfig.hostnameVerification === '0' ||
     exports.ticsConfig.hostnameVerification === 'false' ||
     exports.ticsConfig.trustStrategy === 'self-signed' ||
     exports.ticsConfig.trustStrategy === 'all';
+exports.octokit = new myOctokit({ auth: exports.ticsConfig.githubToken, request: { retries: 25 } });
 exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
-function fetch(url) {
-    return exports.httpClient.get(url);
-}
-exports.octokit = new myOctokit({ auth: exports.ticsConfig.githubToken, request: { fetch: fetch } });
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
