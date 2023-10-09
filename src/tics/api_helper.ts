@@ -19,6 +19,8 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
   const response: HttpClientResponse = await httpClient.get(url, headers);
 
+  const errorMessage = `Retried ${ticsConfig.retries} time(s), but got: HTTP request failed with status ${response.message.statusCode}.`;
+
   switch (response.message.statusCode) {
     case 200:
       const text = await response.readBody();
@@ -29,28 +31,24 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
       }
       break;
     case 302:
-      logger.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
-      );
+      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
       break;
     case 400:
-      const body = await response.readBody();
-      console.log(body);
-      logger.exit(`HTTP request failed with status ${response.message.statusCode}. ${(<HttpResponse>JSON.parse(body)).alertMessages[0].header}`);
+      logger.exit(`${errorMessage} ${(<HttpResponse>JSON.parse(await response.readBody())).alertMessages[0].header}`);
       break;
     case 401:
       logger.exit(
-        `HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
+        `${errorMessage} Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
       break;
     case 403:
-      logger.exit(`HTTP request failed with status ${response.message.statusCode}. Forbidden call: ${url}`);
+      logger.exit(`${errorMessage} Forbidden call: ${url}`);
       break;
     case 404:
-      logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
+      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct.`);
       break;
     default:
-      logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
+      logger.exit(`${errorMessage} ${response.message.statusMessage}`);
       break;
   }
   return;

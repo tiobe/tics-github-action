@@ -64,7 +64,8 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   trustStrategy: getInput('trustStrategy'),
   secretsFilter: getSecretsFilter(getInput('secretsFilter')),
-  viewerUrl: getInput('viewerUrl')
+  viewerUrl: getInput('viewerUrl'),
+  retries: 10
 };
 
 const ignoreSslError: boolean =
@@ -73,7 +74,15 @@ const ignoreSslError: boolean =
   ticsConfig.trustStrategy === 'self-signed' ||
   ticsConfig.trustStrategy === 'all';
 
-export const octokit = getOctokit(ticsConfig.githubToken, { request: { retries: 10 } }, require('@octokit/plugin-retry').retry);
-export const httpClient = new HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
+export const octokit = getOctokit(
+  ticsConfig.githubToken,
+  { request: { retries: ticsConfig.retries, retryAfter: 5 } },
+  require('@octokit/plugin-retry').retry
+);
+export const httpClient = new HttpClient('tics-github-action', undefined, {
+  allowRetries: true,
+  maxRetries: ticsConfig.retries,
+  ignoreSslError: ignoreSslError
+});
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

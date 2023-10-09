@@ -71,14 +71,19 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     trustStrategy: (0, core_1.getInput)('trustStrategy'),
     secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter')),
-    viewerUrl: (0, core_1.getInput)('viewerUrl')
+    viewerUrl: (0, core_1.getInput)('viewerUrl'),
+    retries: 10
 };
 const ignoreSslError = exports.ticsConfig.hostnameVerification === '0' ||
     exports.ticsConfig.hostnameVerification === 'false' ||
     exports.ticsConfig.trustStrategy === 'self-signed' ||
     exports.ticsConfig.trustStrategy === 'all';
-exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: 10 } }, (__nccwpck_require__(6298).retry));
-exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
+exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: exports.ticsConfig.retries, retryAfter: 5 } }, (__nccwpck_require__(6298).retry));
+exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, {
+    allowRetries: true,
+    maxRetries: exports.ticsConfig.retries,
+    ignoreSslError: ignoreSslError
+});
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -94,6 +99,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deletePreviousReviewComments = exports.postAnnotations = exports.getPostedReviewComments = void 0;
 const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
+const error_1 = __nccwpck_require__(5922);
 /**
  * Gets a list of all reviews posted on the pull request.
  * @returns List of reviews posted on the pull request.
@@ -110,9 +116,7 @@ async function getPostedReviewComments() {
         response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listReviewComments, params);
     }
     catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Could not retrieve the review comments: ${message}`);
     }
     return response;
@@ -156,9 +160,7 @@ function deletePreviousReviewComments(postedReviewComments) {
                 await configuration_1.octokit.rest.pulls.deleteReviewComment(params);
             }
             catch (error) {
-                let message = 'reason unkown';
-                if (error instanceof Error)
-                    message = error.message;
+                const message = (0, error_1.handleOctokitError)(error);
                 logger_1.logger.error(`Could not delete review comment: ${message}`);
             }
         }
@@ -183,6 +185,7 @@ const artifact_1 = __nccwpck_require__(2605);
 const logger_1 = __nccwpck_require__(6440);
 const fs_1 = __nccwpck_require__(7147);
 const canonical_path_1 = __nccwpck_require__(5806);
+const error_1 = __nccwpck_require__(5922);
 async function uploadArtifact() {
     const artifactClient = (0, artifact_1.create)();
     try {
@@ -195,9 +198,7 @@ async function uploadArtifact() {
         }
     }
     catch (error) {
-        let message = 'reason unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.debug('Failed to upload artifact: ' + message);
     }
 }
@@ -249,6 +250,7 @@ const configuration_1 = __nccwpck_require__(5527);
 const summary_1 = __nccwpck_require__(1502);
 const markdown_1 = __nccwpck_require__(5300);
 const enums_1 = __nccwpck_require__(1655);
+const error_1 = __nccwpck_require__(5922);
 /**
  * Gets a list of all comments on the pull request.
  * @returns List of comments on the pull request.
@@ -265,9 +267,7 @@ async function getPostedComments() {
         response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.issues.listComments, params);
     }
     catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Could not retrieve the comments: ${message}`);
     }
     return response;
@@ -308,9 +308,7 @@ async function postComment(body) {
         logger_1.logger.info('Posted comment for this pull request.');
     }
     catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Posting the comment failed: ${message}`);
     }
 }
@@ -328,9 +326,7 @@ function deletePreviousComments(comments) {
                 await configuration_1.octokit.rest.issues.deleteComment(params);
             }
             catch (error) {
-                let message = 'reason unkown';
-                if (error instanceof Error)
-                    message = error.message;
+                const message = (0, error_1.handleOctokitError)(error);
                 logger_1.logger.error(`Removing a comment failed: ${message}`);
             }
         }
@@ -363,6 +359,7 @@ exports.getChangedFilesOfCommit = void 0;
 const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
+const error_1 = __nccwpck_require__(5922);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
@@ -400,9 +397,7 @@ async function getChangedFilesOfCommit() {
         logger_1.logger.info('Retrieved changed files from commit.');
     }
     catch (error) {
-        let message = 'error unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
     }
     return response;
@@ -423,6 +418,7 @@ const fs_1 = __nccwpck_require__(7147);
 const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
+const error_1 = __nccwpck_require__(5922);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
@@ -458,9 +454,7 @@ async function getChangedFilesOfPullRequest() {
         logger_1.logger.info('Retrieved changed files from pull request.');
     }
     catch (error) {
-        let message = 'error unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.exit(`Could not retrieve the changed files: ${message}`);
     }
     return response;
@@ -498,6 +492,7 @@ const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 const enums_1 = __nccwpck_require__(1655);
 const markdown_1 = __nccwpck_require__(5300);
+const error_1 = __nccwpck_require__(5922);
 /**
  * Create review on the pull request from the analysis given.
  * @param body Body containing the summary of the review
@@ -517,9 +512,7 @@ async function postReview(body, event) {
         logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Posting the review failed: ${message}`);
     }
 }
@@ -543,9 +536,7 @@ async function postNothingAnalyzedReview(message) {
         logger_1.logger.info('Posted review for this pull request.');
     }
     catch (error) {
-        let message = 'reason unkown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Posting the review failed: ${message}`);
     }
 }
@@ -574,6 +565,30 @@ var Events;
     Events["COMMENT"] = "COMMENT";
     Events["REQUEST_CHANGES"] = "REQUEST_CHANGES";
 })(Events || (exports.Events = Events = {}));
+
+
+/***/ }),
+
+/***/ 5922:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handleOctokitError = void 0;
+function handleOctokitError(error) {
+    let message = 'reason unkown';
+    if (error instanceof Error) {
+        message = '';
+        const retryCount = error.request?.request?.retryCount;
+        if (retryCount) {
+            message = `Retried ${retryCount} time(s), but got: `;
+        }
+        message += error.message;
+    }
+    return message;
+}
+exports.handleOctokitError = handleOctokitError;
 
 
 /***/ }),
@@ -1210,6 +1225,7 @@ async function httpRequest(url) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
     const response = await configuration_1.httpClient.get(url, headers);
+    const errorMessage = `Retried ${configuration_1.ticsConfig.retries} time(s), but got: HTTP request failed with status ${response.message.statusCode}.`;
     switch (response.message.statusCode) {
         case 200:
             const text = await response.readBody();
@@ -1221,24 +1237,22 @@ async function httpRequest(url) {
             }
             break;
         case 302:
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
+            logger_1.logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
             break;
         case 400:
-            const body = await response.readBody();
-            console.log(body);
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. ${JSON.parse(body).alertMessages[0].header}`);
+            logger_1.logger.exit(`${errorMessage} ${JSON.parse(await response.readBody()).alertMessages[0].header}`);
             break;
         case 401:
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
+            logger_1.logger.exit(`${errorMessage} Please provide a valid TICSAUTHTOKEN in your configuration. Check ${configuration_1.viewerUrl}/Administration.html#page=authToken`);
             break;
         case 403:
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. Forbidden call: ${url}`);
+            logger_1.logger.exit(`${errorMessage} Forbidden call: ${url}`);
             break;
         case 404:
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if the given ticsConfiguration is correct.`);
+            logger_1.logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct.`);
             break;
         default:
-            logger_1.logger.exit(`HTTP request failed with status ${response.message.statusCode}. Please check if your configuration is correct.`);
+            logger_1.logger.exit(`${errorMessage} ${response.message.statusMessage}`);
             break;
     }
     return;
