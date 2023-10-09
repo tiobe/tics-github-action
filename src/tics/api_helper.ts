@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
 import { logger } from '../helper/logger';
-import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, httpClient, retryConfig, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis, HttpResponse } from '../helper/interfaces';
 import { HttpClientResponse } from '@actions/http-client';
 
@@ -19,7 +19,11 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
 
   const response: HttpClientResponse = await httpClient.get(url, headers);
 
-  const errorMessage = `Retried ${ticsConfig.retries} time(s), but got: HTTP request failed with status ${response.message.statusCode}.`;
+  let errorMessage = '';
+  if (response.message.statusCode && retryConfig.retryCodes.includes(response.message.statusCode)) {
+    errorMessage += `Retried ${retryConfig.maxRetries} time(s), but got: `;
+  }
+  errorMessage += `HTTP request failed with status ${response.message.statusCode}.`;
 
   switch (response.message.statusCode) {
     case 200:

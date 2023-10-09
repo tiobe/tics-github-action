@@ -7,7 +7,7 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.retryConfig = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const http_client_1 = __nccwpck_require__(6255);
@@ -71,17 +71,20 @@ exports.ticsConfig = {
     tmpDir: (0, core_1.getInput)('tmpDir'),
     trustStrategy: (0, core_1.getInput)('trustStrategy'),
     secretsFilter: getSecretsFilter((0, core_1.getInput)('secretsFilter')),
-    viewerUrl: (0, core_1.getInput)('viewerUrl'),
-    retries: 10
+    viewerUrl: (0, core_1.getInput)('viewerUrl')
+};
+exports.retryConfig = {
+    maxRetries: 10,
+    retryCodes: [http_client_1.HttpCodes.BadGateway, http_client_1.HttpCodes.ServiceUnavailable, http_client_1.HttpCodes.GatewayTimeout]
 };
 const ignoreSslError = exports.ticsConfig.hostnameVerification === '0' ||
     exports.ticsConfig.hostnameVerification === 'false' ||
     exports.ticsConfig.trustStrategy === 'self-signed' ||
     exports.ticsConfig.trustStrategy === 'all';
-exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: exports.ticsConfig.retries, retryAfter: 5 } }, (__nccwpck_require__(6298).retry));
+exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: exports.retryConfig.maxRetries, retryAfter: 5 } }, (__nccwpck_require__(6298).retry));
 exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, {
     allowRetries: true,
-    maxRetries: exports.ticsConfig.retries,
+    maxRetries: exports.retryConfig.maxRetries,
     ignoreSslError: ignoreSslError
 });
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
@@ -1225,7 +1228,11 @@ async function httpRequest(url) {
         headers.Authorization = `Basic ${configuration_1.ticsConfig.ticsAuthToken}`;
     }
     const response = await configuration_1.httpClient.get(url, headers);
-    const errorMessage = `Retried ${configuration_1.ticsConfig.retries} time(s), but got: HTTP request failed with status ${response.message.statusCode}.`;
+    let errorMessage = '';
+    if (response.message.statusCode && configuration_1.retryConfig.retryCodes.includes(response.message.statusCode)) {
+        errorMessage += `Retried ${configuration_1.retryConfig.maxRetries} time(s), but got: `;
+    }
+    errorMessage += `HTTP request failed with status ${response.message.statusCode}.`;
     switch (response.message.statusCode) {
         case 200:
             const text = await response.readBody();

@@ -32,7 +32,7 @@ describe('httpRequest', () => {
 
     const response = await httpRequest<any>('url');
     const calledWith =
-      'Retried undefined time(s), but got: HTTP request failed with status 302. Please check if the given ticsConfiguration is correct (possibly http instead of https).';
+      'HTTP request failed with status 302. Please check if the given ticsConfiguration is correct (possibly http instead of https).';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
@@ -46,7 +46,7 @@ describe('httpRequest', () => {
     const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
-    const calledWith = 'Retried undefined time(s), but got: HTTP request failed with status 400. header';
+    const calledWith = 'HTTP request failed with status 400. header';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
@@ -59,7 +59,7 @@ describe('httpRequest', () => {
 
     const response = await httpRequest<any>('url');
     const calledWith =
-      'Retried undefined time(s), but got: HTTP request failed with status 401. Please provide a valid TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
+      'HTTP request failed with status 401. Please provide a valid TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
@@ -71,7 +71,7 @@ describe('httpRequest', () => {
     const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
-    const calledWith = 'Retried undefined time(s), but got: HTTP request failed with status 403. Forbidden call: url';
+    const calledWith = 'HTTP request failed with status 403. Forbidden call: url';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
@@ -83,22 +83,21 @@ describe('httpRequest', () => {
     const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
-    const calledWith =
-      'Retried undefined time(s), but got: HTTP request failed with status 404. Please check if the given ticsConfiguration is correct.';
+    const calledWith = 'HTTP request failed with status 404. Please check if the given ticsConfiguration is correct.';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);
     expect(exit).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should return undefined response and call exit on status null', async () => {
+  test('Should return undefined response and call exit on status 502', async () => {
     (httpClient.get as any).mockImplementationOnce(
-      (): Promise<any> => Promise.resolve({ message: { statusCode: null, statusMessage: 'Just because' } })
+      (): Promise<any> => Promise.resolve({ message: { statusCode: 502, statusMessage: 'Just because' } })
     );
     const exit = jest.spyOn(logger, 'exit');
 
     const response = await httpRequest<any>('url');
-    const calledWith = 'Retried undefined time(s), but got: HTTP request failed with status null. Just because';
+    const calledWith = 'Retried 10 time(s), but got: HTTP request failed with status 502. Just because';
 
     expect(response).toEqual(undefined);
     expect(exit).toHaveBeenCalledTimes(1);

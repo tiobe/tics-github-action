@@ -1,6 +1,6 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
-import { HttpClient } from '@actions/http-client';
+import { HttpClient, HttpCodes } from '@actions/http-client';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
 
@@ -64,8 +64,12 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   trustStrategy: getInput('trustStrategy'),
   secretsFilter: getSecretsFilter(getInput('secretsFilter')),
-  viewerUrl: getInput('viewerUrl'),
-  retries: 10
+  viewerUrl: getInput('viewerUrl')
+};
+
+export const retryConfig = {
+  maxRetries: 10,
+  retryCodes: [HttpCodes.BadGateway, HttpCodes.ServiceUnavailable, HttpCodes.GatewayTimeout]
 };
 
 const ignoreSslError: boolean =
@@ -76,12 +80,12 @@ const ignoreSslError: boolean =
 
 export const octokit = getOctokit(
   ticsConfig.githubToken,
-  { request: { retries: ticsConfig.retries, retryAfter: 5 } },
+  { request: { retries: retryConfig.maxRetries, retryAfter: 5 } },
   require('@octokit/plugin-retry').retry
 );
 export const httpClient = new HttpClient('tics-github-action', undefined, {
   allowRetries: true,
-  maxRetries: ticsConfig.retries,
+  maxRetries: retryConfig.maxRetries,
   ignoreSslError: ignoreSslError
 });
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);

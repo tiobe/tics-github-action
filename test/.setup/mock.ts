@@ -23,6 +23,10 @@ jest.mock('../../src/configuration', () => {
       id: '123-1',
       commitSha: 'asdfghjk'
     },
+    retryConfig: {
+      maxRetries: 10,
+      retryCodes: [502, 503, 504]
+    },
     octokit: {
       paginate: jest.fn(),
       rest: {
