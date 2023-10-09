@@ -77,7 +77,7 @@ const ignoreSslError = exports.ticsConfig.hostnameVerification === '0' ||
     exports.ticsConfig.hostnameVerification === 'false' ||
     exports.ticsConfig.trustStrategy === 'self-signed' ||
     exports.ticsConfig.trustStrategy === 'all';
-exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: 25 } }, (__nccwpck_require__(6298).retry));
+exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, { request: { retries: 10 } }, (__nccwpck_require__(6298).retry));
 exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
