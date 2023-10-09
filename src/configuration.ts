@@ -5,7 +5,7 @@ import { Octokit } from '@octokit/core';
 import { retry } from '@octokit/plugin-retry';
 import { paginateRest } from '@octokit/plugin-paginate-rest';
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods';
-import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import { getTicsWebBaseUrlFromUrl, httpRequest } from './tics/api_helper';
 import { EOL } from 'os';
 
 export const githubConfig = {
@@ -79,6 +79,6 @@ const ignoreSslError: boolean =
   ticsConfig.trustStrategy === 'all';
 
 export const httpClient = new HttpClient('tics-github-action', undefined, { allowRetries: true, maxRetries: 10, ignoreSslError: ignoreSslError });
-export const octokit = new myOctokit({ auth: ticsConfig.githubToken, request: { fetch: httpClient } });
+export const octokit = new myOctokit({ auth: ticsConfig.githubToken, request: { fetch: httpRequest } });
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
