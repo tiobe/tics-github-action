@@ -2,6 +2,7 @@ import { logger } from '../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 import { ReviewComment } from './interfaces';
 import { AnalysisResults, TicsReviewComment } from '../helper/interfaces';
+import { handleOctokitError } from '../helper/error';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -18,8 +19,7 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
     };
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
   } catch (error: unknown) {
-    let message = 'reason unkown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.error(`Could not retrieve the review comments: ${message}`);
   }
   return response;
@@ -65,8 +65,7 @@ export function deletePreviousReviewComments(postedReviewComments: ReviewComment
         };
         await octokit.rest.pulls.deleteReviewComment(params);
       } catch (error: unknown) {
-        let message = 'reason unkown';
-        if (error instanceof Error) message = error.message;
+        const message = handleOctokitError(error);
         logger.error(`Could not delete review comment: ${message}`);
       }
     }

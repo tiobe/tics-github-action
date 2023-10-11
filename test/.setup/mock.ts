@@ -23,6 +23,10 @@ jest.mock('../../src/configuration', () => {
       id: '123-1',
       commitSha: 'asdfghjk'
     },
+    retryConfig: {
+      maxRetries: 10,
+      retryCodes: [502, 503, 504]
+    },
     octokit: {
       paginate: jest.fn(),
       rest: {
@@ -42,7 +46,9 @@ jest.mock('../../src/configuration', () => {
         }
       }
     },
-    requestInit: { headers: {} },
+    httpClient: {
+      get: jest.fn()
+    },
     viewerUrl: '<url>',
     baseUrl: 'http://base.com'
   };
@@ -83,7 +89,6 @@ jest.mock('@actions/artifact', () => {
     })
   };
 });
-jest.mock('node-fetch', () => jest.fn());
 jest.mock('fs', () => {
   return {
     writeFileSync: jest.fn(),
@@ -97,9 +102,6 @@ jest.mock('canonical-path', () => {
     normalize: jest.fn(data => data),
     join: jest.fn((one, two) => `${one}/${two}`)
   };
-});
-jest.mock('proxy-agent', () => {
-  return jest.fn();
 });
 jest.mock('os', () => {
   return {

@@ -1,8 +1,8 @@
 import { OutgoingHttpHeaders } from 'http';
 import { logger } from '../helper/logger';
-import { githubConfig, requestInit, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, httpClient, retryConfig, ticsConfig, viewerUrl } from '../configuration';
 import { Analysis, HttpResponse } from '../helper/interfaces';
-import fetch, { Response } from 'node-fetch';
+import { HttpClientResponse } from '@actions/http-client';
 
 /**
  * Executes a GET request to the given url.
@@ -17,13 +17,17 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
     headers.Authorization = `Basic ${ticsConfig.ticsAuthToken}`;
   }
 
-  requestInit.headers = headers;
+  const response: HttpClientResponse = await httpClient.get(url, headers);
 
-  const response: Response = await fetch(url, requestInit);
+  let errorMessage = '';
+  if (response.message.statusCode && retryConfig.retryCodes.includes(response.message.statusCode)) {
+    errorMessage += `Retried ${retryConfig.maxRetries} time(s), but got: `;
+  }
+  errorMessage += `HTTP request failed with status ${response.message.statusCode}.`;
 
-  switch (response.status) {
+  switch (response.message.statusCode) {
     case 200:
-      const text = await response.text();
+      const text = await response.readBody();
       try {
         return <T>JSON.parse(text);
       } catch (error: unknown) {
@@ -31,26 +35,24 @@ export async function httpRequest<T>(url: string): Promise<T | undefined> {
       }
       break;
     case 302:
-      logger.exit(
-        `HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct (possibly http instead of https).`
-      );
+      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
       break;
     case 400:
-      logger.exit(`HTTP request failed with status ${response.status}. ${(<HttpResponse>await response.json()).alertMessages[0].header}`);
+      logger.exit(`${errorMessage} ${(<HttpResponse>JSON.parse(await response.readBody())).alertMessages[0].header}`);
       break;
     case 401:
       logger.exit(
-        `HTTP request failed with status ${response.status}. Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
+        `${errorMessage} Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
       );
       break;
     case 403:
-      logger.exit(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
+      logger.exit(`${errorMessage} Forbidden call: ${url}`);
       break;
     case 404:
-      logger.exit(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct.`);
       break;
     default:
-      logger.exit(`HTTP request failed with status ${response.status}. Please check if your configuration is correct.`);
+      logger.exit(`${errorMessage} ${response.message.statusMessage}`);
       break;
   }
   return;

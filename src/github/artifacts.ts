@@ -4,6 +4,7 @@ import { create } from '@actions/artifact';
 import { logger } from '../helper/logger';
 import { readdirSync } from 'fs';
 import { join } from 'canonical-path';
+import { handleOctokitError } from '../helper/error';
 
 export async function uploadArtifact(): Promise<void> {
   const artifactClient = create();
@@ -18,8 +19,7 @@ export async function uploadArtifact(): Promise<void> {
       logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
     }
   } catch (error: unknown) {
-    let message = 'reason unknown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.debug('Failed to upload artifact: ' + message);
   }
 }

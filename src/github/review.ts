@@ -2,6 +2,7 @@ import { logger } from '../helper/logger';
 import { githubConfig, octokit } from '../configuration';
 import { Events, Status } from '../helper/enums';
 import { generateStatusMarkdown } from '../helper/markdown';
+import { handleOctokitError } from '../helper/error';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -22,8 +23,7 @@ export async function postReview(body: string, event: Events): Promise<void> {
     await octokit.rest.pulls.createReview(params);
     logger.info('Posted review for this pull request.');
   } catch (error: unknown) {
-    let message = 'reason unkown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.error(`Posting the review failed: ${message}`);
   }
 }
@@ -48,8 +48,7 @@ export async function postNothingAnalyzedReview(message: string): Promise<void> 
     await octokit.rest.pulls.createReview(params);
     logger.info('Posted review for this pull request.');
   } catch (error: unknown) {
-    let message = 'reason unkown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.error(`Posting the review failed: ${message}`);
   }
 }

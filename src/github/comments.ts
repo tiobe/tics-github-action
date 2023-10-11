@@ -5,6 +5,7 @@ import { createErrorSummary } from '../helper/summary';
 import { generateStatusMarkdown } from '../helper/markdown';
 import { Status } from '../helper/enums';
 import { Comment } from './interfaces';
+import { handleOctokitError } from '../helper/error';
 
 /**
  * Gets a list of all comments on the pull request.
@@ -21,8 +22,7 @@ export async function getPostedComments(): Promise<Comment[]> {
     };
     response = await octokit.paginate(octokit.rest.issues.listComments, params);
   } catch (error: unknown) {
-    let message = 'reason unkown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.error(`Could not retrieve the comments: ${message}`);
   }
   return response;
@@ -65,8 +65,7 @@ export async function postComment(body: string): Promise<void> {
     await octokit.rest.issues.createComment(params);
     logger.info('Posted comment for this pull request.');
   } catch (error: unknown) {
-    let message = 'reason unkown';
-    if (error instanceof Error) message = error.message;
+    const message = handleOctokitError(error);
     logger.error(`Posting the comment failed: ${message}`);
   }
 }
@@ -83,8 +82,7 @@ export function deletePreviousComments(comments: Comment[]): void {
         };
         await octokit.rest.issues.deleteComment(params);
       } catch (error: unknown) {
-        let message = 'reason unkown';
-        if (error instanceof Error) message = error.message;
+        const message = handleOctokitError(error);
         logger.error(`Removing a comment failed: ${message}`);
       }
     }
