@@ -15,12 +15,6 @@ jobs:
     steps:
       - name: Setup git config
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.TIOBE_TOKEN }}
-      - run: |
-          git config user.name ${{ secrets.TIOBE_NAME }}
-          git config user.email ${{ secrets.TIOBE_EMAIL }}
-          git pull
       - name: Build
         uses: actions/setup-node@v3
         with:
@@ -28,7 +22,9 @@ jobs:
       - run: |
           npm ci
           npm run all
-      - run: |
-          git add dist 
-          git diff --staged --quiet || git commit -m 'Build dist after push to main'
-          git push origin main
+      - name: Pull and push
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: dist
+          pull: --rebase
+          message: Build dist after push to main
