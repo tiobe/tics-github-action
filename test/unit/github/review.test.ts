@@ -1,11 +1,11 @@
-import { githubConfig, octokit, ticsConfig } from '../../src/configuration';
-import { postNothingAnalyzedReview, postReview } from '../../src/github/review';
-import { createSummaryBody } from '../../src/helper/summary';
-import { Events } from '../../src/helper/enums';
-import { logger } from '../../src/helper/logger';
-import { AnalysisResults } from '../../src/helper/interfaces';
+import { githubConfig, octokit, ticsConfig } from '../../../src/configuration';
+import { postNothingAnalyzedReview, postReview } from '../../../src/github/review';
+import { createSummaryBody } from '../../../src/helper/summary';
+import { Events } from '../../../src/helper/enums';
+import { logger } from '../../../src/helper/logger';
+import { AnalysisResults } from '../../../src/helper/interfaces';
 
-jest.mock('../../src/helper/summary', () => {
+jest.mock('../../../src/helper/summary', () => {
   return {
     createSummaryBody: jest.fn()
   };

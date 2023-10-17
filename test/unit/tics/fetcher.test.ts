@@ -1,8 +1,8 @@
-import { ticsConfig } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
-import * as api_helper from '../../src/tics/api_helper';
-import * as fetcher from '../../src/tics/fetcher';
-import * as summary from '../../src/helper/summary';
+import { ticsConfig } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
+import * as api_helper from '../../../src/tics/api_helper';
+import * as fetcher from '../../../src/tics/fetcher';
+import * as summary from '../../../src/helper/summary';
 import { ticsReviewComments, annotations, failedQualityGate, passedQualityGate } from './objects/fetcher';
 
 describe('getAnalyzedFiles', () => {

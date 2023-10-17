@@ -1,8 +1,8 @@
 import * as exec from '@actions/exec';
-import * as api_helper from '../../src/tics/api_helper';
-import { githubConfig, ticsConfig } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
-import { runTicsAnalyzer } from '../../src/tics/analyzer';
+import * as api_helper from '../../../src/tics/api_helper';
+import { githubConfig, ticsConfig } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
+import { runTicsAnalyzer } from '../../../src/tics/analyzer';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {

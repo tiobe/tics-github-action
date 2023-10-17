@@ -1,10 +1,10 @@
-import { githubConfig, octokit } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
-import { deletePreviousComments, postErrorComment, getPostedComments } from '../../src/github/comments';
-import { createErrorSummary } from '../../src/helper/summary';
-import { Comment } from '../../src/github/interfaces';
+import { githubConfig, octokit } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
+import { deletePreviousComments, postErrorComment, getPostedComments } from '../../../src/github/comments';
+import { createErrorSummary } from '../../../src/helper/summary';
+import { Comment } from '../../../src/github/interfaces';
 
-jest.mock('../../src/helper/summary', () => {
+jest.mock('../../../src/helper/summary', () => {
   return {
     createErrorSummary: jest.fn()
   };

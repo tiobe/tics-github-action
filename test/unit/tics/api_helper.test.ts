@@ -1,7 +1,7 @@
-import { githubConfig, ticsConfig, httpClient } from '../../src/configuration';
-import { Analysis } from '../../src/helper/interfaces';
-import { logger } from '../../src/helper/logger';
-import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTicsWebBaseUrlFromUrl, httpRequest } from '../../src/tics/api_helper';
+import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
+import { Analysis } from '../../../src/helper/interfaces';
+import { logger } from '../../../src/helper/logger';
+import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTicsWebBaseUrlFromUrl, httpRequest } from '../../../src/tics/api_helper';
 
 describe('httpRequest', () => {
   test('Should return response on status 200', async () => {

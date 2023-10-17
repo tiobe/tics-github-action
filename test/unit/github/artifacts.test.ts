@@ -1,9 +1,9 @@
 import * as artifact from '@actions/artifact';
 import * as fs from 'fs';
-import { githubConfig, ticsConfig } from '../../src/configuration';
-import { getTmpDir, uploadArtifact } from '../../src/github/artifacts';
+import { githubConfig, ticsConfig } from '../../../src/configuration';
+import { getTmpDir, uploadArtifact } from '../../../src/github/artifacts';
 import { MockArtifactClient, MockDirent } from './objects/artifacts';
-import { logger } from '../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 describe('Tempdir test', () => {
   it('Should return empty if variable not set and mode is not debug', () => {

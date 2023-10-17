@@ -1,8 +1,8 @@
-import { githubConfig } from '../../src/configuration';
-import { ChangedFile } from '../../src/github/interfaces';
-import { ExtendedAnnotation } from '../../src/helper/interfaces';
-import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../src/helper/summary';
-import '../.setup/extend_jest';
+import { githubConfig } from '../../../src/configuration';
+import { ChangedFile } from '../../../src/github/interfaces';
+import { ExtendedAnnotation } from '../../../src/helper/interfaces';
+import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../../src/helper/summary';
+import '../../.setup/extend_jest';
 
 describe('createErrorSummary', () => {
   test('Should return summary of two errors', () => {

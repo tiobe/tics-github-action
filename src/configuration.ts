@@ -1,5 +1,7 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
-import { context, getOctokit } from '@actions/github';
+import { context } from '@actions/github';
+import { Octokit, customFetch } from "@octokit/action";
+import { retry } from "@octokit/plugin-retry";
 import { HttpClient, HttpCodes } from '@actions/http-client';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
@@ -78,11 +80,15 @@ const ignoreSslError: boolean =
   ticsConfig.trustStrategy === 'self-signed' ||
   ticsConfig.trustStrategy === 'all';
 
-export const octokit = getOctokit(
-  ticsConfig.githubToken,
-  { request: { retries: retryConfig.maxRetries, retryAfter: 5 } },
-  require('@octokit/plugin-retry').retry
-);
+// octokit/action uses the environment variable GITHUB_TOKEN
+process.env.GITHUB_TOKEN = ticsConfig.githubToken;
+export const octokit = new (Octokit.plugin(retry))({
+  request: {
+    fetch: customFetch,
+    retries: retryConfig.maxRetries,
+    retryAfter: 5
+  },
+});
 export const httpClient = new HttpClient('tics-github-action', undefined, {
   allowRetries: true,
   maxRetries: retryConfig.maxRetries,

@@ -1,4 +1,4 @@
-import { ExtendedAnnotation, QualityGate, TicsReviewComment, TicsReviewComments } from '../../../src/helper/interfaces';
+import { ExtendedAnnotation, QualityGate, TicsReviewComment, TicsReviewComments } from '../../../../src/helper/interfaces'
 
 export const failedQualityGate: QualityGate = {
   passed: false,

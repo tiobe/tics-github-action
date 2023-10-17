@@ -1,4 +1,4 @@
-import { Links, ReviewComment, User } from '../../../src/github/interfaces';
+import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
 
 export const user: User = {
   login: '',

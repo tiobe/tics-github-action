@@ -1,13 +1,26 @@
 module.exports = {
-  clearMocks: true,
   coverageReporters: ['lcov', 'cobertura', 'text'],
-  moduleFileExtensions: ['js', 'ts'],
-  testMatch: ['**/*.test.ts'],
-  transform: {
-    '^.+\\.ts$': 'ts-jest'
-  },
   verbose: true,
-  setupFilesAfterEnv: [
-    '<rootDir>/test/.setup/mock.ts'
+  projects: [
+    {
+      clearMocks: true,
+
+      moduleFileExtensions: ['js', 'ts'],
+      testMatch: ['**/proxy/**/*.test.ts'],
+      transform: {
+        '^.+\\.ts$': 'ts-jest'
+      }
+    },
+    {
+      clearMocks: true,
+      moduleFileExtensions: ['js', 'ts'],
+      testMatch: ['**/unit/**/*.test.ts'],
+      transform: {
+        '^.+\\.ts$': 'ts-jest'
+      },
+      setupFilesAfterEnv: [
+        '<rootDir>/test/.setup/mock.ts'
+      ]
+    }
   ]
 };

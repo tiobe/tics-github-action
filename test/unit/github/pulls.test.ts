@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import { resolve } from 'canonical-path';
-import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../src/github/pulls';
-import { octokit, ticsConfig } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
+import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../../src/github/pulls';
+import { octokit, ticsConfig } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
 import { changedFile } from './objects/pulls';
 
 describe('getChangedFilesOfPullRequest', () => {

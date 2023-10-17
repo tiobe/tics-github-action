@@ -95,6 +95,7 @@ The following inputs are available for this action:
 - To package the build to run run `npm run package`.
 - To combine the last two steps run `npm run all`.
 - There is Prettier auto-formatting available, run `npm run format` or enable format on save to automate the formatting.
+- In order to run the tests the environment variable `INPUT_GITHUBTOKEN` needs to be set with a valid `GITHUB_TOKEN`
 
 ## Git hooks
 
