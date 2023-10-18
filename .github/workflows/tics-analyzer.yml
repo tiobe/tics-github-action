@@ -13,7 +13,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
       - run: npm ci
-      - run: npm run test-coverage
+      - run: npm run test:coverage
       - name: Install and run TICSQSERVER
         env:
           TICSAUTHTOKEN: ${{ secrets.EBOIT_ANALYZER_TOKEN }}

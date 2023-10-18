@@ -10,6 +10,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
       - run: npm ci
+      - run: npm run test:coverage
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:

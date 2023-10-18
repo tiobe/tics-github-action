@@ -2,10 +2,9 @@ import * as http from 'http';
 import { ProxyServer, createProxy } from 'proxy';
 
 // Default values are set when the module is imported, so we need to set proxy first.
+// Running these tests with http_proxy
 const proxyUrl = 'http://127.0.0.1:8082';
-const originalHttpsProxyUrl = process.env['https_proxy'];
-const originalHttpProxyUrl = process.env['http_proxy'];
-process.env['https_proxy'] = proxyUrl;
+const originalProxyUrl = process.env['http_proxy'];
 process.env['http_proxy'] = proxyUrl;
 
 // set required inputs
@@ -26,20 +25,31 @@ jest.mock('../../src/tics/api_helper', () => {
   return {
     getTicsWebBaseUrlFromUrl: jest.fn(),
     httpRequest: jest.requireActual('../../src/tics/api_helper').httpRequest
-  }
-})
+  };
+});
 
-describe('@actions/github', () => {
+describe('@actions/http-client (using http_proxy)', () => {
   let proxyServer: ProxyServer;
   let proxyConnects: string[] = [];
   let requestCount = 0;
 
   beforeAll(async () => {
     // setup proxy server
-    proxyServer = createProxy(http.createServer());
-    proxyServer.listen(Number(proxyUrl.split(':')[2]));
+    proxyServer = createProxy(
+      http.createServer((req, res) => {
+        if (req.url == '/200') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end('{"data": "pass"}');
+        } else if (req.url == '/502') {
+          res.writeHead(502, { 'Content-Type': 'text/plain' });
+          res.end('Internal Server Error');
+        }
+      })
+    );
+    const port = Number(proxyUrl.split(':')[2]);
+    proxyServer.listen(port);
 
-    proxyServer.on('connect', (req) => {
+    proxyServer.on('connect', req => {
       requestCount++;
       proxyConnects.push(req.url ?? '');
     });
@@ -53,19 +63,46 @@ describe('@actions/github', () => {
   afterAll(async () => {
     proxyServer.close();
 
-    if (originalHttpsProxyUrl) {
-      process.env['https_proxy'] = originalHttpsProxyUrl;
-    }
-    if (originalHttpProxyUrl) {
-      process.env['http_proxy'] = originalHttpProxyUrl;
+    if (originalProxyUrl) {
+      process.env['http_proxy'] = originalProxyUrl;
     }
   });
 
-  test('Should return basic REST request with proxy', async () => {
-    const version = await httpClient.getJson<{ projectName: string }>('https://eboit.tiobe.com/tiobeweb/TICS/api/v1/version');
+  test('Should return basic REST request through the proxy', async () => {
+    const response = await httpClient.get('http://0.0.0.0:8082/200');
 
-    expect(version?.result?.projectName).toBe('TiobeWebImplementation');
-    expect(proxyConnects).toEqual(['eboit.tiobe.com:443']);
+    expect(JSON.parse(await response.readBody())).toEqual({ data: 'pass' });
+    expect(proxyConnects).toEqual(['0.0.0.0:8082']);
     expect(requestCount).toEqual(1);
   });
+
+  test('Should retry 7 times basic REST request through the proxy', async () => {
+    const httpClient = new HttpClient('tics-github-action', undefined, {
+      allowRetries: true,
+      maxRetries: 7
+    });
+
+    const time = Date.now();
+    const response = await httpClient.get('http://0.0.0.0:8082/502');
+
+    expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(1);
+    expect(response.message.statusCode).toEqual(502);
+    expect(proxyConnects).toContain('0.0.0.0:8082');
+    expect(requestCount).toEqual(8);
+  }, 10000);
+
+  test('Should retry 8 times basic REST request through the proxy', async () => {
+    const httpClient = new HttpClient('tics-github-action', undefined, {
+      allowRetries: true,
+      maxRetries: 8
+    });
+
+    const time = Date.now();
+    const response = await httpClient.get('http://0.0.0.0:8082/502');
+
+    expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(2);
+    expect(response.message.statusCode).toEqual(502);
+    expect(proxyConnects).toContain('0.0.0.0:8082');
+    expect(requestCount).toEqual(9);
+  }, 10000);
 });

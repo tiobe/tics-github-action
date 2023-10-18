@@ -1,7 +1,7 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { context } from '@actions/github';
-import { Octokit, customFetch } from "@octokit/action";
-import { retry } from "@octokit/plugin-retry";
+import { Octokit, customFetch } from '@octokit/action';
+import { retry } from '@octokit/plugin-retry';
 import { HttpClient, HttpCodes } from '@actions/http-client';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
 import { EOL } from 'os';
@@ -87,12 +87,13 @@ export const octokit = new (Octokit.plugin(retry))({
     fetch: customFetch,
     retries: retryConfig.maxRetries,
     retryAfter: 5
-  },
+  }
 });
 export const httpClient = new HttpClient('tics-github-action', undefined, {
   allowRetries: true,
   maxRetries: retryConfig.maxRetries,
   ignoreSslError: ignoreSslError
 });
+
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

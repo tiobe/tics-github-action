@@ -2,6 +2,7 @@ import * as http from 'http';
 import { createProxy } from 'proxy';
 
 // Default values are set when the module is imported, so we need to set proxy first.
+// Running these tests with https_proxy
 const proxyUrl = 'http://127.0.0.1:8081';
 const originalProxyUrl = process.env['https_proxy'];
 process.env['https_proxy'] = proxyUrl;
@@ -22,18 +23,19 @@ import { RequestError } from '@octokit/request-error';
 import { Octokit, customFetch } from '@octokit/action';
 import { retry } from '@octokit/plugin-retry';
 
-describe('@actions/github', () => {
+describe('@octokit/action (using https_proxy)', () => {
   let proxyServer: http.Server;
   let requestCount = 0;
   let proxyConnects: string[];
 
   beforeAll(async () => {
-    // Start proxy server
+    // setup proxy server
     proxyServer = createProxy();
     await new Promise<void>(resolve => {
       const port = Number(proxyUrl.split(':')[2]);
       proxyServer.listen(port, () => resolve());
     });
+
     proxyServer.on('connect', req => {
       requestCount++;
       proxyConnects.push(req.url ?? '');
@@ -63,7 +65,7 @@ describe('@actions/github', () => {
       repo: 'tics-github-action',
       branch: 'main'
     });
-    expect(branch.data.name).toBe('main');
+    expect(branch.data.name).toEqual('main');
     expect(proxyConnects).toEqual(['api.github.com:443']);
     expect(requestCount).toEqual(1);
   });
@@ -95,10 +97,10 @@ describe('@actions/github', () => {
           fetch: customFetch,
           retries: 3, // for the purpose of testing, set a lower number of retries
           retryAfter: 1 // for the purpose of testing, set a lower timeout
-        },
-      })
+        }
+      });
 
-      await octokit.request("/", {
+      await octokit.request('/', {
         owner: 'tiobe',
         repo: 'tics-github-action',
         branch: 'main'
@@ -106,8 +108,9 @@ describe('@actions/github', () => {
     } catch (error: unknown) {
       retryCount = (error as RequestError).request.request?.retryCount;
     }
-    expect(retryCount).toBe(3);
-    expect(requestCount).toEqual(4);
+
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
-  }, 10000)
+    expect(retryCount).toEqual(3);
+    expect(requestCount).toEqual(4);
+  }, 10000);
 });

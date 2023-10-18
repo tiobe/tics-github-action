@@ -90,7 +90,7 @@ exports.octokit = new (action_1.Octokit.plugin(plugin_retry_1.retry))({
         fetch: action_1.customFetch,
         retries: exports.retryConfig.maxRetries,
         retryAfter: 5
-    },
+    }
 });
 exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, {
     allowRetries: true,
