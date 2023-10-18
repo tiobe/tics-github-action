@@ -14,6 +14,8 @@ jobs:
         uses: actions/setup-node@v3
       - run: npm ci
       - run: npm run test:coverage
+        env:
+          INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install and run TICSQSERVER
         env:
           TICSAUTHTOKEN: ${{ secrets.EBOIT_ANALYZER_TOKEN }}

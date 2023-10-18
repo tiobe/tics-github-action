@@ -11,6 +11,8 @@ jobs:
         uses: actions/setup-node@v3
       - run: npm ci
       - run: npm run test:coverage
+        env:
+          INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:
