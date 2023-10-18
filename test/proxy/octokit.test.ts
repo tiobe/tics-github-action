@@ -4,8 +4,10 @@ import { createProxy } from 'proxy';
 // Default values are set when the module is imported, so we need to set proxy first.
 // Running these tests with https_proxy
 const proxyUrl = 'http://127.0.0.1:8081';
-const originalProxyUrl = process.env['https_proxy'];
+const originalhttpsProxyUrl = process.env['https_proxy'];
+const originalhttpProxyUrl = process.env['https_proxy'];
 process.env['https_proxy'] = proxyUrl;
+process.env['http_proxy'] = proxyUrl;
 
 // set required inputs
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
@@ -54,8 +56,11 @@ describe('@octokit/action (using https_proxy)', () => {
       proxyServer.close();
     });
 
-    if (originalProxyUrl) {
-      process.env['https_proxy'] = originalProxyUrl;
+    if (originalhttpsProxyUrl) {
+      process.env['https_proxy'] = originalhttpsProxyUrl;
+    }
+    if (originalhttpProxyUrl) {
+      process.env['http_proxy'] = originalhttpProxyUrl;
     }
   });
 
@@ -93,6 +98,7 @@ describe('@octokit/action (using https_proxy)', () => {
     let retryCount = 0;
     try {
       const octokit = new (Octokit.plugin(retry))({
+        baseUrl: 'http://0.0.0.0:8081',
         request: {
           fetch: customFetch,
           retries: 3, // for the purpose of testing, set a lower number of retries
@@ -100,16 +106,13 @@ describe('@octokit/action (using https_proxy)', () => {
         }
       });
 
-      await octokit.request('/', {
-        owner: 'tiobe',
-        repo: 'tics-github-action',
-        branch: 'main'
-      });
+      await octokit.request('/');
     } catch (error: unknown) {
       retryCount = (error as RequestError).request.request?.retryCount;
     }
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
+    expect(proxyConnects).toContain('0.0.0.0:8081');
     expect(retryCount).toEqual(3);
     expect(requestCount).toEqual(4);
   }, 10000);
