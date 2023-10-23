@@ -7,15 +7,19 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.viewerUrl = exports.baseUrl = exports.httpClient = exports.octokit = exports.retryConfig = exports.ticsConfig = exports.githubConfig = void 0;
+exports.viewerUrl = exports.baseUrl = exports.octokit = exports.httpClient = exports.retryConfig = exports.ticsConfig = exports.githubConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
-const action_1 = __nccwpck_require__(1231);
+const core_2 = __nccwpck_require__(6762);
+const plugin_paginate_rest_1 = __nccwpck_require__(4193);
+const plugin_rest_endpoint_methods_1 = __nccwpck_require__(3044);
 const plugin_retry_1 = __nccwpck_require__(6298);
 const http_client_1 = __nccwpck_require__(6255);
 const api_helper_1 = __nccwpck_require__(3823);
+const undici_1 = __nccwpck_require__(1773);
 const os_1 = __nccwpck_require__(2037);
 exports.githubConfig = {
+    baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
     owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
     reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
@@ -83,20 +87,27 @@ const ignoreSslError = exports.ticsConfig.hostnameVerification === '0' ||
     exports.ticsConfig.hostnameVerification === 'false' ||
     exports.ticsConfig.trustStrategy === 'self-signed' ||
     exports.ticsConfig.trustStrategy === 'all';
-// octokit/action uses the environment variable GITHUB_TOKEN
-process.env.GITHUB_TOKEN = exports.ticsConfig.githubToken;
-exports.octokit = new (action_1.Octokit.plugin(plugin_retry_1.retry))({
-    request: {
-        fetch: action_1.customFetch,
-        retries: exports.retryConfig.maxRetries,
-        retryAfter: 5
-    }
-});
 exports.httpClient = new http_client_1.HttpClient('tics-github-action', undefined, {
     allowRetries: true,
     maxRetries: exports.retryConfig.maxRetries,
     ignoreSslError: ignoreSslError
 });
+const octokitOptions = {
+    auth: exports.ticsConfig.githubToken,
+    baseUrl: exports.githubConfig.baseUrl,
+    request: {
+        agent: exports.httpClient.getAgent(exports.githubConfig.baseUrl),
+        fetch: async (url, opts) => {
+            return (0, undici_1.fetch)(url, {
+                ...opts,
+                dispatcher: exports.httpClient.getAgentDispatcher(exports.githubConfig.baseUrl)
+            });
+        },
+        retries: exports.retryConfig.maxRetries,
+        retryAfter: 5
+    }
+};
+exports.octokit = new (core_2.Octokit.plugin(plugin_paginate_rest_1.paginateRest, plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_retry_1.retry).defaults(octokitOptions))();
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
@@ -8569,151 +8580,6 @@ function parseParams (str) {
 }
 
 module.exports = parseParams
-
-
-/***/ }),
-
-/***/ 1231:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  Octokit: () => Octokit,
-  customFetch: () => customFetch,
-  getProxyAgent: () => getProxyAgent
-});
-module.exports = __toCommonJS(dist_src_exports);
-var import_core = __nccwpck_require__(6762);
-var import_auth_action = __nccwpck_require__(20);
-var import_plugin_paginate_rest = __nccwpck_require__(4193);
-var import_plugin_rest_endpoint_methods = __nccwpck_require__(3044);
-
-// pkg/dist-src/version.js
-var VERSION = "6.0.6";
-
-// pkg/dist-src/index.js
-var import_undici = __nccwpck_require__(1773);
-var DEFAULTS = {
-  authStrategy: import_auth_action.createActionAuth,
-  baseUrl: getApiBaseUrl(),
-  userAgent: `octokit-action.js/${VERSION}`
-};
-function getProxyAgent() {
-  const httpProxy = process.env["HTTP_PROXY"] || process.env["http_proxy"];
-  if (httpProxy) {
-    return new import_undici.ProxyAgent(httpProxy);
-  }
-  const httpsProxy = process.env["HTTPS_PROXY"] || process.env["https_proxy"];
-  if (httpsProxy) {
-    return new import_undici.ProxyAgent(httpsProxy);
-  }
-  return void 0;
-}
-var customFetch = async function(url, opts) {
-  return await (0, import_undici.fetch)(url, {
-    dispatcher: getProxyAgent(),
-    ...opts
-  });
-};
-var Octokit = import_core.Octokit.plugin(
-  import_plugin_paginate_rest.paginateRest,
-  import_plugin_rest_endpoint_methods.legacyRestEndpointMethods
-).defaults(function buildDefaults(options) {
-  return {
-    ...DEFAULTS,
-    ...options,
-    request: {
-      fetch: customFetch,
-      ...options.request
-    }
-  };
-});
-function getApiBaseUrl() {
-  return process.env["GITHUB_API_URL"] || "https://api.github.com";
-}
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-
-/***/ }),
-
-/***/ 20:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  createActionAuth: () => createActionAuth
-});
-module.exports = __toCommonJS(dist_src_exports);
-var import_auth_token = __nccwpck_require__(334);
-var createActionAuth = function createActionAuth2() {
-  if (!process.env.GITHUB_ACTION) {
-    throw new Error(
-      "[@octokit/auth-action] `GITHUB_ACTION` environment variable is not set. @octokit/auth-action is meant to be used in GitHub Actions only."
-    );
-  }
-  const definitions = [
-    process.env.GITHUB_TOKEN,
-    process.env.INPUT_GITHUB_TOKEN,
-    process.env.INPUT_TOKEN
-  ].filter(Boolean);
-  if (definitions.length === 0) {
-    throw new Error(
-      "[@octokit/auth-action] `GITHUB_TOKEN` variable is not set. It must be set on either `env:` or `with:`. See https://github.com/octokit/auth-action.js#createactionauth"
-    );
-  }
-  if (definitions.length > 1) {
-    throw new Error(
-      "[@octokit/auth-action] The token variable is specified more than once. Use either `with.token`, `with.GITHUB_TOKEN`, or `env.GITHUB_TOKEN`. See https://github.com/octokit/auth-action.js#createactionauth"
-    );
-  }
-  const token = definitions.pop();
-  return (0, import_auth_token.createTokenAuth)(token);
-};
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
 
 
 /***/ }),

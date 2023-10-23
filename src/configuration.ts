@@ -1,12 +1,17 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { context } from '@actions/github';
-import { Octokit, customFetch } from '@octokit/action';
+import { Octokit } from '@octokit/core';
+import { paginateRest } from '@octokit/plugin-paginate-rest';
+import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods';
 import { retry } from '@octokit/plugin-retry';
+import { OctokitOptions } from '@octokit/core/dist-types/types';
 import { HttpClient, HttpCodes } from '@actions/http-client';
 import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import { RequestInfo, RequestInit, fetch } from 'undici';
 import { EOL } from 'os';
 
 export const githubConfig = {
+  baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
   owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
   reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
@@ -80,20 +85,28 @@ const ignoreSslError: boolean =
   ticsConfig.trustStrategy === 'self-signed' ||
   ticsConfig.trustStrategy === 'all';
 
-// octokit/action uses the environment variable GITHUB_TOKEN
-process.env.GITHUB_TOKEN = ticsConfig.githubToken;
-export const octokit = new (Octokit.plugin(retry))({
-  request: {
-    fetch: customFetch,
-    retries: retryConfig.maxRetries,
-    retryAfter: 5
-  }
-});
 export const httpClient = new HttpClient('tics-github-action', undefined, {
   allowRetries: true,
   maxRetries: retryConfig.maxRetries,
   ignoreSslError: ignoreSslError
 });
 
+const octokitOptions: OctokitOptions = {
+  auth: ticsConfig.githubToken,
+  baseUrl: githubConfig.baseUrl,
+  request: {
+    agent: httpClient.getAgent(githubConfig.baseUrl),
+    fetch: async (url: RequestInfo, opts: RequestInit | undefined) => {
+      return fetch(url, {
+        ...opts,
+        dispatcher: httpClient.getAgentDispatcher(githubConfig.baseUrl)
+      });
+    },
+    retries: retryConfig.maxRetries,
+    retryAfter: 5
+  }
+};
+
+export const octokit = new (Octokit.plugin(paginateRest, restEndpointMethods, retry).defaults(octokitOptions))();
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

@@ -34,7 +34,6 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "@actions/http-client": "^2.2.0",
-    "@octokit/action": "^6.0.6",
     "@octokit/plugin-retry": "^6.0.1",
     "@octokit/request-error": "^5.0.1",
     "canonical-path": "^1.0.0",

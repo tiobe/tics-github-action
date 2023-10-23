@@ -17,36 +17,28 @@ process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
-process.env.GITHUB_ACTION = 'true';
 
 // eslint-disable-next-line import/first
 import { octokit } from '../../src/configuration';
 import { RequestError } from '@octokit/request-error';
-import { Octokit, customFetch } from '@octokit/action';
-import { retry } from '@octokit/plugin-retry';
 
 describe('@octokit/action (using https_proxy)', () => {
   let proxyServer: http.Server;
-  let requestCount = 0;
   let proxyConnects: string[];
 
   beforeAll(async () => {
     // setup proxy server
     proxyServer = createProxy();
-    await new Promise<void>(resolve => {
-      const port = Number(proxyUrl.split(':')[2]);
-      proxyServer.listen(port, () => resolve());
-    });
+    const port = Number(proxyUrl.split(':')[2]);
+    proxyServer.listen(port);
 
     proxyServer.on('connect', req => {
-      requestCount++;
       proxyConnects.push(req.url ?? '');
     });
   });
 
   beforeEach(() => {
     proxyConnects = [];
-    requestCount = 0;
   });
 
   afterAll(async () => {
@@ -64,7 +56,25 @@ describe('@octokit/action (using https_proxy)', () => {
     }
   });
 
-  test('Should return basic REST request with proxy', async () => {
+  test('Should return basic REST request, but not through the proxy', async () => {
+    // setting no_proxy
+    const originalNoProxy = process.env['no_proxy'];
+    process.env['no_proxy'] = 'api.github.com:443';
+
+    const branch = await octokit.rest.repos.getBranch({
+      owner: 'tiobe',
+      repo: 'tics-github-action',
+      branch: 'main'
+    });
+
+    // resetting no_proxy
+    process.env['no_proxy'] = originalNoProxy;
+
+    expect(branch.data.name).toEqual('main');
+    expect(proxyConnects.length).toEqual(0);
+  });
+
+  test('Should return basic REST request through the proxy', async () => {
     const branch = await octokit.rest.repos.getBranch({
       owner: 'tiobe',
       repo: 'tics-github-action',
@@ -72,10 +82,9 @@ describe('@octokit/action (using https_proxy)', () => {
     });
     expect(branch.data.name).toEqual('main');
     expect(proxyConnects).toEqual(['api.github.com:443']);
-    expect(requestCount).toEqual(1);
   });
 
-  test('Should return basic pagination request with proxy', async () => {
+  test('Should return basic pagination request through the proxy', async () => {
     const branch = await octokit.paginate(octokit.rest.repos.listBranches, {
       owner: 'tiobe',
       repo: 'tics-github-action',
@@ -83,37 +92,32 @@ describe('@octokit/action (using https_proxy)', () => {
     });
     expect(branch.find(b => b.name === 'main')).not.toBeUndefined();
     expect(proxyConnects).toEqual(['api.github.com:443']);
-    expect(requestCount).toEqual(1);
   });
 
-  test('Should return basic GraphQL request with proxy', async () => {
+  test('Should return basic GraphQL request through the proxy', async () => {
     const repository = await octokit.graphql('{repository(owner:"tiobe", name:"tics-github-action"){name}}');
     expect(repository).toEqual({ repository: { name: 'tics-github-action' } });
     expect(proxyConnects).toEqual(['api.github.com:443']);
-    expect(requestCount).toEqual(1);
   });
 
-  test('Should retry when request url is unavailable', async () => {
+  test('Should retry 3 times on request through the proxy', async () => {
     const time = Date.now();
     let retryCount = 0;
     try {
-      const octokit = new (Octokit.plugin(retry))({
+      await octokit.request('/', {
         baseUrl: 'http://0.0.0.0:8081',
         request: {
-          fetch: customFetch,
           retries: 3, // for the purpose of testing, set a lower number of retries
           retryAfter: 1 // for the purpose of testing, set a lower timeout
         }
       });
-
-      await octokit.request('/');
     } catch (error: unknown) {
       retryCount = (error as RequestError).request.request?.retryCount;
     }
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
     expect(proxyConnects).toContain('0.0.0.0:8081');
+    expect(proxyConnects.length).toEqual(4);
     expect(retryCount).toEqual(3);
-    expect(requestCount).toEqual(4);
   }, 10000);
 });

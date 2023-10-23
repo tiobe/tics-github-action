@@ -6,7 +6,7 @@ module.exports = {
       clearMocks: true,
 
       moduleFileExtensions: ['js', 'ts'],
-      testMatch: ['**/proxy/**/*.test.ts'],
+      testMatch: ['**/integration/**/*.test.ts'],
       transform: {
         '^.+\\.ts$': 'ts-jest'
       }
