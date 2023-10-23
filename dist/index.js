@@ -107,7 +107,7 @@ const octokitOptions = {
         retryAfter: 5
     }
 };
-exports.octokit = new (core_2.Octokit.plugin(plugin_paginate_rest_1.paginateRest, plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_retry_1.retry).defaults(octokitOptions))();
+exports.octokit = new (core_2.Octokit.plugin(plugin_paginate_rest_1.paginateRest, plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_retry_1.retry))(octokitOptions);
 exports.baseUrl = (0, api_helper_1.getTicsWebBaseUrlFromUrl)(exports.ticsConfig.ticsConfiguration);
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 

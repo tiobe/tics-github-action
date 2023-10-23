@@ -59,7 +59,7 @@ describe('@octokit/action (using https_proxy)', () => {
   test('Should return basic REST request, but not through the proxy', async () => {
     // setting no_proxy
     const originalNoProxy = process.env['no_proxy'];
-    process.env['no_proxy'] = 'api.github.com:443';
+    process.env['no_proxy'] = 'api.github.com';
 
     const branch = await octokit.rest.repos.getBranch({
       owner: 'tiobe',

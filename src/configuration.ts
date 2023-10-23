@@ -107,6 +107,6 @@ const octokitOptions: OctokitOptions = {
   }
 };
 
-export const octokit = new (Octokit.plugin(paginateRest, restEndpointMethods, retry).defaults(octokitOptions))();
+export const octokit = new (Octokit.plugin(paginateRest, restEndpointMethods, retry))(octokitOptions);
 export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
