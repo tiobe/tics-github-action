@@ -19,7 +19,8 @@ process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 
 // eslint-disable-next-line import/first
 import { httpClient } from '../../src/configuration';
-import { HttpClient } from '@actions/http-client';
+import HttpClient from '@tiobe/http-client';
+import { ProxyAgent } from 'proxy-agent';
 
 jest.mock('../../src/tics/api_helper', () => {
   return {
@@ -31,13 +32,11 @@ jest.mock('../../src/tics/api_helper', () => {
 describe('@actions/http-client (using http_proxy)', () => {
   let proxyServer: ProxyServer;
   let proxyConnects: string[] = [];
-  let requestCount = 0;
 
   beforeAll(async () => {
     // setup proxy server
     proxyServer = createProxy(
       http.createServer((req, res) => {
-        requestCount++;
         if (req.url == '/200') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end('{"data": "pass"}');
@@ -50,14 +49,13 @@ describe('@actions/http-client (using http_proxy)', () => {
     const port = Number(proxyUrl.split(':')[2]);
     proxyServer.listen(port);
 
-    proxyServer.on('connect', req => {
+    proxyServer.on('request', req => {
       proxyConnects.push(req.url ?? '');
     });
   });
 
   beforeEach(() => {
     proxyConnects = [];
-    requestCount = 0;
   });
 
   afterAll(async () => {
@@ -71,39 +69,67 @@ describe('@actions/http-client (using http_proxy)', () => {
   test('Should return basic REST request through the proxy', async () => {
     const response = await httpClient.get('http://0.0.0.0:8082/200');
 
-    expect(JSON.parse(await response.readBody())).toEqual({ data: 'pass' });
-    expect(proxyConnects).toEqual(['0.0.0.0:8082']);
-    expect(requestCount).toEqual(1);
+    expect(response).toEqual({ data: 'pass' });
+    expect(proxyConnects).toContain('http://0.0.0.0:8082/200');
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/200').length).toEqual(1);
   });
 
-  test('Should retry 7 times basic REST request through the proxy', async () => {
-    const httpClient = new HttpClient('tics-github-action', undefined, {
-      allowRetries: true,
-      maxRetries: 7
-    });
+  test('Should retry 3 times basic REST request through the proxy', async () => {
+    const httpClient = new HttpClient(
+      true,
+      {
+        retry: {
+          retries: 3,
+          retryDelay: 200,
+          retryOn: [502]
+        }
+      },
+      new ProxyAgent()
+    );
 
+    let response: any;
+    let errorMessage: any;
     const time = Date.now();
-    const response = await httpClient.get('http://0.0.0.0:8082/502');
+    try {
+      response = await httpClient.get('http://0.0.0.0:8082/502');
+    } catch (error: any) {
+      errorMessage = error.message;
+    }
 
-    expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(1);
-    expect(response.message.statusCode).toEqual(502);
-    expect(proxyConnects).toContain('0.0.0.0:8082');
-    expect(requestCount).toEqual(8);
+    expect(Date.now() - time).toBeGreaterThanOrEqual(600);
+    expect(response).toEqual(undefined);
+    expect(errorMessage).toContain('502');
+    expect(proxyConnects).toContain('http://0.0.0.0:8082/502');
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(4);
   }, 10000);
 
-  test('Should retry 8 times basic REST request through the proxy', async () => {
-    const httpClient = new HttpClient('tics-github-action', undefined, {
-      allowRetries: true,
-      maxRetries: 8
-    });
+  test('Should retry 4 times basic REST request through the proxy', async () => {
+    const httpClient = new HttpClient(
+      true,
+      {
+        retry: {
+          retries: 4,
+          retryDelay: 200,
+          retryOn: [502]
+        }
+      },
+      new ProxyAgent()
+    );
 
+    let response: any;
+    let errorMessage: any;
     const time = Date.now();
-    const response = await httpClient.get('http://0.0.0.0:8082/502');
+    try {
+      response = await httpClient.get('http://0.0.0.0:8082/502');
+    } catch (error: any) {
+      errorMessage = error.message;
+    }
 
-    expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(2);
-    expect(response.message.statusCode).toEqual(502);
-    expect(proxyConnects).toContain('0.0.0.0:8082');
-    expect(requestCount).toEqual(9);
+    expect(Date.now() - time).toBeGreaterThanOrEqual(800);
+    expect(response).toEqual(undefined);
+    expect(errorMessage).toContain('502');
+    expect(proxyConnects).toContain('http://0.0.0.0:8082/502');
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(5);
   }, 10000);
 
   test('Should retry on basic REST request, but not through the proxy', async () => {
@@ -111,20 +137,33 @@ describe('@actions/http-client (using http_proxy)', () => {
     const originalNoProxy = process.env['no_proxy'];
     process.env['no_proxy'] = '0.0.0.0';
 
-    const httpClient = new HttpClient('tics-github-action', undefined, {
-      allowRetries: true,
-      maxRetries: 8
-    });
+    const httpClient = new HttpClient(
+      true,
+      {
+        retry: {
+          retries: 4,
+          retryDelay: 200,
+          retryOn: [502]
+        }
+      },
+      new ProxyAgent()
+    );
 
+    let response: any;
+    let errorMessage: any;
     const time = Date.now();
-    const response = await httpClient.get('http://0.0.0.0:8082/502');
+    try {
+      response = await httpClient.get('http://0.0.0.0:8082/502');
+    } catch (error: any) {
+      errorMessage = error.message;
+    }
 
     // resetting no_proxy
     process.env['no_proxy'] = originalNoProxy;
 
-    expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(2);
-    expect(response.message.statusCode).toEqual(502);
-    expect(proxyConnects.length).toEqual(0);
-    expect(requestCount).toEqual(9);
+    expect(Date.now() - time).toBeGreaterThanOrEqual(800);
+    expect(response).toEqual(undefined);
+    expect(errorMessage).toContain('502');
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(0);
   }, 10000);
 });

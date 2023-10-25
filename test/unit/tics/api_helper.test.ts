@@ -1,109 +1,7 @@
-import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
+import { githubConfig, ticsConfig } from '../../../src/configuration';
 import { Analysis } from '../../../src/helper/interfaces';
 import { logger } from '../../../src/helper/logger';
-import { cliSummary, getInstallTicsApiUrl, getItemFromUrl, getProjectName, getTicsWebBaseUrlFromUrl, httpRequest } from '../../../src/tics/api_helper';
-
-describe('httpRequest', () => {
-  test('Should return response on status 200', async () => {
-    // testing without setting TICS Auth Token at least once
-    const body = jest.fn(() => Promise.resolve('{ "data": "body" }'));
-    const exit = jest.spyOn(logger, 'exit');
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 200 }, readBody: body }));
-
-    const response = await httpRequest<any>('url');
-    expect(response.data).toEqual('body');
-    expect(exit).toHaveBeenCalledTimes(0);
-  });
-
-  test('Should return response on status 200 wrong json', async () => {
-    // testing without setting TICS Auth Token at least once
-    const body = jest.fn(() => Promise.resolve('{ data: "body" }'));
-    const exit = jest.spyOn(logger, 'exit');
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 200 }, readBody: body }));
-
-    await httpRequest<any>('url');
-    expect(exit).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should return undefined response and call exit on status 302', async () => {
-    ticsConfig.ticsAuthToken = 'authToken'; // test setting TICS Auth Token at least once
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 302 } }));
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith =
-      'HTTP request failed with status 302. Please check if the given ticsConfiguration is correct (possibly http instead of https).';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-
-  test('Should return undefined response and call exit on status 400', async () => {
-    const body = jest.fn(() => Promise.resolve(JSON.stringify({ data: 'body', alertMessages: [{ header: 'header' }] })));
-
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 400 }, readBody: body }));
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith = 'HTTP request failed with status 400. header';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-
-  test('Should return undefined response and call exit on status 401', async () => {
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 401 } }));
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith =
-      'HTTP request failed with status 401. Please provide a valid TICSAUTHTOKEN in your configuration. Check <url>/Administration.html#page=authToken';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-
-  test('Should return undefined response and call exit on status 403', async () => {
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 403 } }));
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith = 'HTTP request failed with status 403. Forbidden call: url';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-
-  test('Should return undefined response and call exit on status 404', async () => {
-    (httpClient.get as any).mockImplementationOnce((): Promise<any> => Promise.resolve({ message: { statusCode: 404 } }));
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith = 'HTTP request failed with status 404. Please check if the given ticsConfiguration is correct.';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-
-  test('Should return undefined response and call exit on status 502', async () => {
-    (httpClient.get as any).mockImplementationOnce(
-      (): Promise<any> => Promise.resolve({ message: { statusCode: 502, statusMessage: 'Just because' } })
-    );
-    const exit = jest.spyOn(logger, 'exit');
-
-    const response = await httpRequest<any>('url');
-    const calledWith = 'Retried 10 time(s), but got: HTTP request failed with status 502. Just because';
-
-    expect(response).toEqual(undefined);
-    expect(exit).toHaveBeenCalledTimes(1);
-    expect(exit).toHaveBeenCalledWith(calledWith);
-  });
-});
+import { cliSummary, getItemFromUrl, getProjectName } from '../../../src/tics/api_helper';
 
 describe('cliSummary', () => {
   test('Should post errors and warnings on logLevel debug, cliSummary.', async () => {
@@ -142,33 +40,6 @@ describe('cliSummary', () => {
 
     expect(error).toHaveBeenCalledTimes(3);
     expect(warning).toHaveBeenCalledTimes(0);
-  });
-});
-
-describe('getInstallTicsApiUrl', () => {
-  test('Should append configuration url with platform and url', () => {
-    ticsConfig.ticsConfiguration = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
-
-    const installTicsApiUrl = getInstallTicsApiUrl('http://localhost/tiobeweb/TICS', 'Linux');
-
-    const decodedUrl = decodeURIComponent(installTicsApiUrl);
-
-    expect(decodedUrl).toEqual('http://localhost/tiobeweb/TICS/api/cfg?name=default&platform=Linux&url=http://localhost/tiobeweb/TICS');
-  });
-});
-
-describe('getTicsWebBaseUrlFromUrl', () => {
-  test('Should return base url from correct url.', () => {
-    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TICS/api/cfg?name=default');
-    expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
-  });
-
-  test('Should return empty string from incorrect url.', () => {
-    const spy = jest.spyOn(logger, 'exit');
-
-    const baseUrl = getTicsWebBaseUrlFromUrl('http://localhost/tiobeweb/TICS/cfg?name=default');
-    expect(baseUrl).toEqual('');
-    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 

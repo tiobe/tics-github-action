@@ -1,4 +1,4 @@
-import { baseUrl, ticsConfig } from '../configuration';
+import { baseUrl, httpClient, ticsConfig } from '../configuration';
 import { ChangedFile } from '../github/interfaces';
 import {
   ProjectResult,
@@ -14,7 +14,7 @@ import {
 } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
-import { getItemFromUrl, getProjectName, httpRequest } from './api_helper';
+import { getItemFromUrl, getProjectName } from './api_helper';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -85,7 +85,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
   logger.debug(`From: ${analyzedFilesUrl}`);
 
   try {
-    const response = await httpRequest<AnalyzedFiles>(analyzedFilesUrl);
+    const response = await httpClient.get<AnalyzedFiles>(analyzedFilesUrl);
     if (response) {
       analyzedFiles = response.data.map((file: AnalyzedFile) => {
         logger.debug(file.formattedValue);
@@ -129,7 +129,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   let response: QualityGate | undefined = undefined;
 
   try {
-    response = await httpRequest<QualityGate>(qualityGateUrl);
+    response = await httpClient.get<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {
@@ -180,7 +180,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
         const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
         annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
         logger.debug(`From: ${annotationsUrl}`);
-        const response = await httpRequest<AnnotationResonse>(annotationsUrl.href);
+        const response = await httpClient.get<AnnotationResonse>(annotationsUrl.href);
         if (response) {
           response.data.forEach((annotation: Annotation) => {
             const extendedAnnotation: ExtendedAnnotation = {
@@ -212,7 +212,7 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   const getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   let response;
   try {
-    response = await httpRequest<VersionResponse>(getViewerVersionUrl.href);
+    response = await httpClient.get<VersionResponse>(getViewerVersionUrl.href);
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {

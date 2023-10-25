@@ -105,18 +105,20 @@ describe('@octokit/action (using https_proxy)', () => {
     let retryCount = 0;
     try {
       await octokit.request('/', {
-        baseUrl: 'http://0.0.0.0:8081',
         request: {
           retries: 3, // for the purpose of testing, set a lower number of retries
           retryAfter: 1 // for the purpose of testing, set a lower timeout
-        }
+        },
+        owner: 'tiobe',
+        repo: 'tics-github-action',
+        branch: 'main'
       });
     } catch (error: unknown) {
       retryCount = (error as RequestError).request.request?.retryCount;
     }
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
-    expect(proxyConnects).toContain('0.0.0.0:8081');
+    expect(proxyConnects).toContain('api.github.com:443');
     expect(proxyConnects.length).toEqual(4);
     expect(retryCount).toEqual(3);
   }, 10000);

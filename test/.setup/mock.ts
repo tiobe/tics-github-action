@@ -31,8 +31,8 @@ jest.mock('../../src/configuration', () => {
       paginate: jest.fn(),
       rest: {
         pulls: {
-          listFiles: () => { },
-          listReviewComments: () => { },
+          listFiles: () => {},
+          listReviewComments: () => {},
           createReview: jest.fn(),
           deleteReviewComment: jest.fn()
         },
@@ -73,7 +73,7 @@ jest.mock('@actions/core', () => {
       stringify: jest.fn(() => {
         return summaryOutput;
       }),
-      write: jest.fn(() => { })
+      write: jest.fn(() => {})
     }
   };
 });
@@ -105,7 +105,8 @@ jest.mock('canonical-path', () => {
 });
 jest.mock('os', () => {
   return {
-    tmpdir: jest.fn(() => '/tmp')
+    tmpdir: jest.fn(() => '/tmp'),
+    platform: jest.fn()
   };
 });
 
