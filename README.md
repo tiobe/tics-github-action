@@ -83,6 +83,7 @@ The following inputs are available for this action:
 | `postAnnotations`      | Show the latest TICS annotations directly in the GitHub Pull Request review.                                                                                                                                                                                                             | false    |
 | `postToConversation`   | Post the summary to the conversation page of the pull request. Options are `true` (default) or `false`.                                                                                                                                                                                  | false    |
 | `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between 2.0.0 and 2.5.0). | false    |
+| `retryCodes`           | Status codes to retry api calls for. The default codes will be overwritten if this option is set.                                                                                                                                                                                        | false    |
 | `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                                                                                     | false    |
 | `ticsAuthToken`        | Authentication token to authorize the plugin when it connects to the TICS Viewer.                                                                                                                                                                                                        | false    |
 | `tmpDir`               | Location to store debug information.                                                                                                                                                                                                                                                     | false    |
@@ -95,6 +96,7 @@ The following inputs are available for this action:
 - To package the build to run run `npm run package`.
 - To combine the last two steps run `npm run all`.
 - There is Prettier auto-formatting available, run `npm run format` or enable format on save to automate the formatting.
+- In order to run the tests the environment variable `INPUT_GITHUBTOKEN` needs to be set with a valid `GITHUB_TOKEN`
 
 ## Git hooks
 

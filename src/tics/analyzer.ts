@@ -1,9 +1,10 @@
 import { exec } from '@actions/exec';
-import { baseUrl, githubConfig, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
-import { getInstallTicsApiUrl, httpRequest } from './api_helper';
-import { Analysis, ArtifactsResponse } from '../helper/interfaces';
+import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
+import { InstallTics } from '@tiobe/install-tics';
+import { platform } from 'os';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -62,36 +63,21 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
  * @returns Command to run.
  */
 async function buildRunCommand(fileListPath: string): Promise<string> {
-  if (githubConfig.runnerOS === 'Linux') {
-    return `/bin/bash -c "${await getInstallTics()} ${getTicsCommand(fileListPath)}"`;
-  }
-  return `powershell "${await getInstallTics()}; if ($?) {${getTicsCommand(fileListPath)}}"`;
-}
+  const installTics = new InstallTics(true, httpClient);
 
-/**
- * Get the command to install TICS with.
- */
-async function getInstallTics(): Promise<string> {
-  if (!ticsConfig.installTics) return '';
+  let installCommand = '';
+  if (ticsConfig.installTics) {
+    installCommand = await installTics.getInstallCommand(ticsConfig.ticsConfiguration);
 
-  const installTicsUrl = await retrieveInstallTics(githubConfig.runnerOS.toLowerCase());
-
-  if (!installTicsUrl) return '';
-
-  if (githubConfig.runnerOS === 'Linux') {
-    let trustStrategy = '';
-    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
-      trustStrategy = '--insecure';
+    if (platform() === 'linux') {
+      installCommand += ' &&';
     }
-    return `source <(curl --silent ${trustStrategy} '${installTicsUrl}') &&`;
-  } else {
-    // runnerOS is assumed to be Windows here
-    let trustStrategy = '';
-    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
-      trustStrategy = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};';
-    }
-    return `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ${trustStrategy} iex ((New-Object System.Net.WebClient).DownloadString('${installTicsUrl}'))`;
   }
+
+  if (platform() === 'linux') {
+    return `/bin/bash -c "${installCommand} ${getTicsCommand(fileListPath)}"`;
+  }
+  return `powershell "${installCommand}; if ($?) {${getTicsCommand(fileListPath)}}"`;
 }
 
 /**
@@ -112,30 +98,6 @@ function findInStdOutOrErr(data: string): void {
       explorerUrls.push(viewerUrl + urlPath);
     }
   }
-}
-
-/**
- * Retrieves the the TICS install url from the ticsConfiguration.
- * @param os the OS the runner runs on.
- * @returns the TICS install url.
- */
-async function retrieveInstallTics(os: string): Promise<string | undefined> {
-  try {
-    logger.info('Trying to retrieve configuration information from TICS.');
-
-    const ticsInstallApiBaseUrl = getInstallTicsApiUrl(baseUrl, os);
-
-    const data = await httpRequest<ArtifactsResponse>(ticsInstallApiBaseUrl);
-
-    if (data?.links.installTics) {
-      return baseUrl + '/' + data.links.installTics;
-    }
-  } catch (error: unknown) {
-    let message = 'reason unknown';
-    if (error instanceof Error) message = error.message;
-    logger.exit(`An error occurred when trying to retrieve configuration information: ${message}`);
-  }
-  return;
 }
 
 /**

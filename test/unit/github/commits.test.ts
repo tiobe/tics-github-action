@@ -1,7 +1,7 @@
-import { getChangedFilesOfCommit } from '../../src/github/commits';
-import { octokit, ticsConfig } from '../../src/configuration';
+import { getChangedFilesOfCommit } from '../../../src/github/commits';
+import { octokit, ticsConfig } from '../../../src/configuration';
 import { changedFile } from './objects/pulls';
-import { logger } from '../../src/helper/logger';
+import { logger } from '../../../src/helper/logger';
 
 describe('getChangedFilesOfCommit', () => {
   test('Should return single file on getChangedFilesOfCommit', async () => {

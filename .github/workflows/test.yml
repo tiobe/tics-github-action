@@ -13,4 +13,6 @@ jobs:
       - name: Jest
         uses: actions/setup-node@v3
       - run: npm ci
-      - run: npm run test-coverage
+      - run: npm run test:coverage
+        env:
+          INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}

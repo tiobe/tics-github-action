@@ -105,7 +105,8 @@ jest.mock('canonical-path', () => {
 });
 jest.mock('os', () => {
   return {
-    tmpdir: jest.fn(() => '/tmp')
+    tmpdir: jest.fn(() => '/tmp'),
+    platform: jest.fn()
   };
 });
 

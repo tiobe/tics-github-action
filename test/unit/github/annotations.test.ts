@@ -1,6 +1,6 @@
-import { deletePreviousReviewComments, getPostedReviewComments } from '../../src/github/annotations';
-import { octokit } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
+import { deletePreviousReviewComments, getPostedReviewComments } from '../../../src/github/annotations';
+import { octokit } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
 import { emptyComment, warningComment } from './objects/annotations';
 
 describe('getPostedReviewComments', () => {

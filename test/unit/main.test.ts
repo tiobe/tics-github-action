@@ -1,15 +1,15 @@
 import { existsSync } from 'fs';
-import { githubConfig, ticsConfig } from '../src/configuration';
-import { Events } from '../src/helper/enums';
-import { logger } from '../src/helper/logger';
+import { githubConfig, ticsConfig } from '../../src/configuration';
+import { Events } from '../../src/helper/enums';
+import { logger } from '../../src/helper/logger';
 
-import * as main from '../src/main';
-import * as pulls from '../src/github/pulls';
-import * as analyzer from '../src/tics/analyzer';
-import * as fetcher from '../src/tics/fetcher';
-import * as review from '../src/github/review';
-import * as annotations from '../src/github/annotations';
-import * as comments from '../src/github/comments';
+import * as main from '../../src/main';
+import * as pulls from '../../src/github/pulls';
+import * as analyzer from '../../src/tics/analyzer';
+import * as fetcher from '../../src/tics/fetcher';
+import * as review from '../../src/github/review';
+import * as annotations from '../../src/github/annotations';
+import * as comments from '../../src/github/comments';
 
 import {
   analysisFailedNoUrl,

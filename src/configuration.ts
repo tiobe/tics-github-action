@@ -1,10 +1,14 @@
 import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
-import { HttpClient, HttpCodes } from '@actions/http-client';
-import { getTicsWebBaseUrlFromUrl } from './tics/api_helper';
+import { retry } from '@octokit/plugin-retry';
+import { OctokitOptions } from '@octokit/core/dist-types/types';
+import HttpClient from '@tiobe/http-client';
+import { ProxyAgent } from 'proxy-agent';
 import { EOL } from 'os';
+import { getBaseUrl } from '@tiobe/install-tics';
 
 export const githubConfig = {
+  baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
   repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
   owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
   reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
@@ -14,7 +18,6 @@ export const githubConfig = {
   commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
   eventName: context.eventName,
   id: `${context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
-  runnerOS: process.env.RUNNER_OS ? process.env.RUNNER_OS : '',
   pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
 };
@@ -39,6 +42,10 @@ function getSecretsFilter(secretsFilter: string | undefined) {
   return combinedFilters;
 }
 
+function getRetryCodes(retryCodes?: string): number[] {
+  return retryCodes?.split(',').map(r => parseInt(r)) || [419, 500, 501, 502, 503, 504];
+}
+
 export const ticsConfig = {
   githubToken: getInput('githubToken', { required: true }),
   projectName: getInput('projectName', { required: true }),
@@ -60,6 +67,7 @@ export const ticsConfig = {
   postToConversation: getBooleanInput('postToConversation'),
   pullRequestApproval: getBooleanInput('pullRequestApproval'),
   recalc: getInput('recalc'),
+  retryCodes: getRetryCodes(getInput('retryCodes')),
   ticsAuthToken: getInput('ticsAuthToken'),
   tmpDir: getInput('tmpDir'),
   trustStrategy: getInput('trustStrategy'),
@@ -67,26 +75,35 @@ export const ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-export const retryConfig = {
+const retryConfig = {
   maxRetries: 10,
-  retryCodes: [HttpCodes.BadGateway, HttpCodes.ServiceUnavailable, HttpCodes.GatewayTimeout]
+  retryCodes: ticsConfig.retryCodes,
+  delay: 5
 };
 
-const ignoreSslError: boolean =
-  ticsConfig.hostnameVerification === '0' ||
-  ticsConfig.hostnameVerification === 'false' ||
-  ticsConfig.trustStrategy === 'self-signed' ||
-  ticsConfig.trustStrategy === 'all';
-
-export const octokit = getOctokit(
-  ticsConfig.githubToken,
-  { request: { retries: retryConfig.maxRetries, retryAfter: 5 } },
-  require('@octokit/plugin-retry').retry
+export const httpClient = new HttpClient(
+  true,
+  {
+    authToken: ticsConfig.ticsAuthToken,
+    xRequestWithTics: true,
+    retry: {
+      retries: retryConfig.maxRetries,
+      retryDelay: retryConfig.delay * 1000,
+      retryOn: retryConfig.retryCodes
+    }
+  },
+  new ProxyAgent()
 );
-export const httpClient = new HttpClient('tics-github-action', undefined, {
-  allowRetries: true,
-  maxRetries: retryConfig.maxRetries,
-  ignoreSslError: ignoreSslError
-});
-export const baseUrl = getTicsWebBaseUrlFromUrl(ticsConfig.ticsConfiguration);
+
+const octokitOptions: OctokitOptions = {
+  baseUrl: githubConfig.baseUrl,
+  request: {
+    agent: new ProxyAgent(),
+    retries: retryConfig.maxRetries,
+    retryAfter: retryConfig.delay
+  }
+};
+
+export const octokit = getOctokit(ticsConfig.githubToken, octokitOptions, retry);
+export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration);
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;

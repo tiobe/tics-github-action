@@ -149,10 +149,6 @@ export interface VersionResponse {
   dbversion?: string;
 }
 
-export interface ArtifactsResponse {
-  links: Links;
-}
-
 export interface Links {
   setPropPath: string;
   queryArtifact: string;

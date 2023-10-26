@@ -1,5 +1,5 @@
-import { Status } from '../../src/helper/enums';
-import { generateExpandableAreaMarkdown, generateStatusMarkdown } from '../../src/helper/markdown';
+import { Status } from '../../../src/helper/enums';
+import { generateExpandableAreaMarkdown, generateStatusMarkdown } from '../../../src/helper/markdown';
 
 describe('generateStatusMarkdown', () => {
   test('Should return failed without prefix', () => {

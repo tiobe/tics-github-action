@@ -1,15 +1,15 @@
-import { ticsConfig } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
-import * as api_helper from '../../src/tics/api_helper';
-import * as fetcher from '../../src/tics/fetcher';
-import * as summary from '../../src/helper/summary';
+import { ticsConfig, httpClient } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
+import * as api_helper from '../../../src/tics/api_helper';
+import * as fetcher from '../../../src/tics/fetcher';
+import * as summary from '../../../src/helper/summary';
 import { ticsReviewComments, annotations, failedQualityGate, passedQualityGate } from './objects/fetcher';
 
 describe('getAnalyzedFiles', () => {
   test('Should return one analyzed file from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }] }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }] }));
 
     const spy = jest.spyOn(logger, 'debug');
 
@@ -23,7 +23,7 @@ describe('getAnalyzedFiles', () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest
-      .spyOn(api_helper, 'httpRequest')
+      .spyOn(httpClient, 'get')
       .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] }));
 
     const spy = jest.spyOn(logger, 'debug');
@@ -34,10 +34,10 @@ describe('getAnalyzedFiles', () => {
     expect(response).toEqual(['file.js', 'files.js']);
   });
 
-  test('Should throw error on faulty httpRequest in getAnalyzedFiles', async () => {
+  test('Should throw error on faulty get in getAnalyzedFiles', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
     const spy = jest.spyOn(logger, 'exit');
 
@@ -51,7 +51,7 @@ describe('getQualityGate', () => {
   test('Should return quality gates from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(api_helper, 'httpRequest').mockResolvedValueOnce({ data: 'data' });
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: 'data' });
 
     ticsConfig.branchName = 'main';
 
@@ -60,10 +60,10 @@ describe('getQualityGate', () => {
     expect(response).toEqual({ data: 'data' });
   });
 
-  test('Should throw error on faulty httpRequest in getQualityGate', async () => {
+  test('Should throw error on faulty get in getQualityGate', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
     const spy = jest.spyOn(logger, 'exit');
 
@@ -76,19 +76,23 @@ describe('getQualityGate', () => {
 describe('getAnnotations', () => {
   test('Should return analyzed files from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_1' }] }));
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ annotation: 'anno_2' }] }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ type: 'CS' }] }));
+    jest
+      .spyOn(httpClient, 'get')
+      .mockImplementationOnce(
+        (): Promise<any> => Promise.resolve({ data: [{ type: 'CS' }], annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } } })
+      );
 
     const response = await fetcher.getAnnotations([{ url: 'url' }, { url: 'url' }]);
 
     expect(response).toEqual([
-      { annotation: 'anno_1', gateId: 0, instanceName: undefined },
-      { annotation: 'anno_2', gateId: 1, instanceName: undefined }
+      { type: 'CS', gateId: 0, instanceName: 'CS' },
+      { type: 'CS', gateId: 1, instanceName: 'Coding Standard Violations' }
     ]);
   });
 
-  test('Should throw error on faulty httpRequest in getAnnotations', async () => {
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+  test('Should throw error on faulty get in getAnnotations', async () => {
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
     const spy = jest.spyOn(logger, 'exit');
 
@@ -100,15 +104,15 @@ describe('getAnnotations', () => {
 
 describe('getViewerVersion', () => {
   test('Should version of the viewer', async () => {
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.resolve({ version: '2022.0.0' }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ version: '2022.0.0' }));
 
     const response = await fetcher.getViewerVersion();
 
     expect(response?.version).toEqual('2022.0.0');
   });
 
-  test('Should throw error on faulty httpRequest in getViewerVersion', async () => {
-    jest.spyOn(api_helper, 'httpRequest').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+  test('Should throw error on faulty get in getViewerVersion', async () => {
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
     const spy = jest.spyOn(logger, 'exit');
 

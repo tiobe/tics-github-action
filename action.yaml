@@ -74,6 +74,9 @@ inputs:
     description: Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between 2.0.0 and 2.5.0).
     required: false
     default: false
+  retryCodes:
+    description: Status codes to retry api calls for. The default codes will be overwritten if this option is set.
+    required: false
   secretsFilter:
     description: Comma-seperated list of extra secrets to mask in the console output.
     required: false

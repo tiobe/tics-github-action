@@ -1,4 +1,4 @@
-import { ChangedFile } from '../../../src/github/interfaces';
+import { ChangedFile } from '../../../../src/github/interfaces';
 
 export const changedFile: ChangedFile = {
   sha: '',

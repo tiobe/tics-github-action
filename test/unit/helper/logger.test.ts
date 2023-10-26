@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
-import { ticsConfig } from '../../src/configuration';
-import { logger } from '../../src/helper/logger';
+import { ticsConfig } from '../../../src/configuration';
+import { logger } from '../../../src/helper/logger';
 
 describe('info', () => {
   test('Should call core.info on info', () => {

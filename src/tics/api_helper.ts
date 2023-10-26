@@ -1,62 +1,6 @@
-import { OutgoingHttpHeaders } from 'http';
 import { logger } from '../helper/logger';
-import { githubConfig, httpClient, retryConfig, ticsConfig, viewerUrl } from '../configuration';
-import { Analysis, HttpResponse } from '../helper/interfaces';
-import { HttpClientResponse } from '@actions/http-client';
-
-/**
- * Executes a GET request to the given url.
- * @param url api url to perform a GET request for.
- * @returns Promise of the data retrieved from the response.
- */
-export async function httpRequest<T>(url: string): Promise<T | undefined> {
-  var headers: OutgoingHttpHeaders = {
-    XRequestedWith: 'tics'
-  };
-  if (ticsConfig.ticsAuthToken) {
-    headers.Authorization = `Basic ${ticsConfig.ticsAuthToken}`;
-  }
-
-  const response: HttpClientResponse = await httpClient.get(url, headers);
-
-  let errorMessage = '';
-  if (response.message.statusCode && retryConfig.retryCodes.includes(response.message.statusCode)) {
-    errorMessage += `Retried ${retryConfig.maxRetries} time(s), but got: `;
-  }
-  errorMessage += `HTTP request failed with status ${response.message.statusCode}.`;
-
-  switch (response.message.statusCode) {
-    case 200:
-      const text = await response.readBody();
-      try {
-        return <T>JSON.parse(text);
-      } catch (error: unknown) {
-        logger.exit(`${error}. Tried to parse response: ${text}`);
-      }
-      break;
-    case 302:
-      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct (possibly http instead of https).`);
-      break;
-    case 400:
-      logger.exit(`${errorMessage} ${(<HttpResponse>JSON.parse(await response.readBody())).alertMessages[0].header}`);
-      break;
-    case 401:
-      logger.exit(
-        `${errorMessage} Please provide a valid TICSAUTHTOKEN in your configuration. Check ${viewerUrl}/Administration.html#page=authToken`
-      );
-      break;
-    case 403:
-      logger.exit(`${errorMessage} Forbidden call: ${url}`);
-      break;
-    case 404:
-      logger.exit(`${errorMessage} Please check if the given ticsConfiguration is correct.`);
-      break;
-    default:
-      logger.exit(`${errorMessage} ${response.message.statusMessage}`);
-      break;
-  }
-  return;
-}
+import { githubConfig, ticsConfig } from '../configuration';
+import { Analysis } from '../helper/interfaces';
 
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.
@@ -67,39 +11,6 @@ export function cliSummary(analysis: Analysis): void {
   if (githubConfig.debugger) {
     analysis.warningList.forEach(warning => logger.warning(warning));
   }
-}
-
-/**
- * Creates the TICS install data from the TICS Viewer.
- * @param url url given in the ticsConfiguration.
- * @param os the OS the runner runs on.
- * @returns the TICS install url.
- */
-export function getInstallTicsApiUrl(url: string, os: string): string {
-  const installTicsApi = new URL(ticsConfig.ticsConfiguration);
-  installTicsApi.searchParams.append('platform', os);
-  installTicsApi.searchParams.append('url', url);
-
-  return installTicsApi.href;
-}
-
-/**
- * Returns the TIOBE web base url.
- * @param url url given in the ticsConfiguration.
- * @returns TIOBE web base url.
- */
-export function getTicsWebBaseUrlFromUrl(url: string): string {
-  const cfgMarker = 'cfg?name=';
-  const apiMarker = '/api/';
-  let baseUrl = '';
-
-  if (url.includes(apiMarker + cfgMarker)) {
-    baseUrl = url.split(apiMarker)[0];
-  } else {
-    logger.exit('Missing configuration api in the TICS Viewer URL. Please check your workflow configuration.');
-  }
-
-  return baseUrl;
 }
 
 /**

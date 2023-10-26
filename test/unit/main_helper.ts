@@ -1,4 +1,4 @@
-import { AnalysisResults, ExtendedAnnotation, QualityGate } from '../src/helper/interfaces';
+import { AnalysisResults, ExtendedAnnotation, QualityGate } from '../../src/helper/interfaces';
 
 interface changedFile {
   sha: string;
