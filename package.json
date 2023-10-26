@@ -48,7 +48,7 @@
     "@types/node": "^20.8.6",
     "@types/underscore": "^1.11.11",
     "@typescript-eslint/parser": "^6.7.5",
-    "@vercel/ncc": "^0.38.0",
+    "@vercel/ncc": "^0.38.1",
     "async-listen": "^3.0.1",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
