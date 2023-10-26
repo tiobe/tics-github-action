@@ -3,7 +3,7 @@ import { createProxy } from 'proxy';
 
 // Default values are set when the module is imported, so we need to set proxy first.
 // Running these tests with https_proxy
-const proxyUrl = 'http://127.0.0.1:8081';
+const proxyUrl = 'http://0.0.0.0:8081';
 const originalhttpsProxyUrl = process.env['https_proxy'];
 const originalhttpProxyUrl = process.env['https_proxy'];
 process.env['https_proxy'] = proxyUrl;
@@ -101,24 +101,28 @@ describe('@octokit/action (using https_proxy)', () => {
   });
 
   test('Should retry 3 times on request through the proxy', async () => {
+    proxyServer.on('request', (req, res) => {
+      if (req.url?.startsWith('http')) {
+        proxyConnects.push(req.url);
+      }
+    });
+
     const time = Date.now();
     let retryCount = 0;
     try {
       await octokit.request('/', {
+        baseUrl: 'http://0.0.0.0:8081',
         request: {
           retries: 3, // for the purpose of testing, set a lower number of retries
           retryAfter: 1 // for the purpose of testing, set a lower timeout
-        },
-        owner: 'tiobe',
-        repo: 'tics-github-action',
-        branch: 'main'
+        }
       });
     } catch (error: unknown) {
       retryCount = (error as RequestError).request.request?.retryCount;
     }
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
-    expect(proxyConnects).toContain('api.github.com:443');
+    expect(proxyConnects).toContain('http://0.0.0.0:8081/');
     expect(proxyConnects.length).toEqual(4);
     expect(retryCount).toEqual(3);
   }, 10000);
