@@ -70,17 +70,6 @@ class Logger {
   }
 
   /**
-   * Uses core.setFailed to exit with error.
-   * @param error
-   */
-  exit(error: string): void {
-    error = this.maskSecrets(error);
-    this.addNewline('error');
-    core.setFailed(`\u001b[31m${error}`);
-    process.exit(1);
-  }
-
-  /**
    * Add newline above header, error and setFailed if the logger has been called before.
    * @param type the type of call to add a newline for.
    */

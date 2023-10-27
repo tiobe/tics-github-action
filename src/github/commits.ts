@@ -41,7 +41,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
     logger.info('Retrieved changed files from commit.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.exit(`Could not retrieve the changed files: ${message}`);
+    throw Error(`Could not retrieve the changed files: ${message}`);
   }
   return response;
 }

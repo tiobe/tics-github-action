@@ -89,9 +89,14 @@ describe('getChangedFilesOfCommit', () => {
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'exit');
-    await getChangedFilesOfCommit();
 
-    expect(spy).toHaveBeenCalledTimes(1);
+    let error: any;
+    try {
+      await getChangedFilesOfCommit();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
   });
 });

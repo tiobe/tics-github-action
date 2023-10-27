@@ -3,7 +3,7 @@ import { normalize, resolve } from 'canonical-path';
 import { logger } from '../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../configuration';
 import { ChangedFile } from './interfaces';
-import { handleOctokitError } from '../helper/error';
+import { handleOctokitError as getMessageFromOctokitError } from '../helper/error';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -40,8 +40,8 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
     });
     logger.info('Retrieved changed files from pull request.');
   } catch (error: unknown) {
-    const message = handleOctokitError(error);
-    logger.exit(`Could not retrieve the changed files: ${message}`);
+    const message = getMessageFromOctokitError(error);
+    throw Error(`Could not retrieve the changed files: ${message}`);
   }
   return response;
 }

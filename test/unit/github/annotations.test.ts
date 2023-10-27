@@ -1,7 +1,7 @@
-import { deletePreviousReviewComments, getPostedReviewComments } from '../../../src/github/annotations';
+import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
 import { octokit } from '../../../src/configuration';
 import { logger } from '../../../src/helper/logger';
-import { emptyComment, warningComment } from './objects/annotations';
+import { analysisResults, emptyComment, warningComment } from './objects/annotations';
 
 describe('getPostedReviewComments', () => {
   test('Should return single file on getPostedReviewComments', async () => {

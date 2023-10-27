@@ -96,7 +96,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
   } catch (error: unknown) {
     let message = 'unknown error';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the analyzed files: ${message}`);
+    throw Error(`There was an error retrieving the analyzed files: ${message}`);
   }
   return analyzedFiles;
 }
@@ -135,7 +135,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the quality gates: ${message}`);
+    throw Error(`There was an error retrieving the quality gates: ${message}`);
   }
 
   return response;
@@ -198,7 +198,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
+    throw Error(`An error occured when trying to retrieve annotations: ${message}`);
   }
 
   return annotations;
@@ -218,7 +218,7 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the Viewer version: ${message}`);
+    throw Error(`There was an error retrieving the Viewer version: ${message}`);
   }
   return response;
 }

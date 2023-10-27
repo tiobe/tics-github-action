@@ -15,110 +15,129 @@ import { exportVariable, summary } from '@actions/core';
 import { Analysis } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
+import { ChangedFiles } from './interfaces';
 
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
   if (error instanceof Error) message = error.message;
-  logger.exit(message);
+  logger.setFailed(message);
+  process.exit(1);
 });
 
 // exported for testing purposes
 export async function main(): Promise<void> {
   configure();
 
-  const message = await meetsPrerequisites();
-  if (message) {
-    return logger.exit(message);
-  }
+  await meetsPrerequisites();
 
-  try {
-    await run();
-  } catch (error: unknown) {
-    throw error;
-  }
-}
-
-async function run() {
   let analysis: Analysis | undefined;
-
   if (ticsConfig.mode === 'diagnostic') {
     analysis = await diagnosticAnalysis();
   } else {
-    let changedFilesFilePath = undefined;
-    let changedFiles = undefined;
+    const changedFiles = await getChangedFiles();
 
-    if (ticsConfig.filelist) {
-      changedFilesFilePath = ticsConfig.filelist;
-    }
+    if (changedFiles) {
+      analysis = await analyze(changedFiles);
 
-    if (githubConfig.eventName === 'pull_request') {
-      changedFiles = await getChangedFilesOfPullRequest();
-    } else {
-      changedFiles = await getChangedFilesOfCommit();
-    }
-
-    if (!ticsConfig.filelist) {
-      if (changedFiles.length <= 0) {
-        return logger.info('No changed files found to analyze.');
-      }
-      changedFilesFilePath = changedFilesToFile(changedFiles);
-    }
-
-    if (!changedFilesFilePath) return logger.error('No filepath for changedfiles list.');
-    analysis = await runTicsAnalyzer(changedFilesFilePath);
-
-    if (analysis.explorerUrls.length === 0) {
-      deletePreviousComments(await getPostedComments());
-      if (!analysis.completed) {
-        await postErrorComment(analysis);
-        logger.setFailed('Failed to run TICS Github Action.');
-      } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-        await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
-      } else {
-        logger.setFailed('Failed to run TICS Github Action.');
-        analysis.errorList.push('Explorer URL not returned from TICS analysis.');
-        await postErrorComment(analysis);
-      }
-      cliSummary(analysis);
-      return;
-    }
-
-    const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles);
-
-    if (analysisResults.missesQualityGate) return logger.exit('Some quality gates could not be retrieved');
-
-    // If not run on a pull request no review comments have to be deleted
-    if (githubConfig.eventName === 'pull_request') {
-      const previousReviewComments = await getPostedReviewComments();
-      if (previousReviewComments && previousReviewComments.length > 0) {
-        deletePreviousReviewComments(previousReviewComments);
+      if (analysis) {
+        try {
+          await processAnalysis(analysis, changedFiles);
+        } catch (error: unknown) {
+          let message = 'Something went wrond: reason unknown';
+          if (error instanceof Error) message = error.message;
+          logger.setFailed(message);
+        }
       }
     }
-
-    if (ticsConfig.postAnnotations) {
-      postAnnotations(analysisResults);
-    }
-
-    let reviewBody = createSummaryBody(analysisResults);
-
-    // If not run on a pull request no comments have to be deleted
-    // and there is no conversation to post to.
-    if (githubConfig.eventName === 'pull_request') {
-      deletePreviousComments(await getPostedComments());
-
-      await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
-    }
-
-    if (!analysisResults.passed) logger.setFailed(analysisResults.message);
   }
 
-  if (ticsConfig.tmpDir || githubConfig.debugger) {
+  if ((ticsConfig.tmpDir || githubConfig.debugger) && analysis) {
     await uploadArtifact();
   }
 
   // Write the summary made to the action summary.
   await summary.write({ overwrite: true });
   cliSummary(analysis);
+}
+
+async function getChangedFiles(): Promise<ChangedFiles | undefined> {
+  let changedFilesFilePath = undefined;
+  let changedFiles = undefined;
+
+  if (githubConfig.eventName === 'pull_request') {
+    changedFiles = await getChangedFilesOfPullRequest();
+  } else {
+    changedFiles = await getChangedFilesOfCommit();
+  }
+
+  if (ticsConfig.filelist) {
+    changedFilesFilePath = ticsConfig.filelist;
+  } else {
+    if (changedFiles.length <= 0) {
+      logger.info('No changed files found to analyze.');
+      return;
+    }
+    changedFilesFilePath = changedFilesToFile(changedFiles);
+  }
+
+  return {
+    files: changedFiles,
+    path: changedFilesFilePath
+  };
+}
+
+async function analyze(changedFiles: ChangedFiles): Promise<Analysis | undefined> {
+  const analysis = await runTicsAnalyzer(changedFiles.path);
+
+  if (analysis.explorerUrls.length === 0) {
+    deletePreviousComments(await getPostedComments());
+    if (!analysis.completed) {
+      await postErrorComment(analysis);
+      logger.setFailed('Failed to run TICS Github Action.');
+    } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
+      await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
+    } else {
+      logger.setFailed('Failed to run TICS Github Action.');
+      analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+      await postErrorComment(analysis);
+    }
+    cliSummary(analysis);
+    return;
+  }
+
+  return analysis;
+}
+
+async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
+  const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles.files);
+
+  if (analysisResults.missesQualityGate) {
+    throw Error('Some quality gates could not be retrieved');
+  }
+
+  // If not run on a pull request no review comments have to be deleted
+  if (githubConfig.eventName === 'pull_request') {
+    const previousReviewComments = await getPostedReviewComments();
+    if (previousReviewComments && previousReviewComments.length > 0) {
+      deletePreviousReviewComments(previousReviewComments);
+    }
+  }
+
+  if (ticsConfig.postAnnotations) {
+    postAnnotations(analysisResults);
+  }
+
+  let reviewBody = createSummaryBody(analysisResults);
+
+  // If not run on a pull request no comments have to be deleted
+  // and there is no conversation to post to.
+  if (githubConfig.eventName === 'pull_request') {
+    deletePreviousComments(await getPostedComments());
+
+    await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
+  }
+
+  if (!analysisResults.passed) logger.setFailed(analysisResults.message);
 }
 
 /**
@@ -199,25 +218,20 @@ export function configure(): void {
 /**
  * Checks if prerequisites are met to run the Github Plugin.
  * If any of these checks fail it returns a message.
- * @returns Message containing why it failed the prerequisite.
  */
-async function meetsPrerequisites(): Promise<string | undefined> {
-  let message;
-
+async function meetsPrerequisites(): Promise<void> {
   const viewerVersion = await getViewerVersion();
 
   if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
     const version = viewerVersion ? viewerVersion.version : 'unknown';
-    message = `Minimum required TICS Viewer version is 2022.4. Found version ${version}.`;
+    throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for checked out repository.
   } else if (githubConfig.eventName !== 'pull_request' && !ticsConfig.filelist) {
-    message = 'If the the action is run outside a pull request it should be run with a filelist.';
+    throw Error('If the the action is run outside a pull request it should be run with a filelist.');
   } else if (!isCheckedOut()) {
-    message = 'No checkout found to analyze. Please perform a checkout before running the TICS Action.';
+    throw Error('No checkout found to analyze. Please perform a checkout before running the TICS Action.');
   }
-
-  return message;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
+import { AnalysisResults, ProjectResult, TicsReviewComment, TicsReviewComments } from '../../../../src/helper/interfaces';
 
 export const user: User = {
   login: '',
@@ -73,4 +74,27 @@ export const emptyComment: ReviewComment = {
   pull_request_url: '',
   author_association: 'COLLABORATOR',
   _links: links
+};
+
+export const analysisResults: AnalysisResults = {
+  passed: false,
+  message: '',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      project: '',
+      explorerUrl: '',
+      analyzedFiles: [],
+      reviewComments: {
+        postable: [
+          {
+            title: '',
+            body: '',
+            line: 0
+          }
+        ],
+        unpostable: []
+      }
+    }
+  ]
 };

@@ -1,6 +1,6 @@
 import { githubConfig, octokit } from '../../../src/configuration';
 import { logger } from '../../../src/helper/logger';
-import { deletePreviousComments, postErrorComment, getPostedComments } from '../../../src/github/comments';
+import { deletePreviousComments, postErrorComment, getPostedComments, postNothingAnalyzedComment } from '../../../src/github/comments';
 import { createErrorSummary } from '../../../src/helper/summary';
 import { Comment } from '../../../src/github/interfaces';
 
@@ -98,11 +98,22 @@ describe('postErrorComment', () => {
   });
 });
 
+describe('postNothingAnalyzedComment', () => {
+  test('Should call createComment once', async () => {
+    (createErrorSummary as any).mockReturnValueOnce('body');
+    const spy = jest.spyOn(octokit.rest.issues, 'createComment');
+
+    const message = 'message';
+    await postNothingAnalyzedComment(message);
+    expect(spy).toBeCalledTimes(1);
+  });
+});
+
 describe('deletePreviousComments', () => {
   test('Should call deleteComment once', async () => {
     const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
 
-    deletePreviousComments([comment]);
+    deletePreviousComments([commentWithBody]);
     expect(spy).toBeCalledTimes(1);
   });
 
@@ -110,13 +121,21 @@ describe('deletePreviousComments', () => {
     (createErrorSummary as any).mockReturnValueOnce('body');
     const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
 
-    deletePreviousComments([comment]);
+    deletePreviousComments([commentWithBody]);
     const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       comment_id: 0
     };
     expect(spy).toBeCalledWith(calledWith);
+  });
+
+  test('Should call createComment with values', async () => {
+    (createErrorSummary as any).mockReturnValueOnce('body');
+    const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
+
+    deletePreviousComments([commentWithoutBody]);
+    expect(spy).toBeCalledTimes(0);
   });
 
   test('Should throw an error on postErrorComment', async () => {
@@ -126,13 +145,13 @@ describe('deletePreviousComments', () => {
     });
     const spy = jest.spyOn(logger, 'error');
 
-    deletePreviousComments([comment]);
+    deletePreviousComments([commentWithBody]);
 
     expect(spy).toBeCalledTimes(1);
   });
 });
 
-const comment: Comment = {
+const commentWithBody: Comment = {
   url: '',
   html_url: '',
   issue_url: '',
@@ -142,4 +161,16 @@ const comment: Comment = {
   created_at: '',
   updated_at: '',
   body: '<h1>TICS Quality Gate</h1>'
+};
+
+const commentWithoutBody: Comment = {
+  url: '',
+  html_url: '',
+  issue_url: '',
+  id: 0,
+  node_id: '',
+  user: null,
+  created_at: '',
+  updated_at: '',
+  body: undefined
 };

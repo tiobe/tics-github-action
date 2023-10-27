@@ -6,10 +6,10 @@ import { Analysis } from '../helper/interfaces';
  * Creates a cli summary of all errors and bugs based on the logLevel.
  * @param analysis the output of the TICS analysis run.
  */
-export function cliSummary(analysis: Analysis): void {
-  analysis.errorList.forEach(error => logger.error(error));
+export function cliSummary(analysis?: Analysis): void {
+  analysis?.errorList.forEach(error => logger.error(error));
   if (githubConfig.debugger) {
-    analysis.warningList.forEach(warning => logger.warning(warning));
+    analysis?.warningList.forEach(warning => logger.warning(warning));
   }
 }
 
