@@ -18,6 +18,7 @@ const http_client_1 = __importDefault(__nccwpck_require__(4824));
 const proxy_agent_1 = __nccwpck_require__(8391);
 const os_1 = __nccwpck_require__(2037);
 const install_tics_1 = __nccwpck_require__(8569);
+const crypto_1 = __nccwpck_require__(6113);
 exports.githubConfig = {
     baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
     repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
@@ -28,7 +29,7 @@ exports.githubConfig = {
     branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
     commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
     eventName: github_1.context.eventName,
-    id: `${github_1.context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
+    id: `${github_1.context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT || (0, crypto_1.randomBytes)(4).toString('hex')}`,
     pullRequestNumber: getPullRequestNumber(),
     debugger: (0, core_1.isDebug)()
 };
@@ -105,7 +106,7 @@ const octokitOptions = {
     }
 };
 exports.octokit = (0, github_1.getOctokit)(exports.ticsConfig.githubToken, octokitOptions, plugin_retry_1.retry);
-exports.baseUrl = (0, install_tics_1.getBaseUrl)(exports.ticsConfig.ticsConfiguration);
+exports.baseUrl = (0, install_tics_1.getBaseUrl)(exports.ticsConfig.ticsConfiguration).href;
 exports.viewerUrl = exports.ticsConfig.viewerUrl ? exports.ticsConfig.viewerUrl.replace(/\/+$/, '') : exports.baseUrl;
 
 
@@ -1227,16 +1228,40 @@ exports.getProjectName = getProjectName;
 /***/ }),
 
 /***/ 1559:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getViewerVersion = exports.getAnnotations = exports.getQualityGate = exports.getAnalyzedFiles = exports.getAnalysisResults = void 0;
 const configuration_1 = __nccwpck_require__(5527);
 const logger_1 = __nccwpck_require__(6440);
 const summary_1 = __nccwpck_require__(1502);
 const api_helper_1 = __nccwpck_require__(3823);
+const fetcher = __importStar(__nccwpck_require__(1559));
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
  * @param explorerUrls All the explorer urls gotten from the TICS analysis.
@@ -1259,9 +1284,11 @@ async function getAnalysisResults(explorerUrls, changedFiles) {
         let analysisResult = {
             project: (0, api_helper_1.getProjectName)(url),
             explorerUrl: url,
-            analyzedFiles: await exports.getAnalyzedFiles(url) // export is used for testing
+            // import of itself is used for mocking the function in the same file
+            analyzedFiles: await fetcher.getAnalyzedFiles(url)
         };
-        const qualityGate = await exports.getQualityGate(url); // export is used for testing
+        // import of itself is used for mocking the function in the same file
+        const qualityGate = await fetcher.getQualityGate(url);
         if (!qualityGate) {
             analysisResults.passed = false;
             analysisResults.missesQualityGate = true;
@@ -1271,7 +1298,8 @@ async function getAnalysisResults(explorerUrls, changedFiles) {
             analysisResults.message += qualityGate.message + '; ';
         }
         if (qualityGate && configuration_1.ticsConfig.postAnnotations) {
-            const annotations = await exports.getAnnotations(qualityGate.annotationsApiV1Links); // export is used for testing
+            // import of itself is used for mocking the function in the same file
+            const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
             if (annotations && annotations.length > 0) {
                 analysisResult.reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
             }
@@ -1379,7 +1407,7 @@ async function getAnnotations(apiLinks) {
         await Promise.all(apiLinks.map(async (link, index) => {
             const annotationsUrl = new URL(`${configuration_1.baseUrl}/${link.url}`);
             annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
-            logger_1.logger.debug(`From: ${annotationsUrl}`);
+            logger_1.logger.debug(`From: ${annotationsUrl.href}`);
             const response = await configuration_1.httpClient.get(annotationsUrl.href);
             if (response) {
                 response.data.forEach((annotation) => {

@@ -88,7 +88,7 @@ class Logger {
    */
   maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
-    ticsConfig.secretsFilter.forEach((secret: string | RegExp) => {
+    ticsConfig.secretsFilter.forEach((secret: string) => {
       if (data.match(new RegExp(secret, 'gi'))) {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;

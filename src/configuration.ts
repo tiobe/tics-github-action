@@ -6,6 +6,7 @@ import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 import { EOL } from 'os';
 import { getBaseUrl } from '@tiobe/install-tics';
+import { randomBytes } from 'crypto';
 
 export const githubConfig = {
   baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
@@ -17,7 +18,7 @@ export const githubConfig = {
   branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
   eventName: context.eventName,
-  id: `${context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT}`,
+  id: `${context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT || randomBytes(4).toString('hex')}`,
   pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
 };
@@ -105,5 +106,5 @@ const octokitOptions: OctokitOptions = {
 };
 
 export const octokit = getOctokit(ticsConfig.githubToken, octokitOptions, retry);
-export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration);
+export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration).href;
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
