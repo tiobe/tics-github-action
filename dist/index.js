@@ -84436,6 +84436,7 @@ async function main() {
         const changedFiles = await getChangedFiles();
         if (changedFiles) {
             analysis = await analyze(changedFiles);
+            logger_1.logger.info(`analysis: ${analysis}`);
             if (analysis) {
                 try {
                     await processAnalysis(analysis, changedFiles);
@@ -84449,7 +84450,7 @@ async function main() {
             }
         }
     }
-    logger_1.logger.info(`tmpdir: ${configuration_1.ticsConfig.tmpDir}, debugger: ${configuration_1.githubConfig.debugger}, analysis: ${analysis}`);
+    logger_1.logger.info(`analysis: ${analysis}`);
     if ((configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) && analysis) {
         await (0, artifacts_1.uploadArtifact)();
     }
