@@ -51,6 +51,7 @@ export async function main(): Promise<void> {
     }
   }
 
+  logger.info(`tmpdir: ${ticsConfig.tmpDir}, debugger: ${githubConfig.debugger}, analysis: ${analysis}`);
   if ((ticsConfig.tmpDir || githubConfig.debugger) && analysis) {
     await uploadArtifact();
   }

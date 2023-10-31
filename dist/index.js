@@ -129,7 +129,7 @@ const error_1 = __nccwpck_require__(5922);
 async function getPostedReviewComments() {
     let response = [];
     try {
-        logger_1.logger.info('Retrieving posted review comments.');
+        logger_1.logger.header('Retrieving posted review comments.');
         const params = {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
@@ -141,6 +141,7 @@ async function getPostedReviewComments() {
         const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Could not retrieve the review comments: ${message}`);
     }
+    logger_1.logger.info('Retrieve posted review comments.');
     return response;
 }
 exports.getPostedReviewComments = getPostedReviewComments;
@@ -280,7 +281,7 @@ const error_1 = __nccwpck_require__(5922);
 async function getPostedComments() {
     let response = [];
     try {
-        logger_1.logger.info('Retrieving posted review comments.');
+        logger_1.logger.header('Retrieving posted comments.');
         const params = {
             owner: configuration_1.githubConfig.owner,
             repo: configuration_1.githubConfig.reponame,
@@ -292,6 +293,7 @@ async function getPostedComments() {
         const message = (0, error_1.handleOctokitError)(error);
         logger_1.logger.error(`Could not retrieve the comments: ${message}`);
     }
+    logger_1.logger.info('Retrieved posted comments.');
     return response;
 }
 exports.getPostedComments = getPostedComments;
@@ -1191,6 +1193,7 @@ const configuration_1 = __nccwpck_require__(5527);
  * @param analysis the output of the TICS analysis run.
  */
 function cliSummary(analysis) {
+    logger_1.logger.info(''); //empty line for better readability
     analysis?.errorList.forEach(error => logger_1.logger.error(error));
     if (configuration_1.githubConfig.debugger) {
         analysis?.warningList.forEach(warning => logger_1.logger.warning(warning));
@@ -84446,6 +84449,7 @@ async function main() {
             }
         }
     }
+    logger_1.logger.info(`tmpdir: ${configuration_1.ticsConfig.tmpDir}, debugger: ${configuration_1.githubConfig.debugger}, analysis: ${analysis}`);
     if ((configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) && analysis) {
         await (0, artifacts_1.uploadArtifact)();
     }
