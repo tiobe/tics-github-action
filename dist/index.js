@@ -1437,9 +1437,6 @@ const configuration_1 = __nccwpck_require__(5527);
  * @param analysis the output of the TICS analysis run.
  */
 function cliSummary(analysis) {
-    if (analysis.errorList.length > 0 || (configuration_1.githubConfig.debugger && analysis.warningList.length > 0)) {
-        logger_1.logger.info(''); //empty line for better readability
-    }
     analysis.errorList.forEach(error => logger_1.logger.error(error));
     if (configuration_1.githubConfig.debugger) {
         analysis.warningList.forEach(warning => logger_1.logger.warning(warning));
