@@ -84436,7 +84436,6 @@ async function main() {
         const changedFiles = await getChangedFiles();
         if (changedFiles) {
             analysis = await analyze(changedFiles);
-            logger_1.logger.info(`analysis: ${analysis}`);
             if (analysis) {
                 try {
                     await processAnalysis(analysis, changedFiles);
@@ -84450,8 +84449,7 @@ async function main() {
             }
         }
     }
-    logger_1.logger.info(`analysis: ${analysis}`);
-    if ((configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) && analysis) {
+    if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
         await (0, artifacts_1.uploadArtifact)();
     }
     // Write the summary made to the action summary.

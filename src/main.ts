@@ -38,7 +38,6 @@ export async function main(): Promise<void> {
 
     if (changedFiles) {
       analysis = await analyze(changedFiles);
-      logger.info(`analysis: ${analysis}`);
 
       if (analysis) {
         try {
@@ -52,8 +51,7 @@ export async function main(): Promise<void> {
     }
   }
 
-  logger.info(`analysis: ${analysis}`);
-  if ((ticsConfig.tmpDir || githubConfig.debugger) && analysis) {
+  if (ticsConfig.tmpDir || githubConfig.debugger) {
     await uploadArtifact();
   }
 
