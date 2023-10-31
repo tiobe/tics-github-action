@@ -17,6 +17,9 @@ import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { ChangedFiles } from './interfaces';
 
+// export for testing purposes
+export let failedMessage: string | undefined = undefined;
+
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
   if (error instanceof Error) message = error.message;
@@ -45,17 +48,22 @@ export async function main(): Promise<void> {
         } catch (error: unknown) {
           let message = 'Something went wrond: reason unknown';
           if (error instanceof Error) message = error.message;
-          logger.setFailed(message);
+
+          failedMessage = message;
         }
       }
     }
   }
 
-  if (analysis) {
-    if (ticsConfig.tmpDir || githubConfig.debugger) {
-      await uploadArtifact();
-    }
+  if (analysis && (ticsConfig.tmpDir || githubConfig.debugger)) {
+    await uploadArtifact();
+  }
 
+  if (failedMessage) {
+    logger.setFailed(failedMessage);
+  }
+
+  if (analysis) {
     cliSummary(analysis);
   }
 
@@ -95,12 +103,12 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   if (analysis.explorerUrls.length === 0) {
     deletePreviousComments(await getPostedComments());
     if (!analysis.completed) {
+      failedMessage = 'Failed to run TICS Github Action.';
       await postErrorComment(analysis);
-      logger.setFailed('Failed to run TICS Github Action.');
     } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
       await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
     } else {
-      logger.setFailed('Failed to run TICS Github Action.');
+      failedMessage = 'Failed to run TICS Github Action.';
       analysis.errorList.push('Explorer URL not returned from TICS analysis.');
       await postErrorComment(analysis);
     }
@@ -113,7 +121,7 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles.files);
 
   if (analysisResults.missesQualityGate) {
-    throw Error('Some quality gates could not be retrieved');
+    throw Error('Some quality gates could not be retrieved.');
   }
 
   // If not run on a pull request no review comments have to be deleted
@@ -138,7 +146,9 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
     await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
   }
 
-  if (!analysisResults.passed) logger.setFailed(analysisResults.message);
+  if (!analysisResults.passed) {
+    failedMessage = analysisResults.message;
+  }
 }
 
 /**
@@ -148,8 +158,9 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
 async function diagnosticAnalysis(): Promise<Analysis> {
   logger.header('Running action in diagnostic mode');
   let analysis = await runTicsAnalyzer('');
+
   if (analysis.statusCode !== 0) {
-    logger.setFailed('Diagnostic run has failed.');
+    failedMessage = 'Diagnostic run has failed.';
   }
 
   return analysis;

@@ -82,7 +82,7 @@ class Logger {
   }
 
   /**
-   * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
+   * Masks the secrets defined in ticsConfig secretsFilter from the
    * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
