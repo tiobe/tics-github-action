@@ -12,7 +12,7 @@ export async function uploadArtifact(): Promise<void> {
   try {
     logger.header('Uploading artifact');
     const tmpDir = getTmpDir() + '/ticstmpdir';
-    logger.info(`Logs written to ${tmpDir}`);
+    logger.info(`Logs gotten from ${tmpDir}`);
     const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
 
     if (response.failedItems.length > 0) {

@@ -290,7 +290,7 @@ describe('Artifact upload tests', () => {
     await main.main();
 
     expect(spyArtifact).toHaveBeenCalledTimes(0);
-    expect(spySummary).toHaveBeenCalledTimes(1);
+    expect(spySummary).toHaveBeenCalledTimes(0);
   });
 
   test('Should call uploadArtifacts when action is run with debug', async () => {

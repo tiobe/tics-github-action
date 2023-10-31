@@ -39,7 +39,7 @@ export async function main(): Promise<void> {
     if (changedFiles) {
       analysis = await analyze(changedFiles);
 
-      if (analysis) {
+      if (analysis.explorerUrls.length > 0) {
         try {
           await processAnalysis(analysis, changedFiles);
         } catch (error: unknown) {
@@ -51,13 +51,16 @@ export async function main(): Promise<void> {
     }
   }
 
-  if (ticsConfig.tmpDir || githubConfig.debugger) {
-    await uploadArtifact();
+  if (analysis) {
+    if (ticsConfig.tmpDir || githubConfig.debugger) {
+      await uploadArtifact();
+    }
+
+    cliSummary(analysis);
   }
 
   // Write the summary made to the action summary.
   await summary.write({ overwrite: true });
-  cliSummary(analysis);
 }
 
 async function getChangedFiles(): Promise<ChangedFiles | undefined> {
@@ -86,7 +89,7 @@ async function getChangedFiles(): Promise<ChangedFiles | undefined> {
   };
 }
 
-async function analyze(changedFiles: ChangedFiles): Promise<Analysis | undefined> {
+async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   const analysis = await runTicsAnalyzer(changedFiles.path);
 
   if (analysis.explorerUrls.length === 0) {
@@ -101,8 +104,6 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis | undefined
       analysis.errorList.push('Explorer URL not returned from TICS analysis.');
       await postErrorComment(analysis);
     }
-    cliSummary(analysis);
-    return;
   }
 
   return analysis;

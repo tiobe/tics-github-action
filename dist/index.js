@@ -214,7 +214,7 @@ async function uploadArtifact() {
     try {
         logger_1.logger.header('Uploading artifact');
         const tmpDir = getTmpDir() + '/ticstmpdir';
-        logger_1.logger.info(`Logs written to ${tmpDir}`);
+        logger_1.logger.info(`Logs gotten from ${tmpDir}`);
         const response = await artifactClient.uploadArtifact('ticstmpdir', getFilesInFolder(tmpDir), tmpDir);
         if (response.failedItems.length > 0) {
             logger_1.logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
@@ -1193,10 +1193,12 @@ const configuration_1 = __nccwpck_require__(5527);
  * @param analysis the output of the TICS analysis run.
  */
 function cliSummary(analysis) {
-    logger_1.logger.info(''); //empty line for better readability
-    analysis?.errorList.forEach(error => logger_1.logger.error(error));
+    if (analysis.errorList.length > 0 || (configuration_1.githubConfig.debugger && analysis.warningList.length > 0)) {
+        logger_1.logger.info(''); //empty line for better readability
+    }
+    analysis.errorList.forEach(error => logger_1.logger.error(error));
     if (configuration_1.githubConfig.debugger) {
-        analysis?.warningList.forEach(warning => logger_1.logger.warning(warning));
+        analysis.warningList.forEach(warning => logger_1.logger.warning(warning));
     }
 }
 exports.cliSummary = cliSummary;
@@ -84436,7 +84438,7 @@ async function main() {
         const changedFiles = await getChangedFiles();
         if (changedFiles) {
             analysis = await analyze(changedFiles);
-            if (analysis) {
+            if (analysis.explorerUrls.length > 0) {
                 try {
                     await processAnalysis(analysis, changedFiles);
                 }
@@ -84449,12 +84451,14 @@ async function main() {
             }
         }
     }
-    if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
-        await (0, artifacts_1.uploadArtifact)();
+    if (analysis) {
+        if (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger) {
+            await (0, artifacts_1.uploadArtifact)();
+        }
+        (0, api_helper_1.cliSummary)(analysis);
     }
     // Write the summary made to the action summary.
     await core_1.summary.write({ overwrite: true });
-    (0, api_helper_1.cliSummary)(analysis);
 }
 exports.main = main;
 async function getChangedFiles() {
@@ -84497,8 +84501,6 @@ async function analyze(changedFiles) {
             analysis.errorList.push('Explorer URL not returned from TICS analysis.');
             await (0, comments_1.postErrorComment)(analysis);
         }
-        (0, api_helper_1.cliSummary)(analysis);
-        return;
     }
     return analysis;
 }
