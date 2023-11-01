@@ -44,7 +44,8 @@ jest.mock('../../src/configuration', () => {
         repos: {
           getCommit: jest.fn()
         }
-      }
+      },
+      graphql: jest.fn()
     },
     httpClient: {
       get: jest.fn()

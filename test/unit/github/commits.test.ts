@@ -57,7 +57,7 @@ describe('getChangedFilesOfCommit', () => {
     (octokit.paginate as any).mock.calls[0][2]({
       data: { files: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] }
     });
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
 

@@ -404,7 +404,7 @@ async function getChangedFilesOfCommit() {
                     // If a file is moved or renamed the status is 'renamed'.
                     if (item.status === 'renamed') {
                         // If a files has been moved without changes or if moved files are excluded, exclude them.
-                        if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                        if ((configuration_1.ticsConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
                             return false;
                         }
                     }
@@ -443,6 +443,7 @@ const canonical_path_1 = __nccwpck_require__(5806);
 const logger_1 = __nccwpck_require__(6440);
 const configuration_1 = __nccwpck_require__(5527);
 const error_1 = __nccwpck_require__(5922);
+const enums_1 = __nccwpck_require__(1655);
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
@@ -451,37 +452,66 @@ async function getChangedFilesOfPullRequest() {
     const params = {
         owner: configuration_1.githubConfig.owner,
         repo: configuration_1.githubConfig.reponame,
-        pull_number: configuration_1.githubConfig.pullRequestNumber
+        pull_number: configuration_1.githubConfig.pullRequestNumber,
+        per_page: 100,
+        after: undefined
     };
-    let response = [];
+    let files = [];
     try {
-        logger_1.logger.header('Retrieving changed files.');
-        response = await configuration_1.octokit.paginate(configuration_1.octokit.rest.pulls.listFiles, params, response => {
-            let files = response.data
-                .filter(item => {
+        let response;
+        do {
+            response = await configuration_1.octokit.graphql(`query($owner: String!, $repo: String!, $pull_number: Int!, $per_page: Int!, $after: String) {
+          rateLimit {
+            remaining
+          }
+          repository(owner: $owner, name: $repo) {
+            pullRequest(number: $pull_number) {
+              files(first: $per_page, after: $after) {
+                totalCount
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+                nodes {
+                  path
+                  changeType
+                  additions
+                  deletions
+                }
+              }
+            }
+          }
+        }`, params);
+            files = files.concat(response.repository.pullRequest.files.nodes
+                .map((item) => {
+                const changedFile = {
+                    filename: (0, canonical_path_1.normalize)(item.path),
+                    additions: item.additions,
+                    deletions: item.deletions,
+                    changes: item.additions + item.deletions,
+                    status: enums_1.ChangeType[item.changeType]
+                };
+                return changedFile;
+            })
+                .filter((item) => {
                 if (item.status === 'renamed') {
                     // If a files has been moved without changes or if moved files are excluded, exclude them.
-                    if (configuration_1.ticsConfig.excludeMovedFiles || item.changes === 0) {
+                    if ((configuration_1.ticsConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
                         return false;
                     }
                 }
-                return true;
-            })
-                .map(item => {
-                // If a file is moved or renamed the status is 'renamed'.
-                item.filename = (0, canonical_path_1.normalize)(item.filename);
                 logger_1.logger.debug(item.filename);
-                return item;
-            });
-            return files ? files : [];
-        });
+                return true;
+            }));
+            params.after = response.repository.pullRequest.files.pageInfo.endCursor;
+        } while (response.repository.pullRequest.files.pageInfo.hasNextPage);
         logger_1.logger.info('Retrieved changed files from pull request.');
     }
     catch (error) {
         const message = (0, error_1.handleOctokitError)(error);
         throw Error(`Could not retrieve the changed files: ${message}`);
     }
-    return response;
+    return files;
 }
 exports.getChangedFilesOfPullRequest = getChangedFilesOfPullRequest;
 /**
@@ -575,7 +605,7 @@ exports.postNothingAnalyzedReview = postNothingAnalyzedReview;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Events = exports.Status = void 0;
+exports.ChangeType = exports.Events = exports.Status = void 0;
 var Status;
 (function (Status) {
     Status["FAILED"] = "FAILED";
@@ -589,6 +619,15 @@ var Events;
     Events["COMMENT"] = "COMMENT";
     Events["REQUEST_CHANGES"] = "REQUEST_CHANGES";
 })(Events || (exports.Events = Events = {}));
+var ChangeType;
+(function (ChangeType) {
+    ChangeType["ADDED"] = "added";
+    ChangeType["CHANGED"] = "changed";
+    ChangeType["COPIED"] = "copied";
+    ChangeType["DELETED"] = "removed";
+    ChangeType["MODIFIED"] = "modified";
+    ChangeType["RENAMED"] = "renamed";
+})(ChangeType || (exports.ChangeType = ChangeType = {}));
 
 
 /***/ }),
