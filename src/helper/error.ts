@@ -4,7 +4,7 @@ export function handleOctokitError(error: unknown): string {
   let message = 'reason unkown';
   if (error instanceof Error) {
     message = '';
-    const retryCount = (error as RequestError).request?.request?.retryCount;
+    const retryCount = <number | undefined>(error as RequestError).request?.request?.retryCount;
     if (retryCount) {
       message = `Retried ${retryCount} time(s), but got: `;
     }

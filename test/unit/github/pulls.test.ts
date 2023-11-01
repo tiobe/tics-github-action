@@ -70,10 +70,15 @@ describe('getChangedFilesOfPullRequest', () => {
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'exit');
-    await getChangedFilesOfPullRequest();
 
-    expect(spy).toHaveBeenCalledTimes(1);
+    let error: any;
+    try {
+      await getChangedFilesOfPullRequest();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
   });
 });
 

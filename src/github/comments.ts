@@ -14,7 +14,7 @@ import { handleOctokitError } from '../helper/error';
 export async function getPostedComments(): Promise<Comment[]> {
   let response: Comment[] = [];
   try {
-    logger.info('Retrieving posted review comments.');
+    logger.header('Retrieving posted comments.');
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
@@ -25,6 +25,7 @@ export async function getPostedComments(): Promise<Comment[]> {
     const message = handleOctokitError(error);
     logger.error(`Could not retrieve the comments: ${message}`);
   }
+  logger.info('Retrieved posted comments.');
   return response;
 }
 

@@ -39,11 +39,14 @@ describe('getAnalyzedFiles', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(logger, 'exit');
+    let error: any;
+    try {
+      await fetcher.getAnalyzedFiles('url');
+    } catch (err) {
+      error = err;
+    }
 
-    await fetcher.getAnalyzedFiles('url');
-
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(Error);
   });
 });
 
@@ -65,11 +68,14 @@ describe('getQualityGate', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(logger, 'exit');
+    let error: any;
+    try {
+      await fetcher.getQualityGate('url');
+    } catch (err) {
+      error = err;
+    }
 
-    await fetcher.getQualityGate('url');
-
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(Error);
   });
 });
 
@@ -94,11 +100,14 @@ describe('getAnnotations', () => {
   test('Should throw error on faulty get in getAnnotations', async () => {
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(logger, 'exit');
+    let error: any;
+    try {
+      await fetcher.getAnnotations([{ url: 'url' }]);
+    } catch (err) {
+      error = err;
+    }
 
-    await fetcher.getAnnotations([{ url: 'url' }]);
-
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(Error);
   });
 });
 
@@ -114,11 +123,14 @@ describe('getViewerVersion', () => {
   test('Should throw error on faulty get in getViewerVersion', async () => {
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
 
-    const spy = jest.spyOn(logger, 'exit');
+    let error: any;
+    try {
+      await fetcher.getViewerVersion();
+    } catch (err) {
+      error = err;
+    }
 
-    await fetcher.getViewerVersion();
-
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(Error);
   });
 });
 

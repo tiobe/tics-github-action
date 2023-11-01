@@ -70,17 +70,6 @@ class Logger {
   }
 
   /**
-   * Uses core.setFailed to exit with error.
-   * @param error
-   */
-  exit(error: string): void {
-    error = this.maskSecrets(error);
-    this.addNewline('error');
-    core.setFailed(`\u001b[31m${error}`);
-    process.exit(1);
-  }
-
-  /**
    * Add newline above header, error and setFailed if the logger has been called before.
    * @param type the type of call to add a newline for.
    */
@@ -93,13 +82,13 @@ class Logger {
   }
 
   /**
-   * Masks the secrets defined in ticsConfig secretsFilter from the console logging.
+   * Masks the secrets defined in ticsConfig secretsFilter from the
    * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
   maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
-    ticsConfig.secretsFilter.forEach((secret: string | RegExp) => {
+    ticsConfig.secretsFilter.forEach((secret: string) => {
       if (data.match(new RegExp(secret, 'gi'))) {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;

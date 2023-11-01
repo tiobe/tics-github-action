@@ -87,17 +87,3 @@ describe('setFailed', () => {
     expect(logger.called).toEqual('error');
   });
 });
-
-describe('exit', () => {
-  test('Should call core.setFailed on exit', () => {
-    const setFailed = jest.spyOn(core, 'setFailed');
-    const addNewline = jest.spyOn(logger, 'addNewline');
-
-    logger.exit('error');
-
-    expect(setFailed).toHaveBeenCalledTimes(1);
-    expect(setFailed).toHaveBeenCalledWith(expect.stringContaining('error'));
-    expect(addNewline).toHaveBeenCalledTimes(1);
-    expect(addNewline).toHaveBeenCalledWith('error');
-  });
-});

@@ -15,6 +15,7 @@ import {
 import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName } from './api_helper';
+import * as fetcher from './fetcher';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -40,10 +41,12 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     let analysisResult: ProjectResult = {
       project: getProjectName(url),
       explorerUrl: url,
-      analyzedFiles: await exports.getAnalyzedFiles(url) // export is used for testing
+      // import of itself is used for mocking the function in the same file
+      analyzedFiles: await fetcher.getAnalyzedFiles(url)
     };
 
-    const qualityGate = await exports.getQualityGate(url); // export is used for testing
+    // import of itself is used for mocking the function in the same file
+    const qualityGate = await fetcher.getQualityGate(url);
 
     if (!qualityGate) {
       analysisResults.passed = false;
@@ -56,7 +59,8 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     }
 
     if (qualityGate && ticsConfig.postAnnotations) {
-      const annotations = await exports.getAnnotations(qualityGate.annotationsApiV1Links); // export is used for testing
+      // import of itself is used for mocking the function in the same file
+      const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
       if (annotations && annotations.length > 0) {
         analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
       }
@@ -96,7 +100,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
   } catch (error: unknown) {
     let message = 'unknown error';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the analyzed files: ${message}`);
+    throw Error(`There was an error retrieving the analyzed files: ${message}`);
   }
   return analyzedFiles;
 }
@@ -135,7 +139,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the quality gates: ${message}`);
+    throw Error(`There was an error retrieving the quality gates: ${message}`);
   }
 
   return response;
@@ -179,7 +183,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
       apiLinks.map(async (link, index) => {
         const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
         annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
-        logger.debug(`From: ${annotationsUrl}`);
+        logger.debug(`From: ${annotationsUrl.href}`);
         const response = await httpClient.get<AnnotationResonse>(annotationsUrl.href);
         if (response) {
           response.data.forEach((annotation: Annotation) => {
@@ -198,7 +202,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`An error occured when trying to retrieve annotations: ${message}`);
+    throw Error(`An error occured when trying to retrieve annotations: ${message}`);
   }
 
   return annotations;
@@ -218,7 +222,7 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   } catch (error: unknown) {
     let message = 'reason unknown';
     if (error instanceof Error) message = error.message;
-    logger.exit(`There was an error retrieving the Viewer version: ${message}`);
+    throw Error(`There was an error retrieving the Viewer version: ${message}`);
   }
   return response;
 }
