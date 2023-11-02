@@ -375,7 +375,6 @@ describe('Diagnostic mode checks', () => {
     ticsConfig.mode = 'diagnostic';
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
-    console.log('test');
     await main.main();
 
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);

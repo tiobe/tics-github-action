@@ -957,19 +957,37 @@ function createReviewComments(annotations, changedFiles) {
     let postable = [];
     groupedAnnotations.forEach(annotation => {
         const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-        if (annotation.diffLines?.includes(annotation.line)) {
-            logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-            postable.push({
-                title: `${annotation.instanceName}: ${annotation.rule}`,
-                body: createBody(annotation, displayCount),
-                path: annotation.path,
-                line: annotation.line
-            });
+        if (configuration_1.githubConfig.eventName === 'pull_request') {
+            if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
+                logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+                postable.push({
+                    title: `${annotation.instanceName}: ${annotation.rule}`,
+                    body: createBody(annotation, displayCount),
+                    path: annotation.path,
+                    line: annotation.line
+                });
+            }
+            else {
+                annotation.displayCount = displayCount;
+                logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+                unpostable.push(annotation);
+            }
         }
         else {
-            annotation.displayCount = displayCount;
-            logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-            unpostable.push(annotation);
+            if (annotation.diffLines?.includes(annotation.line)) {
+                logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+                postable.push({
+                    title: `${annotation.instanceName}: ${annotation.rule}`,
+                    body: createBody(annotation, displayCount),
+                    path: annotation.path,
+                    line: annotation.line
+                });
+            }
+            else {
+                annotation.displayCount = displayCount;
+                logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+                unpostable.push(annotation);
+            }
         }
     });
     logger_1.logger.info('Created review comments from annotations.');
