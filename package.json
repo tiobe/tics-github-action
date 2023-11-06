@@ -45,7 +45,7 @@
     "underscore": "^1.13.6"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^29.5.7",
     "@types/node": "^20.8.10",
     "@types/underscore": "^1.11.12",
     "@typescript-eslint/parser": "^6.9.1",
