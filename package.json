@@ -33,7 +33,7 @@
     "@actions/core": "^1.10.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
-    "@octokit/plugin-retry": "^5.0.5",
+    "@octokit/plugin-retry": "^6.0.1",
     "@octokit/request-error": "^5.0.1",
     "@tiobe/http-client": "^0.3.0",
     "@tiobe/install-tics": "^0.4.0",
