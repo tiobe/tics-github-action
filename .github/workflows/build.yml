@@ -26,5 +26,4 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           add: dist
-          pull: --rebase
           message: Build dist after push to main
