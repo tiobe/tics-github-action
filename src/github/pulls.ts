@@ -20,6 +20,7 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
   };
   let files: ChangedFile[] = [];
   try {
+    logger.header('Retrieving changed files.');
     let response: GraphQlResponse<ChangedFileResData>;
     do {
       response = await octokit.graphql<GraphQlResponse<ChangedFileResData>>(

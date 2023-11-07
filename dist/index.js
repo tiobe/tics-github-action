@@ -458,6 +458,7 @@ async function getChangedFilesOfPullRequest() {
     };
     let files = [];
     try {
+        logger_1.logger.header('Retrieving changed files.');
         let response;
         do {
             response = await configuration_1.octokit.graphql(`query($owner: String!, $repo: String!, $pull_number: Int!, $per_page: Int!, $after: String) {
