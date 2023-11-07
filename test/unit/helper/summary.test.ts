@@ -106,18 +106,14 @@ describe('createReviewComments', () => {
   });
 
   test('Should return one combined postable review comment for the same line', async () => {
+    githubConfig.eventName = 'pull_request';
     const changedFiles: ChangedFile[] = [
       {
-        sha: 'sha',
         filename: 'src/test.js',
         status: 'modified',
         additions: 1,
         deletions: 1,
-        changes: 2,
-        blob_url: 'url',
-        raw_url: 'url',
-        contents_url: 'url',
-        patch: '@@ -0,1 +0,1 @@'
+        changes: 2
       }
     ];
     const annotations = [
@@ -163,16 +159,11 @@ describe('createReviewComments', () => {
   test('Should return one postable and one unpostable review comment', async () => {
     const changedFiles: ChangedFile[] = [
       {
-        sha: 'sha',
         filename: 'src/test.js',
         status: 'modified',
         additions: 1,
         deletions: 1,
-        changes: 2,
-        blob_url: 'url',
-        raw_url: 'url',
-        contents_url: 'url',
-        patch: '@@ -0,1 +0,1 @@'
+        changes: 2
       }
     ];
     const annotations = [
@@ -259,6 +250,103 @@ describe('createReviewComments', () => {
     const response = createReviewComments(annotations, changedFiles);
     expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
   });
+});
+
+test('Should return one postable and one unpostable review comment', async () => {
+  githubConfig.eventName = 'push';
+  const changedFiles: ChangedFile[] = [
+    {
+      filename: 'src/test.js',
+      status: 'modified',
+      additions: 1,
+      deletions: 1,
+      changes: 2,
+      patch: '@@ -0,1 +0,1 @@'
+    }
+  ];
+  const annotations = [
+    {
+      fullPath: 'c:/src/test.js',
+      line: 0,
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      instanceName: 'test'
+    },
+    {
+      fullPath: 'HIE://project/branch/src/jest.js',
+      line: 2,
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      instanceName: 'test'
+    },
+    {
+      fullPath: 'HIE://project/branch/src/zest.js',
+      line: 2,
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      instanceName: 'test'
+    }
+  ];
+
+  const expected_postable = [
+    {
+      title: 'test: test',
+      path: 'src/test.js',
+      line: 0,
+      body: 'Line: 0: test\r\nLevel: 1, Category: test'
+    }
+  ];
+
+  const expected_unpostable = [
+    {
+      path: 'src/jest.js',
+      fullPath: 'HIE://project/branch/src/jest.js',
+      line: 2,
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      displayCount: '',
+      diffLines: [],
+      instanceName: 'test'
+    },
+    {
+      path: 'src/zest.js',
+      fullPath: 'HIE://project/branch/src/zest.js',
+      line: 2,
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      displayCount: '',
+      diffLines: [],
+      instanceName: 'test'
+    }
+  ];
+
+  const response = createReviewComments(annotations, changedFiles);
+  expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
 });
 
 describe('createUnpostableReviewCommentsSummary', () => {

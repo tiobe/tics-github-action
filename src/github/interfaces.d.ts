@@ -122,15 +122,53 @@ export interface Comment {
 }
 
 export interface ChangedFile {
-  sha: string;
   filename: string;
-  status: 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged';
+  status: 'added' | 'changed' | 'copied' | 'removed' | 'modified' | 'renamed' | 'unchanged';
   additions: number;
   deletions: number;
   changes: number;
-  blob_url: string;
-  raw_url: string;
-  contents_url: string;
+  sha?: string;
+  blob_url?: string;
+  raw_url?: string;
+  contents_url?: string;
   patch?: string | undefined;
   previous_filename?: string | undefined;
+}
+
+export type GraphQlParams = {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  per_page: number;
+  after?: string;
+};
+
+export interface GraphQlChangedFile {
+  path: string;
+  changeType: 'ADDED' | 'CHANGED' | 'COPIED' | 'DELETED' | 'MODIFIED' | 'RENAMED';
+  additions: number;
+  deletions: number;
+}
+
+export interface GraphQlResponse<T> {
+  repository: {
+    pullRequest: T;
+  };
+}
+
+export interface ChangedFileResData {
+  files: {
+    totalCount: number;
+    pageInfo: {
+      endCursor: string;
+      hasNextPage: boolean;
+    };
+    nodes: GraphQlChangedFile[];
+  };
+}
+
+export interface HeadRepositoryOwnerResData {
+  headRepositoryOwner: {
+    login: string;
+  };
 }

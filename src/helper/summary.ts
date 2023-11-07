@@ -3,7 +3,7 @@ import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
 import { AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, TicsReviewComment, TicsReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
-import { githubConfig, viewerUrl } from '../configuration';
+import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
@@ -139,18 +139,34 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
 
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-    if (annotation.diffLines?.includes(annotation.line)) {
-      logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-      postable.push({
-        title: `${annotation.instanceName}: ${annotation.rule}`,
-        body: createBody(annotation, displayCount),
-        path: annotation.path,
-        line: annotation.line
-      });
+    if (githubConfig.eventName === 'pull_request') {
+      if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
+        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+        postable.push({
+          title: `${annotation.instanceName}: ${annotation.rule}`,
+          body: createBody(annotation, displayCount),
+          path: annotation.path,
+          line: annotation.line
+        });
+      } else {
+        annotation.displayCount = displayCount;
+        logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+        unpostable.push(annotation);
+      }
     } else {
-      annotation.displayCount = displayCount;
-      logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-      unpostable.push(annotation);
+      if (annotation.diffLines?.includes(annotation.line)) {
+        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+        postable.push({
+          title: `${annotation.instanceName}: ${annotation.rule}`,
+          body: createBody(annotation, displayCount),
+          path: annotation.path,
+          line: annotation.line
+        });
+      } else {
+        annotation.displayCount = displayCount;
+        logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+        unpostable.push(annotation);
+      }
     }
   });
   logger.info('Created review comments from annotations.');

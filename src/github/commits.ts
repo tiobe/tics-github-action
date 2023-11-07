@@ -24,7 +24,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
             // If a file is moved or renamed the status is 'renamed'.
             if (item.status === 'renamed') {
               // If a files has been moved without changes or if moved files are excluded, exclude them.
-              if (ticsConfig.excludeMovedFiles || item.changes === 0) {
+              if ((ticsConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
                 return false;
               }
             }
