@@ -33,7 +33,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith('/bin/bash -c " TICS -ide github -help "', [], {
+    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github -help "`, [], {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
       silent: true
     });
@@ -50,10 +50,14 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith(`/bin/bash -c " TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE "`, [], {
-      listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
-      silent: true
-    });
+    expect(spy).toHaveBeenCalledWith(
+      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE "`,
+      [],
+      {
+        listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
+        silent: true
+      }
+    );
   });
 
   test('Should call exec with minimal TICS command for Windows', async () => {
@@ -65,10 +69,14 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith(`powershell "; if ($?) {TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE }"`, [], {
-      listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
-      silent: true
-    });
+    expect(spy).toHaveBeenCalledWith(
+      `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE }"`,
+      [],
+      {
+        listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
+        silent: true
+      }
+    );
   });
 
   test('Should call exec with run TICS command for Linux', async () => {
@@ -86,7 +94,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \" TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
+      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -110,7 +118,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
+      "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },

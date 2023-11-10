@@ -1422,6 +1422,14 @@ async function buildRunCommand(fileListPath) {
             installCommand += ' &&';
         }
     }
+    else {
+        if ((0, os_1.platform)() === 'linux') {
+            installCommand = `TICS='${configuration_1.ticsConfig.ticsConfiguration}';`;
+        }
+        else {
+            installCommand = `$env:TICS='${configuration_1.ticsConfig.ticsConfiguration}'`;
+        }
+    }
     if ((0, os_1.platform)() === 'linux') {
         return `/bin/bash -c "${installCommand} ${getTicsCommand(fileListPath)}"`;
     }
