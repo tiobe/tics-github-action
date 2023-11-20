@@ -1,9 +1,7 @@
 import * as exec from '@actions/exec';
 import * as os from 'os';
 import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
-import { logger } from '../../../src/helper/logger';
 import { runTicsAnalyzer } from '../../../src/tics/analyzer';
-import { InstallTics } from '@tiobe/install-tics';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
@@ -129,7 +127,7 @@ describe('test multiple types of configuration', () => {
 
   test('Should call exec with full TICS command for Linux, trustStrategy self-signed', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: '/install-url' } }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { links: { installTics: '/install-url' } } }));
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
@@ -157,7 +155,7 @@ describe('test multiple types of configuration', () => {
 
   test('Should call exec with full TICS command for Windows, no trustStrategy set', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: '/install-url' } }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { links: { installTics: '/install-url' } } }));
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
@@ -184,7 +182,7 @@ describe('test multiple types of configuration', () => {
 
   test('Should call exec with full TICS command for Windows, trustStrategy set to all', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: '/install-url' } }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { links: { installTics: '/install-url' } } }));
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
@@ -218,7 +216,7 @@ describe('test multiple types of configuration', () => {
 
   test('Should call exec with full TICS command for Windows and filelist .', async () => {
     (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: '/install-url' } }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { links: { installTics: '/install-url' } } }));
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
@@ -299,7 +297,7 @@ describe('throwing errors', () => {
     (exec.exec as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ links: { installTics: '/install-url' } }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { links: { installTics: '/install-url' } } }));
 
     const response = await runTicsAnalyzer('');
 

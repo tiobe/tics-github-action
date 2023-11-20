@@ -16,6 +16,7 @@ import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName } from './api_helper';
 import * as fetcher from './fetcher';
+import { getRetryErrorMessage } from '../helper/error';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -91,15 +92,14 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
   try {
     const response = await httpClient.get<AnalyzedFiles>(analyzedFilesUrl);
     if (response) {
-      analyzedFiles = response.data.map((file: AnalyzedFile) => {
+      analyzedFiles = response.data.data.map((file: AnalyzedFile) => {
         logger.debug(file.formattedValue);
         return file.formattedValue;
       });
       logger.info('Retrieved the analyzed files.');
     }
   } catch (error: unknown) {
-    let message = 'unknown error';
-    if (error instanceof Error) message = error.message;
+    const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the analyzed files: ${message}`);
   }
   return analyzedFiles;
@@ -130,19 +130,18 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
   const qualityGateUrl = getQualityGateUrl(url);
   logger.debug(`From: ${qualityGateUrl}`);
 
-  let response: QualityGate | undefined = undefined;
+  let response;
 
   try {
     response = await httpClient.get<QualityGate>(qualityGateUrl);
     logger.info('Retrieved the quality gates.');
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {
-    let message = 'reason unknown';
-    if (error instanceof Error) message = error.message;
+    const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the quality gates: ${message}`);
   }
 
-  return response;
+  return response.data;
 }
 
 /**
@@ -186,10 +185,10 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
         logger.debug(`From: ${annotationsUrl.href}`);
         const response = await httpClient.get<AnnotationResonse>(annotationsUrl.href);
         if (response) {
-          response.data.forEach((annotation: Annotation) => {
+          response.data.data.forEach((annotation: Annotation) => {
             const extendedAnnotation: ExtendedAnnotation = {
               ...annotation,
-              instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
+              instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
             };
             extendedAnnotation.gateId = index;
             logger.debug(JSON.stringify(extendedAnnotation));
@@ -200,8 +199,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
     );
     logger.info('Retrieved all annotations.');
   } catch (error: unknown) {
-    let message = 'reason unknown';
-    if (error instanceof Error) message = error.message;
+    const message = getRetryErrorMessage(error);
     throw Error(`An error occured when trying to retrieve annotations: ${message}`);
   }
 
@@ -220,9 +218,8 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {
-    let message = 'reason unknown';
-    if (error instanceof Error) message = error.message;
+    const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the Viewer version: ${message}`);
   }
-  return response;
+  return response.data;
 }

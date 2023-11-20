@@ -69,7 +69,7 @@ describe('@actions/http-client (using http_proxy)', () => {
   test('Should return basic REST request through the proxy', async () => {
     const response = await httpClient.get('http://0.0.0.0:8082/200');
 
-    expect(response).toEqual({ data: 'pass' });
+    expect(response).toMatchObject({ data: { data: 'pass' }, status: 200, retryCount: 0 });
     expect(proxyConnects).toContain('http://0.0.0.0:8082/200');
     expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/200').length).toEqual(1);
   });
