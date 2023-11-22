@@ -649,7 +649,7 @@ var ChangeType;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getRetryErrorMessage = exports.handleOctokitError = void 0;
+exports.getRetryMessage = exports.getRetryErrorMessage = exports.handleOctokitError = void 0;
 const retry_1 = __nccwpck_require__(6645);
 function handleOctokitError(error) {
     let message = 'reason unkown';
@@ -675,6 +675,13 @@ function getRetryErrorMessage(error) {
     return message;
 }
 exports.getRetryErrorMessage = getRetryErrorMessage;
+function getRetryMessage(response, message) {
+    if (response.retryCount > 0) {
+        message += ` (retried ${response.retryCount} times)`;
+    }
+    return message;
+}
+exports.getRetryMessage = getRetryMessage;
 
 
 /***/ }),
@@ -1667,7 +1674,7 @@ async function getAnalyzedFiles(url) {
                 logger_1.logger.debug(file.formattedValue);
                 return file.formattedValue;
             });
-            logger_1.logger.info('Retrieved the analyzed files.');
+            logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the analyzed files.'));
         }
     }
     catch (error) {
@@ -1701,7 +1708,7 @@ async function getQualityGate(url) {
     let response;
     try {
         response = await configuration_1.httpClient.get(qualityGateUrl);
-        logger_1.logger.info('Retrieved the quality gates.');
+        logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the quality gates.'));
         logger_1.logger.debug(JSON.stringify(response));
     }
     catch (error) {
@@ -1775,7 +1782,7 @@ async function getViewerVersion() {
         logger_1.logger.header('Retrieving the viewer version');
         logger_1.logger.debug(`From ${getViewerVersionUrl}`);
         response = await configuration_1.httpClient.get(getViewerVersionUrl.href);
-        logger_1.logger.info('Retrieved the Viewer Version.');
+        logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the Viewer Version.'));
         logger_1.logger.debug(JSON.stringify(response));
     }
     catch (error) {

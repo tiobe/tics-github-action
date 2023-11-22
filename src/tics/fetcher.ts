@@ -16,7 +16,7 @@ import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName } from './api_helper';
 import * as fetcher from './fetcher';
-import { getRetryErrorMessage } from '../helper/error';
+import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
 import { debug } from '@actions/core';
 
 /**
@@ -97,7 +97,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
         logger.debug(file.formattedValue);
         return file.formattedValue;
       });
-      logger.info('Retrieved the analyzed files.');
+      logger.info(getRetryMessage(response, 'Retrieved the analyzed files.'));
     }
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
@@ -135,7 +135,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
 
   try {
     response = await httpClient.get<QualityGate>(qualityGateUrl);
-    logger.info('Retrieved the quality gates.');
+    logger.info(getRetryMessage(response, 'Retrieved the quality gates.'));
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
@@ -218,7 +218,7 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
     logger.header('Retrieving the viewer version');
     logger.debug(`From ${getViewerVersionUrl}`);
     response = await httpClient.get<VersionResponse>(getViewerVersionUrl.href);
-    logger.info('Retrieved the Viewer Version.');
+    logger.info(getRetryMessage(response, 'Retrieved the Viewer Version.'));
     logger.debug(JSON.stringify(response));
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
