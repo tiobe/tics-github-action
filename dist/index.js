@@ -56,15 +56,7 @@ function getRetryCodes(retryCodes) {
     if (!retryCodes) {
         return [419, 500, 501, 502, 503, 504];
     }
-    const codes = retryCodes.split(',').map(r => {
-        if (+r !== +r) {
-            return NaN;
-        }
-        else {
-            return parseInt(r);
-        }
-    });
-    return codes;
+    return retryCodes.split(',').map(r => Number(r));
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),

@@ -47,16 +47,7 @@ function getRetryCodes(retryCodes?: string): number[] {
   if (!retryCodes) {
     return [419, 500, 501, 502, 503, 504];
   }
-
-  const codes = retryCodes.split(',').map(r => {
-    if (+r !== +r) {
-      return NaN;
-    } else {
-      return parseInt(r);
-    }
-  });
-
-  return codes;
+  return retryCodes.split(',').map(r => Number(r));
 }
 
 export const ticsConfig = {
