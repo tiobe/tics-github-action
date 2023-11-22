@@ -1780,7 +1780,7 @@ async function getViewerVersion() {
     let response;
     try {
         logger_1.logger.header('Retrieving the viewer version');
-        logger_1.logger.debug(`From ${getViewerVersionUrl}`);
+        logger_1.logger.debug(`From ${getViewerVersionUrl.href}`);
         response = await configuration_1.httpClient.get(getViewerVersionUrl.href);
         logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the Viewer Version.'));
         logger_1.logger.debug(JSON.stringify(response));

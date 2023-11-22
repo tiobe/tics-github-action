@@ -17,7 +17,6 @@ import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName } from './api_helper';
 import * as fetcher from './fetcher';
 import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
-import { debug } from '@actions/core';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -216,7 +215,7 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   let response;
   try {
     logger.header('Retrieving the viewer version');
-    logger.debug(`From ${getViewerVersionUrl}`);
+    logger.debug(`From ${getViewerVersionUrl.href}`);
     response = await httpClient.get<VersionResponse>(getViewerVersionUrl.href);
     logger.info(getRetryMessage(response, 'Retrieved the Viewer Version.'));
     logger.debug(JSON.stringify(response));
