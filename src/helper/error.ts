@@ -19,7 +19,7 @@ export function getRetryErrorMessage(error: unknown): string {
   if (error instanceof TicsError) {
     message = error.message;
     if (error.retryCount > 0) {
-      message += `(retried ${error.retryCount} times)`;
+      message += ` (retried ${error.retryCount} times)`;
     }
   }
   return message;

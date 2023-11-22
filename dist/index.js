@@ -669,7 +669,7 @@ function getRetryErrorMessage(error) {
     if (error instanceof retry_1.RequestError) {
         message = error.message;
         if (error.retryCount > 0) {
-            message += `(retried ${error.retryCount} times)`;
+            message += ` (retried ${error.retryCount} times)`;
         }
     }
     return message;
