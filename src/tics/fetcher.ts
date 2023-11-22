@@ -214,6 +214,8 @@ export async function getViewerVersion(): Promise<VersionResponse | undefined> {
   const getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
   let response;
   try {
+    logger.header('Retrieving the viewer version');
+    logger.debug(`From ${getViewerVersionUrl}`);
     response = await httpClient.get<VersionResponse>(getViewerVersionUrl.href);
     logger.info('Retrieved the Viewer Version.');
     logger.debug(JSON.stringify(response));

@@ -1755,6 +1755,8 @@ async function getViewerVersion() {
     const getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
     let response;
     try {
+        logger_1.logger.header('Retrieving the viewer version');
+        logger_1.logger.debug(`From ${getViewerVersionUrl}`);
         response = await configuration_1.httpClient.get(getViewerVersionUrl.href);
         logger_1.logger.info('Retrieved the Viewer Version.');
         logger_1.logger.debug(JSON.stringify(response));
