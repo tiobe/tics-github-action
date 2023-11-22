@@ -44,7 +44,19 @@ function getSecretsFilter(secretsFilter: string | undefined) {
 }
 
 function getRetryCodes(retryCodes?: string): number[] {
-  return retryCodes?.split(',').map(r => parseInt(r)) || [419, 500, 501, 502, 503, 504];
+  if (!retryCodes) {
+    return [419, 500, 501, 502, 503, 504];
+  }
+
+  const codes = retryCodes.split(',').map(r => {
+    if (+r !== +r) {
+      return NaN;
+    } else {
+      return parseInt(r);
+    }
+  });
+
+  return codes;
 }
 
 export const ticsConfig = {
@@ -78,7 +90,6 @@ export const ticsConfig = {
 
 const retryConfig = {
   maxRetries: 10,
-  retryCodes: ticsConfig.retryCodes,
   delay: 5
 };
 
@@ -90,7 +101,7 @@ export const httpClient = new HttpClient(
     retry: {
       retries: retryConfig.maxRetries,
       retryDelay: retryConfig.delay * 1000,
-      retryOn: retryConfig.retryCodes
+      retryOn: ticsConfig.retryCodes
     }
   },
   new ProxyAgent()

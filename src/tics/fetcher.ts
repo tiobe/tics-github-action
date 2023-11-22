@@ -17,6 +17,7 @@ import { createReviewComments } from '../helper/summary';
 import { getItemFromUrl, getProjectName } from './api_helper';
 import * as fetcher from './fetcher';
 import { getRetryErrorMessage } from '../helper/error';
+import { debug } from '@actions/core';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.

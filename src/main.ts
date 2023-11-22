@@ -243,6 +243,8 @@ async function meetsPrerequisites(): Promise<void> {
     throw Error('If the the action is run outside a pull request it should be run with a filelist.');
   } else if (!isCheckedOut()) {
     throw Error('No checkout found to analyze. Please perform a checkout before running the TICS Action.');
+  } else if (ticsConfig.retryCodes.some(isNaN)) {
+    throw Error('Given retry codes could not be parsed. Please check if the input is correct.');
   }
 }
 

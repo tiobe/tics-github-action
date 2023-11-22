@@ -53,7 +53,18 @@ function getSecretsFilter(secretsFilter) {
     return combinedFilters;
 }
 function getRetryCodes(retryCodes) {
-    return retryCodes?.split(',').map(r => parseInt(r)) || [419, 500, 501, 502, 503, 504];
+    if (!retryCodes) {
+        return [419, 500, 501, 502, 503, 504];
+    }
+    const codes = retryCodes.split(',').map(r => {
+        if (+r !== +r) {
+            return NaN;
+        }
+        else {
+            return parseInt(r);
+        }
+    });
+    return codes;
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -85,7 +96,6 @@ exports.ticsConfig = {
 };
 const retryConfig = {
     maxRetries: 10,
-    retryCodes: exports.ticsConfig.retryCodes,
     delay: 5
 };
 exports.httpClient = new http_client_1.default(true, {
@@ -94,7 +104,7 @@ exports.httpClient = new http_client_1.default(true, {
     retry: {
         retries: retryConfig.maxRetries,
         retryDelay: retryConfig.delay * 1000,
-        retryOn: retryConfig.retryCodes
+        retryOn: exports.ticsConfig.retryCodes
     }
 }, new proxy_agent_1.ProxyAgent());
 const octokitOptions = {
@@ -656,8 +666,12 @@ function handleOctokitError(error) {
 exports.handleOctokitError = handleOctokitError;
 function getRetryErrorMessage(error) {
     let message = error;
-    if (error instanceof retry_1.RequestError)
-        message = `${error.message} (retried ${error.retryCount} times)`;
+    if (error instanceof retry_1.RequestError) {
+        message = error.message;
+        if (error.retryCount > 0) {
+            message += `(retried ${error.retryCount} times)`;
+        }
+    }
     return message;
 }
 exports.getRetryErrorMessage = getRetryErrorMessage;
@@ -1337,6 +1351,9 @@ async function meetsPrerequisites() {
     }
     else if (!isCheckedOut()) {
         throw Error('No checkout found to analyze. Please perform a checkout before running the TICS Action.');
+    }
+    else if (configuration_1.ticsConfig.retryCodes.some(isNaN)) {
+        throw Error('Given retry codes could not be parsed. Please check if the input is correct.');
     }
 }
 /**
