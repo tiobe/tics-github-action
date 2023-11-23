@@ -9,7 +9,7 @@ describe('getAnalyzedFiles', () => {
   test('Should return one analyzed file from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }] }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { data: [{ formattedValue: 'file.js' }] } }));
 
     const spy = jest.spyOn(logger, 'debug');
 
@@ -24,7 +24,9 @@ describe('getAnalyzedFiles', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest
       .spyOn(httpClient, 'get')
-      .mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] }));
+      .mockImplementationOnce(
+        (): Promise<any> => Promise.resolve({ data: { data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] } })
+      );
 
     const spy = jest.spyOn(logger, 'debug');
 
@@ -54,7 +56,7 @@ describe('getQualityGate', () => {
   test('Should return quality gates from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: 'data' });
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { data: 'data' } }));
 
     ticsConfig.branchName = 'main';
 
@@ -82,11 +84,12 @@ describe('getQualityGate', () => {
 describe('getAnnotations', () => {
   test('Should return analyzed files from viewer', async () => {
     jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: [{ type: 'CS' }] }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { data: [{ type: 'CS' }] } }));
     jest
       .spyOn(httpClient, 'get')
       .mockImplementationOnce(
-        (): Promise<any> => Promise.resolve({ data: [{ type: 'CS' }], annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } } })
+        (): Promise<any> =>
+          Promise.resolve({ data: { data: [{ type: 'CS' }], annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } } } })
       );
 
     const response = await fetcher.getAnnotations([{ url: 'url' }, { url: 'url' }]);
@@ -113,7 +116,7 @@ describe('getAnnotations', () => {
 
 describe('getViewerVersion', () => {
   test('Should version of the viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ version: '2022.0.0' }));
+    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { version: '2022.0.0' } }));
 
     const response = await fetcher.getViewerVersion();
 

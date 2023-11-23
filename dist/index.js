@@ -53,7 +53,10 @@ function getSecretsFilter(secretsFilter) {
     return combinedFilters;
 }
 function getRetryCodes(retryCodes) {
-    return retryCodes?.split(',').map(r => parseInt(r)) || [419, 500, 501, 502, 503, 504];
+    if (!retryCodes) {
+        return [419, 500, 501, 502, 503, 504];
+    }
+    return retryCodes.split(',').map(r => Number(r));
 }
 exports.ticsConfig = {
     githubToken: (0, core_1.getInput)('githubToken', { required: true }),
@@ -85,7 +88,6 @@ exports.ticsConfig = {
 };
 const retryConfig = {
     maxRetries: 10,
-    retryCodes: exports.ticsConfig.retryCodes,
     delay: 5
 };
 exports.httpClient = new http_client_1.default(true, {
@@ -94,7 +96,7 @@ exports.httpClient = new http_client_1.default(true, {
     retry: {
         retries: retryConfig.maxRetries,
         retryDelay: retryConfig.delay * 1000,
-        retryOn: retryConfig.retryCodes
+        retryOn: exports.ticsConfig.retryCodes
     }
 }, new proxy_agent_1.ProxyAgent());
 const octokitOptions = {
@@ -164,6 +166,7 @@ function postAnnotations(analysisResult) {
             title: reviewComment.title
         });
     });
+    logger_1.logger.info('Posted all postable annotations (none if there are no violations).');
 }
 exports.postAnnotations = postAnnotations;
 /**
@@ -634,12 +637,13 @@ var ChangeType;
 /***/ }),
 
 /***/ 5922:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleOctokitError = void 0;
+exports.getRetryMessage = exports.getRetryErrorMessage = exports.handleOctokitError = void 0;
+const retry_1 = __nccwpck_require__(6645);
 function handleOctokitError(error) {
     let message = 'reason unkown';
     if (error instanceof Error) {
@@ -653,6 +657,24 @@ function handleOctokitError(error) {
     return message;
 }
 exports.handleOctokitError = handleOctokitError;
+function getRetryErrorMessage(error) {
+    let message = error;
+    if (error instanceof retry_1.RequestError) {
+        message = error.message;
+        if (error.retryCount > 0) {
+            message += ` (retried ${error.retryCount} times)`;
+        }
+    }
+    return message;
+}
+exports.getRetryErrorMessage = getRetryErrorMessage;
+function getRetryMessage(response, message) {
+    if (response.retryCount > 0) {
+        message += ` (retried ${response.retryCount} times)`;
+    }
+    return message;
+}
+exports.getRetryMessage = getRetryMessage;
 
 
 /***/ }),
@@ -1108,7 +1130,7 @@ exports.createUnpostableAnnotationsDetails = createUnpostableAnnotationsDetails;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configure = exports.main = exports.failedMessage = void 0;
+exports.configure = exports.main = exports.actionFailed = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const comments_1 = __nccwpck_require__(6572);
 const configuration_1 = __nccwpck_require__(5527);
@@ -1126,7 +1148,7 @@ const core_1 = __nccwpck_require__(2186);
 const artifacts_1 = __nccwpck_require__(5734);
 const commits_1 = __nccwpck_require__(5759);
 // export for testing purposes
-exports.failedMessage = undefined;
+exports.actionFailed = false;
 main().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
@@ -1151,10 +1173,12 @@ async function main() {
                     await processAnalysis(analysis, changedFiles);
                 }
                 catch (error) {
-                    let message = 'Something went wrond: reason unknown';
+                    let message = 'Something went wrong: reason unknown';
                     if (error instanceof Error)
                         message = error.message;
-                    exports.failedMessage = message;
+                    logger_1.logger.error(message);
+                    exports.actionFailed = true;
+                    analysis.errorList.unshift(message);
                 }
             }
         }
@@ -1162,8 +1186,8 @@ async function main() {
     if (analysis && (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger)) {
         await (0, artifacts_1.uploadArtifact)();
     }
-    if (exports.failedMessage) {
-        logger_1.logger.setFailed(exports.failedMessage);
+    if (exports.actionFailed) {
+        logger_1.logger.setFailed('Failed to run TICS Github Action.');
     }
     if (analysis) {
         (0, api_helper_1.cliSummary)(analysis);
@@ -1201,15 +1225,15 @@ async function analyze(changedFiles) {
     if (analysis.explorerUrls.length === 0) {
         (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
         if (!analysis.completed) {
-            exports.failedMessage = 'Failed to run TICS Github Action.';
+            exports.actionFailed = true;
             await (0, comments_1.postErrorComment)(analysis);
         }
         else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
             await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
         }
         else {
-            exports.failedMessage = 'Failed to run TICS Github Action.';
-            analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+            exports.actionFailed = true;
+            analysis.errorList.unshift('Explorer URL not returned from TICS analysis.');
             await (0, comments_1.postErrorComment)(analysis);
         }
     }
@@ -1238,7 +1262,8 @@ async function processAnalysis(analysis, changedFiles) {
         await postToConversation(true, reviewBody, analysisResults.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
     }
     if (!analysisResults.passed) {
-        exports.failedMessage = analysisResults.message;
+        exports.actionFailed = true;
+        analysis.errorList.unshift(analysisResults.message);
     }
 }
 /**
@@ -1249,7 +1274,8 @@ async function diagnosticAnalysis() {
     logger_1.logger.header('Running action in diagnostic mode');
     let analysis = await (0, analyzer_1.runTicsAnalyzer)('');
     if (analysis.statusCode !== 0) {
-        exports.failedMessage = 'Diagnostic run has failed.';
+        exports.actionFailed = true;
+        analysis.errorList.unshift('Diagnostic run has failed.');
     }
     return analysis;
 }
@@ -1329,6 +1355,9 @@ async function meetsPrerequisites() {
     }
     else if (!isCheckedOut()) {
         throw Error('No checkout found to analyze. Please perform a checkout before running the TICS Action.');
+    }
+    else if (configuration_1.ticsConfig.retryCodes.some(isNaN)) {
+        throw Error('Given retry codes could not be parsed. Please check if the input is correct.');
     }
 }
 /**
@@ -1574,6 +1603,7 @@ const logger_1 = __nccwpck_require__(6440);
 const summary_1 = __nccwpck_require__(1502);
 const api_helper_1 = __nccwpck_require__(3823);
 const fetcher = __importStar(__nccwpck_require__(1559));
+const error_1 = __nccwpck_require__(5922);
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
  * @param explorerUrls All the explorer urls gotten from the TICS analysis.
@@ -1637,17 +1667,15 @@ async function getAnalyzedFiles(url) {
     try {
         const response = await configuration_1.httpClient.get(analyzedFilesUrl);
         if (response) {
-            analyzedFiles = response.data.map((file) => {
+            analyzedFiles = response.data.data.map((file) => {
                 logger_1.logger.debug(file.formattedValue);
                 return file.formattedValue;
             });
-            logger_1.logger.info('Retrieved the analyzed files.');
+            logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the analyzed files.'));
         }
     }
     catch (error) {
-        let message = 'unknown error';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.getRetryErrorMessage)(error);
         throw Error(`There was an error retrieving the analyzed files: ${message}`);
     }
     return analyzedFiles;
@@ -1674,19 +1702,17 @@ async function getQualityGate(url) {
     logger_1.logger.header('Retrieving the quality gates.');
     const qualityGateUrl = getQualityGateUrl(url);
     logger_1.logger.debug(`From: ${qualityGateUrl}`);
-    let response = undefined;
+    let response;
     try {
         response = await configuration_1.httpClient.get(qualityGateUrl);
-        logger_1.logger.info('Retrieved the quality gates.');
+        logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the quality gates.'));
         logger_1.logger.debug(JSON.stringify(response));
     }
     catch (error) {
-        let message = 'reason unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.getRetryErrorMessage)(error);
         throw Error(`There was an error retrieving the quality gates: ${message}`);
     }
-    return response;
+    return response.data;
 }
 exports.getQualityGate = getQualityGate;
 /**
@@ -1722,10 +1748,10 @@ async function getAnnotations(apiLinks) {
             logger_1.logger.debug(`From: ${annotationsUrl.href}`);
             const response = await configuration_1.httpClient.get(annotationsUrl.href);
             if (response) {
-                response.data.forEach((annotation) => {
+                response.data.data.forEach((annotation) => {
                     const extendedAnnotation = {
                         ...annotation,
-                        instanceName: response.annotationTypes ? response.annotationTypes[annotation.type].instanceName : annotation.type
+                        instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
                     };
                     extendedAnnotation.gateId = index;
                     logger_1.logger.debug(JSON.stringify(extendedAnnotation));
@@ -1733,12 +1759,15 @@ async function getAnnotations(apiLinks) {
                 });
             }
         }));
-        logger_1.logger.info('Retrieved all annotations.');
+        if (apiLinks.length > 0) {
+            logger_1.logger.info('Retrieved all annotations.');
+        }
+        else {
+            logger_1.logger.info('No annotations to retrieve.');
+        }
     }
     catch (error) {
-        let message = 'reason unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.getRetryErrorMessage)(error);
         throw Error(`An error occured when trying to retrieve annotations: ${message}`);
     }
     return annotations;
@@ -1752,17 +1781,17 @@ async function getViewerVersion() {
     const getViewerVersionUrl = new URL(configuration_1.baseUrl + '/api/v1/version');
     let response;
     try {
+        logger_1.logger.header('Retrieving the viewer version');
+        logger_1.logger.debug(`From ${getViewerVersionUrl.href}`);
         response = await configuration_1.httpClient.get(getViewerVersionUrl.href);
-        logger_1.logger.info('Retrieved the Viewer Version.');
+        logger_1.logger.info((0, error_1.getRetryMessage)(response, 'Retrieved the Viewer Version.'));
         logger_1.logger.debug(JSON.stringify(response));
     }
     catch (error) {
-        let message = 'reason unknown';
-        if (error instanceof Error)
-            message = error.message;
+        const message = (0, error_1.getRetryErrorMessage)(error);
         throw Error(`There was an error retrieving the Viewer version: ${message}`);
     }
-    return response;
+    return response.data;
 }
 exports.getViewerVersion = getViewerVersion;
 
@@ -12425,7 +12454,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const node_fetch_1 = __importStar(__nccwpck_require__(467));
-const fetch_retry_ts_1 = __nccwpck_require__(2515);
+const retry_1 = __importStar(__nccwpck_require__(6645));
 class HttpClient {
     /**
      * @param ci If this http client is used in a ci environment.
@@ -12442,7 +12471,7 @@ class HttpClient {
         if (options === null || options === void 0 ? void 0 : options.xRequestWithTics) {
             this.defaultHeaders.set('x-requested-with', 'TICS');
         }
-        this.customFetch = (0, fetch_retry_ts_1.fetchBuilder)(node_fetch_1.default, options === null || options === void 0 ? void 0 : options.retry);
+        this.customFetch = (0, retry_1.default)(node_fetch_1.default, options === null || options === void 0 ? void 0 : options.retry);
     }
     /**
      * Executes a GET request to the given url.
@@ -12463,31 +12492,118 @@ class HttpClient {
                 case 200:
                     const text = yield response.text();
                     try {
-                        return JSON.parse(text);
+                        const result = {
+                            status: response.status,
+                            retryCount: response.retryCount,
+                            data: JSON.parse(text)
+                        };
+                        return result;
                     }
                     catch (error) {
-                        throw Error(`${error}: ${text}`);
+                        throw new retry_1.RequestError(`${error}: ${text}`, response.retryCount);
                     }
                 case 302:
-                    throw Error(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`, response.retryCount);
                 case 400:
-                    throw Error(`HTTP request failed with status ${response.status}. ${(yield response.json()).alertMessages[0].header}`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}. ${(yield response.json()).alertMessages[0].header}`, response.retryCount);
                 case 401:
                     let authUrl = url.split('/api/')[0];
                     authUrl += this.ci ? '/Administration.html#page=authToken' : '/UserSettings.html#page=authToken';
-                    throw Error(`HTTP request failed with status ${response.status}. Please provide a valid TICS authentication token. See ${authUrl}`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}. Please provide a valid TICS authentication token. See ${authUrl}`, response.retryCount);
                 case 403:
-                    throw Error(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}. Forbidden call: ${url}`, response.retryCount);
                 case 404:
-                    throw Error(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}. Please check if the given ticsConfiguration is correct.`, response.retryCount);
                 default:
-                    throw Error(`HTTP request failed with status ${response.status}: ${response.statusText}`);
+                    throw new retry_1.RequestError(`HTTP request failed with status ${response.status}: ${response.statusText}`, response.retryCount);
             }
         });
     }
 }
 exports["default"] = HttpClient;
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 6645:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.fetchBuilder = exports.RequestError = void 0;
+class RequestError extends Error {
+    constructor(message, retryCount) {
+        super(message);
+        this.name = 'RequestError';
+        this.retryCount = retryCount;
+    }
+}
+exports.RequestError = RequestError;
+function sanitize(params, defaults) {
+    const result = Object.assign(Object.assign({}, defaults), params);
+    if (typeof result.retries === 'undefined') {
+        result.retries = defaults.retries;
+    }
+    if (typeof result.retryDelay === 'undefined') {
+        result.retryDelay = defaults.retryDelay;
+    }
+    if (typeof result.retryOn === 'undefined') {
+        result.retryOn = defaults.retryOn;
+    }
+    return result;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fetchBuilder(fetchFunc, params = {}) {
+    const defaults = sanitize(params, { retries: 3, retryDelay: 500, retryOn: [419, 503, 504] });
+    return function (input, init) {
+        const frp = sanitize({
+            // TICS -no-unsafe-assignment
+            retries: init === null || init === void 0 ? void 0 : init.retries,
+            retryDelay: init === null || init === void 0 ? void 0 : init.retryDelay,
+            retryOn: init === null || init === void 0 ? void 0 : init.retryOn
+            // TICS +no-unsafe-assignment
+        }, defaults);
+        const retryDelayFn = typeof frp.retryDelay === 'function' ? frp.retryDelay : () => frp.retryDelay;
+        const retryOnFn = typeof frp.retryOn === 'function'
+            ? frp.retryOn
+            : (attempt, retries, error, response) => (!!error || !response || frp.retryOn.indexOf(response.status) !== -1) && attempt < retries;
+        return new Promise(function (resolve, reject) {
+            const extendedFetch = function (attempt) {
+                fetchFunc(input, init)
+                    .then(function (response) {
+                    if (retryOnFn(attempt, frp.retries, null, response)) {
+                        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                        retry(attempt, null, response);
+                    }
+                    else {
+                        const responseWithRetryCount = response;
+                        responseWithRetryCount.retryCount = attempt;
+                        resolve(responseWithRetryCount);
+                    }
+                })
+                    .catch(function (error) {
+                    if (retryOnFn(attempt, frp.retries, error, null)) {
+                        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                        retry(attempt, error, null);
+                    }
+                    else {
+                        reject(new RequestError(error.message, attempt));
+                    }
+                });
+            };
+            function retry(attempt, error, response) {
+                setTimeout(function () {
+                    extendedFetch(++attempt);
+                }, retryDelayFn(attempt, error, response));
+            }
+            extendedFetch(0);
+        });
+    };
+}
+exports.fetchBuilder = fetchBuilder;
+exports["default"] = fetchBuilder;
+//# sourceMappingURL=retry.js.map
 
 /***/ }),
 
@@ -12614,8 +12730,8 @@ class InstallTics {
             installTicsUrl.searchParams.append('url', baseUrl);
             try {
                 const response = yield this.httpClient.get(installTicsUrl.href);
-                if (response.links.installTics) {
-                    return baseUrl + response.links.installTics;
+                if (response.data.links.installTics) {
+                    return baseUrl + response.data.links.installTics;
                 }
                 throw Error(`Install url could not be retrieved from ${installTicsUrl.href}.`);
             }
@@ -36878,77 +36994,6 @@ return /******/ (function(modules) { // webpackBootstrap
     exports.keyword = __nccwpck_require__(7635);
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
-
-
-/***/ }),
-
-/***/ 2515:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fetchBuilder = void 0;
-function sanitize(params, defaults) {
-    const result = Object.assign(Object.assign({}, defaults), params);
-    if (typeof result.retries === 'undefined') {
-        result.retries = defaults.retries;
-    }
-    if (typeof result.retryDelay === 'undefined') {
-        result.retryDelay = defaults.retryDelay;
-    }
-    if (typeof result.retryOn === 'undefined') {
-        result.retryOn = defaults.retryOn;
-    }
-    return result;
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fetchBuilder(fetchFunc, params = {}) {
-    const defaults = sanitize(params, { retries: 3, retryDelay: 500, retryOn: [419, 503, 504] });
-    return function (input, init) {
-        const frp = sanitize({
-            retries: init === null || init === void 0 ? void 0 : init.retries,
-            retryDelay: init === null || init === void 0 ? void 0 : init.retryDelay,
-            retryOn: init === null || init === void 0 ? void 0 : init.retryOn,
-        }, defaults);
-        const retryDelayFn = typeof frp.retryDelay === 'function' ? frp.retryDelay : () => frp.retryDelay;
-        const retryOnFn = typeof frp.retryOn === 'function'
-            ? frp.retryOn
-            : (attempt, retries, error, response) => (!!error || !response || frp.retryOn.indexOf(response.status) !== -1) &&
-                attempt < retries;
-        return new Promise(function (resolve, reject) {
-            const extendedFetch = function (attempt) {
-                fetchFunc(input, init)
-                    .then(function (response) {
-                    if (retryOnFn(attempt, frp.retries, null, response)) {
-                        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                        retry(attempt, null, response);
-                    }
-                    else {
-                        resolve(response);
-                    }
-                })
-                    .catch(function (error) {
-                    if (retryOnFn(attempt, frp.retries, error, null)) {
-                        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                        retry(attempt, error, null);
-                    }
-                    else {
-                        reject(error);
-                    }
-                });
-            };
-            function retry(attempt, error, response) {
-                setTimeout(function () {
-                    extendedFetch(++attempt);
-                }, retryDelayFn(attempt, error, response));
-            }
-            extendedFetch(0);
-        });
-    };
-}
-exports.fetchBuilder = fetchBuilder;
-exports["default"] = fetchBuilder;
 
 
 /***/ }),

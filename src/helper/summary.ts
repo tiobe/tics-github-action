@@ -3,7 +3,7 @@ import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
 import { AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, TicsReviewComment, TicsReviewComments } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
-import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';

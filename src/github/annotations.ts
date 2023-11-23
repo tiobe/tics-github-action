@@ -48,6 +48,7 @@ export function postAnnotations(analysisResult: AnalysisResults): void {
       title: reviewComment.title
     });
   });
+  logger.info('Posted all postable annotations (none if there are no violations).');
 }
 
 /**

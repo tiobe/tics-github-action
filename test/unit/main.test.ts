@@ -30,11 +30,11 @@ import {
 
 afterEach(() => {
   jest.clearAllMocks();
-  delete main.failedMessage;
+  delete main.actionFailed;
 });
 
 describe('pre checks', () => {
-  test('Should call exit if viewer version is too low', async () => {
+  test('Should throw error if viewer version is too low', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.0.0' });
 
     let error: any;
@@ -48,7 +48,7 @@ describe('pre checks', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
-  test('Should call exit if event is not pull request and', async () => {
+  test('Should throw error if event is not pull request and', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
     jest.spyOn(main, 'configure').mockImplementation();
 
@@ -65,7 +65,7 @@ describe('pre checks', () => {
     );
   });
 
-  test('Should call exit if ".git" does not exist', async () => {
+  test('Should throw error if ".git" does not exist', async () => {
     githubConfig.eventName = 'pull_request';
 
     let error: any;
@@ -80,12 +80,30 @@ describe('pre checks', () => {
       expect.stringContaining('No checkout found to analyze. Please perform a checkout before running the TICS Action.')
     );
   });
+
+  test('Should throw error if retryCodes are incorrect', async () => {
+    (existsSync as any).mockReturnValueOnce(true);
+
+    ticsConfig.retryCodes = [NaN];
+
+    let error: any;
+    try {
+      await main.main();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toEqual(expect.stringContaining('Given retry codes could not be parsed. Please check if the input is correct.'));
+  });
 });
 
 describe('SetFailed checks', () => {
   test('Should call info if no files are found', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce([]);
+
+    ticsConfig.retryCodes = [500];
 
     const spyInfo = jest.spyOn(logger, 'info');
 
@@ -105,7 +123,7 @@ describe('SetFailed checks', () => {
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TICS Github Action.'));
+    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
@@ -121,7 +139,7 @@ describe('SetFailed checks', () => {
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith(expect.stringContaining('Failed to run TICS Github Action.'));
+    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
     expect(spyError).toHaveBeenCalledWith(expect.stringContaining('Explorer URL not returned from TICS analysis.'));
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
@@ -135,10 +153,12 @@ describe('SetFailed checks', () => {
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
+    const spyError = jest.spyOn(logger, 'error');
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Some quality gates could not be retrieved.');
+    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
+    expect(spyError).toHaveBeenCalledWith('Some quality gates could not be retrieved.');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
@@ -152,10 +172,12 @@ describe('SetFailed checks', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
+    const spyError = jest.spyOn(logger, 'error');
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
+    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
+    expect(spyError).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
