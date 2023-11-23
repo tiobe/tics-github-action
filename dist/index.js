@@ -166,6 +166,7 @@ function postAnnotations(analysisResult) {
             title: reviewComment.title
         });
     });
+    logger_1.logger.info('Posted all postable annotations (none if there are no violations).');
 }
 exports.postAnnotations = postAnnotations;
 /**
@@ -1758,7 +1759,12 @@ async function getAnnotations(apiLinks) {
                 });
             }
         }));
-        logger_1.logger.info('Retrieved all annotations.');
+        if (apiLinks.length > 0) {
+            logger_1.logger.info('Retrieved all annotations.');
+        }
+        else {
+            logger_1.logger.info('No annotations to retrieve.');
+        }
     }
     catch (error) {
         const message = (0, error_1.getRetryErrorMessage)(error);

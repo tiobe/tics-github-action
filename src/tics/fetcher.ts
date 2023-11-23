@@ -197,7 +197,11 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
         }
       })
     );
-    logger.info('Retrieved all annotations.');
+    if (apiLinks.length > 0) {
+      logger.info('Retrieved all annotations.');
+    } else {
+      logger.info('No annotations to retrieve.');
+    }
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
     throw Error(`An error occured when trying to retrieve annotations: ${message}`);
