@@ -18,7 +18,7 @@ import { getChangedFilesOfCommit } from './github/commits';
 import { ChangedFiles } from './interfaces';
 
 // export for testing purposes
-export let failedMessage: string | undefined = undefined;
+export let actionFailed: boolean | undefined = false;
 
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
@@ -46,10 +46,12 @@ export async function main(): Promise<void> {
         try {
           await processAnalysis(analysis, changedFiles);
         } catch (error: unknown) {
-          let message = 'Something went wrond: reason unknown';
+          let message = 'Something went wrong: reason unknown';
           if (error instanceof Error) message = error.message;
+          logger.error(message);
 
-          failedMessage = message;
+          actionFailed = true;
+          analysis.errorList.unshift(message);
         }
       }
     }
@@ -59,8 +61,8 @@ export async function main(): Promise<void> {
     await uploadArtifact();
   }
 
-  if (failedMessage) {
-    logger.setFailed(failedMessage);
+  if (actionFailed) {
+    logger.setFailed('Failed to run TICS Github Action.');
   }
 
   if (analysis) {
@@ -103,13 +105,13 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   if (analysis.explorerUrls.length === 0) {
     deletePreviousComments(await getPostedComments());
     if (!analysis.completed) {
-      failedMessage = 'Failed to run TICS Github Action.';
+      actionFailed = true;
       await postErrorComment(analysis);
     } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
       await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
     } else {
-      failedMessage = 'Failed to run TICS Github Action.';
-      analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+      actionFailed = true;
+      analysis.errorList.unshift('Explorer URL not returned from TICS analysis.');
       await postErrorComment(analysis);
     }
   }
@@ -147,7 +149,8 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   }
 
   if (!analysisResults.passed) {
-    failedMessage = analysisResults.message;
+    actionFailed = true;
+    analysis.errorList.unshift(analysisResults.message);
   }
 }
 
@@ -160,7 +163,8 @@ async function diagnosticAnalysis(): Promise<Analysis> {
   let analysis = await runTicsAnalyzer('');
 
   if (analysis.statusCode !== 0) {
-    failedMessage = 'Diagnostic run has failed.';
+    actionFailed = true;
+    analysis.errorList.unshift('Diagnostic run has failed.');
   }
 
   return analysis;

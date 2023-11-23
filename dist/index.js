@@ -1129,7 +1129,7 @@ exports.createUnpostableAnnotationsDetails = createUnpostableAnnotationsDetails;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configure = exports.main = exports.failedMessage = void 0;
+exports.configure = exports.main = exports.actionFailed = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const comments_1 = __nccwpck_require__(6572);
 const configuration_1 = __nccwpck_require__(5527);
@@ -1147,7 +1147,7 @@ const core_1 = __nccwpck_require__(2186);
 const artifacts_1 = __nccwpck_require__(5734);
 const commits_1 = __nccwpck_require__(5759);
 // export for testing purposes
-exports.failedMessage = undefined;
+exports.actionFailed = false;
 main().catch((error) => {
     let message = 'TICS failed with unknown reason';
     if (error instanceof Error)
@@ -1172,10 +1172,12 @@ async function main() {
                     await processAnalysis(analysis, changedFiles);
                 }
                 catch (error) {
-                    let message = 'Something went wrond: reason unknown';
+                    let message = 'Something went wrong: reason unknown';
                     if (error instanceof Error)
                         message = error.message;
-                    exports.failedMessage = message;
+                    logger_1.logger.error(message);
+                    exports.actionFailed = true;
+                    analysis.errorList.unshift(message);
                 }
             }
         }
@@ -1183,8 +1185,8 @@ async function main() {
     if (analysis && (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger)) {
         await (0, artifacts_1.uploadArtifact)();
     }
-    if (exports.failedMessage) {
-        logger_1.logger.setFailed(exports.failedMessage);
+    if (exports.actionFailed) {
+        logger_1.logger.setFailed('Failed to run TICS Github Action.');
     }
     if (analysis) {
         (0, api_helper_1.cliSummary)(analysis);
@@ -1222,15 +1224,15 @@ async function analyze(changedFiles) {
     if (analysis.explorerUrls.length === 0) {
         (0, comments_1.deletePreviousComments)(await (0, comments_1.getPostedComments)());
         if (!analysis.completed) {
-            exports.failedMessage = 'Failed to run TICS Github Action.';
+            exports.actionFailed = true;
             await (0, comments_1.postErrorComment)(analysis);
         }
         else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
             await postToConversation(false, 'No changed files applicable for TICS analysis quality gating.');
         }
         else {
-            exports.failedMessage = 'Failed to run TICS Github Action.';
-            analysis.errorList.push('Explorer URL not returned from TICS analysis.');
+            exports.actionFailed = true;
+            analysis.errorList.unshift('Explorer URL not returned from TICS analysis.');
             await (0, comments_1.postErrorComment)(analysis);
         }
     }
@@ -1259,7 +1261,8 @@ async function processAnalysis(analysis, changedFiles) {
         await postToConversation(true, reviewBody, analysisResults.passed ? enums_1.Events.APPROVE : enums_1.Events.REQUEST_CHANGES);
     }
     if (!analysisResults.passed) {
-        exports.failedMessage = analysisResults.message;
+        exports.actionFailed = true;
+        analysis.errorList.unshift(analysisResults.message);
     }
 }
 /**
@@ -1270,7 +1273,8 @@ async function diagnosticAnalysis() {
     logger_1.logger.header('Running action in diagnostic mode');
     let analysis = await (0, analyzer_1.runTicsAnalyzer)('');
     if (analysis.statusCode !== 0) {
-        exports.failedMessage = 'Diagnostic run has failed.';
+        exports.actionFailed = true;
+        analysis.errorList.unshift('Diagnostic run has failed.');
     }
     return analysis;
 }
