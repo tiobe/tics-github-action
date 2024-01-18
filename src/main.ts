@@ -24,7 +24,6 @@ main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
   if (error instanceof Error) message = error.message;
   logger.setFailed(message);
-  process.exit(1);
 });
 
 // exported for testing purposes

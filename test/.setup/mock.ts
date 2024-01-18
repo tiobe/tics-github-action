@@ -99,5 +99,3 @@ jest.mock('os', () => {
     EOL: jest.requireActual<typeof import('os')>('os').EOL
   };
 });
-
-jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);

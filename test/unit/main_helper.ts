@@ -101,7 +101,8 @@ const singleFileQualityGateFailed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
@@ -156,7 +157,8 @@ const singleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
@@ -211,7 +213,8 @@ const doubleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               },
@@ -223,7 +226,8 @@ const doubleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
