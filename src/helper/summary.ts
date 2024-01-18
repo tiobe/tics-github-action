@@ -20,7 +20,7 @@ import { logger } from './logger';
 export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(analysisResults.passed ? Status.PASSED : Status.FAILED, true)}`, 3);
+  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResults), true)}`, 3);
 
   analysisResults.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
@@ -55,11 +55,21 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
   return summary.stringify();
 }
 
+function getStatus(analysisResults: AnalysisResults) {
+  if (!analysisResults.passed) {
+    return Status.FAILED;
+  } else if (analysisResults.passedWithWarning) {
+    return Status.PASSED_WITH_WARNING;
+  } else {
+    return Status.PASSED;
+  }
+}
+
 function extractFailedConditions(gates: Gate[]): Condition[] {
   let failedConditions: Condition[] = [];
 
   gates.forEach(gate => {
-    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
+    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
   });
 
   return failedConditions;

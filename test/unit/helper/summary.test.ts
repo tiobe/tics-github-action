@@ -16,6 +16,7 @@ describe('createSummaryBody', () => {
   test('Should contain blocking after if there are soaked violations', () => {
     const string = createSummaryBody(analysisResultsSoaked);
 
+    expect(string).toContain('<h3>:x: Failed </h3>');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
     expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
     expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
@@ -27,6 +28,7 @@ describe('createSummaryBody', () => {
   test('Should not contain blocking after if there are no soaked violations', () => {
     const string = createSummaryBody(analysisResultsNotSoaked);
 
+    expect(string).toContain('<h3>:x: Failed </h3>');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
     expect(string).toContain('</td><td>+39</td></tr><tr><td>');
     expect(string).toContain('</td><td>+30</td></tr><tr><td>');
@@ -38,10 +40,10 @@ describe('createSummaryBody', () => {
   test('Should contain blocking after if there are partly violations', () => {
     const string = createSummaryBody(analysisResultsPartlySoaked);
 
+    expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
-    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
+    expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
+    expect(string).toContain('</td><td>0</td><td>0</td></tr></table>');
 
     summary.clear();
   });

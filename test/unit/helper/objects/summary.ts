@@ -2,6 +2,7 @@ import { AnalysisResults } from '../../../../src/helper/interfaces';
 
 export const analysisResultsSoaked: AnalysisResults = {
   passed: false,
+  passedWithWarning: false,
   message: 'Failed',
   missesQualityGate: false,
   projectResults: [
@@ -118,6 +119,7 @@ export const analysisResultsSoaked: AnalysisResults = {
 
 export const analysisResultsNotSoaked: AnalysisResults = {
   passed: false,
+  passedWithWarning: false,
   message: 'Failed',
   missesQualityGate: false,
   projectResults: [
@@ -131,18 +133,15 @@ export const analysisResultsNotSoaked: AnalysisResults = {
       ],
       qualityGate: {
         passed: false,
-        passedWithWarning: false,
         message: 'Project failed to pass quality gate',
         url: 'api/public/v1/QualityGateStatusDetails?axes\u003dDate(1516070506),Project(20065)',
         gates: [
           {
             passed: false,
-            passedWithWarning: false,
             name: 'Gate for #32163',
             conditions: [
               {
                 passed: false,
-                passedWithWarning: false,
                 error: false,
                 message:
                   'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
@@ -210,7 +209,8 @@ export const analysisResultsNotSoaked: AnalysisResults = {
 };
 
 export const analysisResultsPartlySoaked: AnalysisResults = {
-  passed: false,
+  passed: true,
+  passedWithWarning: true,
   message: 'Failed',
   missesQualityGate: false,
   projectResults: [
@@ -223,19 +223,19 @@ export const analysisResultsPartlySoaked: AnalysisResults = {
         'PADAnalysis/ApplicationNative/src/views/AboutBox.cpp'
       ],
       qualityGate: {
-        passed: false,
-        passedWithWarning: false,
+        passed: true,
+        passedWithWarning: true,
         message: 'Project failed to pass quality gate',
         url: 'api/public/v1/QualityGateStatusDetails?axes\u003dDate(1516070506),Project(20065)',
         gates: [
           {
-            passed: false,
-            passedWithWarning: false,
+            passed: true,
+            passedWithWarning: true,
             name: 'Gate for #32163',
             conditions: [
               {
-                passed: false,
-                passedWithWarning: false,
+                passed: true,
+                passedWithWarning: true,
                 error: false,
                 message:
                   'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
@@ -262,8 +262,8 @@ export const analysisResultsPartlySoaked: AnalysisResults = {
                       link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
                       data: {
                         actualValue: {
-                          formattedValue: '+39',
-                          value: 39.0,
+                          formattedValue: '0',
+                          value: 0.0,
                           classes: ['delta-worse'],
                           link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
                         },
@@ -281,23 +281,10 @@ export const analysisResultsPartlySoaked: AnalysisResults = {
                       link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,controllers,IPerfusionController.h))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
                       data: {
                         actualValue: {
-                          formattedValue: '+30',
-                          value: 30.0,
+                          formattedValue: '0',
+                          value: 0.0,
                           classes: ['delta-worse'],
                           link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,controllers,IPerfusionController.h)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
-                        }
-                      }
-                    },
-                    {
-                      itemType: 'file',
-                      name: 'PADAnalysis/ApplicationNative/src/views/AboutBox.cpp',
-                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
-                      data: {
-                        actualValue: {
-                          formattedValue: '+24',
-                          value: 24.0,
-                          classes: ['delta-worse'],
-                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
                         }
                       }
                     }
