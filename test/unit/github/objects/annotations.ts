@@ -1,5 +1,5 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
-import { AnalysisResults, ProjectResult, TicsReviewComment, TicsReviewComments } from '../../../../src/helper/interfaces';
+import { AnalysisResults } from '../../../../src/helper/interfaces';
 
 export const user: User = {
   login: '',
@@ -96,5 +96,6 @@ export const analysisResults: AnalysisResults = {
         unpostable: []
       }
     }
-  ]
+  ],
+  passedWithWarning: false
 };

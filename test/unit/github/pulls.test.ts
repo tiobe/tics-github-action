@@ -20,7 +20,7 @@ describe('getChangedFilesOfPullRequest', () => {
         status: 'modified'
       }
     ]);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should include changed moved file', async () => {
@@ -44,7 +44,7 @@ describe('getChangedFilesOfPullRequest', () => {
         status: 'renamed'
       }
     ]);
-    expect(spy).toBeCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   test('Should exclude unchanged moved file', async () => {
@@ -61,7 +61,7 @@ describe('getChangedFilesOfPullRequest', () => {
         status: 'modified'
       }
     ]);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should include changed moved file on excludeMovedFiles', async () => {
@@ -87,7 +87,7 @@ describe('getChangedFilesOfPullRequest', () => {
         status: 'renamed'
       }
     ]);
-    expect(spy).toBeCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   test('Should return four files on getChangedFilesOfPullRequest', async () => {
@@ -98,7 +98,7 @@ describe('getChangedFilesOfPullRequest', () => {
 
     const response = await getChangedFilesOfPullRequest();
     expect(response.length).toEqual(4);
-    expect(spy).toBeCalledTimes(4);
+    expect(spy).toHaveBeenCalledTimes(4);
   });
 
   test('Should call exit on thrown error on paginate', async () => {
