@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { summary } from './summary_mock';
 
 jest.mock('../../src/configuration', () => {
   return {
@@ -50,12 +51,11 @@ jest.mock('../../src/configuration', () => {
     httpClient: {
       get: jest.fn()
     },
-    viewerUrl: '<url>',
+    viewerUrl: 'http://viewer.com',
     baseUrl: 'http://base.com'
   };
 });
 jest.mock('@actions/core', () => {
-  let summaryOutput = '';
   return {
     exportVariable: jest.fn(),
     info: jest.fn(),
@@ -63,19 +63,7 @@ jest.mock('@actions/core', () => {
     warning: jest.fn(),
     error: jest.fn(),
     setFailed: jest.fn(),
-    summary: {
-      addBreak: jest.fn(() => (summaryOutput += '\n')),
-      addEOL: jest.fn(() => (summaryOutput += '\n')),
-      addHeading: jest.fn((heading, level) => (summaryOutput += `${level ? level : 1} ${heading}\n`)),
-      addLink: jest.fn((text, link) => (summaryOutput += `[${text}](${link})`)),
-      addRaw: jest.fn(raw => (summaryOutput += raw)),
-      addTable: jest.fn(),
-      clear: jest.fn(() => (summaryOutput = '')),
-      stringify: jest.fn(() => {
-        return summaryOutput;
-      }),
-      write: jest.fn(() => {})
-    }
+    summary: summary
   };
 });
 jest.mock('@actions/exec', () => {
@@ -107,7 +95,8 @@ jest.mock('canonical-path', () => {
 jest.mock('os', () => {
   return {
     tmpdir: jest.fn(() => '/tmp'),
-    platform: jest.fn()
+    platform: jest.fn(),
+    EOL: jest.requireActual<typeof import('os')>('os').EOL
   };
 });
 

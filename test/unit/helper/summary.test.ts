@@ -1,8 +1,51 @@
+import { summary } from '@actions/core';
 import { githubConfig } from '../../../src/configuration';
 import { ChangedFile } from '../../../src/github/interfaces';
 import { ExtendedAnnotation } from '../../../src/helper/interfaces';
-import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../../src/helper/summary';
+import {
+  createErrorSummary,
+  createFilesSummary,
+  createReviewComments,
+  createSummaryBody,
+  createUnpostableAnnotationsDetails
+} from '../../../src/helper/summary';
 import '../../.setup/extend_jest';
+import { analysisResultsSoaked, analysisResultsNotSoaked, analysisResultsPartlySoaked } from './objects/summary';
+
+describe('createSummaryBody', () => {
+  test('Should contain blocking after if there are soaked violations', () => {
+    const string = createSummaryBody(analysisResultsSoaked);
+
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should not contain blocking after if there are no soaked violations', () => {
+    const string = createSummaryBody(analysisResultsNotSoaked);
+
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
+    expect(string).toContain('</td><td>+39</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+30</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+24</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should contain blocking after if there are partly violations', () => {
+    const string = createSummaryBody(analysisResultsPartlySoaked);
+
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
+
+    summary.clear();
+  });
+});
 
 describe('createErrorSummary', () => {
   test('Should return summary of two errors', () => {

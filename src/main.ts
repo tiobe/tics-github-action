@@ -37,24 +37,7 @@ export async function main(): Promise<void> {
   if (ticsConfig.mode === 'diagnostic') {
     analysis = await diagnosticAnalysis();
   } else {
-    const changedFiles = await getChangedFiles();
-
-    if (changedFiles) {
-      analysis = await analyze(changedFiles);
-
-      if (analysis.explorerUrls.length > 0) {
-        try {
-          await processAnalysis(analysis, changedFiles);
-        } catch (error: unknown) {
-          let message = 'Something went wrong: reason unknown';
-          if (error instanceof Error) message = error.message;
-          logger.error(message);
-
-          actionFailed = true;
-          analysis.errorList.unshift(message);
-        }
-      }
-    }
+    analysis = await runAnalysisMode();
   }
 
   if (analysis && (ticsConfig.tmpDir || githubConfig.debugger)) {
@@ -97,6 +80,30 @@ async function getChangedFiles(): Promise<ChangedFiles | undefined> {
     files: changedFiles,
     path: changedFilesFilePath
   };
+}
+
+async function runAnalysisMode(): Promise<Analysis | undefined> {
+  let analysis: Analysis | undefined;
+  const changedFiles = await getChangedFiles();
+
+  if (changedFiles) {
+    analysis = await analyze(changedFiles);
+
+    if (analysis.explorerUrls.length > 0) {
+      try {
+        await processAnalysis(analysis, changedFiles);
+      } catch (error: unknown) {
+        let message = 'Something went wrong: reason unknown';
+        if (error instanceof Error) message = error.message;
+        logger.error(message);
+
+        actionFailed = true;
+        analysis.errorList.unshift(message);
+      }
+    }
+  }
+
+  return analysis;
 }
 
 async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
@@ -184,12 +191,10 @@ async function postToConversation(isGate: boolean, body: string, event: Events =
       } else {
         await postComment(body);
       }
+    } else if (ticsConfig.pullRequestApproval) {
+      await postNothingAnalyzedReview(body);
     } else {
-      if (ticsConfig.pullRequestApproval) {
-        await postNothingAnalyzedReview(body);
-      } else {
-        await postNothingAnalyzedComment(body);
-      }
+      await postNothingAnalyzedComment(body);
     }
   }
 }

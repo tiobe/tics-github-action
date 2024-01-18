@@ -1,7 +1,16 @@
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { AnalysisResults, Annotation, Condition, ExtendedAnnotation, Gate, TicsReviewComment, TicsReviewComments } from './interfaces';
+import {
+  AnalysisResults,
+  Annotation,
+  Condition,
+  ConditionDetails,
+  ExtendedAnnotation,
+  Gate,
+  TicsReviewComment,
+  TicsReviewComments
+} from './interfaces';
 import { ChangedFile } from '../github/interfaces';
 import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
@@ -23,7 +32,7 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
         if (condition.details && condition.details.items.length > 0) {
           summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
           summary.addBreak();
-          summary.addTable(createConditionTable(condition));
+          summary.addTable(createConditionTable(condition.details));
           summary.addRaw('</details>', true);
         } else {
           summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
@@ -33,7 +42,7 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
 
       summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
-      if (projectResult.reviewComments) {
+      if (projectResult.reviewComments && projectResult.reviewComments.unpostable.length > 0) {
         summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
       }
 
@@ -98,27 +107,39 @@ export function createFilesSummary(fileList: string[]): string {
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionTable(condition: Condition): SummaryTableRow[] {
-  if (!condition.details) return [];
-
-  let rows: SummaryTableRow[] = [
-    [
-      {
-        data: 'File',
-        header: true
-      },
-      {
-        data: condition.details.dataKeys.actualValue.title,
-        header: true
-      }
-    ]
+function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
+  let rows: SummaryTableRow[] = [];
+  const titleRow: SummaryTableRow = [
+    {
+      data: 'File',
+      header: true
+    },
+    {
+      data: details.dataKeys.actualValue.title,
+      header: true
+    }
   ];
-  condition.details.items
+  if (details.dataKeys.blockingAfter) {
+    titleRow.push({
+      data: details.dataKeys.blockingAfter.title,
+      header: true
+    });
+  }
+  rows.push(titleRow);
+
+  details.items
     .filter(item => item.itemType === 'file')
     .forEach(item => {
-      rows.push([`\n\n[${item.name}](${viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue]);
-    });
+      const dataRow: SummaryTableRow = [`\n\n[${item.name}](${viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue];
 
+      if (item.data.blockingAfter) {
+        dataRow.push(item.data.blockingAfter.formattedValue);
+      } else if (details.dataKeys.blockingAfter) {
+        dataRow.push('0');
+      }
+
+      rows.push(dataRow);
+    });
   return rows;
 }
 
@@ -153,20 +174,18 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
         logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
         unpostable.push(annotation);
       }
+    } else if (annotation.diffLines?.includes(annotation.line)) {
+      logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+      postable.push({
+        title: `${annotation.instanceName}: ${annotation.rule}`,
+        body: createBody(annotation, displayCount),
+        path: annotation.path,
+        line: annotation.line
+      });
     } else {
-      if (annotation.diffLines?.includes(annotation.line)) {
-        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-        postable.push({
-          title: `${annotation.instanceName}: ${annotation.rule}`,
-          body: createBody(annotation, displayCount),
-          path: annotation.path,
-          line: annotation.line
-        });
-      } else {
-        annotation.displayCount = displayCount;
-        logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-        unpostable.push(annotation);
-      }
+      annotation.displayCount = displayCount;
+      logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+      unpostable.push(annotation);
     }
   });
   logger.info('Created review comments from annotations.');
@@ -208,10 +227,8 @@ function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: Chang
       annotation.diffLines = file ? fetchDiffLines(file) : [];
       annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
-    } else {
-      if (groupedAnnotations[index].gateId === annotation.gateId) {
-        groupedAnnotations[index].count += annotation.count;
-      }
+    } else if (groupedAnnotations[index].gateId === annotation.gateId) {
+      groupedAnnotations[index].count += annotation.count;
     }
   });
   return groupedAnnotations;

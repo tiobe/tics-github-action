@@ -72,12 +72,10 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
     if (platform() === 'linux') {
       installCommand += ' &&';
     }
+  } else if (platform() === 'linux') {
+    installCommand = `TICS='${ticsConfig.ticsConfiguration}';`;
   } else {
-    if (platform() === 'linux') {
-      installCommand = `TICS='${ticsConfig.ticsConfiguration}';`;
-    } else {
-      installCommand = `$env:TICS='${ticsConfig.ticsConfiguration}'`;
-    }
+    installCommand = `$env:TICS='${ticsConfig.ticsConfiguration}'`;
   }
 
   if (platform() === 'linux') {
@@ -128,6 +126,7 @@ function getTicsCommand(fileListPath: string) {
     execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
     execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
     execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
+    execString += ticsConfig.branchName ? `-branchname ${ticsConfig.branchName} ` : '';
     execString += ticsConfig.tmpDir || githubConfig.debugger ? `-tmpdir '${getTmpDir()}' ` : '';
   }
   execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
