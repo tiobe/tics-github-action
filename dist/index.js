@@ -871,21 +871,22 @@ const logger_1 = __nccwpck_require__(6440);
 function createSummaryBody(analysisResults) {
     logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
-    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(getStatus(analysisResults), true)}`, 3);
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(getStatus(analysisResults.passed, analysisResults.passedWithWarning), true)}`, 3);
     analysisResults.projectResults.forEach(projectResult => {
         if (projectResult.qualityGate) {
-            const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+            const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
             core_1.summary.addHeading(projectResult.project, 2);
-            core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 3);
-            failedConditions.forEach(condition => {
+            core_1.summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
+            failedOrWarnConditions.forEach(condition => {
+                const statusMarkdown = (0, markdown_1.generateStatusMarkdown)(getStatus(condition.passed, condition.passedWithWarning));
                 if (condition.details && condition.details.items.length > 0) {
-                    core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+                    core_1.summary.addRaw(`\n<details><summary>${statusMarkdown}${condition.message}</summary>\n`);
                     core_1.summary.addBreak();
                     core_1.summary.addTable(createConditionTable(condition.details));
                     core_1.summary.addRaw('</details>', true);
                 }
                 else {
-                    core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+                    core_1.summary.addRaw(`\n&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
                 }
             });
             core_1.summary.addEOL();
@@ -900,23 +901,43 @@ function createSummaryBody(analysisResults) {
     return core_1.summary.stringify();
 }
 exports.createSummaryBody = createSummaryBody;
-function getStatus(analysisResults) {
-    if (!analysisResults.passed) {
+function getConditionHeading(failedOrWarnConditions) {
+    const countFailedConditions = failedOrWarnConditions.filter(c => !c.passed).length;
+    const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
+    const header = [];
+    if (countFailedConditions > 0) {
+        header.push(`${countFailedConditions} Condition(s) failed`);
+    }
+    if (countWarnConditions > 0) {
+        header.push(`${countWarnConditions} Condition(s) passed with warning`);
+    }
+    if (failedOrWarnConditions.length === 0) {
+        header.push('All conditions passed');
+    }
+    return header.join(', ');
+}
+function getStatus(passed, passedWithWarning) {
+    if (!passed) {
         return enums_1.Status.FAILED;
     }
-    else if (analysisResults.passedWithWarning) {
+    else if (passedWithWarning) {
         return enums_1.Status.PASSED_WITH_WARNING;
     }
     else {
         return enums_1.Status.PASSED;
     }
 }
-function extractFailedConditions(gates) {
-    let failedConditions = [];
+/**
+ * Extract conditions that have failed or have passed with warning(s)
+ * @param gates Gates of a quality gate
+ * @returns Extracted conditions
+ */
+function extractFailedOrWarningConditions(gates) {
+    let failedOrWarnConditions = [];
     gates.forEach(gate => {
-        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
+        failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
     });
-    return failedConditions;
+    return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
 }
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.

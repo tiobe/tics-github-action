@@ -20,22 +20,24 @@ import { logger } from './logger';
 export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResults), true)}`, 3);
+  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResults.passed, analysisResults.passedWithWarning), true)}`, 3);
 
   analysisResults.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
-      const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+      const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
 
       summary.addHeading(projectResult.project, 2);
-      summary.addHeading(`${failedConditions.length} Condition(s) failed`, 3);
-      failedConditions.forEach(condition => {
+      summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
+
+      failedOrWarnConditions.forEach(condition => {
+        const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
         if (condition.details && condition.details.items.length > 0) {
-          summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+          summary.addRaw(`\n<details><summary>${statusMarkdown}${condition.message}</summary>\n`);
           summary.addBreak();
           summary.addTable(createConditionTable(condition.details));
           summary.addRaw('</details>', true);
         } else {
-          summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+          summary.addRaw(`\n&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
         }
       });
       summary.addEOL();
@@ -55,24 +57,47 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
   return summary.stringify();
 }
 
-function getStatus(analysisResults: AnalysisResults) {
-  if (!analysisResults.passed) {
+function getConditionHeading(failedOrWarnConditions: Condition[]): string {
+  const countFailedConditions = failedOrWarnConditions.filter(c => !c.passed).length;
+  const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
+  const header = [];
+  if (countFailedConditions > 0) {
+    header.push(`${countFailedConditions} Condition(s) failed`);
+  }
+  if (countWarnConditions > 0) {
+    header.push(`${countWarnConditions} Condition(s) passed with warning`);
+  }
+
+  if (failedOrWarnConditions.length === 0) {
+    header.push('All conditions passed');
+  }
+
+  return header.join(', ');
+}
+
+function getStatus(passed: boolean, passedWithWarning?: boolean) {
+  if (!passed) {
     return Status.FAILED;
-  } else if (analysisResults.passedWithWarning) {
+  } else if (passedWithWarning) {
     return Status.PASSED_WITH_WARNING;
   } else {
     return Status.PASSED;
   }
 }
 
-function extractFailedConditions(gates: Gate[]): Condition[] {
-  let failedConditions: Condition[] = [];
+/**
+ * Extract conditions that have failed or have passed with warning(s)
+ * @param gates Gates of a quality gate
+ * @returns Extracted conditions
+ */
+function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
+  let failedOrWarnConditions: Condition[] = [];
 
   gates.forEach(gate => {
-    failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
+    failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
   });
 
-  return failedConditions;
+  return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
 }
 
 /**
