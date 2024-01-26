@@ -27,6 +27,7 @@ import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
 export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
   let analysisResults: AnalysisResults = {
     passed: true,
+    passedWithWarning: false,
     message: '',
     missesQualityGate: false,
     projectResults: []
@@ -52,18 +53,18 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     if (!qualityGate) {
       analysisResults.passed = false;
       analysisResults.missesQualityGate = true;
-    }
+    } else {
+      if (!qualityGate.passed) {
+        analysisResults.passed = false;
+        analysisResults.message += qualityGate.message + '; ';
+      }
 
-    if (qualityGate && !qualityGate.passed) {
-      analysisResults.passed = false;
-      analysisResults.message += qualityGate.message + '; ';
-    }
-
-    if (qualityGate && ticsConfig.postAnnotations) {
-      // import of itself is used for mocking the function in the same file
-      const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
-      if (annotations && annotations.length > 0) {
-        analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
+      if (ticsConfig.postAnnotations) {
+        // import of itself is used for mocking the function in the same file
+        const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
+        if (annotations && annotations.length > 0) {
+          analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
+        }
       }
     }
 
@@ -71,6 +72,9 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
 
     analysisResults.projectResults.push(analysisResult);
   }
+
+  analysisResults.passedWithWarning =
+    analysisResults.passed && analysisResults.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
 
   // Remove trailing space from the message
   analysisResults.message = analysisResults.message.trimEnd();

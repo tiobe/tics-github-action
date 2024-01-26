@@ -101,7 +101,8 @@ const singleFileQualityGateFailed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
@@ -156,7 +157,8 @@ const singleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
@@ -211,7 +213,8 @@ const doubleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               },
@@ -223,7 +226,8 @@ const doubleFileQualityGatePassed: QualityGate = {
                   actualValue: {
                     formattedValue: '+4',
                     value: 4.0,
-                    classes: ['delta-worse']
+                    classes: ['delta-worse'],
+                    link: ''
                   }
                 }
               }
@@ -270,7 +274,8 @@ export const analysisResultsPassedNoUrl: AnalysisResults = {
   passed: false,
   message: '',
   missesQualityGate: true,
-  projectResults: []
+  projectResults: [],
+  passedWithWarning: false
 };
 
 export const analysisResultsSingleFileFailed: AnalysisResults = {
@@ -284,7 +289,8 @@ export const analysisResultsSingleFileFailed: AnalysisResults = {
       project: 'project',
       qualityGate: singleFileQualityGateFailed
     }
-  ]
+  ],
+  passedWithWarning: false
 };
 
 export const analysisResultsSingleFilePassed: AnalysisResults = {
@@ -298,7 +304,8 @@ export const analysisResultsSingleFilePassed: AnalysisResults = {
       project: 'project',
       qualityGate: singleFileQualityGatePassed
     }
-  ]
+  ],
+  passedWithWarning: false
 };
 
 export const analysisResultsDoubleFilePassed: AnalysisResults = {
@@ -312,5 +319,6 @@ export const analysisResultsDoubleFilePassed: AnalysisResults = {
       project: 'project',
       qualityGate: doubleFileQualityGatePassed
     }
-  ]
+  ],
+  passedWithWarning: false
 };

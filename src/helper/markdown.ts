@@ -12,6 +12,8 @@ export function generateStatusMarkdown(status: Status, hasSuffix = false): strin
       return ':x: ' + (hasSuffix ? 'Failed ' : '');
     case Status.PASSED:
       return ':heavy_check_mark: ' + (hasSuffix ? 'Passed ' : '');
+    case Status.PASSED_WITH_WARNING:
+      return ':warning: ' + (hasSuffix ? 'Passed with warnings ' : '');
     case Status.SKIPPED:
     case Status.WARNING:
       return ':warning: ' + (hasSuffix ? 'Skipped ' : '');

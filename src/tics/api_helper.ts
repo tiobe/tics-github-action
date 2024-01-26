@@ -22,7 +22,7 @@ export function cliSummary(analysis: Analysis): void {
 export function getItemFromUrl(url: string, query: string): string {
   let regExpr = new RegExp(`${query}\\((.*?)\\)`);
   let cleanUrl = url.replace(/\+/g, '%20');
-  let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
+  let itemValue = RegExp(regExpr).exec(decodeURIComponent(cleanUrl));
 
   if (itemValue && itemValue.length >= 2) {
     logger.debug(`Retrieved ${query} value: ${itemValue[1]}`);

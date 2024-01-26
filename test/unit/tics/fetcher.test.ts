@@ -147,6 +147,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: 'No Explorer url found',
       missesQualityGate: true,
       projectResults: []
@@ -161,6 +162,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: '',
       missesQualityGate: true,
       projectResults: [
@@ -174,6 +176,28 @@ describe('getAnalysisResults', () => {
     });
   });
 
+  test('Should return on one passed quality gate with warnings', async () => {
+    jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValue(['file']);
+    jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
+
+    const result = await fetcher.getAnalysisResults(['https://url.com/Project(projectName)'], []);
+
+    expect(result).toEqual({
+      passed: true,
+      passedWithWarning: true,
+      message: '',
+      missesQualityGate: false,
+      projectResults: [
+        {
+          project: 'projectName',
+          explorerUrl: 'https://url.com/Project(projectName)',
+          analyzedFiles: ['file'],
+          qualityGate: passedQualityGate
+        }
+      ]
+    });
+  });
+
   test('Should return on failed quality gate on single url', async () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
@@ -182,6 +206,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: 'failed;',
       missesQualityGate: false,
       projectResults: [
@@ -204,6 +229,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: 'failed;',
       missesQualityGate: false,
       projectResults: [
@@ -231,6 +257,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: 'failed; failed;',
       missesQualityGate: false,
       projectResults: [
@@ -262,6 +289,7 @@ describe('getAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      passedWithWarning: false,
       message: 'failed;',
       missesQualityGate: false,
       projectResults: [

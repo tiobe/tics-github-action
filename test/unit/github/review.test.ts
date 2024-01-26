@@ -34,13 +34,14 @@ describe('postReview', () => {
             annotationsApiV1Links: []
           }
         }
-      ]
+      ],
+      passedWithWarning: false
     };
 
     let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call createReview with values passed and no comments', async () => {
@@ -65,7 +66,8 @@ describe('postReview', () => {
             annotationsApiV1Links: []
           }
         }
-      ]
+      ],
+      passedWithWarning: false
     };
 
     let body = createSummaryBody(analysisResults);
@@ -80,7 +82,7 @@ describe('postReview', () => {
       body: 'ReviewBody...',
       comments: undefined
     };
-    expect(spy).toBeCalledWith(calledWith);
+    expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
   test('Should call createReview with values failed', async () => {
@@ -109,7 +111,8 @@ describe('postReview', () => {
             unpostable: []
           }
         }
-      ]
+      ],
+      passedWithWarning: false
     };
 
     let body = createSummaryBody(analysisResults);
@@ -123,7 +126,7 @@ describe('postReview', () => {
       event: Events.REQUEST_CHANGES,
       body: 'ReviewBody...'
     };
-    expect(spy).toBeCalledWith(calledWith);
+    expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
   test('Should throw an error on createReview', async () => {
@@ -151,14 +154,15 @@ describe('postReview', () => {
             annotationsApiV1Links: []
           }
         }
-      ]
+      ],
+      passedWithWarning: false
     };
 
     let body = createSummaryBody(analysisResults);
     let event = analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES;
     await postReview(body, event);
 
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -167,7 +171,7 @@ describe('postNothingAnalyzedReview', () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
     await postNothingAnalyzedReview('message');
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call createReview with value passed', async () => {
@@ -184,7 +188,7 @@ describe('postNothingAnalyzedReview', () => {
       event: Events.APPROVE,
       body: '<h1>TICS Quality Gate</h1>\n\n### :heavy_check_mark: Passed \n\nmessage'
     };
-    expect(spy).toBeCalledWith(calledWith);
+    expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
   test('Should throw an error on createReview', async () => {
@@ -195,6 +199,6 @@ describe('postNothingAnalyzedReview', () => {
 
     await postNothingAnalyzedReview('message');
 
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

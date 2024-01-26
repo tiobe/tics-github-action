@@ -8,6 +8,7 @@ export interface Analysis {
 
 export interface AnalysisResults {
   passed: boolean;
+  passedWithWarning: boolean;
   message: string;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
@@ -23,6 +24,7 @@ export interface ProjectResult {
 
 export interface QualityGate {
   passed: boolean;
+  passedWithWarning?: boolean;
   message: string;
   url: string;
   gates: Gate[];
@@ -31,12 +33,14 @@ export interface QualityGate {
 
 export interface Gate {
   passed: boolean;
+  passedWithWarning?: boolean;
   name: string;
   conditions: Condition[];
 }
 
 export interface Condition {
   passed: boolean;
+  passedWithWarning?: boolean;
   skipped?: boolean;
   error: boolean;
   message: string;
@@ -48,6 +52,11 @@ export interface ConditionDetails {
   itemTypes: string[];
   dataKeys: {
     actualValue: {
+      title: string;
+      order: number;
+      itemType: string;
+    };
+    blockingAfter?: {
       title: string;
       order: number;
       itemType: string;
@@ -67,6 +76,13 @@ export interface ConditionItem {
       formattedValue: string;
       value: number;
       classes: string[];
+      link: string;
+    };
+    blockingAfter?: {
+      formattedValue: string;
+      value: number;
+      classes: string[];
+      link: string;
     };
   };
 }

@@ -39,7 +39,7 @@ describe('getPostedReviewComments', () => {
       throw new Error();
     });
     await getPostedComments();
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -55,7 +55,7 @@ describe('postErrorComment', () => {
       explorerUrls: []
     };
     await postErrorComment(analysis);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call createComment with values', async () => {
@@ -75,7 +75,7 @@ describe('postErrorComment', () => {
       issue_number: githubConfig.pullRequestNumber,
       body: 'body'
     };
-    expect(spy).toBeCalledWith(calledWith);
+    expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
   test('Should throw an error on postErrorComment', async () => {
@@ -94,7 +94,7 @@ describe('postErrorComment', () => {
     };
     await postErrorComment(analysis);
 
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -105,7 +105,7 @@ describe('postNothingAnalyzedComment', () => {
 
     const message = 'message';
     await postNothingAnalyzedComment(message);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -114,7 +114,7 @@ describe('deletePreviousComments', () => {
     const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
 
     deletePreviousComments([commentWithBody]);
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call createComment with values', async () => {
@@ -127,7 +127,7 @@ describe('deletePreviousComments', () => {
       repo: githubConfig.reponame,
       comment_id: 0
     };
-    expect(spy).toBeCalledWith(calledWith);
+    expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
   test('Should call createComment with values', async () => {
@@ -135,7 +135,7 @@ describe('deletePreviousComments', () => {
     const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
 
     deletePreviousComments([commentWithoutBody]);
-    expect(spy).toBeCalledTimes(0);
+    expect(spy).toHaveBeenCalledTimes(0);
   });
 
   test('Should throw an error on postErrorComment', async () => {
@@ -147,7 +147,7 @@ describe('deletePreviousComments', () => {
 
     deletePreviousComments([commentWithBody]);
 
-    expect(spy).toBeCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 

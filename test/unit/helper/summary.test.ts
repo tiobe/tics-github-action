@@ -1,8 +1,90 @@
+import { summary } from '@actions/core';
 import { githubConfig } from '../../../src/configuration';
 import { ChangedFile } from '../../../src/github/interfaces';
 import { ExtendedAnnotation } from '../../../src/helper/interfaces';
-import { createErrorSummary, createFilesSummary, createReviewComments, createUnpostableAnnotationsDetails } from '../../../src/helper/summary';
+import {
+  createErrorSummary,
+  createFilesSummary,
+  createReviewComments,
+  createSummaryBody,
+  createUnpostableAnnotationsDetails
+} from '../../../src/helper/summary';
 import '../../.setup/extend_jest';
+import {
+  analysisResultsSoaked,
+  analysisResultsNotSoaked,
+  analysisResultsPartlySoakedPassed,
+  analysisResultsNoSoakedPassed,
+  analysisResultsPartlySoakedFailed
+} from './objects/summary';
+
+describe('createSummaryBody', () => {
+  test('Should contain blocking after if there are soaked violations', () => {
+    const string = createSummaryBody(analysisResultsSoaked);
+
+    expect(string).toContain('<h3>:x: Failed </h3>');
+    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+    expect(string).toContain(':x: No new Coding Standard Violations');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should not contain blocking after if there are no soaked violations', () => {
+    const string = createSummaryBody(analysisResultsNotSoaked);
+
+    expect(string).toContain('<h3>:x: Failed </h3>');
+    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+    expect(string).toContain(':x: No new Coding Standard Violations');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
+    expect(string).toContain('</td><td>+39</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+30</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+24</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should contain blocking after if there are partly violations', () => {
+    const string = createSummaryBody(analysisResultsPartlySoakedPassed);
+
+    expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
+    expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
+    expect(string).toContain(':warning: No new Coding Standard Violations');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
+    expect(string).toContain('</td><td>+1</td><td>0</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should contain blocking after for one of the two conditions', () => {
+    const string = createSummaryBody(analysisResultsPartlySoakedFailed);
+
+    expect(string).toContain('<h3>:x: Failed </h3>');
+    expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
+    expect(string).toContain(':x: No new Coding Standard Violations');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
+    expect(string).toContain('</td><td>+1</td></tr></table>');
+    expect(string).toContain(':warning: No new Coding Standard Violations');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('</td><td>0</td><td>+3</td></tr></table>');
+
+    summary.clear();
+  });
+
+  test('Should pass with no conditions that passed with warnings', () => {
+    const string = createSummaryBody(analysisResultsNoSoakedPassed);
+
+    expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
+    expect(string).toContain('<h3>All conditions passed</h3>');
+
+    console.log(string);
+    summary.clear();
+  });
+});
 
 describe('createErrorSummary', () => {
   test('Should return summary of two errors', () => {

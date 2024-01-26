@@ -614,6 +614,7 @@ var Status;
 (function (Status) {
     Status["FAILED"] = "FAILED";
     Status["PASSED"] = "PASSED";
+    Status["PASSED_WITH_WARNING"] = "PASSED_WITH_WARNING";
     Status["WARNING"] = "WARNING";
     Status["SKIPPED"] = "SKIPPED";
 })(Status || (exports.Status = Status = {}));
@@ -832,6 +833,8 @@ function generateStatusMarkdown(status, hasSuffix = false) {
             return ':x: ' + (hasSuffix ? 'Failed ' : '');
         case enums_1.Status.PASSED:
             return ':heavy_check_mark: ' + (hasSuffix ? 'Passed ' : '');
+        case enums_1.Status.PASSED_WITH_WARNING:
+            return ':warning: ' + (hasSuffix ? 'Passed with warnings ' : '');
         case enums_1.Status.SKIPPED:
         case enums_1.Status.WARNING:
             return ':warning: ' + (hasSuffix ? 'Skipped ' : '');
@@ -868,26 +871,27 @@ const logger_1 = __nccwpck_require__(6440);
 function createSummaryBody(analysisResults) {
     logger_1.logger.header('Creating summary.');
     core_1.summary.addHeading('TICS Quality Gate');
-    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(analysisResults.passed ? enums_1.Status.PASSED : enums_1.Status.FAILED, true)}`, 3);
+    core_1.summary.addHeading(`${(0, markdown_1.generateStatusMarkdown)(getStatus(analysisResults.passed, analysisResults.passedWithWarning), true)}`, 3);
     analysisResults.projectResults.forEach(projectResult => {
         if (projectResult.qualityGate) {
-            const failedConditions = extractFailedConditions(projectResult.qualityGate.gates);
+            const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
             core_1.summary.addHeading(projectResult.project, 2);
-            core_1.summary.addHeading(`${failedConditions.length} Condition(s) failed`, 3);
-            failedConditions.forEach(condition => {
+            core_1.summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
+            failedOrWarnConditions.forEach(condition => {
+                const statusMarkdown = (0, markdown_1.generateStatusMarkdown)(getStatus(condition.passed, condition.passedWithWarning));
                 if (condition.details && condition.details.items.length > 0) {
-                    core_1.summary.addRaw(`\n<details><summary>:x: ${condition.message}</summary>\n`);
+                    core_1.summary.addRaw(`\n<details><summary>${statusMarkdown}${condition.message}</summary>\n`);
                     core_1.summary.addBreak();
-                    core_1.summary.addTable(createConditionTable(condition));
+                    core_1.summary.addTable(createConditionTable(condition.details));
                     core_1.summary.addRaw('</details>', true);
                 }
                 else {
-                    core_1.summary.addRaw(`\n&nbsp;&nbsp;&nbsp;:x: ${condition.message}`, true);
+                    core_1.summary.addRaw(`\n&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
                 }
             });
             core_1.summary.addEOL();
             core_1.summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
-            if (projectResult.reviewComments) {
+            if (projectResult.reviewComments && projectResult.reviewComments.unpostable.length > 0) {
                 core_1.summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
             }
             core_1.summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
@@ -897,12 +901,43 @@ function createSummaryBody(analysisResults) {
     return core_1.summary.stringify();
 }
 exports.createSummaryBody = createSummaryBody;
-function extractFailedConditions(gates) {
-    let failedConditions = [];
+function getConditionHeading(failedOrWarnConditions) {
+    const countFailedConditions = failedOrWarnConditions.filter(c => !c.passed).length;
+    const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
+    const header = [];
+    if (countFailedConditions > 0) {
+        header.push(`${countFailedConditions} Condition(s) failed`);
+    }
+    if (countWarnConditions > 0) {
+        header.push(`${countWarnConditions} Condition(s) passed with warning`);
+    }
+    if (failedOrWarnConditions.length === 0) {
+        header.push('All conditions passed');
+    }
+    return header.join(', ');
+}
+function getStatus(passed, passedWithWarning) {
+    if (!passed) {
+        return enums_1.Status.FAILED;
+    }
+    else if (passedWithWarning) {
+        return enums_1.Status.PASSED_WITH_WARNING;
+    }
+    else {
+        return enums_1.Status.PASSED;
+    }
+}
+/**
+ * Extract conditions that have failed or have passed with warning(s)
+ * @param gates Gates of a quality gate
+ * @returns Extracted conditions
+ */
+function extractFailedOrWarningConditions(gates) {
+    let failedOrWarnConditions = [];
     gates.forEach(gate => {
-        failedConditions = failedConditions.concat(gate.conditions.filter(c => !c.passed));
+        failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
     });
-    return failedConditions;
+    return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
 }
 /**
  * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
@@ -944,25 +979,36 @@ exports.createFilesSummary = createFilesSummary;
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionTable(condition) {
-    if (!condition.details)
-        return [];
-    let rows = [
-        [
-            {
-                data: 'File',
-                header: true
-            },
-            {
-                data: condition.details.dataKeys.actualValue.title,
-                header: true
-            }
-        ]
+function createConditionTable(details) {
+    let rows = [];
+    const titleRow = [
+        {
+            data: 'File',
+            header: true
+        },
+        {
+            data: details.dataKeys.actualValue.title,
+            header: true
+        }
     ];
-    condition.details.items
+    if (details.dataKeys.blockingAfter) {
+        titleRow.push({
+            data: details.dataKeys.blockingAfter.title,
+            header: true
+        });
+    }
+    rows.push(titleRow);
+    details.items
         .filter(item => item.itemType === 'file')
         .forEach(item => {
-        rows.push([`\n\n[${item.name}](${configuration_1.viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue]);
+        const dataRow = [`\n\n[${item.name}](${configuration_1.viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue];
+        if (item.data.blockingAfter) {
+            dataRow.push(item.data.blockingAfter.formattedValue);
+        }
+        else if (details.dataKeys.blockingAfter) {
+            dataRow.push('0');
+        }
+        rows.push(dataRow);
     });
     return rows;
 }
@@ -996,21 +1042,19 @@ function createReviewComments(annotations, changedFiles) {
                 unpostable.push(annotation);
             }
         }
+        else if (annotation.diffLines?.includes(annotation.line)) {
+            logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+            postable.push({
+                title: `${annotation.instanceName}: ${annotation.rule}`,
+                body: createBody(annotation, displayCount),
+                path: annotation.path,
+                line: annotation.line
+            });
+        }
         else {
-            if (annotation.diffLines?.includes(annotation.line)) {
-                logger_1.logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-                postable.push({
-                    title: `${annotation.instanceName}: ${annotation.rule}`,
-                    body: createBody(annotation, displayCount),
-                    path: annotation.path,
-                    line: annotation.line
-                });
-            }
-            else {
-                annotation.displayCount = displayCount;
-                logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-                unpostable.push(annotation);
-            }
+            annotation.displayCount = displayCount;
+            logger_1.logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+            unpostable.push(annotation);
         }
     });
     logger_1.logger.info('Created review comments from annotations.');
@@ -1051,10 +1095,8 @@ function groupAnnotations(annotations, changedFiles) {
             annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
             groupedAnnotations.push(annotation);
         }
-        else {
-            if (groupedAnnotations[index].gateId === annotation.gateId) {
-                groupedAnnotations[index].count += annotation.count;
-            }
+        else if (groupedAnnotations[index].gateId === annotation.gateId) {
+            groupedAnnotations[index].count += annotation.count;
         }
     });
     return groupedAnnotations;
@@ -1154,7 +1196,6 @@ main().catch((error) => {
     if (error instanceof Error)
         message = error.message;
     logger_1.logger.setFailed(message);
-    process.exit(1);
 });
 // exported for testing purposes
 async function main() {
@@ -1165,23 +1206,7 @@ async function main() {
         analysis = await diagnosticAnalysis();
     }
     else {
-        const changedFiles = await getChangedFiles();
-        if (changedFiles) {
-            analysis = await analyze(changedFiles);
-            if (analysis.explorerUrls.length > 0) {
-                try {
-                    await processAnalysis(analysis, changedFiles);
-                }
-                catch (error) {
-                    let message = 'Something went wrong: reason unknown';
-                    if (error instanceof Error)
-                        message = error.message;
-                    logger_1.logger.error(message);
-                    exports.actionFailed = true;
-                    analysis.errorList.unshift(message);
-                }
-            }
-        }
+        analysis = await runAnalysisMode();
     }
     if (analysis && (configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger)) {
         await (0, artifacts_1.uploadArtifact)();
@@ -1219,6 +1244,27 @@ async function getChangedFiles() {
         files: changedFiles,
         path: changedFilesFilePath
     };
+}
+async function runAnalysisMode() {
+    let analysis;
+    const changedFiles = await getChangedFiles();
+    if (changedFiles) {
+        analysis = await analyze(changedFiles);
+        if (analysis.explorerUrls.length > 0) {
+            try {
+                await processAnalysis(analysis, changedFiles);
+            }
+            catch (error) {
+                let message = 'Something went wrong: reason unknown';
+                if (error instanceof Error)
+                    message = error.message;
+                logger_1.logger.error(message);
+                exports.actionFailed = true;
+                analysis.errorList.unshift(message);
+            }
+        }
+    }
+    return analysis;
 }
 async function analyze(changedFiles) {
     const analysis = await (0, analyzer_1.runTicsAnalyzer)(changedFiles.path);
@@ -1295,13 +1341,11 @@ async function postToConversation(isGate, body, event = enums_1.Events.COMMENT) 
                 await (0, comments_1.postComment)(body);
             }
         }
+        else if (configuration_1.ticsConfig.pullRequestApproval) {
+            await (0, review_1.postNothingAnalyzedReview)(body);
+        }
         else {
-            if (configuration_1.ticsConfig.pullRequestApproval) {
-                await (0, review_1.postNothingAnalyzedReview)(body);
-            }
-            else {
-                await (0, comments_1.postNothingAnalyzedComment)(body);
-            }
+            await (0, comments_1.postNothingAnalyzedComment)(body);
         }
     }
 }
@@ -1451,13 +1495,11 @@ async function buildRunCommand(fileListPath) {
             installCommand += ' &&';
         }
     }
+    else if ((0, os_1.platform)() === 'linux') {
+        installCommand = `TICS='${configuration_1.ticsConfig.ticsConfiguration}';`;
+    }
     else {
-        if ((0, os_1.platform)() === 'linux') {
-            installCommand = `TICS='${configuration_1.ticsConfig.ticsConfiguration}';`;
-        }
-        else {
-            installCommand = `$env:TICS='${configuration_1.ticsConfig.ticsConfiguration}'`;
-        }
+        installCommand = `$env:TICS='${configuration_1.ticsConfig.ticsConfiguration}'`;
     }
     if ((0, os_1.platform)() === 'linux') {
         return `/bin/bash -c "${installCommand} ${getTicsCommand(fileListPath)}"`;
@@ -1507,6 +1549,7 @@ function getTicsCommand(fileListPath) {
         execString += configuration_1.ticsConfig.norecalc ? `-norecalc ${configuration_1.ticsConfig.norecalc} ` : '';
         execString += configuration_1.ticsConfig.codetype ? `-codetype ${configuration_1.ticsConfig.codetype} ` : '';
         execString += configuration_1.ticsConfig.clientData ? `-cdtoken ${configuration_1.ticsConfig.clientData} ` : '';
+        execString += configuration_1.ticsConfig.branchName ? `-branchname ${configuration_1.ticsConfig.branchName} ` : '';
         execString += configuration_1.ticsConfig.tmpDir || configuration_1.githubConfig.debugger ? `-tmpdir '${(0, artifacts_1.getTmpDir)()}' ` : '';
     }
     execString += configuration_1.ticsConfig.additionalFlags ? configuration_1.ticsConfig.additionalFlags : '';
@@ -1547,7 +1590,7 @@ exports.cliSummary = cliSummary;
 function getItemFromUrl(url, query) {
     let regExpr = new RegExp(`${query}\\((.*?)\\)`);
     let cleanUrl = url.replace(/\+/g, '%20');
-    let itemValue = decodeURIComponent(cleanUrl).match(regExpr);
+    let itemValue = RegExp(regExpr).exec(decodeURIComponent(cleanUrl));
     if (itemValue && itemValue.length >= 2) {
         logger_1.logger.debug(`Retrieved ${query} value: ${itemValue[1]}`);
         return itemValue[1];
@@ -1613,6 +1656,7 @@ const error_1 = __nccwpck_require__(5922);
 async function getAnalysisResults(explorerUrls, changedFiles) {
     let analysisResults = {
         passed: true,
+        passedWithWarning: false,
         message: '',
         missesQualityGate: false,
         projectResults: []
@@ -1635,20 +1679,24 @@ async function getAnalysisResults(explorerUrls, changedFiles) {
             analysisResults.passed = false;
             analysisResults.missesQualityGate = true;
         }
-        if (qualityGate && !qualityGate.passed) {
-            analysisResults.passed = false;
-            analysisResults.message += qualityGate.message + '; ';
-        }
-        if (qualityGate && configuration_1.ticsConfig.postAnnotations) {
-            // import of itself is used for mocking the function in the same file
-            const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
-            if (annotations && annotations.length > 0) {
-                analysisResult.reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
+        else {
+            if (!qualityGate.passed) {
+                analysisResults.passed = false;
+                analysisResults.message += qualityGate.message + '; ';
+            }
+            if (configuration_1.ticsConfig.postAnnotations) {
+                // import of itself is used for mocking the function in the same file
+                const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
+                if (annotations && annotations.length > 0) {
+                    analysisResult.reviewComments = (0, summary_1.createReviewComments)(annotations, changedFiles);
+                }
             }
         }
         analysisResult.qualityGate = qualityGate;
         analysisResults.projectResults.push(analysisResult);
     }
+    analysisResults.passedWithWarning =
+        analysisResults.passed && analysisResults.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
     // Remove trailing space from the message
     analysisResults.message = analysisResults.message.trimEnd();
     return analysisResults;
