@@ -46,19 +46,6 @@ jobs:
 
 Linux and Windows based runners, both Github-hosted and self-hosted, are supported.
 
-### Environment Variables
-
-**This method has been depricated as of version 2.0 and has been moved to the action parameters**. The environment variables that are needed for the action to function.
-
-```
-env:
-    GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-    TICSAUTHTOKEN: ${{secrets.TICSAUTHTOKEN}}
-```
-
-- `GITHUB_TOKEN` – Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)).
-- `TICSAUTHTOKEN` – It is required only when the TICS viewer is not publicly accessible and requires an authentication token. You can create a TICS Viewer Authentication token of role 'TICS Client' (see [Configuring a token for TICS Client](https://demo.tiobe.com/tiobeweb/TICS/docs/index.html#doc=admin/admin_11_viewer.html%23auth-token)). You can then assign the TICSAUTHTOKEN value in the "Secrets" settings page of your repository, or add them at the level of your GitHub organization.
-
 ### Action Parameters
 
 The following inputs are available for this action:
