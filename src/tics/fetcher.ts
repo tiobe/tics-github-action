@@ -205,11 +205,6 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
             };
             extendedAnnotation.gateId = index;
 
-            // parse the after date from (unix)epoch to JavaScript Date
-            if (extendedAnnotation.blocking && extendedAnnotation.blocking.state === 'after' && extendedAnnotation.blocking.after) {
-              extendedAnnotation.blocking.after = new Date(extendedAnnotation.blocking.after);
-            }
-
             logger.debug(JSON.stringify(extendedAnnotation));
             annotations.push(extendedAnnotation);
           });

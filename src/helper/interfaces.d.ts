@@ -152,7 +152,7 @@ export interface Annotation {
   synopsis?: string;
   blocking?: {
     state: 'yes' | 'after';
-    after?: Date;
+    after?: number;
   };
 }
 

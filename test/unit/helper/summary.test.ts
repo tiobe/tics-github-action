@@ -17,6 +17,7 @@ import {
   analysisResultsNoSoakedPassed,
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
+import { EOL } from 'os';
 
 describe('createSummaryBody', () => {
   test('Should contain blocking after if there are soaked violations', () => {
@@ -179,7 +180,7 @@ describe('createReviewComments', () => {
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: test\r\nLevel: 1, Category: test'
+        body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -230,7 +231,7 @@ describe('createReviewComments', () => {
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: (2x) test\r\nLevel: 1, Category: test'
+        body: `Blocking now${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -292,7 +293,7 @@ describe('createReviewComments', () => {
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: test\r\nLevel: 1, Category: test'
+        body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -390,7 +391,7 @@ test('Should return one postable and one unpostable review comment', async () =>
       title: 'test: test',
       path: 'src/test.js',
       line: 0,
-      body: 'Line: 0: test\r\nLevel: 1, Category: test'
+      body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
     }
   ];
 

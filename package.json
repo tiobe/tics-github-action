@@ -39,6 +39,7 @@
     "@tiobe/install-tics": "^0.5.0",
     "canonical-path": "^1.0.0",
     "compare-versions": "^6.1.0",
+    "date-fns": "^3.3.1",
     "proxy-agent": "^6.3.1",
     "semver": "^7.5.4",
     "underscore": "^1.13.6"

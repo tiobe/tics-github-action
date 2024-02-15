@@ -16,6 +16,8 @@ import { githubConfig, viewerUrl } from '../configuration';
 import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
+import { EOL } from 'os';
+import { format } from 'date-fns';
 
 export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
@@ -228,9 +230,16 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
 }
 
 function createBody(annotation: Annotation, displayCount: string) {
-  let body = `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
-  body += `\r\nLevel: ${annotation.level}, Category: ${annotation.category}`;
-  body += annotation.ruleHelp ? `\r\nRule help: ${annotation.ruleHelp}` : '';
+  let body = '';
+  if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
+  } else {
+    body += `Blocking now`;
+  }
+
+  body += `${EOL}Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
+  body += `${EOL}Level: ${annotation.level}, Category: ${annotation.category}`;
+  body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
   return body;
 }
