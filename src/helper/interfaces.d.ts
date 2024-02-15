@@ -121,7 +121,7 @@ export interface HttpResponse {
   alertMessages: { header: string }[];
 }
 
-export interface AnnotationResonse {
+export interface AnnotationResponse {
   header: {
     title: string;
   };
@@ -150,6 +150,10 @@ export interface Annotation {
   diffLines?: number[];
   ruleHelp?: string;
   synopsis?: string;
+  blocking?: {
+    state: 'yes' | 'after';
+    after?: Date;
+  };
 }
 
 export interface ExtendedAnnotation extends Annotation {

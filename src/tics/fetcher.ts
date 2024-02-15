@@ -7,7 +7,7 @@ import {
   AnalyzedFiles,
   Annotation,
   AnnotationApiLink,
-  AnnotationResonse,
+  AnnotationResponse,
   ExtendedAnnotation,
   QualityGate,
   VersionResponse
@@ -165,6 +165,7 @@ function getQualityGateUrl(url: string) {
   }
 
   qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
+  qualityGateUrl.searchParams.append('includeFields ', 'blockingAfter');
 
   const clientData = getItemFromUrl(url, 'ClientData');
   qualityGateUrl.searchParams.append('cdt', clientData);
@@ -185,9 +186,17 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
     await Promise.all(
       apiLinks.map(async (link, index) => {
         const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
-        annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
+
+        let fields = annotationsUrl.searchParams.get('fields');
+        const requiredFields = 'default,ruleHelp,synopsis';
+        if (fields !== null) {
+          annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
+        } else {
+          annotationsUrl.searchParams.append('fields', requiredFields);
+        }
+
         logger.debug(`From: ${annotationsUrl.href}`);
-        const response = await httpClient.get<AnnotationResonse>(annotationsUrl.href);
+        const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
         if (response) {
           response.data.data.forEach((annotation: Annotation) => {
             const extendedAnnotation: ExtendedAnnotation = {
@@ -195,6 +204,12 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
               instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
             };
             extendedAnnotation.gateId = index;
+
+            // parse the after date from (unix)epoch to JavaScript Date
+            if (extendedAnnotation.blocking && extendedAnnotation.blocking.state === 'after' && extendedAnnotation.blocking.after) {
+              extendedAnnotation.blocking.after = new Date(extendedAnnotation.blocking.after);
+            }
+
             logger.debug(JSON.stringify(extendedAnnotation));
             annotations.push(extendedAnnotation);
           });
