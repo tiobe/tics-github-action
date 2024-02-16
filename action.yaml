@@ -11,6 +11,7 @@ inputs:
   githubToken:
     desctiption: Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)), can be overridden if needed.
     required: false
+    default: ${{ github.token }}
   additionalFlags:
     description: Option to add flags to the TICS command.
     required: false

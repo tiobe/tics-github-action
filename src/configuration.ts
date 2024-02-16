@@ -52,7 +52,7 @@ function getRetryCodes(retryCodes?: string): number[] {
 export const ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
-  githubToken: getInput('githubToken') || process.env.GITHUB_TOKEN || '',
+  githubToken: getInput('githubToken'),
   additionalFlags: getInput('additionalFlags'),
   branchName: getInput('branchName'),
   clientData: getInput('clientData'),
@@ -105,8 +105,6 @@ const octokitOptions: OctokitOptions = {
     retryAfter: retryConfig.delay
   }
 };
-
-console.log(process.env);
 
 export const octokit = getOctokit(ticsConfig.githubToken, octokitOptions, retry);
 export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration).href;
