@@ -38,21 +38,23 @@ jobs:
           projectName: project-name
           ticsConfiguration: https://domain.com/tiobeweb/TICS/api/cfg?name=config
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
 ```
 
 ### Action Runners
 
 Linux and Windows based runners, both Github-hosted and self-hosted, are supported.
 
-### Required parameters
+### Recommended parameters
 
-The following inputs are required for this action:
+The following inputs are recommended or required for this action:
 
-| Input               | Description                                                                                                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectName`       | Name of the TICS project present in the TICS Viewer.                                                                                                              |
-| `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration. |
-| `ticsAuthToken`     | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                               |
+| Input               | Description                                                                                                                                                                            | Required |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `projectName`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                   | true     |
+| `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                      | true     |
+| `ticsAuthToken`     | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                    | false    |
+| `installTics`       | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job. | false    |
 
 ### Optional parameters
 
@@ -64,7 +66,6 @@ The following inputs are required for this action:
 | `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be used. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                 | `GATE`                                   |
 | `recalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                    | -                                        |
 | `clientData`           | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                           | -                                        |
-| `installTics`          | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job.                                                                                                   | `true`                                   |
 | `branchName`           | Name of the branch in TICS.                                                                                                                                                                                                                                                              | -                                        |
 | `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE` and `EXTERNAL`.                                                                                                                                           | `PRODUCTION`                             |
 | `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                                                                                                                                                          | `false`                                  |

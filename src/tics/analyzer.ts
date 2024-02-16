@@ -120,10 +120,10 @@ function getTicsCommand(fileListPath: string) {
       execString += `'@${fileListPath}' -viewer `;
     }
     execString += `-project '${ticsConfig.projectName}' `;
-    execString += `-calc ${ticsConfig.calc} `;
-    execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
     execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
     execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
+    execString += `-calc ${ticsConfig.calc} `;
+    execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
     execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
     execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
     execString += ticsConfig.branchName ? `-branchname ${ticsConfig.branchName} ` : '';
