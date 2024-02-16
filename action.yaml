@@ -2,15 +2,15 @@ name: TICS Code Quality Analysis
 author: TIOBE Software
 description: Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.
 inputs:
-  githubToken:
-    desctiption: Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)).
-    required: true
   projectName:
     description: Name of the TICS project
     required: true
   ticsConfiguration:
     description: A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration
     required: true
+  githubToken:
+    desctiption: Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)), can be overridden if needed.
+    required: false
   additionalFlags:
     description: Option to add flags to the TICS command.
     required: false
@@ -63,7 +63,7 @@ inputs:
     required: false
     default: default
   postAnnotations:
-    description: Show the latest TICS annotations directly in the GitHub Pull Request review.
+    description: Show the TICS violations in the changed files window. Options are `true` or `false` (default is `true`).
     required: false
     default: true
   postToConversation:
@@ -80,6 +80,10 @@ inputs:
   secretsFilter:
     description: Comma-seperated list of extra secrets to mask in the console output.
     required: false
+  showBlockingAfter:
+    description: Show the blocking after violations in the changed files window. Options are `true` or `false` (default is `true`).
+    required: false
+    default: true
   ticsAuthToken:
     description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
     required: false

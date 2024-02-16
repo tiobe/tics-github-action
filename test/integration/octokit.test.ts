@@ -17,6 +17,7 @@ process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
+process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 
 // eslint-disable-next-line import/first
 import { octokit } from '../../src/configuration';

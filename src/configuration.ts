@@ -15,7 +15,6 @@ export const githubConfig = {
   reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
   branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
   basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-  branchdir: process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : '',
   commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
   eventName: context.eventName,
   id: `${context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT || randomBytes(4).toString('hex')}`,
@@ -51,11 +50,10 @@ function getRetryCodes(retryCodes?: string): number[] {
 }
 
 export const ticsConfig = {
-  githubToken: getInput('githubToken', { required: true }),
   projectName: getInput('projectName', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
+  githubToken: getInput('githubToken') ?? process.env.GITHUB_TOKEN ?? '',
   additionalFlags: getInput('additionalFlags'),
-  branchDir: getInput('branchDir'),
   branchName: getInput('branchName'),
   clientData: getInput('clientData'),
   codetype: getInput('codetype'),
@@ -76,6 +74,7 @@ export const ticsConfig = {
   tmpDir: getInput('tmpDir'),
   trustStrategy: getInput('trustStrategy'),
   secretsFilter: getSecretsFilter(getInput('secretsFilter')),
+  showBlockingAfter: getBooleanInput('showBlockingAfter'),
   viewerUrl: getInput('viewerUrl')
 };
 

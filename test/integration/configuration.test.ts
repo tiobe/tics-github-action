@@ -1,5 +1,3 @@
-import { context } from '@actions/github';
-
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
 process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
@@ -8,6 +6,7 @@ process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
+process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 
 beforeEach(() => {
   jest.resetModules();

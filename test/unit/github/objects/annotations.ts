@@ -88,6 +88,7 @@ export const analysisResults: AnalysisResults = {
       reviewComments: {
         postable: [
           {
+            blocking: undefined,
             title: '',
             body: '',
             line: 0

@@ -82,7 +82,6 @@ describe('createSummaryBody', () => {
     expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
     expect(string).toContain('<h3>All conditions passed</h3>');
 
-    console.log(string);
     summary.clear();
   });
 });

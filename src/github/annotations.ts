@@ -1,5 +1,5 @@
 import { logger } from '../helper/logger';
-import { githubConfig, octokit } from '../configuration';
+import { githubConfig, octokit, ticsConfig } from '../configuration';
 import { ReviewComment } from './interfaces';
 import { AnalysisResults, TicsReviewComment } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/error';
@@ -42,11 +42,19 @@ export function postAnnotations(analysisResult: AnalysisResults): void {
   });
 
   postableReviewComments.forEach(reviewComment => {
-    logger.warning(reviewComment.body, {
-      file: reviewComment.path,
-      startLine: reviewComment.line,
-      title: reviewComment.title
-    });
+    if (reviewComment.blocking === undefined || reviewComment.blocking === 'yes') {
+      logger.warning(reviewComment.body, {
+        file: reviewComment.path,
+        startLine: reviewComment.line,
+        title: reviewComment.title
+      });
+    } else if (reviewComment.blocking === 'after' && ticsConfig.showBlockingAfter) {
+      logger.notice(reviewComment.body, {
+        file: reviewComment.path,
+        startLine: reviewComment.line,
+        title: reviewComment.title
+      });
+    }
   });
   logger.info('Posted all postable annotations (none if there are no violations).');
 }

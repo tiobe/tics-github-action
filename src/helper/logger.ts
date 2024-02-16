@@ -38,8 +38,20 @@ class Logger {
   }
 
   /**
+   * Uses core.notice to print to the console.
+   * @param string
+   * @param properties (optional) properties to annotate to file
+   */
+  notice(string: string, properties?: AnnotationProperties): void {
+    string = this.maskSecrets(string);
+    core.notice(string, properties);
+    this.called = 'notice';
+  }
+
+  /**
    * Uses core.warning to print to the console.
    * @param string
+   * @param properties (optional) properties to annotate to file
    */
   warning(string: string, properties?: AnnotationProperties): void {
     string = this.maskSecrets(string);
@@ -50,6 +62,7 @@ class Logger {
   /**
    * Uses core.error to print to the console with a red color.
    * @param error
+   * @param properties (optional) properties to annotate to file
    */
   error(error: string, properties?: AnnotationProperties): void {
     error = this.maskSecrets(error);

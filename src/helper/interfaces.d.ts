@@ -96,6 +96,7 @@ export interface TicsReviewComment {
   body: string;
   path?: string;
   line: number;
+  blocking: 'yes' | 'no' | 'after' | undefined;
 }
 
 export interface TicsReviewComments {
@@ -151,7 +152,7 @@ export interface Annotation {
   ruleHelp?: string;
   synopsis?: string;
   blocking?: {
-    state: 'yes' | 'after';
+    state: 'yes' | 'no' | 'after';
     after?: number;
   };
 }

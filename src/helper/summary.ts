@@ -201,6 +201,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
       if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
         logger.debug(`Postable: ${JSON.stringify(annotation)}`);
         postable.push({
+          blocking: annotation.blocking?.state,
           title: `${annotation.instanceName}: ${annotation.rule}`,
           body: createBody(annotation, displayCount),
           path: annotation.path,
@@ -214,6 +215,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
     } else if (annotation.diffLines?.includes(annotation.line)) {
       logger.debug(`Postable: ${JSON.stringify(annotation)}`);
       postable.push({
+        blocking: annotation.blocking?.state,
         title: `${annotation.instanceName}: ${annotation.rule}`,
         body: createBody(annotation, displayCount),
         path: annotation.path,
