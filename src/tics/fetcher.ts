@@ -165,7 +165,7 @@ function getQualityGateUrl(url: string) {
   }
 
   qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
-  qualityGateUrl.searchParams.append('includeFields ', 'blockingAfter');
+  qualityGateUrl.searchParams.append('includeFields', 'blockingAfter');
 
   const clientData = getItemFromUrl(url, 'ClientData');
   qualityGateUrl.searchParams.append('cdt', clientData);
