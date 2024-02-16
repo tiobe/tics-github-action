@@ -106,6 +106,8 @@ const octokitOptions: OctokitOptions = {
   }
 };
 
+console.log(process.env);
+
 export const octokit = getOctokit(ticsConfig.githubToken, octokitOptions, retry);
 export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration).href;
 export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
