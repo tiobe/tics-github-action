@@ -6,18 +6,14 @@ import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 import { EOL } from 'os';
 import { getBaseUrl } from '@tiobe/install-tics';
-import { randomBytes } from 'crypto';
 
 export const githubConfig = {
-  baseUrl: process.env.GITHUB_API_URL ? process.env.GITHUB_API_URL : 'https://api.github.com',
-  repo: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY : '',
-  owner: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[0] : '',
-  reponame: process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '',
-  branchname: process.env.GITHUB_HEAD_REF ? process.env.GITHUB_HEAD_REF : '',
-  basebranchname: process.env.GITHUB_BASE_REF ? process.env.GITHUB_BASE_REF : '',
-  commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA : '',
+  apiUrl: context.apiUrl,
+  owner: context.repo.owner,
+  reponame: context.repo.repo,
+  commitSha: context.sha,
   eventName: context.eventName,
-  id: `${context.runId.toString()}-${process.env.GITHUB_RUN_ATTEMPT || randomBytes(4).toString('hex')}`,
+  id: `${context.runId.toString()}-${context.runNumber.toString()}`,
   pullRequestNumber: getPullRequestNumber(),
   debugger: isDebug()
 };
@@ -37,7 +33,9 @@ function getSecretsFilter(secretsFilter: string | undefined) {
   const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
 
   const combinedFilters = defaults.concat(keys);
-  if (githubConfig.debugger) process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
+  if (githubConfig.debugger) {
+    process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
+  }
 
   return combinedFilters;
 }
@@ -78,10 +76,6 @@ export const ticsConfig = {
   viewerUrl: getInput('viewerUrl')
 };
 
-// This will mask all occurences of these tokens
-setSecret(ticsConfig.ticsAuthToken);
-setSecret(ticsConfig.githubToken);
-
 const retryConfig = {
   maxRetries: 10,
   delay: 5
@@ -102,7 +96,7 @@ export const httpClient = new HttpClient(
 );
 
 const octokitOptions: OctokitOptions = {
-  baseUrl: githubConfig.baseUrl,
+  baseUrl: githubConfig.apiUrl,
   request: {
     agent: new ProxyAgent(),
     retries: retryConfig.maxRetries,

@@ -21,7 +21,12 @@ describe('pullRequestNumber', () => {
             pull_request: { number: 1 }
           },
           eventName: 'pull_request',
-          runId: 1
+          runId: 1,
+          runNumber: 1,
+          repo: {
+            owner: 'owner',
+            repo: 'repo'
+          }
         },
         getOctokit: jest.fn()
       };
@@ -40,7 +45,12 @@ describe('pullRequestNumber', () => {
             pull_request: undefined
           },
           eventName: 'pull_request',
-          runId: 1
+          runId: 1,
+          runNumber: 1,
+          repo: {
+            owner: 'owner',
+            repo: 'repo'
+          }
         },
         getOctokit: jest.fn()
       };
@@ -61,7 +71,12 @@ describe('pullRequestNumber', () => {
             pull_request: undefined
           },
           eventName: 'pull_request',
-          runId: 1
+          runId: 1,
+          runNumber: 1,
+          repo: {
+            owner: 'owner',
+            repo: 'repo'
+          }
         },
         getOctokit: jest.fn()
       };

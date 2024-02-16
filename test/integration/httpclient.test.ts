@@ -8,6 +8,7 @@ const originalProxyUrl = process.env['http_proxy'];
 process.env['http_proxy'] = proxyUrl;
 
 // set required inputs
+process.env.GITHUB_REPOSITORY = 'owner/repo';
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
 process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
