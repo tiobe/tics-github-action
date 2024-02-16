@@ -92,12 +92,20 @@ describe('getAnnotations', () => {
           Promise.resolve({ data: { data: [{ type: 'CS' }], annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } } } })
       );
 
-    const response = await fetcher.getAnnotations([{ url: 'url' }, { url: 'url' }]);
+    const response = await fetcher.getAnnotations([{ url: 'url?fields=default,blocking' }, { url: 'url' }]);
 
     expect(response).toEqual([
       { type: 'CS', gateId: 0, instanceName: 'CS' },
       { type: 'CS', gateId: 1, instanceName: 'Coding Standard Violations' }
     ]);
+  });
+
+  test('Should return no analyzed files when no urls are given', async () => {
+    jest.spyOn(api_helper, 'getItemFromUrl').mockReturnValueOnce('clientData');
+
+    const response = await fetcher.getAnnotations([]);
+
+    expect(response).toEqual([]);
   });
 
   test('Should throw error on faulty get in getAnnotations', async () => {
