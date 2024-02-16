@@ -205,7 +205,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -recalc CY -norecalc CD -calc CS -nocalc CW -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -239,7 +239,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github . -viewer -project 'project' -recalc CY -norecalc CD -calc CS -nocalc CW -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github . -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
