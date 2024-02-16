@@ -122,7 +122,7 @@ describe('secretsFilter', () => {
 
     const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
 
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token']);
+    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization']);
   });
 
   test('Should add custom secretsFilter when given correctly', async () => {
@@ -130,6 +130,6 @@ describe('secretsFilter', () => {
 
     const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
 
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'TOKEN', 'AUTH;STEM']);
+    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization', 'TOKEN', 'AUTH;STEM']);
   });
 });

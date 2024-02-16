@@ -49,12 +49,12 @@ Linux and Windows based runners, both Github-hosted and self-hosted, are support
 
 The following inputs are recommended or required for this action:
 
-| Input               | Description                                                                                                                                                                            | Required |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `projectName`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                   | true     |
-| `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                      | true     |
-| `ticsAuthToken`     | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                    | false    |
-| `installTics`       | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job. | false    |
+| Input               | Description                                                                                                                                                                                                      | Required |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `projectName`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                             | true     |
+| `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
+| `ticsAuthToken`     | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
+| `installTics`       | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ### Optional parameters
 
