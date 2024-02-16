@@ -14,11 +14,8 @@ jobs:
         env:
           INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: TICS GitHub Action
-        uses: tiobe/tics-github-action@v2
+        uses: tiobe/tics-github-action@33663-blocking_after_annotations
         with:
           projectName: GitHub
           ticsConfiguration: https://eboit.tiobe.com/tiobeweb/TICS/api/cfg?name=main
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
           ticsAuthToken: ${{ secrets.EBOIT_CLIENT_TOKEN }}
-          installTics: true
-          postAnnotations: true

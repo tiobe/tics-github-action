@@ -52,7 +52,7 @@ function getRetryCodes(retryCodes?: string): number[] {
 export const ticsConfig = {
   projectName: getInput('projectName', { required: true }),
   ticsConfiguration: getInput('ticsConfiguration', { required: true }),
-  githubToken: getInput('githubToken') ?? process.env.GITHUB_TOKEN ?? '',
+  githubToken: getInput('githubToken') || process.env.GITHUB_TOKEN || '',
   additionalFlags: getInput('additionalFlags'),
   branchName: getInput('branchName'),
   clientData: getInput('clientData'),
