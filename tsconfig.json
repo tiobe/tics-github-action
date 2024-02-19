@@ -6,14 +6,9 @@
     "rootDir": "./src",
     "strict": true,
     "noImplicitAny": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "**/*.test.ts"
-  ],
-  "include": [
-    "src/**/*"
-  ]
+  "exclude": ["dist", "node_modules", "**/*.test.ts"],
+  "include": ["src/**/*"]
 }
