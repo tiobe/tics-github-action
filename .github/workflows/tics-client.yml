@@ -20,3 +20,4 @@ jobs:
           ticsConfiguration: https://eboit.tiobe.com/tiobeweb/TICS/api/cfg?name=main
           ticsAuthToken: ${{ secrets.EBOIT_CLIENT_TOKEN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          installTics: true
