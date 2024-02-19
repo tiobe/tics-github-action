@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput, isDebug, setSecret } from '@actions/core';
+import { getBooleanInput, getInput, isDebug } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { retry } from '@octokit/plugin-retry';
 import { OctokitOptions } from '@octokit/core/dist-types/types';
