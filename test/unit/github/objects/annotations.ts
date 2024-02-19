@@ -1,5 +1,5 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
-import { AnalysisResults } from '../../../../src/helper/interfaces';
+import { AnalysisResults, TicsReviewComment } from '../../../../src/helper/interfaces';
 
 export const user: User = {
   login: '',
@@ -95,6 +95,126 @@ export const analysisResults: AnalysisResults = {
           }
         ],
         unpostable: []
+      }
+    }
+  ],
+  passedWithWarning: false
+};
+
+const twoAnnotations: TicsReviewComment[] = [
+  {
+    path: 'path0.js',
+    blocking: 'yes',
+    title: 'title 0',
+    body: 'body 0',
+    line: 0
+  },
+  {
+    path: 'path1.js',
+    blocking: 'after',
+    title: 'title 1',
+    body: 'body 1',
+    line: 1
+  }
+];
+
+const fourAnnotations: TicsReviewComment[] = [
+  {
+    path: 'path0.js',
+    blocking: 'yes',
+    title: 'title 0',
+    body: 'body 0',
+    line: 0
+  },
+  {
+    path: 'path1.js',
+    blocking: 'after',
+    title: 'title 1',
+    body: 'body 1',
+    line: 1
+  },
+  {
+    path: 'path2.js',
+    blocking: 'yes',
+    title: 'title 2',
+    body: 'body 2',
+    line: 2
+  },
+  {
+    path: 'path3.js',
+    blocking: 'after',
+    title: 'title 3',
+    body: 'body 3',
+    line: 3
+  }
+];
+
+export const twoMixedAnalysisResults: AnalysisResults = {
+  passed: false,
+  message: '',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      project: '',
+      explorerUrl: '',
+      analyzedFiles: [],
+      reviewComments: {
+        postable: twoAnnotations,
+        unpostable: [
+          {
+            fullPath: 'path2.js',
+            line: 2,
+            level: 2,
+            category: 'category 2',
+            rule: 'rule 2',
+            msg: 'message 2',
+            supp: false,
+            type: 'type 2',
+            count: 1,
+            gateId: 1,
+            displayCount: '1x',
+            blocking: {
+              state: 'yes'
+            },
+            instanceName: 'CS'
+          }
+        ]
+      }
+    }
+  ],
+  passedWithWarning: false
+};
+
+export const fourMixedAnalysisResults: AnalysisResults = {
+  passed: false,
+  message: '',
+  missesQualityGate: false,
+  projectResults: [
+    {
+      project: '',
+      explorerUrl: '',
+      analyzedFiles: [],
+      reviewComments: {
+        postable: fourAnnotations,
+        unpostable: [
+          {
+            fullPath: 'path2.js',
+            line: 2,
+            level: 2,
+            category: 'category 2',
+            rule: 'rule 2',
+            msg: 'message 2',
+            supp: false,
+            type: 'type 2',
+            count: 1,
+            gateId: 1,
+            displayCount: '1x',
+            blocking: {
+              state: 'yes'
+            },
+            instanceName: 'CS'
+          }
+        ]
       }
     }
   ],
