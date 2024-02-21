@@ -42703,6 +42703,7 @@ const tls = __importStar(__nccwpck_require__(4404));
 const debug_1 = __importDefault(__nccwpck_require__(8237));
 const events_1 = __nccwpck_require__(2361);
 const agent_base_1 = __nccwpck_require__(694);
+const url_1 = __nccwpck_require__(7310);
 const debug = (0, debug_1.default)('http-proxy-agent');
 /**
  * The `HttpProxyAgent` implements an HTTP Agent subclass that connects
@@ -42711,7 +42712,7 @@ const debug = (0, debug_1.default)('http-proxy-agent');
 class HttpProxyAgent extends agent_base_1.Agent {
     constructor(proxy, opts) {
         super(opts);
-        this.proxy = typeof proxy === 'string' ? new URL(proxy) : proxy;
+        this.proxy = typeof proxy === 'string' ? new url_1.URL(proxy) : proxy;
         this.proxyHeaders = opts?.headers ?? {};
         debug('Creating new HttpProxyAgent instance: %o', this.proxy.href);
         // Trim off the brackets from IPv6 addresses
@@ -42738,7 +42739,7 @@ class HttpProxyAgent extends agent_base_1.Agent {
         const protocol = opts.secureEndpoint ? 'https:' : 'http:';
         const hostname = req.getHeader('host') || 'localhost';
         const base = `${protocol}//${hostname}`;
-        const url = new URL(req.path, base);
+        const url = new url_1.URL(req.path, base);
         if (opts.port !== 80) {
             url.port = String(opts.port);
         }
@@ -42857,6 +42858,7 @@ const tls = __importStar(__nccwpck_require__(4404));
 const assert_1 = __importDefault(__nccwpck_require__(9491));
 const debug_1 = __importDefault(__nccwpck_require__(8237));
 const agent_base_1 = __nccwpck_require__(694);
+const url_1 = __nccwpck_require__(7310);
 const parse_proxy_response_1 = __nccwpck_require__(595);
 const debug = (0, debug_1.default)('https-proxy-agent');
 /**
@@ -42875,7 +42877,7 @@ class HttpsProxyAgent extends agent_base_1.Agent {
     constructor(proxy, opts) {
         super(opts);
         this.options = { path: undefined };
-        this.proxy = typeof proxy === 'string' ? new URL(proxy) : proxy;
+        this.proxy = typeof proxy === 'string' ? new url_1.URL(proxy) : proxy;
         this.proxyHeaders = opts?.headers ?? {};
         debug('Creating new HttpsProxyAgent instance: %o', this.proxy.href);
         // Trim off the brackets from IPv6 addresses
@@ -42909,7 +42911,7 @@ class HttpsProxyAgent extends agent_base_1.Agent {
             const servername = this.connectOpts.servername || this.connectOpts.host;
             socket = tls.connect({
                 ...this.connectOpts,
-                servername: servername && net.isIP(servername) ? undefined : servername
+                servername: servername && net.isIP(servername) ? undefined : servername,
             });
         }
         else {
@@ -48251,7 +48253,7 @@ class ProxyAgent extends agent_base_1.Agent {
                 : 'http:';
         const host = req.getHeader('host');
         const url = new url_1.URL(req.path, `${protocol}//${host}`).href;
-        const proxy = this.getProxyForUrl(url);
+        const proxy = await this.getProxyForUrl(url);
         if (!proxy) {
             debug('Proxy not enabled for URL: %o', url);
             return secureEndpoint ? this.httpsAgent : this.httpAgent;
