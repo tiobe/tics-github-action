@@ -135,12 +135,10 @@ describe('SetFailed checks', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
-    const spyError = jest.spyOn(logger, 'error');
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
-    expect(spyError).toHaveBeenCalledWith(expect.stringContaining('Explorer URL not returned from TICS analysis.'));
+    expect(spySetFailed).toHaveBeenCalledWith('Explorer URL not returned from TICS analysis.');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
@@ -153,12 +151,9 @@ describe('SetFailed checks', () => {
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
-    const spyError = jest.spyOn(logger, 'error');
-
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
-    expect(spyError).toHaveBeenCalledWith('Some quality gates could not be retrieved.');
+    expect(spySetFailed).toHaveBeenCalledWith('Some quality gates could not be retrieved.');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
@@ -172,12 +167,10 @@ describe('SetFailed checks', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
-    const spyError = jest.spyOn(logger, 'error');
 
     await main.main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
-    expect(spyError).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
+    expect(spySetFailed).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
   });
 
