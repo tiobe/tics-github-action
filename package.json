@@ -40,13 +40,13 @@
     "canonical-path": "^1.0.0",
     "compare-versions": "^6.1.0",
     "date-fns": "^3.3.1",
-    "proxy-agent": "^6.3.1",
-    "semver": "^7.5.4",
+    "proxy-agent": "^6.4.0",
+    "semver": "^7.6.0",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.11",
-    "@types/node": "^20.11.17",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
     "@types/underscore": "^1.11.15",
     "@typescript-eslint/parser": "^7.0.1",
     "@vercel/ncc": "^0.38.1",
