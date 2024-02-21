@@ -176,10 +176,11 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        blocking: undefined,
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
+        body: `Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -198,7 +199,7 @@ describe('createReviewComments', () => {
         changes: 2
       }
     ];
-    const annotations = [
+    const annotations: ExtendedAnnotation[] = [
       {
         fullPath: 'c:/src/test.js',
         line: 0,
@@ -209,7 +210,10 @@ describe('createReviewComments', () => {
         msg: 'test',
         count: 1,
         supp: false,
-        instanceName: 'test'
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        }
       },
       {
         fullPath: 'c:/src/test.js',
@@ -221,16 +225,20 @@ describe('createReviewComments', () => {
         msg: 'test',
         count: 1,
         supp: false,
-        instanceName: 'test'
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        }
       }
     ];
 
     const expected_postable = [
       {
+        blocking: 'yes',
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: `Blocking now${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
+        body: `Blocking${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -289,7 +297,7 @@ describe('createReviewComments', () => {
         title: 'test: rule-now',
         path: 'src/test.js',
         line: 0,
-        body: `Blocking now${EOL}Line: 0: message-now${EOL}Level: 1, Category: test`
+        body: `Blocking${EOL}Line: 0: message-now${EOL}Level: 1, Category: test`
       },
       {
         blocking: 'after',
@@ -355,10 +363,11 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        blocking: undefined,
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
+        body: `Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -457,7 +466,7 @@ test('Should return one postable and one unpostable review comment', async () =>
       title: 'test: test',
       path: 'src/test.js',
       line: 0,
-      body: `Blocking now${EOL}Line: 0: test${EOL}Level: 1, Category: test`
+      body: `Line: 0: test${EOL}Level: 1, Category: test`
     }
   ];
 

@@ -234,12 +234,12 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
 function createBody(annotation: Annotation, displayCount: string) {
   let body = '';
   if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
-  } else {
-    body += `Blocking now`;
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
+  } else if (annotation.blocking?.state === 'yes') {
+    body += `Blocking${EOL}`;
   }
 
-  body += `${EOL}Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
+  body += `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
   body += `${EOL}Level: ${annotation.level}, Category: ${annotation.category}`;
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
