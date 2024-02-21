@@ -153,7 +153,7 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   }
 
   if (!analysisResults.passed) {
-    actionFailed = analysisResults.message;
+    actionFailed = analysisResults.failureMessage;
   }
 }
 

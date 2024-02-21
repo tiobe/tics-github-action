@@ -78,7 +78,7 @@ export const emptyComment: ReviewComment = {
 
 export const analysisResults: AnalysisResults = {
   passed: false,
-  message: '',
+  failureMessage: '',
   missesQualityGate: false,
   projectResults: [
     {
@@ -151,7 +151,7 @@ const fourAnnotations: TicsReviewComment[] = [
 
 export const twoMixedAnalysisResults: AnalysisResults = {
   passed: false,
-  message: '',
+  failureMessage: '',
   missesQualityGate: false,
   projectResults: [
     {
@@ -187,7 +187,7 @@ export const twoMixedAnalysisResults: AnalysisResults = {
 
 export const fourMixedAnalysisResults: AnalysisResults = {
   passed: false,
-  message: '',
+  failureMessage: '',
   missesQualityGate: false,
   projectResults: [
     {

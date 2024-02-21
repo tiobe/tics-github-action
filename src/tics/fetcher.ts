@@ -25,17 +25,18 @@ import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
  * @returns Object containing the results of the analysis.
  */
 export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
+  let failedProjectQualityGateCount = 0;
   let analysisResults: AnalysisResults = {
     passed: true,
     passedWithWarning: false,
-    message: '',
+    failureMessage: '',
     missesQualityGate: false,
     projectResults: []
   };
 
   if (explorerUrls.length === 0) {
     analysisResults.passed = false;
-    analysisResults.message = 'No Explorer url found';
+    analysisResults.failureMessage = 'No Explorer url found';
     analysisResults.missesQualityGate = true;
   }
 
@@ -56,7 +57,7 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     } else {
       if (!qualityGate.passed) {
         analysisResults.passed = false;
-        analysisResults.message += qualityGate.message + '; ';
+        failedProjectQualityGateCount++;
       }
 
       if (ticsConfig.postAnnotations) {
@@ -76,8 +77,11 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
   analysisResults.passedWithWarning =
     analysisResults.passed && analysisResults.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
 
-  // Remove trailing space from the message
-  analysisResults.message = analysisResults.message.trimEnd();
+  // Construct message on how many projects failed the quality gate (if at least one fails).
+  if (failedProjectQualityGateCount >= 1) {
+    analysisResults.failureMessage = explorerUrls.length > 1 ? `${failedProjectQualityGateCount} out of ${explorerUrls.length} projects` : 'Project';
+    analysisResults.failureMessage += ` failed quality gate(s)`;
+  }
 
   return analysisResults;
 }

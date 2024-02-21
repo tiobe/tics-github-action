@@ -272,7 +272,7 @@ export const singlePreviousReviewComments = [
 
 export const analysisResultsPassedNoUrl: AnalysisResults = {
   passed: false,
-  message: '',
+  failureMessage: '',
   missesQualityGate: true,
   projectResults: [],
   passedWithWarning: false
@@ -280,7 +280,7 @@ export const analysisResultsPassedNoUrl: AnalysisResults = {
 
 export const analysisResultsSingleFileFailed: AnalysisResults = {
   passed: false,
-  message: 'Project failed 2 out of 2 quality gates',
+  failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,
   projectResults: [
     {
@@ -295,7 +295,7 @@ export const analysisResultsSingleFileFailed: AnalysisResults = {
 
 export const analysisResultsSingleFilePassed: AnalysisResults = {
   passed: true,
-  message: 'Project failed 2 out of 2 quality gates',
+  failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,
   projectResults: [
     {
@@ -310,7 +310,7 @@ export const analysisResultsSingleFilePassed: AnalysisResults = {
 
 export const analysisResultsDoubleFilePassed: AnalysisResults = {
   passed: true,
-  message: 'Project failed 2 out of 2 quality gates',
+  failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,
   projectResults: [
     {

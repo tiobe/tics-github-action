@@ -156,7 +156,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: 'No Explorer url found',
+      failureMessage: 'No Explorer url found',
       missesQualityGate: true,
       projectResults: []
     });
@@ -171,7 +171,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: '',
+      failureMessage: '',
       missesQualityGate: true,
       projectResults: [
         {
@@ -193,7 +193,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: true,
       passedWithWarning: true,
-      message: '',
+      failureMessage: '',
       missesQualityGate: false,
       projectResults: [
         {
@@ -215,7 +215,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: 'failed;',
+      failureMessage: 'Project failed quality gate(s)',
       missesQualityGate: false,
       projectResults: [
         {
@@ -238,7 +238,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: 'failed;',
+      failureMessage: '1 out of 2 projects failed quality gate(s)',
       missesQualityGate: false,
       projectResults: [
         {
@@ -266,7 +266,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: 'failed; failed;',
+      failureMessage: '2 out of 2 projects failed quality gate(s)',
       missesQualityGate: false,
       projectResults: [
         {
@@ -298,7 +298,7 @@ describe('getAnalysisResults', () => {
     expect(result).toEqual({
       passed: false,
       passedWithWarning: false,
-      message: 'failed;',
+      failureMessage: 'Project failed quality gate(s)',
       missesQualityGate: false,
       projectResults: [
         {

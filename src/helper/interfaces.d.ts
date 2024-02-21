@@ -9,7 +9,7 @@ export interface Analysis {
 export interface AnalysisResults {
   passed: boolean;
   passedWithWarning: boolean;
-  message: string;
+  failureMessage: string;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
 }
