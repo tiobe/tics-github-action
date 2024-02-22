@@ -19,7 +19,7 @@ describe('postReview', () => {
 
     const analysisResults: AnalysisResults = {
       passed: true,
-      message: '',
+      failureMessage: '',
       missesQualityGate: false,
       projectResults: [
         {
@@ -51,7 +51,7 @@ describe('postReview', () => {
 
     const analysisResults: AnalysisResults = {
       passed: true,
-      message: '',
+      failureMessage: '',
       missesQualityGate: false,
       projectResults: [
         {
@@ -92,7 +92,7 @@ describe('postReview', () => {
 
     const analysisResults: AnalysisResults = {
       passed: false,
-      message: '',
+      failureMessage: '',
       missesQualityGate: false,
       projectResults: [
         {
@@ -139,7 +139,7 @@ describe('postReview', () => {
 
     const analysisResults: AnalysisResults = {
       passed: false,
-      message: '',
+      failureMessage: '',
       missesQualityGate: false,
       projectResults: [
         {

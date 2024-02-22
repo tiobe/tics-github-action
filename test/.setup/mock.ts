@@ -60,6 +60,7 @@ jest.mock('@actions/core', () => {
     exportVariable: jest.fn(),
     info: jest.fn(),
     debug: jest.fn(),
+    notice: jest.fn(),
     warning: jest.fn(),
     error: jest.fn(),
     setFailed: jest.fn(),

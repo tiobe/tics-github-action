@@ -9,7 +9,7 @@ export interface Analysis {
 export interface AnalysisResults {
   passed: boolean;
   passedWithWarning: boolean;
-  message: string;
+  failureMessage: string;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
 }
@@ -96,6 +96,7 @@ export interface TicsReviewComment {
   body: string;
   path?: string;
   line: number;
+  blocking: 'yes' | 'no' | 'after' | undefined;
 }
 
 export interface TicsReviewComments {
@@ -121,7 +122,7 @@ export interface HttpResponse {
   alertMessages: { header: string }[];
 }
 
-export interface AnnotationResonse {
+export interface AnnotationResponse {
   header: {
     title: string;
   };
@@ -150,6 +151,10 @@ export interface Annotation {
   diffLines?: number[];
   ruleHelp?: string;
   synopsis?: string;
+  blocking?: {
+    state: 'yes' | 'no' | 'after';
+    after?: number;
+  };
 }
 
 export interface ExtendedAnnotation extends Annotation {

@@ -3,7 +3,7 @@ import { AnalysisResults } from '../../../../src/helper/interfaces';
 export const analysisResultsSoaked: AnalysisResults = {
   passed: false,
   passedWithWarning: false,
-  message: 'Failed',
+  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -120,7 +120,7 @@ export const analysisResultsSoaked: AnalysisResults = {
 export const analysisResultsNotSoaked: AnalysisResults = {
   passed: false,
   passedWithWarning: false,
-  message: 'Failed',
+  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -211,7 +211,7 @@ export const analysisResultsNotSoaked: AnalysisResults = {
 export const analysisResultsPartlySoakedFailed: AnalysisResults = {
   passed: false,
   passedWithWarning: false,
-  message: 'Failed',
+  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -324,7 +324,7 @@ export const analysisResultsPartlySoakedFailed: AnalysisResults = {
 export const analysisResultsNoSoakedPassed: AnalysisResults = {
   passed: true,
   passedWithWarning: false,
-  message: 'Failed',
+  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -437,7 +437,7 @@ export const analysisResultsNoSoakedPassed: AnalysisResults = {
 export const analysisResultsPartlySoakedPassed: AnalysisResults = {
   passed: true,
   passedWithWarning: true,
-  message: 'Failed',
+  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {

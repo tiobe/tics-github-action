@@ -17,6 +17,7 @@ import {
   analysisResultsNoSoakedPassed,
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
+import { EOL } from 'os';
 
 describe('createSummaryBody', () => {
   test('Should contain blocking after if there are soaked violations', () => {
@@ -81,7 +82,6 @@ describe('createSummaryBody', () => {
     expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
     expect(string).toContain('<h3>All conditions passed</h3>');
 
-    console.log(string);
     summary.clear();
   });
 });
@@ -176,10 +176,11 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        blocking: undefined,
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: test\r\nLevel: 1, Category: test'
+        body: `Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -198,7 +199,7 @@ describe('createReviewComments', () => {
         changes: 2
       }
     ];
-    const annotations = [
+    const annotations: ExtendedAnnotation[] = [
       {
         fullPath: 'c:/src/test.js',
         line: 0,
@@ -209,7 +210,10 @@ describe('createReviewComments', () => {
         msg: 'test',
         count: 1,
         supp: false,
-        instanceName: 'test'
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        }
       },
       {
         fullPath: 'c:/src/test.js',
@@ -221,16 +225,86 @@ describe('createReviewComments', () => {
         msg: 'test',
         count: 1,
         supp: false,
-        instanceName: 'test'
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        }
       }
     ];
 
     const expected_postable = [
       {
+        blocking: 'yes',
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: (2x) test\r\nLevel: 1, Category: test'
+        body: `Blocking${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
+      }
+    ];
+
+    const response = createReviewComments(annotations, changedFiles);
+    expect(response).toEqual({ postable: expected_postable, unpostable: [] });
+  });
+
+  test('Should return one blocking now and a blocking after review comment for the same line', async () => {
+    githubConfig.eventName = 'pull_request';
+    const changedFiles: ChangedFile[] = [
+      {
+        filename: 'src/test.js',
+        status: 'modified',
+        additions: 1,
+        deletions: 1,
+        changes: 2
+      }
+    ];
+    const annotations: ExtendedAnnotation[] = [
+      {
+        fullPath: 'c:/src/test.js',
+        line: 0,
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'rule-now',
+        msg: 'message-now',
+        count: 1,
+        supp: false,
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        }
+      },
+      {
+        fullPath: 'c:/src/test.js',
+        line: 0,
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'rule-after',
+        msg: 'message-after',
+        count: 1,
+        supp: false,
+        instanceName: 'test',
+        blocking: {
+          state: 'after',
+          after: 1708356940000
+        }
+      }
+    ];
+
+    const expected_postable = [
+      {
+        blocking: 'yes',
+        title: 'test: rule-now',
+        path: 'src/test.js',
+        line: 0,
+        body: `Blocking${EOL}Line: 0: message-now${EOL}Level: 1, Category: test`
+      },
+      {
+        blocking: 'after',
+        title: 'test: rule-after',
+        path: 'src/test.js',
+        line: 0,
+        body: `Blocking after: 2024-02-19${EOL}Line: 0: message-after${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -289,10 +363,11 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
+        blocking: undefined,
         title: 'test: test',
         path: 'src/test.js',
         line: 0,
-        body: 'Line: 0: test\r\nLevel: 1, Category: test'
+        body: `Line: 0: test${EOL}Level: 1, Category: test`
       }
     ];
 
@@ -387,10 +462,11 @@ test('Should return one postable and one unpostable review comment', async () =>
 
   const expected_postable = [
     {
+      blocking: undefined,
       title: 'test: test',
       path: 'src/test.js',
       line: 0,
-      body: 'Line: 0: test\r\nLevel: 1, Category: test'
+      body: `Line: 0: test${EOL}Level: 1, Category: test`
     }
   ];
 
@@ -461,6 +537,46 @@ describe('createUnpostableReviewCommentsSummary', () => {
     expect(response).toContain(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
       `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
+    );
+  });
+
+  test('Should return summary of two unpostable review comment for one file', () => {
+    const unpostable = [
+      {
+        fullPath: '/home/src/hello.js',
+        path: 'src/hello.js',
+        line: 0,
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'test',
+        displayCount: '',
+        msg: 'test',
+        supp: false,
+        count: 0,
+        instanceName: 'test'
+      },
+      {
+        fullPath: '/home/src/hello.js',
+        path: 'src/hello.js',
+        line: 0,
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'test',
+        displayCount: '',
+        msg: 'test',
+        supp: false,
+        count: 0,
+        instanceName: 'test'
+      }
+    ];
+
+    const response = createUnpostableAnnotationsDetails(unpostable);
+    expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
+    expect(response).toContainTimes(
+      `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
+      2
     );
   });
 

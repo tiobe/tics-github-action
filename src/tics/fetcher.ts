@@ -7,7 +7,7 @@ import {
   AnalyzedFiles,
   Annotation,
   AnnotationApiLink,
-  AnnotationResonse,
+  AnnotationResponse,
   ExtendedAnnotation,
   QualityGate,
   VersionResponse
@@ -25,17 +25,18 @@ import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
  * @returns Object containing the results of the analysis.
  */
 export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
+  let failedProjectQualityGateCount = 0;
   let analysisResults: AnalysisResults = {
     passed: true,
     passedWithWarning: false,
-    message: '',
+    failureMessage: '',
     missesQualityGate: false,
     projectResults: []
   };
 
   if (explorerUrls.length === 0) {
     analysisResults.passed = false;
-    analysisResults.message = 'No Explorer url found';
+    analysisResults.failureMessage = 'No Explorer url found';
     analysisResults.missesQualityGate = true;
   }
 
@@ -56,7 +57,7 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
     } else {
       if (!qualityGate.passed) {
         analysisResults.passed = false;
-        analysisResults.message += qualityGate.message + '; ';
+        failedProjectQualityGateCount++;
       }
 
       if (ticsConfig.postAnnotations) {
@@ -76,8 +77,11 @@ export async function getAnalysisResults(explorerUrls: string[], changedFiles: C
   analysisResults.passedWithWarning =
     analysisResults.passed && analysisResults.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
 
-  // Remove trailing space from the message
-  analysisResults.message = analysisResults.message.trimEnd();
+  // Construct message on how many projects failed the quality gate (if at least one fails).
+  if (failedProjectQualityGateCount >= 1) {
+    analysisResults.failureMessage = explorerUrls.length > 1 ? `${failedProjectQualityGateCount} out of ${explorerUrls.length} projects` : 'Project';
+    analysisResults.failureMessage += ` failed quality gate(s)`;
+  }
 
   return analysisResults;
 }
@@ -165,6 +169,7 @@ function getQualityGateUrl(url: string) {
   }
 
   qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
+  qualityGateUrl.searchParams.append('includeFields', 'blockingAfter');
 
   const clientData = getItemFromUrl(url, 'ClientData');
   qualityGateUrl.searchParams.append('cdt', clientData);
@@ -185,9 +190,17 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
     await Promise.all(
       apiLinks.map(async (link, index) => {
         const annotationsUrl = new URL(`${baseUrl}/${link.url}`);
-        annotationsUrl.searchParams.append('fields', 'default,ruleHelp,synopsis,annotationName');
+
+        let fields = annotationsUrl.searchParams.get('fields');
+        const requiredFields = 'default,ruleHelp,synopsis';
+        if (fields !== null) {
+          annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
+        } else {
+          annotationsUrl.searchParams.append('fields', requiredFields);
+        }
+
         logger.debug(`From: ${annotationsUrl.href}`);
-        const response = await httpClient.get<AnnotationResonse>(annotationsUrl.href);
+        const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
         if (response) {
           response.data.data.forEach((annotation: Annotation) => {
             const extendedAnnotation: ExtendedAnnotation = {
@@ -195,6 +208,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
               instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
             };
             extendedAnnotation.gateId = index;
+
             logger.debug(JSON.stringify(extendedAnnotation));
             annotations.push(extendedAnnotation);
           });

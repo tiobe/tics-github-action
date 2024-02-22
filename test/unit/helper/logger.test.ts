@@ -44,6 +44,20 @@ describe('debug', () => {
   });
 });
 
+describe('notice', () => {
+  test('Should call core.notice on notice', () => {
+    const debug = jest.spyOn(core, 'notice');
+    const addNewline = jest.spyOn(logger, 'addNewline');
+
+    logger.notice('string');
+
+    expect(debug).toHaveBeenCalledTimes(1);
+    expect(debug).toHaveBeenCalledWith('string', undefined);
+    expect(addNewline).toHaveBeenCalledTimes(0);
+    expect(logger.called).toEqual('notice');
+  });
+});
+
 describe('warning', () => {
   test('Should call core.warning on warning', () => {
     const debug = jest.spyOn(core, 'warning');
