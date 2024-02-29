@@ -10,12 +10,12 @@ import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events } from './helper/enums';
-import { satisfies } from 'compare-versions';
 import { exportVariable, summary } from '@actions/core';
 import { Analysis } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { ChangedFiles } from './interfaces';
+import { coerce, satisfies } from 'semver';
 
 // export for testing purposes
 export let actionFailed: string | undefined;
@@ -237,9 +237,9 @@ export function configure(): void {
  */
 async function meetsPrerequisites(): Promise<void> {
   const viewerVersion = await getViewerVersion();
-
-  if (!viewerVersion || !satisfies(viewerVersion.version, '>=2022.4.0')) {
-    const version = viewerVersion ? viewerVersion.version : 'unknown';
+  const cleanViewerVersion = viewerVersion ? coerce(viewerVersion.version, { loose: true }) : null;
+  if (!cleanViewerVersion || !satisfies(cleanViewerVersion, '>=2022.4.0')) {
+    const version = cleanViewerVersion ?? 'unknown';
     throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
   } else if (ticsConfig.mode === 'diagnostic') {
     // No need for checked out repository.

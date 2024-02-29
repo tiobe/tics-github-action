@@ -37,6 +37,7 @@
     "@octokit/request-error": "^5.0.1",
     "@tiobe/http-client": "^0.4.0",
     "@tiobe/install-tics": "^0.5.0",
+    "@types/semver": "^7.5.8",
     "canonical-path": "^1.0.0",
     "compare-versions": "^6.1.0",
     "date-fns": "^3.3.1",
