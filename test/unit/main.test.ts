@@ -48,6 +48,35 @@ describe('pre checks', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
+  test('Should throw error if viewer version is too low with prefix character', async () => {
+    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: 'r2022.0.0' });
+
+    let error: any;
+    try {
+      await main.main();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
+  });
+
+  test('Should not throw version error if viewer version sufficient with prefix character', async () => {
+    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: 'r2022.4.0' });
+
+    let error: any;
+    try {
+      await main.main();
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toEqual(
+      expect.stringContaining('If the the action is run outside a pull request it should be run with a filelist.')
+    );
+  });
+
   test('Should throw error if event is not pull request and', async () => {
     jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
     jest.spyOn(main, 'configure').mockImplementation();
