@@ -237,7 +237,7 @@ export function configure(): void {
  */
 async function meetsPrerequisites(): Promise<void> {
   const viewerVersion = await getViewerVersion();
-  const cleanViewerVersion = viewerVersion ? coerce(viewerVersion.version, { loose: true }) : null;
+  const cleanViewerVersion = viewerVersion ? coerce(viewerVersion.version) : null;
   if (!cleanViewerVersion || !satisfies(cleanViewerVersion, '>=2022.4.0')) {
     const version = cleanViewerVersion ?? 'unknown';
     throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
