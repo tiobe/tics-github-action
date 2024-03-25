@@ -123,7 +123,10 @@ function getAnalyzedFilesUrl(url: string) {
 
   const clientData = getItemFromUrl(url, 'ClientData');
   const projectName = getProjectName(url);
-  getAnalyzedFilesUrl.searchParams.append('filters', `ClientData(${clientData}),Project(${projectName}),Window(-1),File()`);
+  getAnalyzedFilesUrl.searchParams.append(
+    'filters',
+    `ClientData(${clientData}),Project(${projectName}),Window(-1),CodeType(Set(production,test,external,generated)),File()`
+  );
 
   return getAnalyzedFilesUrl.href;
 }
