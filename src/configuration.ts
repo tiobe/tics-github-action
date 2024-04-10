@@ -1,11 +1,11 @@
-import { getBooleanInput, getInput, isDebug } from '@actions/core';
+import { isDebug } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { retry } from '@octokit/plugin-retry';
 import { OctokitOptions } from '@octokit/core/dist-types/types';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
-import { EOL } from 'os';
 import { getBaseUrl } from '@tiobe/install-tics';
+import { ActionConfiguration } from './action/configuration';
 
 export const githubConfig = {
   apiUrl: context.apiUrl,
@@ -28,53 +28,7 @@ function getPullRequestNumber() {
   }
 }
 
-function getSecretsFilter(secretsFilter: string | undefined) {
-  const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization'];
-  const keys = secretsFilter ? secretsFilter.split(',').filter(s => s !== '') : [];
-
-  const combinedFilters = defaults.concat(keys);
-  if (githubConfig.debugger) {
-    process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
-  }
-
-  return combinedFilters;
-}
-
-function getRetryCodes(retryCodes?: string): number[] {
-  if (!retryCodes) {
-    return [419, 500, 501, 502, 503, 504];
-  }
-  return retryCodes.split(',').map(r => Number(r));
-}
-
-export const ticsConfig = {
-  projectName: getInput('projectName', { required: true }),
-  ticsConfiguration: getInput('ticsConfiguration', { required: true }),
-  githubToken: getInput('githubToken'),
-  additionalFlags: getInput('additionalFlags'),
-  branchName: getInput('branchName'),
-  clientData: getInput('clientData'),
-  codetype: getInput('codetype'),
-  calc: getInput('calc'),
-  excludeMovedFiles: getBooleanInput('excludeMovedFiles'),
-  filelist: getInput('filelist'),
-  hostnameVerification: getInput('hostnameVerification'),
-  installTics: getBooleanInput('installTics'),
-  mode: getInput('mode'),
-  nocalc: getInput('nocalc'),
-  norecalc: getInput('norecalc'),
-  postAnnotations: getBooleanInput('postAnnotations'),
-  postToConversation: getBooleanInput('postToConversation'),
-  pullRequestApproval: getBooleanInput('pullRequestApproval'),
-  recalc: getInput('recalc'),
-  retryCodes: getRetryCodes(getInput('retryCodes')),
-  ticsAuthToken: getInput('ticsAuthToken'),
-  tmpDir: getInput('tmpDir'),
-  trustStrategy: getInput('trustStrategy'),
-  secretsFilter: getSecretsFilter(getInput('secretsFilter')),
-  showBlockingAfter: getBooleanInput('showBlockingAfter'),
-  viewerUrl: getInput('viewerUrl')
-};
+export const ticsConfig = new ActionConfiguration();
 
 const retryConfig = {
   maxRetries: 10,

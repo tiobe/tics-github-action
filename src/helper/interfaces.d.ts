@@ -1,3 +1,10 @@
+import { ChangedFile } from '../github/interfaces';
+
+export interface ChangedFiles {
+  files: ChangedFile[];
+  path: string;
+}
+
 export interface Analysis {
   completed: boolean;
   statusCode: number;
@@ -166,7 +173,7 @@ export interface VersionResponse {
   revision?: string;
   version: string;
   fullVersion?: string;
-  projectName?: string;
+  project?: string;
   dbversion?: string;
 }
 

@@ -20,3 +20,9 @@ export enum ChangeType {
   MODIFIED = 'modified',
   RENAMED = 'renamed'
 }
+
+export enum Mode {
+  CLIENT = 'client',
+  QSERVER = 'qserver',
+  DIAGNOSTIC = 'diagnostic'
+}

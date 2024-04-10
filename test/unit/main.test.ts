@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { githubConfig, ticsConfig } from '../../src/configuration';
-import { Events } from '../../src/helper/enums';
+import { Events, Mode } from '../../src/helper/enums';
 import { logger } from '../../src/helper/logger';
 
 import * as main from '../../src/main';
@@ -416,7 +416,7 @@ describe('Diagnostic mode checks', () => {
   test('Diagnostic mode succeeds', async () => {
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
 
-    ticsConfig.mode = 'diagnostic';
+    ticsConfig.mode = Mode.DIAGNOSTIC;
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.main();
@@ -428,7 +428,7 @@ describe('Diagnostic mode checks', () => {
   test('Diagnostic mode fails', async () => {
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
-    ticsConfig.mode = 'diagnostic';
+    ticsConfig.mode = Mode.DIAGNOSTIC;
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.main();

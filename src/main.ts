@@ -14,8 +14,9 @@ import { exportVariable, summary } from '@actions/core';
 import { Analysis } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
-import { ChangedFiles } from './interfaces';
+import { ChangedFiles } from './helper/interfaces';
 import { coerce, satisfies } from 'semver';
+import { Mode } from './helper/enums';
 
 // export for testing purposes
 export let actionFailed: string | undefined;
@@ -33,7 +34,7 @@ export async function main(): Promise<void> {
   await meetsPrerequisites();
 
   let analysis: Analysis | undefined;
-  if (ticsConfig.mode === 'diagnostic') {
+  if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     analysis = await diagnosticAnalysis();
   } else {
     analysis = await runAnalysisMode();
@@ -241,7 +242,7 @@ async function meetsPrerequisites(): Promise<void> {
   if (!cleanViewerVersion || !satisfies(cleanViewerVersion, '>=2022.4.0')) {
     const version = cleanViewerVersion?.toString() ?? 'unknown';
     throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
-  } else if (ticsConfig.mode === 'diagnostic') {
+  } else if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     // No need for checked out repository.
   } else if (githubConfig.eventName !== 'pull_request' && !ticsConfig.filelist) {
     throw Error('If the the action is run outside a pull request it should be run with a filelist.');

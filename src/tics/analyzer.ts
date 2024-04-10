@@ -5,6 +5,7 @@ import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
+import { Mode } from '../helper/enums';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -111,7 +112,7 @@ function findInStdOutOrErr(data: string): void {
  */
 function getTicsCommand(fileListPath: string) {
   let execString = 'TICS -ide github ';
-  if (ticsConfig.mode === 'diagnostic') {
+  if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     execString += '-help ';
   } else {
     if (fileListPath === '.') {
