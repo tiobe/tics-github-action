@@ -40,21 +40,21 @@ describe('deletePreviousReviewComments', () => {
   test('Should call deleteReviewComment once on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([warningComment, emptyComment]);
+    await deletePreviousReviewComments([warningComment, emptyComment]);
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call deleteReviewComment twice on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([warningComment, warningComment]);
+    await deletePreviousReviewComments([warningComment, warningComment]);
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
   test('Should not call deleteReviewComment on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([emptyComment, emptyComment]);
+    await deletePreviousReviewComments([emptyComment, emptyComment]);
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
@@ -64,7 +64,7 @@ describe('deletePreviousReviewComments', () => {
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    deletePreviousReviewComments([warningComment]);
+    await deletePreviousReviewComments([warningComment]);
 
     expect(spy).toHaveBeenCalledTimes(1);
   });

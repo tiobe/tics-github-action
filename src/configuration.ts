@@ -58,6 +58,14 @@ const octokitOptions: OctokitOptions = {
   }
 };
 
+function getViewerUrl(): string {
+  if (ticsConfig.viewerUrl) {
+    return ticsConfig.viewerUrl.endsWith('/') ? ticsConfig.viewerUrl.slice(0, -1) : ticsConfig.viewerUrl;
+  } else {
+    return baseUrl;
+  }
+}
+
 export const octokit = getOctokit(ticsConfig.githubToken, octokitOptions, retry);
 export const baseUrl = getBaseUrl(ticsConfig.ticsConfiguration).href;
-export const viewerUrl = ticsConfig.viewerUrl ? ticsConfig.viewerUrl.replace(/\/+$/, '') : baseUrl;
+export const viewerUrl = getViewerUrl();

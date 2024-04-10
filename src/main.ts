@@ -9,14 +9,12 @@ import { getAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
-import { Events } from './helper/enums';
+import { Events, Mode } from './helper/enums';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis } from './helper/interfaces';
+import { Analysis, ChangedFiles } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
-import { ChangedFiles } from './helper/interfaces';
 import { coerce, satisfies } from 'semver';
-import { Mode } from './helper/enums';
 
 // export for testing purposes
 export let actionFailed: string | undefined;
@@ -109,7 +107,7 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   const analysis = await runTicsAnalyzer(changedFiles.path);
 
   if (analysis.explorerUrls.length === 0) {
-    deletePreviousComments(await getPostedComments());
+    await deletePreviousComments(await getPostedComments());
     if (!analysis.completed) {
       actionFailed = 'Failed to run TICS Github Action.';
       await postErrorComment(analysis);
@@ -135,7 +133,7 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   if (githubConfig.eventName === 'pull_request') {
     const previousReviewComments = await getPostedReviewComments();
     if (previousReviewComments && previousReviewComments.length > 0) {
-      deletePreviousReviewComments(previousReviewComments);
+      await deletePreviousReviewComments(previousReviewComments);
     }
   }
 
@@ -148,8 +146,7 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   // If not run on a pull request no comments have to be deleted
   // and there is no conversation to post to.
   if (githubConfig.eventName === 'pull_request') {
-    deletePreviousComments(await getPostedComments());
-
+    await deletePreviousComments(await getPostedComments());
     await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
   }
 

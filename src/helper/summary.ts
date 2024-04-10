@@ -131,7 +131,7 @@ export function createErrorSummary(errorList: string[], warningList: string[]): 
 export function createFilesSummary(fileList: string[]): string {
   let header = 'The following files have been checked for this project';
   let body = '<ul>';
-  fileList.sort();
+  fileList.sort((a, b) => a.localeCompare(b));
   fileList.forEach(file => {
     body += `<li>${file}</li>`;
   });

@@ -71,9 +71,9 @@ export async function postComment(body: string): Promise<void> {
   }
 }
 
-export function deletePreviousComments(comments: Comment[]): void {
+export async function deletePreviousComments(comments: Comment[]): Promise<void> {
   logger.header('Deleting comments of previous runs.');
-  comments.map(async comment => {
+  for (const comment of comments) {
     if (commentIncludesTicsTitle(comment.body)) {
       try {
         const params = {
@@ -87,7 +87,7 @@ export function deletePreviousComments(comments: Comment[]): void {
         logger.error(`Removing a comment failed: ${message}`);
       }
     }
-  });
+  }
   logger.info('Deleted review comments of previous runs.');
 }
 

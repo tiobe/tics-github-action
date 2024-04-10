@@ -4,19 +4,19 @@ import { githubConfig } from '../configuration';
 import { EOL } from 'os';
 
 export class ActionConfiguration {
-  ticsConfiguration: string;
-  mode: Mode;
   projectName: string;
-  githubToken: string;
   additionalFlags: string;
+  branchDir: string;
   branchName: string;
+  calc: string;
   clientData: string;
   codetype: string;
-  calc: string;
   excludeMovedFiles: boolean;
   filelist: string;
+  githubToken: string;
   hostnameVerification: string;
   installTics: boolean;
+  mode: Mode;
   nocalc: string;
   norecalc: string;
   postAnnotations: boolean;
@@ -25,40 +25,46 @@ export class ActionConfiguration {
   recalc: string;
   retryCodes: number[];
   ticsAuthToken: string;
+  ticsConfiguration: string;
   tmpDir: string;
   trustStrategy: string;
   secretsFilter: string[];
   showBlockingAfter: boolean;
-  viewerUrl: string;
+  viewerUrl: string | undefined;
 
   constructor() {
+    // TICS usage options
     this.ticsConfiguration = this.validateAndGetConfigUrl(getInput('ticsConfiguration', { required: true }));
     this.mode = this.validateAndGetMode(getInput('mode'));
-    this.projectName = this.validateAndGetProject(getInput('projectName'));
-
     this.githubToken = getInput('githubToken');
-    this.additionalFlags = getInput('additionalFlags');
-    this.branchName = getInput('branchName');
-    this.clientData = getInput('clientData');
-    this.codetype = getInput('codetype');
-    this.calc = getInput('calc');
-    this.excludeMovedFiles = getBooleanInput('excludeMovedFiles');
-    this.filelist = getInput('filelist');
-    this.hostnameVerification = getInput('hostnameVerification');
     this.installTics = getBooleanInput('installTics');
-    this.nocalc = getInput('nocalc');
-    this.norecalc = getInput('norecalc');
+    this.hostnameVerification = getInput('hostnameVerification');
+    this.trustStrategy = getInput('trustStrategy');
+    this.filelist = getInput('filelist');
+
+    // action options
+    this.excludeMovedFiles = getBooleanInput('excludeMovedFiles');
     this.postAnnotations = getBooleanInput('postAnnotations');
     this.postToConversation = getBooleanInput('postToConversation');
     this.pullRequestApproval = getBooleanInput('pullRequestApproval');
-    this.recalc = getInput('recalc');
     this.retryCodes = this.getRetryCodes(getInput('retryCodes'));
-    this.ticsAuthToken = getInput('ticsAuthToken');
-    this.tmpDir = getInput('tmpDir');
-    this.trustStrategy = getInput('trustStrategy');
     this.secretsFilter = this.getSecretsFilter(getInput('secretsFilter'));
     this.showBlockingAfter = getBooleanInput('showBlockingAfter');
-    this.viewerUrl = getInput('viewerUrl');
+    this.viewerUrl = getInput('viewerUrl') ? this.validateAndGetUrl(getInput('viewerUrl')).href : undefined;
+
+    // TICS cli
+    this.additionalFlags = getInput('additionalFlags');
+    this.projectName = this.validateAndGetProject(getInput('projectName'));
+    this.branchName = getInput('branchName');
+    this.branchDir = getInput('branchDir');
+    this.clientData = getInput('clientData');
+    this.codetype = getInput('codetype');
+    this.calc = getInput('calc');
+    this.nocalc = getInput('nocalc');
+    this.norecalc = getInput('norecalc');
+    this.recalc = getInput('recalc');
+    this.ticsAuthToken = getInput('ticsAuthToken');
+    this.tmpDir = getInput('tmpDir');
   }
 
   /**
@@ -67,11 +73,7 @@ export class ActionConfiguration {
    * @throws error if the input is incorrect.
    */
   private validateAndGetConfigUrl(url: string): string {
-    try {
-      var uri = new URL(url);
-    } catch {
-      throw Error(`Parameter 'ticsConfiguration' is not a valid url.`);
-    }
+    const uri = this.validateAndGetUrl(url);
 
     if (uri.protocol !== 'http:' && uri.protocol !== 'https:') {
       throw Error(`Parameter 'ticsConfiguration' is missing the protocol (http(s)://)`);
@@ -82,6 +84,19 @@ export class ActionConfiguration {
     }
 
     return uri.href;
+  }
+
+  /**
+   * Validates if the given input is a valid url and returns it.
+   * @returns the input if it is correct.
+   * @throws error if the input is incorrect.
+   */
+  private validateAndGetUrl(url: string): URL {
+    try {
+      return new URL(url);
+    } catch {
+      throw Error(`Parameter 'ticsConfiguration' is not a valid url.`);
+    }
   }
 
   /**
@@ -132,6 +147,13 @@ export class ActionConfiguration {
     if (!retryCodes) {
       return [419, 500, 501, 502, 503, 504];
     }
-    return retryCodes.split(',').map(r => Number(r));
+
+    return retryCodes.split(',').map(r => {
+      if (Number.isNaN(r)) {
+        throw Error(`Parameter 'retryCodes' contains value '${r}' which is not a number.`);
+      } else {
+        return Number(r);
+      }
+    });
   }
 }

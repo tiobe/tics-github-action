@@ -63,10 +63,10 @@ export function postAnnotations(analysisResult: AnalysisResults): void {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function deletePreviousReviewComments(postedReviewComments: ReviewComment[]): void {
+export async function deletePreviousReviewComments(postedReviewComments: ReviewComment[]): Promise<void> {
   logger.header('Deleting review comments of previous runs.');
-  postedReviewComments.map(async reviewComment => {
-    if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
+  for (const reviewComment of postedReviewComments) {
+    if (reviewComment.body.startsWith(':warning: **TICS:')) {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -79,6 +79,6 @@ export function deletePreviousReviewComments(postedReviewComments: ReviewComment
         logger.error(`Could not delete review comment: ${message}`);
       }
     }
-  });
+  }
   logger.info('Deleted review comments of previous runs.');
 }
