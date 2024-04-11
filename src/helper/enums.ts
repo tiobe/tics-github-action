@@ -26,3 +26,9 @@ export enum Mode {
   QSERVER = 'qserver',
   DIAGNOSTIC = 'diagnostic'
 }
+
+export enum TrustStrategy {
+  STRICT = 'strict',
+  SELFSIGNED = 'self-signed',
+  ALL = 'all'
+}

@@ -2,7 +2,7 @@ import * as exec from '@actions/exec';
 import * as os from 'os';
 import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
 import { runTicsAnalyzer } from '../../../src/tics/analyzer';
-import { Mode } from '../../../src/helper/enums';
+import { Mode, TrustStrategy } from '../../../src/helper/enums';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
@@ -165,7 +165,7 @@ describe('test multiple types of configuration', () => {
     ticsConfig.tmpDir = '/home/ubuntu/test';
     ticsConfig.additionalFlags = '-log 9';
     ticsConfig.installTics = true;
-    ticsConfig.trustStrategy = '';
+    ticsConfig.trustStrategy = TrustStrategy.STRICT;
 
     const response = await runTicsAnalyzer('/path/to');
 

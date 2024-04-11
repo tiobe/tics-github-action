@@ -9,12 +9,13 @@ import { getAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
-import { Events, Mode } from './helper/enums';
+import { Events, Mode, TrustStrategy } from './helper/enums';
 import { exportVariable, summary } from '@actions/core';
 import { Analysis, ChangedFiles } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
+import { isOneOf } from './helper/compare';
 
 // export for testing purposes
 export let actionFailed: string | undefined;
@@ -209,23 +210,19 @@ export function configure(): void {
   }
 
   // set hostnameVerification
-  if (ticsConfig.hostnameVerification) {
-    exportVariable('TICSHOSTNAMEVERIFICATION', ticsConfig.hostnameVerification);
+  exportVariable('TICSHOSTNAMEVERIFICATION', ticsConfig.hostnameVerification);
 
-    if (ticsConfig.hostnameVerification === '0' || ticsConfig.hostnameVerification === 'false') {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      logger.debug('Hostname Verification disabled');
-    }
+  if (!ticsConfig.hostnameVerification) {
+    exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+    logger.debug('Hostname Verification disabled');
   }
 
   // set trustStrategy
-  if (ticsConfig.trustStrategy) {
-    exportVariable('TICSTRUSTSTRATEGY', ticsConfig.trustStrategy);
+  exportVariable('TICSTRUSTSTRATEGY', ticsConfig.trustStrategy);
 
-    if (ticsConfig.trustStrategy === 'self-signed' || ticsConfig.trustStrategy === 'all') {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-      logger.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
-    }
+  if (isOneOf(ticsConfig.trustStrategy, TrustStrategy.SELFSIGNED, TrustStrategy.ALL)) {
+    exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+    logger.debug(`Trust strategy set to ${ticsConfig.trustStrategy}`);
   }
 }
 

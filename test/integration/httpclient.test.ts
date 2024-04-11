@@ -19,6 +19,7 @@ process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
+process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 // eslint-disable-next-line import/first
 import { httpClient } from '../../src/configuration';

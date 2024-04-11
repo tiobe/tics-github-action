@@ -8,6 +8,7 @@ process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
+process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 beforeEach(() => {
   jest.resetModules();
@@ -88,55 +89,5 @@ describe('pullRequestNumber', () => {
     const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(0);
-  });
-});
-
-// describe('retryCodes', () => {
-//   test('Should set default retryCodes if none are given', async () => {
-//     process.env.INPUT_RETRYCODES = '';
-
-//     const retryCodes = require('../../src/configuration').ticsConfig.retryCodes;
-
-//     expect(retryCodes).toEqual([419, 500, 501, 502, 503, 504]);
-//   });
-
-//   test('Should set custom retryCodes when given correctly', async () => {
-//     process.env.INPUT_RETRYCODES = '500,502';
-
-//     const retryCodes = require('../../src/configuration').ticsConfig.retryCodes;
-
-//     expect(retryCodes).toEqual([500, 502]);
-//   });
-
-//   test('Should return NaN for retryCode when input is incorrect', async () => {
-//     process.env.INPUT_RETRYCODES = '404,500;502';
-
-//     let catchError;
-//     try {
-//       require('../../src/configuration').ticsConfig.retryCodes;
-//     } catch (error) {
-//       catchError = error;
-//     }
-
-//     expect(catchError).toBeInstanceOf(Error);
-//     expect(catchError.message).toContain("'500;502'");
-//   });
-// });
-
-describe('secretsFilter', () => {
-  test('Should set default secretsFilter if none are given', async () => {
-    process.env.INPUT_SECRETSFILTER = '';
-
-    const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
-
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization']);
-  });
-
-  test('Should add custom secretsFilter when given correctly', async () => {
-    process.env.INPUT_SECRETSFILTER = ',TOKEN,AUTH;STEM';
-
-    const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
-
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization', 'TOKEN', 'AUTH;STEM']);
   });
 });

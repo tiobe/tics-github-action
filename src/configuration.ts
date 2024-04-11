@@ -5,7 +5,7 @@ import { OctokitOptions } from '@octokit/core/dist-types/types';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 import { getBaseUrl } from '@tiobe/install-tics';
-import { ActionConfiguration } from './action/configuration';
+import { ActionConfiguration } from './action/action_configuration';
 
 export const githubConfig = {
   apiUrl: context.apiUrl,

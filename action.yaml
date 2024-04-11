@@ -10,7 +10,7 @@ inputs:
     required: false
     default: client
   projectName:
-    description: Name of the TICS project
+    description: Name of the TICS project.
     required: false
     default: auto
   githubToken:
@@ -21,10 +21,10 @@ inputs:
     description: Option to add flags to the TICS command.
     required: false
   branchName:
-    description: Name of the branch in TICS
+    description: Name of the branch in TICS.
     required: false
   branchDir:
-    description: Location of the files to analyze
+    description: Location of the files to analyze (only applies to QServer runs).
     required: false
   calc:
     description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
@@ -40,10 +40,10 @@ inputs:
     description: Comma-separated list of metrics not to be recalculated.
     required: false
   clientData:
-    description: A custom client-data token for the purpose of the Client Viewer functionality.
+    description: A custom client-data token for the purpose of the Client Viewer functionality (only applies to Client runs).
     required: false
   codetype:
-    description: Allows you to pick which specific types of code you want to analyze with the TICS client
+    description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
     required: false
   excludeMovedFiles:
     description: Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.

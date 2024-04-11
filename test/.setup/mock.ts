@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
+import { getBooleanInput, getInput } from '@actions/core';
 
 jest.mock('../../src/configuration', () => {
   return {
@@ -64,6 +65,8 @@ jest.mock('@actions/core', () => {
     warning: jest.fn(),
     error: jest.fn(),
     setFailed: jest.fn(),
+    getInput: jest.fn(),
+    getBooleanInput: jest.fn(),
     summary: summary
   };
 });
