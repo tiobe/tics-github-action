@@ -39,7 +39,7 @@ export async function main(): Promise<void> {
     analysis = await runAnalysisMode();
   }
 
-  if (analysis && (ticsConfig.tmpDir || githubConfig.debugger)) {
+  if (analysis && (ticsConfig.tmpdir || githubConfig.debugger)) {
     await uploadArtifact();
   }
 

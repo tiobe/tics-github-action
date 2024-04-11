@@ -424,9 +424,8 @@ describe('Action Configuration', () => {
 
       new ActionConfiguration();
 
-      expect(warningSpy).toHaveBeenCalledTimes(11);
+      expect(warningSpy).toHaveBeenCalledTimes(9);
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('projectName'));
-      expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchDir'));
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchName'));
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('clientData'));
@@ -435,7 +434,6 @@ describe('Action Configuration', () => {
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('nocalc'));
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('norecalc'));
       expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('recalc'));
-      expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('additionalFlags'));
     });
   });
 });

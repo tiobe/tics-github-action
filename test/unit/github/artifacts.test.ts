@@ -20,7 +20,7 @@ describe('Tempdir test', () => {
   });
 
   it('Should return empty if variable is set', () => {
-    ticsConfig.tmpDir = 'something/else';
+    ticsConfig.tmpdir = 'something/else';
     const tmpdir = getTmpDir();
 
     expect(tmpdir).toStrictEqual('something/else/123-1');
@@ -29,7 +29,7 @@ describe('Tempdir test', () => {
 
 describe('Artifacts test', () => {
   it('Should upload logfile to tmpdir', async () => {
-    ticsConfig.tmpDir = '/tmp';
+    ticsConfig.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient([]);
@@ -42,7 +42,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should upload logdir to tmpdir', async () => {
-    ticsConfig.tmpDir = '/tmp';
+    ticsConfig.tmpdir = '/tmp';
 
     const direntOne = [new MockDirent(false, 'tics', '/tmp/123-1/ticstmpdir/tics')];
     const direntTwo = [new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/tics/file.log')];
@@ -59,7 +59,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should call debug logger on failing to upload logfile', async () => {
-    ticsConfig.tmpDir = '/tmp';
+    ticsConfig.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);
@@ -74,7 +74,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should call debug logger on upload throwing an error', async () => {
-    ticsConfig.tmpDir = '/tmp';
+    ticsConfig.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);

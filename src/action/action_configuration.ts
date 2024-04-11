@@ -4,7 +4,7 @@ import { githubConfig } from '../configuration';
 import { EOL } from 'os';
 import { logger } from '../helper/logger';
 import { isOneOf } from '../helper/compare';
-import { CLI_OPTIONS } from './cli_options';
+import { CliOptions } from './cli_options';
 
 export class ActionConfiguration {
   excludeMovedFiles: boolean;
@@ -25,16 +25,16 @@ export class ActionConfiguration {
   viewerUrl: string | undefined;
 
   // cli options
-  projectName: string;
-  branchName: string;
-  branchDir: string;
-  clientData: string;
+  project: string;
+  branchname: string;
+  branchdir: string;
+  cdtoken: string;
   codetype: string;
   calc: string;
   nocalc: string;
   norecalc: string;
   recalc: string;
-  tmpDir: string;
+  tmpdir: string;
   additionalFlags: string;
 
   constructor() {
@@ -58,16 +58,16 @@ export class ActionConfiguration {
     this.showBlockingAfter = getBooleanInput('showBlockingAfter') ?? false;
     this.viewerUrl = getInput('viewerUrl') ? this.validateAndGetUrl(getInput('viewerUrl')).href : undefined;
 
-    this.projectName = getInput('projectName');
-    this.branchName = getInput('branchName');
-    this.branchDir = getInput('branchDir');
-    this.clientData = getInput('clientData');
+    this.project = getInput('projectName');
+    this.branchname = getInput('branchName');
+    this.branchdir = getInput('branchDir');
+    this.cdtoken = getInput('clientData');
     this.codetype = getInput('codetype');
     this.calc = getInput('calc');
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
-    this.tmpDir = getInput('tmpDir');
+    this.tmpdir = getInput('tmpDir');
     this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, this.mode);
@@ -197,16 +197,16 @@ export class ActionConfiguration {
   validateCliOptions(action: ActionConfiguration, mode: Mode) {
     // validate project
     if (mode === Mode.QSERVER) {
-      if (action.projectName === 'auto') {
+      if (action.project === 'auto') {
         throw Error(`Running TICS with project 'auto' is not possible with QServer`);
       }
     }
 
-    CLI_OPTIONS.forEach(v => {
-      const key = v.name as keyof ActionConfiguration;
-      if (action[key] !== '' && !v.modes.includes(mode)) {
-        logger.warning(`Parameter '${v.name}' is not applicable to mode '${mode}' and will therefore not be used.`);
+    for (const option of CliOptions) {
+      const key = option.cli as keyof ActionConfiguration;
+      if (action[key] !== '' && !option.modes.includes(mode)) {
+        logger.warning(`Parameter '${option.action}' is not applicable to mode '${mode}' and will therefore not be used.`);
       }
-    });
+    }
   }
 }

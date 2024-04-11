@@ -6,6 +6,9 @@ import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
 import { Mode } from '../helper/enums';
+import { CliOptions } from '../action/cli_options';
+import { ActionConfiguration } from '../action/action_configuration';
+import { isOneOf } from '../helper/compare';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -18,7 +21,7 @@ let completed: boolean;
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
-  logger.header(`Analyzing for project ${ticsConfig.projectName}`);
+  logger.header(`Analyzing for project ${ticsConfig.project}`);
 
   const command = await buildRunCommand(fileListPath);
 
@@ -111,28 +114,51 @@ function findInStdOutOrErr(data: string): void {
  * @returns string of the command to run TICS.
  */
 function getTicsCommand(fileListPath: string) {
-  let execString = 'TICS -ide github ';
-  if (ticsConfig.mode === Mode.DIAGNOSTIC) {
-    execString += '-help ';
-  } else {
-    if (fileListPath === '.') {
-      execString += '. -viewer ';
-    } else {
-      execString += `'@${fileListPath}' -viewer `;
-    }
-    execString += `-project '${ticsConfig.projectName}' `;
-    execString += `-calc ${ticsConfig.calc} `;
-    execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
-    execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
-    execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
-    execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
-    execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
-    execString += ticsConfig.branchName ? `-branchname ${ticsConfig.branchName} ` : '';
-    execString += ticsConfig.tmpDir || githubConfig.debugger ? `-tmpdir '${getTmpDir()}' ` : '';
-  }
-  execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
-  // Add TICS debug flag when in debug mode, if this flag was not already set.
-  execString += githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
+  let command: string;
 
-  return execString;
+  switch (ticsConfig.mode) {
+    case Mode.DIAGNOSTIC:
+      command = 'TICS -ide github -help';
+      break;
+    case Mode.CLIENT:
+      command = 'TICS -ide github';
+      command += fileListPath === '.' ? ' . -viewer ' : ` '@${fileListPath}' -viewer `;
+      command += buildTicsCli();
+      break;
+    case Mode.QSERVER:
+      command = 'TICSQServer';
+      command += buildTicsCli();
+      break;
+  }
+
+  if (ticsConfig.tmpdir || githubConfig.debugger) {
+    command += ` -tmpdir '${getTmpDir()}' `;
+  }
+
+  if (ticsConfig.additionalFlags) {
+    command += ` ${ticsConfig.additionalFlags} `;
+  }
+
+  // Add TICS debug flag when in debug mode, if this flag was not already set.
+  if (githubConfig.debugger && !command.includes('-log ')) {
+    command += ' -log 9';
+  }
+
+  return command.replace(/\s{2,}-/g, ' -');
+}
+
+function buildTicsCli() {
+  let command = ` -project '${ticsConfig.project}' `;
+  command += ` -calc ${ticsConfig.calc} `;
+
+  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'calc', 'projectName', 'tmpDir')).forEach(option => {
+    if (option.modes.includes(ticsConfig.mode)) {
+      const value = ticsConfig[option.cli as keyof ActionConfiguration];
+      if (value) {
+        command += ` -${option.cli} ${value} `;
+      }
+    }
+  });
+
+  return command;
 }

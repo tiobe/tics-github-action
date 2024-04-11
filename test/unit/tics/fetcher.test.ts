@@ -58,7 +58,7 @@ describe('getQualityGate', () => {
     jest.spyOn(api_helper, 'getProjectName').mockReturnValueOnce('projectName');
     jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { data: 'data' } }));
 
-    ticsConfig.branchName = 'main';
+    ticsConfig.branchname = 'main';
 
     const response = await fetcher.getQualityGate('url');
 
@@ -148,7 +148,7 @@ describe('getViewerVersion', () => {
 // Should be executed last due to spying rules
 describe('getAnalysisResults', () => {
   // For multiproject run with project auto
-  ticsConfig.projectName = 'auto';
+  ticsConfig.project = 'auto';
 
   test('Should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {
     const result = await fetcher.getAnalysisResults([], []);

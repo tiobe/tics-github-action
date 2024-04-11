@@ -1,11 +1,10 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
-import { getBooleanInput, getInput } from '@actions/core';
 
 jest.mock('../../src/configuration', () => {
   return {
     ticsConfig: {
-      projectName: 'project',
+      project: 'project',
       ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
       calc: 'GATE',
       pullRequestApproval: false,

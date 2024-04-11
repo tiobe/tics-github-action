@@ -122,10 +122,10 @@ function getAnalyzedFilesUrl(url: string) {
   let getAnalyzedFilesUrl = new URL(baseUrl + '/api/public/v1/Measure?metrics=filePath');
 
   const clientData = getItemFromUrl(url, 'ClientData');
-  const projectName = getProjectName(url);
+  const project = getProjectName(url);
   getAnalyzedFilesUrl.searchParams.append(
     'filters',
-    `ClientData(${clientData}),Project(${projectName}),Window(-1),CodeType(Set(production,test,external,generated)),File()`
+    `ClientData(${clientData}),Project(${project}),Window(-1),CodeType(Set(production,test,external,generated)),File()`
   );
 
   return getAnalyzedFilesUrl.href;
@@ -163,12 +163,12 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
 function getQualityGateUrl(url: string) {
   let qualityGateUrl = new URL(baseUrl + '/api/public/v1/QualityGateStatus');
 
-  const projectName = getProjectName(url);
-  qualityGateUrl.searchParams.append('project', projectName);
+  const project = getProjectName(url);
+  qualityGateUrl.searchParams.append('project', project);
 
   // Branchname is optional, to check if it is set
-  if (ticsConfig.branchName) {
-    qualityGateUrl.searchParams.append('branch', ticsConfig.branchName);
+  if (ticsConfig.branchname) {
+    qualityGateUrl.searchParams.append('branch', ticsConfig.branchname);
   }
 
   qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');

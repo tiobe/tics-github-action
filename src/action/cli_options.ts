@@ -1,48 +1,64 @@
 import { Mode } from '../helper/enums';
 
-export const CLI_OPTIONS = [
+export interface CliOption {
+  action: string;
+  cli?: string;
+  modes: Mode[];
+}
+
+export const CliOptions: CliOption[] = [
   {
-    name: 'projectName',
+    action: 'projectName',
+    cli: 'project',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    name: 'branchName',
-    modes: [Mode.CLIENT, Mode.QSERVER]
-  },
-  {
-    name: 'branchDir',
+    action: 'branchDir',
+    cli: 'branchdir',
     modes: [Mode.QSERVER]
   },
   {
-    name: 'clientData',
+    action: 'branchName',
+    cli: 'branchname',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'clientData',
+    cli: 'cdtoken',
     modes: [Mode.CLIENT]
   },
   {
-    name: 'codetype',
+    action: 'codetype',
+    cli: 'codetype',
     modes: [Mode.CLIENT]
   },
   {
-    name: 'calc',
+    action: 'calc',
+    cli: 'calc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    name: 'nocalc',
+    action: 'nocalc',
+    cli: 'nocalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    name: 'norecalc',
+    action: 'norecalc',
+    cli: 'norecalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    name: 'recalc',
+    action: 'recalc',
+    cli: 'recalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    name: 'tmpDir',
-    modes: [Mode.CLIENT, Mode.QSERVER]
+    action: 'tmpDir',
+    cli: 'tmpdir',
+    modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
   },
   {
-    name: 'additionalFlags',
-    modes: [Mode.CLIENT, Mode.QSERVER]
+    action: 'additionalFlags',
+    modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
   }
 ];

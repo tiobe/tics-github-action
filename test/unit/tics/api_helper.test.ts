@@ -57,16 +57,16 @@ describe('getItemFromUrl', () => {
 
 describe('getProjectName', () => {
   test('Should return project name from url if project auto', async () => {
-    ticsConfig.projectName = 'auto';
+    ticsConfig.project = 'auto';
 
     const projectName = getProjectName('https://test.com/Project%28project%29');
     expect(projectName).toEqual('project');
   });
 
   test('Should return default project name from url if projectName is given', async () => {
-    ticsConfig.projectName = 'project';
+    ticsConfig.project = 'project';
 
     const projectName = getProjectName('https://test.com/Project%28auto%29');
-    expect(projectName).toEqual(ticsConfig.projectName);
+    expect(projectName).toEqual(ticsConfig.project);
   });
 });

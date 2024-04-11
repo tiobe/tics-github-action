@@ -381,7 +381,7 @@ describe('Artifact upload tests', () => {
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
 
-    ticsConfig.tmpDir = '/tmp';
+    ticsConfig.tmpdir = '/tmp';
 
     await main.main();
 

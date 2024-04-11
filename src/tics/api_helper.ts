@@ -38,5 +38,5 @@ export function getItemFromUrl(url: string, query: string): string {
  * @returns project name.
  */
 export function getProjectName(url: string): string {
-  return ticsConfig.projectName === 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.projectName;
+  return ticsConfig.project === 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.project;
 }
