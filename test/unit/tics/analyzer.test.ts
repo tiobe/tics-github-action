@@ -283,8 +283,6 @@ describe('test callback functions', () => {
   });
 
   test('Should add ExplorerUrl in response', async () => {
-    jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-
     await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('http://base.com/Explorer.html#axes=ClientData');
     (exec.exec as any).mockResolvedValueOnce(0);

@@ -1,6 +1,5 @@
 import { getBooleanInput, getInput } from '@actions/core';
 import { Mode, TrustStrategy } from '../helper/enums';
-import { githubConfig } from '../configuration';
 import { EOL } from 'os';
 import { logger } from '../helper/logger';
 import { isOneOf } from '../helper/compare';

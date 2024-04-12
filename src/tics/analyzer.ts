@@ -9,6 +9,7 @@ import { Mode } from '../helper/enums';
 import { CliOptions } from '../action/cli_options';
 import { ActionConfiguration } from '../action/action_configuration';
 import { isOneOf } from '../helper/compare';
+import { joinUrl } from '../helper/url';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -103,7 +104,7 @@ function findInStdOutOrErr(data: string): void {
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
     if (urlPath) {
-      explorerUrls.push(viewerUrl + urlPath);
+      explorerUrls.push(joinUrl(viewerUrl, urlPath));
     }
   }
 }

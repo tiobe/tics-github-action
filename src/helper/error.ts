@@ -17,12 +17,16 @@ export function handleOctokitError(error: unknown): string {
 
 export function getRetryErrorMessage(error: unknown): string {
   let message = error as string;
-  if (error instanceof TicsError) {
+  if (error instanceof Error) {
     message = error.message;
-    if (error.retryCount > 0) {
-      message += ` (retried ${error.retryCount} times)`;
+
+    if (error instanceof TicsError) {
+      if (error.retryCount > 0) {
+        message += ` (retried ${error.retryCount} times)`;
+      }
     }
   }
+
   return message;
 }
 

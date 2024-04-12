@@ -12,12 +12,13 @@ import {
   TicsReviewComments
 } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
-import { githubConfig, viewerUrl } from '../configuration';
-import { Status } from './enums';
+import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
+import { Mode, Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 import { EOL } from 'os';
 import { format } from 'date-fns';
+import { joinUrl } from './url';
 
 export function createSummaryBody(analysisResults: AnalysisResults): string {
   logger.header('Creating summary.');
@@ -50,7 +51,9 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
         summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
       }
 
-      summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
+      if (ticsConfig.mode === Mode.CLIENT) {
+        summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
+      }
     }
   });
 
@@ -167,7 +170,7 @@ function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
   details.items
     .filter(item => item.itemType === 'file')
     .forEach(item => {
-      const dataRow: SummaryTableRow = [`\n\n[${item.name}](${viewerUrl}/${item.link})\n\n`, item.data.actualValue.formattedValue];
+      const dataRow: SummaryTableRow = [`\n\n[${item.name}](${joinUrl(viewerUrl, item.link)})\n\n`, item.data.actualValue.formattedValue];
 
       if (item.data.blockingAfter) {
         dataRow.push(item.data.blockingAfter.formattedValue);

@@ -85,7 +85,7 @@ describe('getChangedFilesOfCommit', () => {
     expect((response as any[]).length).toEqual(3);
   });
 
-  test('Should call exit on thrown error on paginate', async () => {
+  test('Should call error on thrown error on paginate', async () => {
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });

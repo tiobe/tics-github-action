@@ -91,3 +91,33 @@ describe('pullRequestNumber', () => {
     expect(pullRequestNumber).toEqual(0);
   });
 });
+
+describe('urls', () => {
+  test('Should return base url from ticsConfiguration', () => {
+    const baseUrl = require('../../src/configuration').baseUrl;
+
+    expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
+  });
+
+  test('Should return viewer url as base url from ticsConfiguration if viewerUrl is not set.', () => {
+    const viewerUrl = require('../../src/configuration').viewerUrl;
+
+    expect(viewerUrl).toEqual('http://localhost/tiobeweb/TICS');
+  });
+
+  test('Should return viewer url if viewerUrl is set without trailing slash', () => {
+    process.env.INPUT_VIEWERURL = 'http://localhost';
+
+    const viewerUrl = require('../../src/configuration').viewerUrl;
+
+    expect(viewerUrl).toEqual('http://localhost/');
+  });
+
+  test('Should return viewer url if viewerUrl is set with trailing slash', () => {
+    process.env.INPUT_VIEWERURL = 'http://localhost/';
+
+    const viewerUrl = require('../../src/configuration').viewerUrl;
+
+    expect(viewerUrl).toEqual('http://localhost/');
+  });
+});

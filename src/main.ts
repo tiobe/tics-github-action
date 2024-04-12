@@ -16,6 +16,7 @@ import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
 import { isOneOf } from './helper/compare';
+import { ChangedFile } from './github/interfaces';
 
 // export for testing purposes
 export let actionFailed: string | undefined;
@@ -57,12 +58,14 @@ export async function main(): Promise<void> {
 
 async function getChangedFiles(): Promise<ChangedFiles | undefined> {
   let changedFilesFilePath = undefined;
-  let changedFiles = undefined;
+  let changedFiles: ChangedFile[];
 
   if (githubConfig.eventName === 'pull_request') {
     changedFiles = await getChangedFilesOfPullRequest();
-  } else {
+  } else if (ticsConfig.mode === Mode.CLIENT) {
     changedFiles = await getChangedFilesOfCommit();
+  } else {
+    changedFiles = [];
   }
 
   if (ticsConfig.filelist) {
