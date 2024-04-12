@@ -12,8 +12,8 @@ import {
   TicsReviewComments
 } from './interfaces';
 import { ChangedFile } from '../github/interfaces';
-import { githubConfig, ticsConfig, viewerUrl } from '../configuration';
-import { Mode, Status } from './enums';
+import { githubConfig, viewerUrl } from '../configuration';
+import { Status } from './enums';
 import { range } from 'underscore';
 import { logger } from './logger';
 import { EOL } from 'os';
@@ -51,9 +51,7 @@ export function createSummaryBody(analysisResults: AnalysisResults): string {
         summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
       }
 
-      if (ticsConfig.mode === Mode.CLIENT) {
-        summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
-      }
+      summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
 

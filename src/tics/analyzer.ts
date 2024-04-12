@@ -1,5 +1,5 @@
 import { exec } from '@actions/exec';
-import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
+import { baseUrl, githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
@@ -107,6 +107,13 @@ function findInStdOutOrErr(data: string): void {
       explorerUrls.push(joinUrl(viewerUrl, urlPath));
     }
   }
+
+  const findQServerDate = data.matchAll(/\[INFO 3008\].*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/g);
+  for (const serverDate of findQServerDate) {
+    const dashboardUrl = `TqiDashboard.html#axes=Project(${ticsConfig.project}),Date(${serverDate[1].replace(' ', 'T')}),Sub()&metric=tqi`;
+    const serverUrl = joinUrl(baseUrl, dashboardUrl);
+    explorerUrls.push(serverUrl);
+  }
 }
 
 /**
@@ -124,11 +131,11 @@ export function getTicsCommand(fileListPath: string) {
     case Mode.CLIENT:
       command = 'TICS -ide github';
       command += fileListPath === '.' ? ' . -viewer ' : ` '@${fileListPath}' -viewer `;
-      command += buildTicsCli();
+      command += getCliOptionsForCommand();
       break;
     case Mode.QSERVER:
       command = 'TICSQServer';
-      command += buildTicsCli();
+      command += getCliOptionsForCommand();
       break;
   }
 
@@ -148,7 +155,7 @@ export function getTicsCommand(fileListPath: string) {
   return command.replace(/\s{2,}-/g, ' -');
 }
 
-function buildTicsCli() {
+function getCliOptionsForCommand() {
   let command = ` -project '${ticsConfig.project}' `;
   command += ` -calc ${ticsConfig.calc} `;
 
