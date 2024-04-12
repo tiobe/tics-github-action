@@ -1,7 +1,7 @@
 import * as exec from '@actions/exec';
 import * as os from 'os';
 import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
-import { runTicsAnalyzer } from '../../../src/tics/analyzer';
+import { getTicsCommand, runTicsAnalyzer } from '../../../src/tics/analyzer';
 import { Mode, TrustStrategy } from '../../../src/helper/enums';
 
 // test for multiple different types of configurations
@@ -248,6 +248,104 @@ describe('test multiple types of configuration', () => {
         silent: true
       }
     );
+  });
+});
+
+describe('getTicsCommand', () => {
+  test('Should return full TICS Client command on mode client with all variables set (also non-client ones)', () => {
+    ticsConfig.mode = Mode.CLIENT;
+    ticsConfig.project = 'project';
+    ticsConfig.calc = 'CS';
+    ticsConfig.nocalc = 'CW';
+    ticsConfig.recalc = 'CY';
+    ticsConfig.norecalc = 'CD';
+    ticsConfig.cdtoken = 'token';
+    ticsConfig.codetype = 'TESTCODE';
+    ticsConfig.branchname = 'main';
+    ticsConfig.branchdir = '.';
+    ticsConfig.tmpdir = '/home/ubuntu/test';
+    ticsConfig.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICS ');
+    expect(command).toContain(`'@./filelist'`);
+    expect(command).toContain(`-viewer`);
+    expect(command).toContain(`-project 'project'`);
+    expect(command).toContain('-calc CS');
+    expect(command).toContain('-nocalc CW');
+    expect(command).toContain('-recalc CY');
+    expect(command).toContain('-norecalc CD');
+    expect(command).toContain('-cdtoken token');
+    expect(command).toContain('-codetype TESTCODE');
+    expect(command).toContain('-branchname main');
+    expect(command).not.toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
+  });
+
+  test('Should return full TICSQServer command on mode qserver with all variables set (also non-qserver ones)', () => {
+    ticsConfig.mode = Mode.QSERVER;
+    ticsConfig.project = 'project';
+    ticsConfig.calc = 'CS';
+    ticsConfig.nocalc = 'CW';
+    ticsConfig.recalc = 'CY';
+    ticsConfig.norecalc = 'CD';
+    ticsConfig.cdtoken = 'token';
+    ticsConfig.codetype = 'TESTCODE';
+    ticsConfig.branchname = 'main';
+    ticsConfig.branchdir = '.';
+    ticsConfig.tmpdir = '/home/ubuntu/test';
+    ticsConfig.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICSQServer ');
+    expect(command).not.toContain(`'@./filelist'`);
+    expect(command).not.toContain(`-viewer`);
+    expect(command).toContain(`-project 'project'`);
+    expect(command).toContain('-calc CS');
+    expect(command).toContain('-nocalc CW');
+    expect(command).toContain('-recalc CY');
+    expect(command).toContain('-norecalc CD');
+    expect(command).not.toContain('-cdtoken token');
+    expect(command).not.toContain('-codetype TESTCODE');
+    expect(command).toContain('-branchname main');
+    expect(command).toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
+  });
+
+  test('Should return a diagnostic command on mode diagnostic with all variables set (also non-diagnostic ones)', () => {
+    ticsConfig.mode = Mode.DIAGNOSTIC;
+    ticsConfig.project = 'project';
+    ticsConfig.calc = 'CS';
+    ticsConfig.nocalc = 'CW';
+    ticsConfig.recalc = 'CY';
+    ticsConfig.norecalc = 'CD';
+    ticsConfig.cdtoken = 'token';
+    ticsConfig.codetype = 'TESTCODE';
+    ticsConfig.branchname = 'main';
+    ticsConfig.branchdir = '.';
+    ticsConfig.tmpdir = '/home/ubuntu/test';
+    ticsConfig.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICS ');
+    expect(command).not.toContain(`'@./filelist'`);
+    expect(command).not.toContain(`-viewer`);
+    expect(command).not.toContain(`-project 'project'`);
+    expect(command).not.toContain('-calc CS');
+    expect(command).not.toContain('-nocalc CW');
+    expect(command).not.toContain('-recalc CY');
+    expect(command).not.toContain('-norecalc CD');
+    expect(command).not.toContain('-cdtoken token');
+    expect(command).not.toContain('-codetype TESTCODE');
+    expect(command).not.toContain('-branchname main');
+    expect(command).not.toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
   });
 });
 

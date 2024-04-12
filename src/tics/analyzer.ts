@@ -114,7 +114,7 @@ function findInStdOutOrErr(data: string): void {
  * @param fileListPath
  * @returns string of the command to run TICS.
  */
-function getTicsCommand(fileListPath: string) {
+export function getTicsCommand(fileListPath: string) {
   let command: string;
 
   switch (ticsConfig.mode) {
