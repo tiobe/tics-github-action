@@ -30,7 +30,7 @@ import {
 
 afterEach(() => {
   jest.clearAllMocks();
-  delete main.actionFailed;
+  main.resetActionFailed();
 });
 
 describe('pre checks', () => {
@@ -127,7 +127,11 @@ describe('pre checks', () => {
   });
 });
 
-describe('SetFailed checks', () => {
+describe('SetFailed checks (TICS Client)', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.CLIENT;
+  });
+
   test('Should call info if no files are found', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce([]);
@@ -176,7 +180,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsPassedNoUrl);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsPassedNoUrl);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
@@ -191,7 +195,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
@@ -208,7 +212,7 @@ describe('SetFailed checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
@@ -221,7 +225,11 @@ describe('SetFailed checks', () => {
   });
 });
 
-describe('postNothingAnalyzed', () => {
+describe('postNothingAnalyzed (TICS Client)', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.CLIENT;
+  });
+
   test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
@@ -253,14 +261,18 @@ describe('postNothingAnalyzed', () => {
   });
 });
 
-describe('PostReview checks', () => {
+describe('PostReview checks (TICS Client)', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.CLIENT;
+  });
+
   test('Should call postReview with one file analyzed, qualitygate failed and no annotations', async () => {
     ticsConfig.pullRequestApproval = true;
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -276,7 +288,7 @@ describe('PostReview checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
     jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
 
     const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
@@ -292,7 +304,7 @@ describe('PostReview checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce([]);
     jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
     jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
@@ -311,7 +323,7 @@ describe('PostReview checks', () => {
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
     jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
@@ -326,7 +338,11 @@ describe('PostReview checks', () => {
   });
 });
 
-describe('Artifact upload tests', () => {
+describe('Artifact upload tests (TICS Client)', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.CLIENT;
+  });
+
   test('Should not call uploadArtifacts when tmpDir or isDebug are not set', async () => {
     const spyArtifact = jest.spyOn(artifacts, 'uploadArtifact').mockImplementationOnce(() => Promise.resolve());
     const spySummary = jest.spyOn(api_helper, 'cliSummary');
@@ -391,13 +407,17 @@ describe('Artifact upload tests', () => {
   });
 });
 
-describe('DeletePreviousReviewComments check', () => {
+describe('DeletePreviousReviewComments check (TICS Client)', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.CLIENT;
+  });
+
   test('Should call deletePreviousReviewComments when postAnnotations is true with one annotation and one previously posted review comment', async () => {
     (existsSync as any).mockReturnValueOnce(true);
     jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
     jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
+    jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
     jest.spyOn(annotations, 'getPostedReviewComments').mockImplementationOnce((): any => singlePreviousReviewComments);
     jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
@@ -413,10 +433,13 @@ describe('DeletePreviousReviewComments check', () => {
 });
 
 describe('Diagnostic mode checks', () => {
+  beforeEach(() => {
+    ticsConfig.mode = Mode.DIAGNOSTIC;
+  });
+
   test('Diagnostic mode succeeds', async () => {
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
 
-    ticsConfig.mode = Mode.DIAGNOSTIC;
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.main();
@@ -428,7 +451,6 @@ describe('Diagnostic mode checks', () => {
   test('Diagnostic mode fails', async () => {
     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
 
-    ticsConfig.mode = Mode.DIAGNOSTIC;
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
     await main.main();

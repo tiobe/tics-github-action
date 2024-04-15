@@ -146,12 +146,12 @@ describe('getViewerVersion', () => {
 });
 
 // Should be executed last due to spying rules
-describe('getAnalysisResults', () => {
+describe('getClientAnalysisResults', () => {
   // For multiproject run with project auto
   ticsConfig.project = 'auto';
 
   test('Should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {
-    const result = await fetcher.getAnalysisResults([], []);
+    const result = await fetcher.getClientAnalysisResults([], []);
 
     expect(result).toEqual({
       passed: false,
@@ -166,7 +166,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(undefined);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -188,7 +188,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(projectName)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(projectName)'], []);
 
     expect(result).toEqual({
       passed: true,
@@ -210,7 +210,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -233,7 +233,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -261,7 +261,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(fetcher, 'getQualityGate').mockResolvedValue(failedQualityGate);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -293,7 +293,7 @@ describe('getAnalysisResults', () => {
     jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(annotations);
     jest.spyOn(summary, 'createReviewComments').mockReturnValueOnce(ticsReviewComments);
 
-    const result = await fetcher.getAnalysisResults(['https://url.com/Project(project)'], []);
+    const result = await fetcher.getClientAnalysisResults(['https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: false,

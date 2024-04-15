@@ -1,7 +1,9 @@
+import { getItemFromUrl, getProjectName } from './api_helper';
+import * as fetcher from './fetcher';
 import { baseUrl, httpClient, ticsConfig } from '../configuration';
 import { ChangedFile } from '../github/interfaces';
+import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
 import {
-  ProjectResult,
   AnalysisResults,
   AnalyzedFile,
   AnalyzedFiles,
@@ -9,14 +11,14 @@ import {
   AnnotationApiLink,
   AnnotationResponse,
   ExtendedAnnotation,
+  ProjectResult,
   QualityGate,
+  RunDateResponse,
   VersionResponse
 } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { createReviewComments } from '../helper/summary';
-import { getItemFromUrl, getProjectName } from './api_helper';
-import * as fetcher from './fetcher';
-import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
+import { joinUrl } from '../helper/url';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -24,7 +26,7 @@ import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
  * @param changedFiles The changed files gotten from GitHub.
  * @returns Object containing the results of the analysis.
  */
-export async function getAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
+export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
   let failedProjectQualityGateCount = 0;
   let analysisResults: AnalysisResults = {
     passed: true,
@@ -235,18 +237,41 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
  * Gets the version of the TICS viewer used.
  * @returns Version of the used TICS viewer.
  */
-export async function getViewerVersion(): Promise<VersionResponse | undefined> {
-  const getViewerVersionUrl = new URL(baseUrl + '/api/v1/version');
-  let response;
+export async function getViewerVersion(): Promise<VersionResponse> {
+  const getViewerVersionUrl = joinUrl(baseUrl, '/api/v1/version');
+
   try {
     logger.header('Retrieving the viewer version');
-    logger.debug(`From ${getViewerVersionUrl.href}`);
-    response = await httpClient.get<VersionResponse>(getViewerVersionUrl.href);
+    logger.debug(`From ${getViewerVersionUrl}`);
+    const response = await httpClient.get<VersionResponse>(getViewerVersionUrl);
     logger.info(getRetryMessage(response, 'Retrieved the Viewer Version.'));
     logger.debug(JSON.stringify(response));
+    return response.data;
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the Viewer version: ${message}`);
   }
-  return response.data;
+}
+
+/**
+ * Gets the date of the last QServer run the viewer knows of.
+ * @returns the last QServer run date.
+ * @throws Error if no date could be retrieved.
+ */
+export async function getLastQServerRunDate(): Promise<number> {
+  const getRunDateUrl = joinUrl(baseUrl, `api/public/v1/Measure?filters=Project(${ticsConfig.project})&metrics=lastRunInDatabase`);
+  try {
+    logger.header('Retrieving the last QServer run date');
+    logger.debug(`From ${getRunDateUrl}`);
+    const response = await httpClient.get<RunDateResponse>(getRunDateUrl);
+    logger.info(getRetryMessage(response, 'Retrieved the last QServer run date.'));
+    logger.debug(JSON.stringify(response));
+    if (response.data.data.length === 0) {
+      throw Error('Request returned empty array');
+    }
+    return response.data.data[0].value / 1000;
+  } catch (error: unknown) {
+    const message = getRetryErrorMessage(error);
+    throw Error(`There was an error retrieving last QServer run date: ${message}`);
+  }
 }

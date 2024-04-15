@@ -5,7 +5,7 @@ import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalysisResults, getViewerVersion } from './tics/fetcher';
+import { getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
@@ -18,8 +18,10 @@ import { coerce, satisfies } from 'semver';
 import { isOneOf } from './helper/compare';
 import { ChangedFile } from './github/interfaces';
 
+let actionFailed: string | undefined = undefined;
+
 // export for testing purposes
-export let actionFailed: string | undefined;
+export const resetActionFailed = () => (actionFailed = undefined);
 
 main().catch((error: unknown) => {
   let message = 'TICS failed with unknown reason';
@@ -34,10 +36,16 @@ export async function main(): Promise<void> {
   await meetsPrerequisites();
 
   let analysis: Analysis | undefined;
-  if (ticsConfig.mode === Mode.DIAGNOSTIC) {
-    analysis = await diagnosticAnalysis();
-  } else {
-    analysis = await runAnalysisMode();
+  switch (ticsConfig.mode) {
+    case Mode.DIAGNOSTIC:
+      analysis = await diagnosticAnalysis();
+      break;
+    case Mode.CLIENT:
+      analysis = await clientAnalysis();
+      break;
+    case Mode.QSERVER:
+      analysis = await qServerAnalysis();
+      break;
   }
 
   if (analysis && (ticsConfig.tmpdir || githubConfig.debugger)) {
@@ -56,16 +64,57 @@ export async function main(): Promise<void> {
   await summary.write({ overwrite: true });
 }
 
+/**
+ * Function for running the action in diagnostic mode.
+ * @returns Analysis result from a diagnostic run.
+ */
+async function diagnosticAnalysis(): Promise<Analysis> {
+  logger.header('Running action in diagnostic mode');
+  let analysis = await runTicsAnalyzer('');
+
+  if (analysis.statusCode !== 0) {
+    actionFailed = 'Diagnostic run has failed.';
+  }
+
+  return analysis;
+}
+
+async function clientAnalysis(): Promise<Analysis | undefined> {
+  let analysis: Analysis | undefined;
+  const changedFiles = await getChangedFiles();
+
+  if (changedFiles) {
+    analysis = await runTicsClient(changedFiles);
+
+    if (analysis.explorerUrls.length > 0) {
+      try {
+        await processClientAnalysis(analysis, changedFiles);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Something went wrong: reason unknown';
+        logger.error(message);
+
+        actionFailed = message;
+      }
+    }
+  }
+
+  return analysis;
+}
+
+async function qServerAnalysis(): Promise<Analysis | undefined> {
+  const analysis = await runTicsAnalyzer('');
+
+  return analysis;
+}
+
 async function getChangedFiles(): Promise<ChangedFiles | undefined> {
   let changedFilesFilePath = undefined;
   let changedFiles: ChangedFile[];
 
   if (githubConfig.eventName === 'pull_request') {
     changedFiles = await getChangedFilesOfPullRequest();
-  } else if (ticsConfig.mode === Mode.CLIENT) {
-    changedFiles = await getChangedFilesOfCommit();
   } else {
-    changedFiles = [];
+    changedFiles = await getChangedFilesOfCommit();
   }
 
   if (ticsConfig.filelist) {
@@ -84,30 +133,7 @@ async function getChangedFiles(): Promise<ChangedFiles | undefined> {
   };
 }
 
-async function runAnalysisMode(): Promise<Analysis | undefined> {
-  let analysis: Analysis | undefined;
-  const changedFiles = await getChangedFiles();
-
-  if (changedFiles) {
-    analysis = await analyze(changedFiles);
-
-    if (analysis.explorerUrls.length > 0) {
-      try {
-        await processAnalysis(analysis, changedFiles);
-      } catch (error: unknown) {
-        let message = 'Something went wrong: reason unknown';
-        if (error instanceof Error) message = error.message;
-        logger.error(message);
-
-        actionFailed = message;
-      }
-    }
-  }
-
-  return analysis;
-}
-
-async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
+async function runTicsClient(changedFiles: ChangedFiles): Promise<Analysis> {
   const analysis = await runTicsAnalyzer(changedFiles.path);
 
   if (analysis.explorerUrls.length === 0) {
@@ -126,8 +152,8 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   return analysis;
 }
 
-async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
-  const analysisResults = await getAnalysisResults(analysis.explorerUrls, changedFiles.files);
+async function processClientAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
+  const analysisResults = await getClientAnalysisResults(analysis.explorerUrls, changedFiles.files);
 
   if (analysisResults.missesQualityGate) {
     throw Error('Some quality gates could not be retrieved.');
@@ -157,21 +183,6 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
   if (!analysisResults.passed) {
     actionFailed = analysisResults.failureMessage;
   }
-}
-
-/**
- * Function for running the action in diagnostic mode.
- * @returns Analysis result from a diagnostic run.
- */
-async function diagnosticAnalysis(): Promise<Analysis> {
-  logger.header('Running action in diagnostic mode');
-  let analysis = await runTicsAnalyzer('');
-
-  if (analysis.statusCode !== 0) {
-    actionFailed = 'Diagnostic run has failed.';
-  }
-
-  return analysis;
 }
 
 /**
@@ -235,7 +246,7 @@ export function configure(): void {
  */
 async function meetsPrerequisites(): Promise<void> {
   const viewerVersion = await getViewerVersion();
-  const cleanViewerVersion = viewerVersion ? coerce(viewerVersion.version) : null;
+  const cleanViewerVersion = coerce(viewerVersion.version);
   if (!cleanViewerVersion || !satisfies(cleanViewerVersion, '>=2022.4.0')) {
     const version = cleanViewerVersion?.toString() ?? 'unknown';
     throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);

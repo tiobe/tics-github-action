@@ -1,5 +1,5 @@
 import { exec } from '@actions/exec';
-import { baseUrl, githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
+import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
@@ -95,10 +95,14 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
  */
 function findInStdOutOrErr(data: string): void {
   const error = data.toString().match(/\[ERROR.*/g);
-  if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
+  if (error && !errorList.find(e => e === error?.toString())) {
+    errorList.push(error.toString());
+  }
 
   const warning = data.toString().match(/\[WARNING.*/g);
-  if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
+  if (warning && !warningList.find(w => w === warning?.toString())) {
+    warningList.push(warning.toString());
+  }
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
   if (findExplorerUrl) {
@@ -106,13 +110,6 @@ function findInStdOutOrErr(data: string): void {
     if (urlPath) {
       explorerUrls.push(joinUrl(viewerUrl, urlPath));
     }
-  }
-
-  const findQServerDate = data.matchAll(/\[INFO 3008\].*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/g);
-  for (const serverDate of findQServerDate) {
-    const dashboardUrl = `TqiDashboard.html#axes=Project(${ticsConfig.project}),Date(${serverDate[1].replace(' ', 'T')}),Sub()&metric=tqi`;
-    const serverUrl = joinUrl(baseUrl, dashboardUrl);
-    explorerUrls.push(serverUrl);
   }
 }
 

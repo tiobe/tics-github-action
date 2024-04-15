@@ -183,3 +183,23 @@ export interface Links {
   uploadArtifact: string;
   installTics?: string;
 }
+
+export interface RunDateResponse {
+  data: {
+    formattedValue: string;
+    letter: string | undefined;
+    messages: string[];
+    coverage: number;
+    status: string;
+    value: number;
+  }[];
+  dates: string;
+  metrics: {
+    expression: string;
+    fullName: string;
+  }[];
+  nodes: {
+    name: string;
+    fullPath: string;
+  }[];
+}
