@@ -110,13 +110,14 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
   const analyzedFiles = await getAnalyzedFilesQServer(date);
 
   if (githubConfig.eventName === 'pull_request') {
-    handlePullRequest();
+    await handlePullRequest();
   }
 
   const projectResult: ProjectResult = {
     project: ticsConfig.project,
     explorerUrl: qualityGate.url,
-    analyzedFiles: analyzedFiles
+    analyzedFiles: analyzedFiles,
+    qualityGate: qualityGate
   };
 
   const analysisResults: AnalysisResults = {
