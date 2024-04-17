@@ -72,11 +72,11 @@ export class ActionConfiguration {
     this.validateCliOptions(this, this.mode);
   }
 
-  getCalcDefault() {
+  getCalcDefault(): string {
     if (this.mode === Mode.CLIENT) {
       return 'GATE';
     } else {
-      return undefined;
+      return '';
     }
   }
 

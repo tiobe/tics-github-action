@@ -1,6 +1,6 @@
 import { baseUrl, httpClient, ticsConfig } from '../configuration';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/error';
-import { QualityGate, RunDateResponse } from '../helper/interfaces';
+import { AnalyzedFile, AnalyzedFiles, QualityGate, RunDateResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { joinUrl } from '../helper/url';
 
@@ -67,4 +67,47 @@ export async function getLastQServerRunDate(): Promise<number> {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving last QServer run date: ${message}`);
   }
+}
+
+/**
+ * Retrieves the files TICS analyzed from the TICS viewer.
+ * @param url The TICS explorer url.
+ * @returns the analyzed files.
+ */
+export async function getAnalyzedFilesQServer(date: number): Promise<string[]> {
+  logger.header('Retrieving analyzed files.');
+  const analyzedFilesUrl = getAnalyzedFilesUrl(date);
+  let analyzedFiles: string[] = [];
+  logger.debug(`From: ${analyzedFilesUrl}`);
+
+  try {
+    const response = await httpClient.get<AnalyzedFiles>(analyzedFilesUrl);
+    if (response) {
+      analyzedFiles = response.data.data.map((file: AnalyzedFile) => {
+        logger.debug(file.formattedValue);
+        return file.formattedValue;
+      });
+      logger.info(getRetryMessage(response, 'Retrieved the analyzed files.'));
+    }
+  } catch (error: unknown) {
+    const message = getRetryErrorMessage(error);
+    throw Error(`There was an error retrieving the analyzed files: ${message}`);
+  }
+  return analyzedFiles;
+}
+
+/**
+ * Returns the url to get the analyzed files with from the TICS.
+ * @param url The TICS explorer url.
+ * @returns url to get the analyzed files from.
+ */
+function getAnalyzedFilesUrl(date: number) {
+  let getAnalyzedFilesUrl = new URL(joinUrl(baseUrl, '/api/public/v1/Measure?metrics=filePath'));
+
+  getAnalyzedFilesUrl.searchParams.append(
+    'filters',
+    `Project(${ticsConfig.project}),Date(${date.toString()}),Window(-1),CodeType(Set(production,test,external,generated)),File()`
+  );
+
+  return getAnalyzedFilesUrl.href;
 }

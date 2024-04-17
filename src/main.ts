@@ -5,19 +5,19 @@ import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
+import { getAnalyzedFiles, getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events, Mode, TrustStrategy } from './helper/enums';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis, ChangedFiles } from './helper/interfaces';
+import { Analysis, AnalysisResults, ChangedFiles, ProjectResult } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
 import { isOneOf } from './helper/compare';
 import { ChangedFile } from './github/interfaces';
-import { getLastQServerRunDate, getQServerQualityGate } from './tics/qserver_fetcher';
+import { getAnalyzedFilesQServer, getLastQServerRunDate, getQServerQualityGate } from './tics/qserver_fetcher';
 
 let actionFailed: string | undefined = undefined;
 
@@ -107,10 +107,28 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
   const date = await getLastQServerRunDate();
 
   const qualityGate = await getQServerQualityGate(date);
+  const analyzedFiles = await getAnalyzedFilesQServer(date);
 
   if (githubConfig.eventName === 'pull_request') {
     handlePullRequest();
   }
+
+  const projectResult: ProjectResult = {
+    project: ticsConfig.project,
+    explorerUrl: qualityGate.url,
+    analyzedFiles: analyzedFiles
+  };
+
+  const analysisResults: AnalysisResults = {
+    passed: qualityGate.passed,
+    passedWithWarning: qualityGate.passedWithWarning ?? false,
+    failureMessage: '',
+    missesQualityGate: false,
+    projectResults: [projectResult]
+  };
+
+  createSummaryBody(analysisResults);
+
   return analysis;
 }
 
