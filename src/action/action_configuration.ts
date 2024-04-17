@@ -62,7 +62,7 @@ export class ActionConfiguration {
     this.branchdir = getInput('branchDir');
     this.cdtoken = getInput('clientData');
     this.codetype = getInput('codetype');
-    this.calc = getInput('calc');
+    this.calc = getInput('calc') ?? this.getCalcDefault();
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
@@ -70,6 +70,17 @@ export class ActionConfiguration {
     this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, this.mode);
+  }
+
+  getCalcDefault() {
+    switch (this.mode) {
+      case Mode.CLIENT:
+        return 'GATE';
+      case Mode.QSERVER:
+        return 'ALL';
+      case Mode.DIAGNOSTIC:
+        return undefined;
+    }
   }
 
   /**

@@ -27,9 +27,8 @@ inputs:
     description: Location of the files to analyze (only applies to QServer runs).
     required: false
   calc:
-    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
+    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.
     required: false
-    default: GATE
   nocalc:
     description: Comma-separated list of metrics not to be calculated.
     required: false
