@@ -73,13 +73,10 @@ export class ActionConfiguration {
   }
 
   getCalcDefault() {
-    switch (this.mode) {
-      case Mode.CLIENT:
-        return 'GATE';
-      case Mode.QSERVER:
-        return 'ALL';
-      case Mode.DIAGNOSTIC:
-        return undefined;
+    if (this.mode === Mode.CLIENT) {
+      return 'GATE';
+    } else {
+      return undefined;
     }
   }
 
