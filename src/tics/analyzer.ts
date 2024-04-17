@@ -119,48 +119,47 @@ function findInStdOutOrErr(data: string): void {
  * @returns string of the command to run TICS.
  */
 export function getTicsCommand(fileListPath: string) {
-  let command: string;
+  let command: string[] = [];
 
   switch (ticsConfig.mode) {
     case Mode.DIAGNOSTIC:
-      command = 'TICS -ide github -help';
+      command.push('TICS -ide github -help');
       break;
     case Mode.CLIENT:
-      command = 'TICS -ide github';
-      command += fileListPath === '.' ? ' . -viewer ' : ` '@${fileListPath}' -viewer `;
-      command += getCliOptionsForCommand();
+      command.push('TICS -ide github');
+      command.push(fileListPath === '.' ? '. -viewer' : `'@${fileListPath}' -viewer`);
+      command = [...command, ...getCliOptionsForCommand()];
       break;
     case Mode.QSERVER:
-      command = 'TICSQServer';
-      command += getCliOptionsForCommand();
+      command.push('TICSQServer');
+      command = [...command, ...getCliOptionsForCommand()];
       break;
   }
 
   if (ticsConfig.tmpdir || githubConfig.debugger) {
-    command += ` -tmpdir '${getTmpDir()}' `;
+    command.push(`-tmpdir '${getTmpDir()}'`);
   }
 
   if (ticsConfig.additionalFlags) {
-    command += ` ${ticsConfig.additionalFlags} `;
+    command.push(`${ticsConfig.additionalFlags}`);
   }
 
   // Add TICS debug flag when in debug mode, if this flag was not already set.
   if (githubConfig.debugger && !command.includes('-log ')) {
-    command += ' -log 9';
+    command.push('-log 9');
   }
 
-  return command.replace(/\s{2,}-/g, ' -');
+  return command.join(' ');
 }
 
 function getCliOptionsForCommand() {
-  let command = ` -project '${ticsConfig.project}' `;
-  command += ` -calc ${ticsConfig.calc} `;
+  const command = [`-project '${ticsConfig.project}'`];
 
-  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'calc', 'projectName', 'tmpDir')).forEach(option => {
+  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
     if (option.modes.includes(ticsConfig.mode)) {
       const value = ticsConfig[option.cli as keyof ActionConfiguration];
       if (value) {
-        command += ` -${option.cli} ${value} `;
+        command.push(`-${option.cli} ${value}`);
       }
     }
   });
