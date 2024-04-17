@@ -17,6 +17,7 @@ import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
 import { isOneOf } from './helper/compare';
 import { ChangedFile } from './github/interfaces';
+import { getLastQServerRunDate, getQServerQualityGate } from './tics/qserver_fetcher';
 
 let actionFailed: string | undefined = undefined;
 
@@ -103,8 +104,21 @@ async function clientAnalysis(): Promise<Analysis | undefined> {
 
 async function qServerAnalysis(): Promise<Analysis | undefined> {
   const analysis = await runTicsAnalyzer('');
+  const date = await getLastQServerRunDate();
 
+  const qualityGate = await getQServerQualityGate(date);
+
+  if (githubConfig.eventName === 'pull_request') {
+    handlePullRequest();
+  }
   return analysis;
+}
+
+async function handlePullRequest() {
+  const previousReviewComments = await getPostedReviewComments();
+  if (previousReviewComments && previousReviewComments.length > 0) {
+    await deletePreviousReviewComments(previousReviewComments);
+  }
 }
 
 async function getChangedFiles(): Promise<ChangedFiles | undefined> {
@@ -168,7 +182,7 @@ async function processClientAnalysis(analysis: Analysis, changedFiles: ChangedFi
   }
 
   if (ticsConfig.postAnnotations) {
-    postAnnotations(analysisResults);
+    postAnnotations(analysisResults.projectResults);
   }
 
   let reviewBody = createSummaryBody(analysisResults);
@@ -216,7 +230,9 @@ export function configure(): void {
     if (githubConfig.debugger) logger.debug(warning.message.toString());
   });
 
-  exportVariable('TICSIDE', 'GITHUB');
+  if (ticsConfig.mode !== Mode.QSERVER) {
+    exportVariable('TICSIDE', 'GITHUB');
+  }
 
   // set ticsAuthToken
   if (ticsConfig.ticsAuthToken) {

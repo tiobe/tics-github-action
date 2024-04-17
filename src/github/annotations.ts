@@ -1,7 +1,7 @@
 import { logger } from '../helper/logger';
 import { githubConfig, octokit, ticsConfig } from '../configuration';
 import { ReviewComment } from './interfaces';
-import { AnalysisResults, TicsReviewComment } from '../helper/interfaces';
+import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/error';
 
 /**
@@ -30,12 +30,12 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function postAnnotations(analysisResult: AnalysisResults): void {
+export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
   let postableReviewComments: TicsReviewComment[] = [];
 
-  analysisResult.projectResults.forEach(projectResult => {
+  projectResults.forEach(projectResult => {
     if (projectResult.reviewComments) {
       postableReviewComments.push(...projectResult.reviewComments.postable);
     }

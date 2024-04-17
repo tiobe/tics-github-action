@@ -77,7 +77,7 @@ describe('postAnnotations', () => {
 
     ticsConfig.showBlockingAfter = true;
 
-    postAnnotations(twoMixedAnalysisResults);
+    postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -100,7 +100,7 @@ describe('postAnnotations', () => {
 
     ticsConfig.showBlockingAfter = true;
 
-    postAnnotations(fourMixedAnalysisResults);
+    postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -133,7 +133,7 @@ describe('postAnnotations', () => {
 
     ticsConfig.showBlockingAfter = false;
 
-    postAnnotations(twoMixedAnalysisResults);
+    postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -151,7 +151,7 @@ describe('postAnnotations', () => {
 
     ticsConfig.showBlockingAfter = false;
 
-    postAnnotations(fourMixedAnalysisResults);
+    postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {

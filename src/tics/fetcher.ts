@@ -13,7 +13,6 @@ import {
   ExtendedAnnotation,
   ProjectResult,
   QualityGate,
-  RunDateResponse,
   VersionResponse
 } from '../helper/interfaces';
 import { logger } from '../helper/logger';
@@ -121,7 +120,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
  * @returns url to get the analyzed files from.
  */
 function getAnalyzedFilesUrl(url: string) {
-  let getAnalyzedFilesUrl = new URL(baseUrl + '/api/public/v1/Measure?metrics=filePath');
+  let getAnalyzedFilesUrl = new URL(joinUrl(baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
   const clientData = getItemFromUrl(url, 'ClientData');
   const project = getProjectName(url);
@@ -163,7 +162,7 @@ export async function getQualityGate(url: string): Promise<QualityGate | undefin
  * @returns The url to get the quality gate analysis.
  */
 function getQualityGateUrl(url: string) {
-  let qualityGateUrl = new URL(baseUrl + '/api/public/v1/QualityGateStatus');
+  let qualityGateUrl = new URL(joinUrl(baseUrl, '/api/public/v1/QualityGateStatus'));
 
   const project = getProjectName(url);
   qualityGateUrl.searchParams.append('project', project);
@@ -250,28 +249,5 @@ export async function getViewerVersion(): Promise<VersionResponse> {
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the Viewer version: ${message}`);
-  }
-}
-
-/**
- * Gets the date of the last QServer run the viewer knows of.
- * @returns the last QServer run date.
- * @throws Error if no date could be retrieved.
- */
-export async function getLastQServerRunDate(): Promise<number> {
-  const getRunDateUrl = joinUrl(baseUrl, `api/public/v1/Measure?filters=Project(${ticsConfig.project})&metrics=lastRunInDatabase`);
-  try {
-    logger.header('Retrieving the last QServer run date');
-    logger.debug(`From ${getRunDateUrl}`);
-    const response = await httpClient.get<RunDateResponse>(getRunDateUrl);
-    logger.info(getRetryMessage(response, 'Retrieved the last QServer run date.'));
-    logger.debug(JSON.stringify(response));
-    if (response.data.data.length === 0) {
-      throw Error('Request returned empty array');
-    }
-    return response.data.data[0].value / 1000;
-  } catch (error: unknown) {
-    const message = getRetryErrorMessage(error);
-    throw Error(`There was an error retrieving last QServer run date: ${message}`);
   }
 }
