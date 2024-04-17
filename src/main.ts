@@ -131,6 +131,10 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
 
   createSummaryBody(analysisResults);
 
+  if (!qualityGate.passed) {
+    actionFailed = qualityGate.message;
+  }
+
   return analysis;
 }
 

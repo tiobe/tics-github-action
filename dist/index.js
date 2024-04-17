@@ -72565,6 +72565,9 @@ async function qServerAnalysis() {
     projectResults: [projectResult]
   };
   createSummaryBody(analysisResults);
+  if (!qualityGate.passed) {
+    actionFailed = qualityGate.message;
+  }
   return analysis;
 }
 async function handlePullRequest() {
