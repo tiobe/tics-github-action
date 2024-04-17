@@ -1,11 +1,11 @@
 import { existsSync } from 'fs';
 import { deletePreviousComments, postComment, postErrorComment, postNothingAnalyzedComment, getPostedComments } from './github/comments';
-import { githubConfig, ticsConfig } from './configuration';
+import { baseUrl, githubConfig, ticsConfig } from './configuration';
 import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls';
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getAnalyzedFiles, getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
+import { getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
 import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
@@ -18,6 +18,7 @@ import { coerce, satisfies } from 'semver';
 import { isOneOf } from './helper/compare';
 import { ChangedFile } from './github/interfaces';
 import { getAnalyzedFilesQServer, getLastQServerRunDate, getQServerQualityGate } from './tics/qserver_fetcher';
+import { joinUrl } from './helper/url';
 
 let actionFailed: string | undefined = undefined;
 
@@ -115,7 +116,7 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
 
   const projectResult: ProjectResult = {
     project: ticsConfig.project,
-    explorerUrl: qualityGate.url,
+    explorerUrl: joinUrl(baseUrl, qualityGate.url),
     analyzedFiles: analyzedFiles,
     qualityGate: qualityGate
   };
