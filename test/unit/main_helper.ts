@@ -7,7 +7,11 @@ export const singleChangedFiles: ChangedFile[] = [
     status: 'modified',
     additions: 1,
     deletions: 1,
-    changes: 1
+    changes: 1,
+    sha: '',
+    blob_url: '',
+    raw_url: '',
+    contents_url: ''
   }
 ];
 
@@ -17,14 +21,22 @@ export const doubleChangedFiles: ChangedFile[] = [
     status: 'modified',
     additions: 1,
     deletions: 1,
-    changes: 1
+    changes: 1,
+    sha: '',
+    blob_url: '',
+    raw_url: '',
+    contents_url: ''
   },
   {
     filename: 'jest.js',
     status: 'modified',
     additions: 1,
     deletions: 1,
-    changes: 1
+    changes: 1,
+    sha: '',
+    blob_url: '',
+    raw_url: '',
+    contents_url: ''
   }
 ];
 
