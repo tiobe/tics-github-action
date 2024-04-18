@@ -196,7 +196,11 @@ describe('createReviewComments', () => {
         status: 'modified',
         additions: 1,
         deletions: 1,
-        changes: 2
+        changes: 2,
+        sha: '',
+        blob_url: '',
+        raw_url: '',
+        contents_url: ''
       }
     ];
     const annotations: ExtendedAnnotation[] = [
@@ -254,7 +258,11 @@ describe('createReviewComments', () => {
         status: 'modified',
         additions: 1,
         deletions: 1,
-        changes: 2
+        changes: 2,
+        sha: '',
+        blob_url: '',
+        raw_url: '',
+        contents_url: ''
       }
     ];
     const annotations: ExtendedAnnotation[] = [
@@ -319,7 +327,11 @@ describe('createReviewComments', () => {
         status: 'modified',
         additions: 1,
         deletions: 1,
-        changes: 2
+        changes: 2,
+        sha: '',
+        blob_url: '',
+        raw_url: '',
+        contents_url: ''
       }
     ];
     const annotations = [
@@ -418,7 +430,11 @@ test('Should return one postable and one unpostable review comment', async () =>
       additions: 1,
       deletions: 1,
       changes: 2,
-      patch: '@@ -0,1 +0,1 @@'
+      patch: '@@ -0,1 +0,1 @@',
+      sha: '',
+      blob_url: '',
+      raw_url: '',
+      contents_url: ''
     }
   ];
   const annotations = [

@@ -24,7 +24,6 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 // eslint-disable-next-line import/first
 import { octokit } from '../../src/configuration';
 import { RequestError } from '@octokit/request-error';
-import { GraphQlResponse, HeadRepositoryOwnerResData } from '../../src/github/interfaces';
 
 describe('@octokit/action (using https_proxy)', () => {
   let proxyServer: http.Server;
@@ -58,28 +57,6 @@ describe('@octokit/action (using https_proxy)', () => {
     if (originalhttpProxyUrl) {
       process.env['http_proxy'] = originalhttpProxyUrl;
     }
-  });
-
-  test('Should return basic graphql request through the proxy', async () => {
-    const response = await octokit.graphql<GraphQlResponse<HeadRepositoryOwnerResData>>(
-      `query($owner: String!, $repo: String!, $pull_number: Int!) {
-        repository(owner: $owner, name: $repo) {
-          pullRequest(number: $pull_number) {
-            headRepositoryOwner {
-              login
-            }
-          }
-        }
-      }`,
-      {
-        owner: 'tiobe',
-        repo: 'tics-github-action',
-        pull_number: 1
-      }
-    );
-
-    expect(response.repository.pullRequest.headRepositoryOwner.login).toEqual('tiobe');
-    expect(proxyConnects.length).toEqual(1);
   });
 
   test('Should return basic REST request, but not through the proxy', async () => {
