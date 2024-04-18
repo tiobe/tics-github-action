@@ -32,7 +32,6 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  */
 export function postAnnotations(analysisResult: AnalysisResults): void {
   logger.header('Posting annotations.');
-  logger.debug(`Analysis result: ${JSON.stringify(analysisResult)}`);
 
   let postableReviewComments: TicsReviewComment[] = [];
 
