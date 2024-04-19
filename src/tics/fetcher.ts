@@ -64,7 +64,7 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
       if (ticsConfig.postAnnotations) {
         // import of itself is used for mocking the function in the same file
         const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
-        if (annotations && annotations.length > 0) {
+        if (annotations.length > 0) {
           projectResult.reviewComments = createReviewComments(annotations, changedFiles);
         }
       }

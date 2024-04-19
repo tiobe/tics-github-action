@@ -5,13 +5,13 @@ import { changedFilesToFile, getChangedFilesOfPullRequest } from './github/pulls
 import { logger } from './helper/logger';
 import { runTicsAnalyzer } from './tics/analyzer';
 import { cliSummary } from './tics/api_helper';
-import { getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
+import { getAnnotations, getClientAnalysisResults, getViewerVersion } from './tics/fetcher';
 import { postNothingAnalyzedReview, postReview } from './github/review';
-import { createSummaryBody } from './helper/summary';
+import { createReviewComments, createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events, Mode, TrustStrategy } from './helper/enums';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis, AnalysisResult, ChangedFiles } from './helper/interfaces';
+import { Analysis, AnalysisResult, ChangedFiles, TicsReviewComments } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
@@ -112,6 +112,21 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
   const qualityGate = await getQServerQualityGate(date);
   const analyzedFiles = await getAnalyzedFilesQServer(date);
 
+  let reviewComments: TicsReviewComments | undefined;
+  if (ticsConfig.postAnnotations) {
+    let changedFiles: ChangedFile[] = [];
+    if (githubConfig.eventName === 'pull_request') {
+      changedFiles = await getChangedFilesOfPullRequest();
+    } else {
+      changedFiles = await getChangedFilesOfCommit();
+    }
+
+    const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+    if (annotations.length > 0) {
+      reviewComments = createReviewComments(annotations, changedFiles);
+    }
+  }
+
   const analysisResult: AnalysisResult = {
     passed: qualityGate.passed,
     passedWithWarning: qualityGate.passedWithWarning ?? false,
@@ -122,7 +137,8 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
         project: ticsConfig.project,
         explorerUrl: joinUrl(baseUrl, qualityGate.url),
         analyzedFiles: analyzedFiles,
-        qualityGate: qualityGate
+        qualityGate: qualityGate,
+        reviewComments: reviewComments
       }
     ]
   };
