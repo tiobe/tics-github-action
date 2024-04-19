@@ -13,7 +13,7 @@ export interface Analysis {
   explorerUrls: string[];
 }
 
-export interface AnalysisResults {
+export interface AnalysisResult {
   passed: boolean;
   passedWithWarning: boolean;
   failureMessage: string;

@@ -4,7 +4,7 @@ import { baseUrl, httpClient, ticsConfig } from '../configuration';
 import { ChangedFile } from '../github/interfaces';
 import { getRetryErrorMessage, getRetryMessage } from '../helper/error';
 import {
-  AnalysisResults,
+  AnalysisResult,
   AnalyzedFile,
   AnalyzedFiles,
   Annotation,
@@ -25,9 +25,9 @@ import { joinUrl } from '../helper/url';
  * @param changedFiles The changed files gotten from GitHub.
  * @returns Object containing the results of the analysis.
  */
-export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResults> {
+export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResult> {
   let failedProjectQualityGateCount = 0;
-  let analysisResults: AnalysisResults = {
+  let analysisResult: AnalysisResult = {
     passed: true,
     passedWithWarning: false,
     failureMessage: '',
@@ -36,13 +36,13 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
   };
 
   if (explorerUrls.length === 0) {
-    analysisResults.passed = false;
-    analysisResults.failureMessage = 'No Explorer url found';
-    analysisResults.missesQualityGate = true;
+    analysisResult.passed = false;
+    analysisResult.failureMessage = 'No Explorer url found';
+    analysisResult.missesQualityGate = true;
   }
 
   for (const url of explorerUrls) {
-    let analysisResult: ProjectResult = {
+    let projectResult: ProjectResult = {
       project: getProjectName(url),
       explorerUrl: url,
       // import of itself is used for mocking the function in the same file
@@ -53,11 +53,11 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
     const qualityGate = await fetcher.getQualityGate(url);
 
     if (!qualityGate) {
-      analysisResults.passed = false;
-      analysisResults.missesQualityGate = true;
+      analysisResult.passed = false;
+      analysisResult.missesQualityGate = true;
     } else {
       if (!qualityGate.passed) {
-        analysisResults.passed = false;
+        analysisResult.passed = false;
         failedProjectQualityGateCount++;
       }
 
@@ -65,26 +65,26 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
         // import of itself is used for mocking the function in the same file
         const annotations = await fetcher.getAnnotations(qualityGate.annotationsApiV1Links);
         if (annotations && annotations.length > 0) {
-          analysisResult.reviewComments = createReviewComments(annotations, changedFiles);
+          projectResult.reviewComments = createReviewComments(annotations, changedFiles);
         }
       }
     }
 
-    analysisResult.qualityGate = qualityGate;
+    projectResult.qualityGate = qualityGate;
 
-    analysisResults.projectResults.push(analysisResult);
+    analysisResult.projectResults.push(projectResult);
   }
 
-  analysisResults.passedWithWarning =
-    analysisResults.passed && analysisResults.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
+  analysisResult.passedWithWarning =
+    analysisResult.passed && analysisResult.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
 
   // Construct message on how many projects failed the quality gate (if at least one fails).
   if (failedProjectQualityGateCount >= 1) {
-    analysisResults.failureMessage = explorerUrls.length > 1 ? `${failedProjectQualityGateCount} out of ${explorerUrls.length} projects` : 'Project';
-    analysisResults.failureMessage += ` failed quality gate(s)`;
+    analysisResult.failureMessage = explorerUrls.length > 1 ? `${failedProjectQualityGateCount} out of ${explorerUrls.length} projects` : 'Project';
+    analysisResult.failureMessage += ` failed quality gate(s)`;
   }
 
-  return analysisResults;
+  return analysisResult;
 }
 
 /**

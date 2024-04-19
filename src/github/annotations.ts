@@ -18,11 +18,11 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
       pull_number: githubConfig.pullRequestNumber
     };
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
+    logger.info('Retrieve posted review comments.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
     logger.notice(`Could not retrieve the review comments: ${message}`);
   }
-  logger.info('Retrieve posted review comments.');
   return response;
 }
 

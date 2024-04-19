@@ -1,5 +1,5 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
-import { AnalysisResults, TicsReviewComment } from '../../../../src/helper/interfaces';
+import { AnalysisResult, TicsReviewComment } from '../../../../src/helper/interfaces';
 
 export const user: User = {
   login: '',
@@ -76,7 +76,7 @@ export const emptyComment: ReviewComment = {
   _links: links
 };
 
-export const analysisResults: AnalysisResults = {
+export const analysisResults: AnalysisResult = {
   passed: false,
   failureMessage: '',
   missesQualityGate: false,
@@ -149,7 +149,7 @@ const fourAnnotations: TicsReviewComment[] = [
   }
 ];
 
-export const twoMixedAnalysisResults: AnalysisResults = {
+export const twoMixedAnalysisResults: AnalysisResult = {
   passed: false,
   failureMessage: '',
   missesQualityGate: false,
@@ -185,7 +185,7 @@ export const twoMixedAnalysisResults: AnalysisResults = {
   passedWithWarning: false
 };
 
-export const fourMixedAnalysisResults: AnalysisResults = {
+export const fourMixedAnalysisResults: AnalysisResult = {
   passed: false,
   failureMessage: '',
   missesQualityGate: false,

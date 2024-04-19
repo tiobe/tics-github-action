@@ -11,7 +11,7 @@ import { createSummaryBody } from './helper/summary';
 import { getPostedReviewComments, postAnnotations, deletePreviousReviewComments } from './github/annotations';
 import { Events, Mode, TrustStrategy } from './helper/enums';
 import { exportVariable, summary } from '@actions/core';
-import { Analysis, AnalysisResults, ChangedFiles, ProjectResult } from './helper/interfaces';
+import { Analysis, AnalysisResult, ChangedFiles } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
 import { getChangedFilesOfCommit } from './github/commits';
 import { coerce, satisfies } from 'semver';
@@ -112,39 +112,64 @@ async function qServerAnalysis(): Promise<Analysis | undefined> {
   const qualityGate = await getQServerQualityGate(date);
   const analyzedFiles = await getAnalyzedFilesQServer(date);
 
-  if (githubConfig.eventName === 'pull_request') {
-    await handlePullRequest();
-  }
-
-  const projectResult: ProjectResult = {
-    project: ticsConfig.project,
-    explorerUrl: joinUrl(baseUrl, qualityGate.url),
-    analyzedFiles: analyzedFiles,
-    qualityGate: qualityGate
-  };
-
-  const analysisResults: AnalysisResults = {
+  const analysisResult: AnalysisResult = {
     passed: qualityGate.passed,
     passedWithWarning: qualityGate.passedWithWarning ?? false,
     failureMessage: '',
     missesQualityGate: false,
-    projectResults: [projectResult]
+    projectResults: [
+      {
+        project: ticsConfig.project,
+        explorerUrl: joinUrl(baseUrl, qualityGate.url),
+        analyzedFiles: analyzedFiles,
+        qualityGate: qualityGate
+      }
+    ]
   };
 
-  createSummaryBody(analysisResults);
-
-  if (!qualityGate.passed) {
-    actionFailed = qualityGate.message;
-  }
+  await processAnalysisResult(analysisResult);
 
   return analysis;
 }
 
-async function handlePullRequest() {
+async function processClientAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
+  const analysisResult = await getClientAnalysisResults(analysis.explorerUrls, changedFiles.files);
+
+  if (analysisResult.missesQualityGate) {
+    throw Error('Some quality gates could not be retrieved.');
+  }
+
+  await processAnalysisResult(analysisResult);
+}
+
+async function processAnalysisResult(analysisResult: AnalysisResult) {
+  const summaryBody = createSummaryBody(analysisResult);
+
+  if (githubConfig.eventName === 'pull_request') {
+    await decoratePullRequest(analysisResult.passed, summaryBody);
+  }
+
+  if (ticsConfig.postAnnotations) {
+    postAnnotations(analysisResult.projectResults);
+  }
+
+  if (!analysisResult.passed) {
+    actionFailed = analysisResult.failureMessage;
+  }
+}
+
+async function decoratePullRequest(passed: boolean, summaryBody: string) {
   const previousReviewComments = await getPostedReviewComments();
-  if (previousReviewComments && previousReviewComments.length > 0) {
+  if (previousReviewComments.length > 0) {
     await deletePreviousReviewComments(previousReviewComments);
   }
+
+  const previousComments = await getPostedComments();
+  if (previousComments.length > 0) {
+    await deletePreviousComments(previousComments);
+  }
+
+  await postToConversation(true, summaryBody, passed ? Events.APPROVE : Events.REQUEST_CHANGES);
 }
 
 async function getChangedFiles(): Promise<ChangedFiles | undefined> {
@@ -195,42 +220,6 @@ async function runTicsClient(changedFiles: ChangedFiles): Promise<Analysis> {
   }
 
   return analysis;
-}
-
-async function processClientAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
-  const analysisResults = await getClientAnalysisResults(analysis.explorerUrls, changedFiles.files);
-
-  if (analysisResults.missesQualityGate) {
-    throw Error('Some quality gates could not be retrieved.');
-  }
-
-  // If not run on a pull request no review comments have to be deleted
-  if (githubConfig.eventName === 'pull_request') {
-    const previousReviewComments = await getPostedReviewComments();
-    if (previousReviewComments && previousReviewComments.length > 0) {
-      await deletePreviousReviewComments(previousReviewComments);
-    }
-  }
-
-  if (ticsConfig.postAnnotations) {
-    postAnnotations(analysisResults.projectResults);
-  }
-
-  let reviewBody = createSummaryBody(analysisResults);
-
-  // If not run on a pull request no comments have to be deleted and there is no conversation to post to.
-  if (githubConfig.eventName === 'pull_request') {
-    const postedComments = await getPostedComments();
-    if (postedComments.length > 0) {
-      await deletePreviousComments(postedComments);
-    }
-
-    await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
-  }
-
-  if (!analysisResults.passed) {
-    actionFailed = analysisResults.failureMessage;
-  }
 }
 
 /**

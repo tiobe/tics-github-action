@@ -1,6 +1,6 @@
-import { AnalysisResults } from '../../../../src/helper/interfaces';
+import { AnalysisResult } from '../../../../src/helper/interfaces';
 
-export const analysisResultsSoaked: AnalysisResults = {
+export const analysisResultsSoaked: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
   failureMessage: 'Failed',
@@ -117,7 +117,7 @@ export const analysisResultsSoaked: AnalysisResults = {
   ]
 };
 
-export const analysisResultsNotSoaked: AnalysisResults = {
+export const analysisResultsNotSoaked: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
   failureMessage: 'Failed',
@@ -208,7 +208,7 @@ export const analysisResultsNotSoaked: AnalysisResults = {
   ]
 };
 
-export const analysisResultsPartlySoakedFailed: AnalysisResults = {
+export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
   failureMessage: 'Failed',
@@ -321,7 +321,7 @@ export const analysisResultsPartlySoakedFailed: AnalysisResults = {
   ]
 };
 
-export const analysisResultsNoSoakedPassed: AnalysisResults = {
+export const analysisResultsNoSoakedPassed: AnalysisResult = {
   passed: true,
   passedWithWarning: false,
   failureMessage: 'Failed',
@@ -434,7 +434,7 @@ export const analysisResultsNoSoakedPassed: AnalysisResults = {
   ]
 };
 
-export const analysisResultsPartlySoakedPassed: AnalysisResults = {
+export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   passed: true,
   passedWithWarning: true,
   failureMessage: 'Failed',

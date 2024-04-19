@@ -3,7 +3,7 @@ import { postNothingAnalyzedReview, postReview } from '../../../src/github/revie
 import { createSummaryBody } from '../../../src/helper/summary';
 import { Events } from '../../../src/helper/enums';
 import { logger } from '../../../src/helper/logger';
-import { AnalysisResults } from '../../../src/helper/interfaces';
+import { AnalysisResult } from '../../../src/helper/interfaces';
 
 jest.mock('../../../src/helper/summary', () => {
   return {
@@ -17,7 +17,7 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysisResults: AnalysisResults = {
+    const analysisResults: AnalysisResult = {
       passed: true,
       failureMessage: '',
       missesQualityGate: false,
@@ -49,7 +49,7 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysisResults: AnalysisResults = {
+    const analysisResults: AnalysisResult = {
       passed: true,
       failureMessage: '',
       missesQualityGate: false,
@@ -90,7 +90,7 @@ describe('postReview', () => {
 
     const spy = jest.spyOn(octokit.rest.pulls, 'createReview');
 
-    const analysisResults: AnalysisResults = {
+    const analysisResults: AnalysisResult = {
       passed: false,
       failureMessage: '',
       missesQualityGate: false,
@@ -137,7 +137,7 @@ describe('postReview', () => {
     });
     const spy = jest.spyOn(logger, 'notice');
 
-    const analysisResults: AnalysisResults = {
+    const analysisResults: AnalysisResult = {
       passed: false,
       failureMessage: '',
       missesQualityGate: false,

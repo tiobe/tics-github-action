@@ -198,6 +198,7 @@ describe('SetFailed checks (TICS Client)', () => {
     jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
+    jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 
@@ -215,6 +216,7 @@ describe('SetFailed checks (TICS Client)', () => {
     jest.spyOn(fetcher, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
     jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
+    jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValue([]);
 
     const spySetFailed = jest.spyOn(logger, 'setFailed');
 

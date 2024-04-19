@@ -1,5 +1,5 @@
 import { ChangedFile } from '../../src/github/interfaces';
-import { AnalysisResults, ExtendedAnnotation, QualityGate } from '../../src/helper/interfaces';
+import { AnalysisResult, ExtendedAnnotation, QualityGate } from '../../src/helper/interfaces';
 
 export const singleChangedFiles: ChangedFile[] = [
   {
@@ -282,7 +282,7 @@ export const singlePreviousReviewComments = [
   }
 ];
 
-export const analysisResultsPassedNoUrl: AnalysisResults = {
+export const analysisResultsPassedNoUrl: AnalysisResult = {
   passed: false,
   failureMessage: '',
   missesQualityGate: true,
@@ -290,7 +290,7 @@ export const analysisResultsPassedNoUrl: AnalysisResults = {
   passedWithWarning: false
 };
 
-export const analysisResultsSingleFileFailed: AnalysisResults = {
+export const analysisResultsSingleFileFailed: AnalysisResult = {
   passed: false,
   failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,
@@ -305,7 +305,7 @@ export const analysisResultsSingleFileFailed: AnalysisResults = {
   passedWithWarning: false
 };
 
-export const analysisResultsSingleFilePassed: AnalysisResults = {
+export const analysisResultsSingleFilePassed: AnalysisResult = {
   passed: true,
   failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,
@@ -320,7 +320,7 @@ export const analysisResultsSingleFilePassed: AnalysisResults = {
   passedWithWarning: false
 };
 
-export const analysisResultsDoubleFilePassed: AnalysisResults = {
+export const analysisResultsDoubleFilePassed: AnalysisResult = {
   passed: true,
   failureMessage: 'Project failed 2 out of 2 quality gates',
   missesQualityGate: false,

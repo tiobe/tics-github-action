@@ -2,7 +2,7 @@ import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
 import {
-  AnalysisResults,
+  AnalysisResult,
   Annotation,
   Condition,
   ConditionDetails,
@@ -20,12 +20,12 @@ import { EOL } from 'os';
 import { format } from 'date-fns';
 import { joinUrl } from './url';
 
-export function createSummaryBody(analysisResults: AnalysisResults): string {
+export function createSummaryBody(analysisResult: AnalysisResult): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResults.passed, analysisResults.passedWithWarning), true)}`, 3);
+  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResult.passed, analysisResult.passedWithWarning), true)}`, 3);
 
-  analysisResults.projectResults.forEach(projectResult => {
+  analysisResult.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
       const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
 
