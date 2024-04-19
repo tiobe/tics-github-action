@@ -8,7 +8,7 @@
     "format": "prettier --write src/**/*.ts",
     "format-check": "prettier --check src/**/*.ts",
     "lint": "eslint src/**/*.ts",
-    "package": "esbuild ./src/main.ts --platform=node --bundle --outfile=./dist/index.js",
+    "package": "ncc build ./src/main.ts --license licenses.txt",
     "test": "jest",
     "test:coverage": "jest --coverage --collectCoverageFrom='src/**'"
   },
@@ -50,8 +50,8 @@
     "@types/underscore": "^1.11.15",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.6.0",
+    "@vercel/ncc": "^0.38.1",
     "async-listen": "^3.0.1",
-    "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jest": "^28.2.0",
