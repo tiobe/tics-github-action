@@ -28,6 +28,8 @@ main().catch((error: unknown) => {
 
 // exported for testing purposes
 export async function main(): Promise<void> {
+  logger.info(`Running action on event: ${githubConfig.eventName}`);
+
   configure();
 
   await meetsPrerequisites();
@@ -108,7 +110,12 @@ async function analyze(changedFiles: ChangedFiles): Promise<Analysis> {
   const analysis = await runTicsAnalyzer(changedFiles.path);
 
   if (analysis.explorerUrls.length === 0) {
-    deletePreviousComments(await getPostedComments());
+    const previousComments = await getPostedComments();
+
+    if (previousComments.length > 0) {
+      await deletePreviousComments(previousComments);
+    }
+
     if (!analysis.completed) {
       actionFailed = 'Failed to run TICS Github Action.';
       await postErrorComment(analysis);
@@ -144,10 +151,12 @@ async function processAnalysis(analysis: Analysis, changedFiles: ChangedFiles) {
 
   let reviewBody = createSummaryBody(analysisResults);
 
-  // If not run on a pull request no comments have to be deleted
-  // and there is no conversation to post to.
+  // If not run on a pull request no comments have to be deleted and there is no conversation to post to.
   if (githubConfig.eventName === 'pull_request') {
-    deletePreviousComments(await getPostedComments());
+    const postedComments = await getPostedComments();
+    if (postedComments.length > 0) {
+      await deletePreviousComments(postedComments);
+    }
 
     await postToConversation(true, reviewBody, analysisResults.passed ? Events.APPROVE : Events.REQUEST_CHANGES);
   }

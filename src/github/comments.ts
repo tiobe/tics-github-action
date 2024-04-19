@@ -21,11 +21,11 @@ export async function getPostedComments(): Promise<Comment[]> {
       issue_number: githubConfig.pullRequestNumber
     };
     response = await octokit.paginate(octokit.rest.issues.listComments, params);
+    logger.info('Retrieved posted comments.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.error(`Could not retrieve the comments: ${message}`);
+    logger.notice(`Could not retrieve the comments: ${message}`);
   }
-  logger.info('Retrieved posted comments.');
   return response;
 }
 
@@ -67,13 +67,13 @@ export async function postComment(body: string): Promise<void> {
     logger.info('Posted comment for this pull request.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.error(`Posting the comment failed: ${message}`);
+    logger.notice(`Posting the comment failed: ${message}`);
   }
 }
 
-export function deletePreviousComments(comments: Comment[]): void {
+export async function deletePreviousComments(comments: Comment[]): Promise<void> {
   logger.header('Deleting comments of previous runs.');
-  comments.map(async comment => {
+  for (const comment of comments) {
     if (commentIncludesTicsTitle(comment.body)) {
       try {
         const params = {
@@ -84,10 +84,10 @@ export function deletePreviousComments(comments: Comment[]): void {
         await octokit.rest.issues.deleteComment(params);
       } catch (error: unknown) {
         const message = handleOctokitError(error);
-        logger.error(`Removing a comment failed: ${message}`);
+        logger.notice(`Removing a comment failed: ${message}`);
       }
     }
-  });
+  }
   logger.info('Deleted review comments of previous runs.');
 }
 

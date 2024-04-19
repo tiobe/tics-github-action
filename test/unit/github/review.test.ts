@@ -129,13 +129,13 @@ describe('postReview', () => {
     expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should throw an error on createReview', async () => {
+  test('Should post a notice on createReview', async () => {
     (createSummaryBody as any).mockReturnValueOnce('ReviewBody...');
 
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'error');
+    const spy = jest.spyOn(logger, 'notice');
 
     const analysisResults: AnalysisResults = {
       passed: false,
@@ -191,11 +191,11 @@ describe('postNothingAnalyzedReview', () => {
     expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should throw an error on createReview', async () => {
+  test('Should post a notice on createReview', async () => {
     jest.spyOn(octokit.rest.pulls, 'createReview').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'error');
+    const spy = jest.spyOn(logger, 'notice');
 
     await postNothingAnalyzedReview('message');
 

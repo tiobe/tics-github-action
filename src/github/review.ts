@@ -24,7 +24,7 @@ export async function postReview(body: string, event: Events): Promise<void> {
     logger.info('Posted review for this pull request.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.error(`Posting the review failed: ${message}`);
+    logger.notice(`Posting the review failed: ${message}`);
   }
 }
 
@@ -49,6 +49,6 @@ export async function postNothingAnalyzedReview(message: string): Promise<void> 
     logger.info('Posted review for this pull request.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.error(`Posting the review failed: ${message}`);
+    logger.notice(`Posting the review failed: ${message}`);
   }
 }
