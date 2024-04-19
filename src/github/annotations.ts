@@ -20,7 +20,7 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.error(`Could not retrieve the review comments: ${message}`);
+    logger.notice(`Could not retrieve the review comments: ${message}`);
   }
   logger.info('Retrieve posted review comments.');
   return response;
@@ -76,7 +76,7 @@ export async function deletePreviousReviewComments(postedReviewComments: ReviewC
         await octokit.rest.pulls.deleteReviewComment(params);
       } catch (error: unknown) {
         const message = handleOctokitError(error);
-        logger.error(`Could not delete review comment: ${message}`);
+        logger.notice(`Could not delete review comment: ${message}`);
       }
     }
   }

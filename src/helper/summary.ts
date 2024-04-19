@@ -200,28 +200,30 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
     if (githubConfig.eventName === 'pull_request') {
       if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
-        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-        postable.push({
+        const reviewComment = {
           blocking: annotation.blocking?.state,
           title: `${annotation.instanceName}: ${annotation.rule}`,
           body: createBody(annotation, displayCount),
           path: annotation.path,
           line: annotation.line
-        });
+        };
+        logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
+        postable.push(reviewComment);
       } else {
         annotation.displayCount = displayCount;
         logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
         unpostable.push(annotation);
       }
     } else if (annotation.diffLines?.includes(annotation.line)) {
-      logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-      postable.push({
+      const reviewComment = {
         blocking: annotation.blocking?.state,
         title: `${annotation.instanceName}: ${annotation.rule}`,
         body: createBody(annotation, displayCount),
         path: annotation.path,
         line: annotation.line
-      });
+      };
+      logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
+      postable.push(reviewComment);
     } else {
       annotation.displayCount = displayCount;
       logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);

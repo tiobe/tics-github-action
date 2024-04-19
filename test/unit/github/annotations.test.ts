@@ -26,8 +26,9 @@ describe('getPostedReviewComments', () => {
     expect((response as any[]).length).toEqual(3);
   });
 
-  test('Should throw an error on getPostedReviewComments', async () => {
-    const spy = jest.spyOn(logger, 'error');
+  test('Should post a notice when getPostedReviewComments fails', async () => {
+    const spy = jest.spyOn(logger, 'notice');
+
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
@@ -58,8 +59,8 @@ describe('deletePreviousReviewComments', () => {
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
-  test('Should throw an error on deletePreviousReviewComments', async () => {
-    const spy = jest.spyOn(logger, 'error');
+  test('Should post a notice when deletePreviousReviewComments fails', async () => {
+    const spy = jest.spyOn(logger, 'notice');
 
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();

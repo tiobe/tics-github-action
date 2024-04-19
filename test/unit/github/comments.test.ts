@@ -33,8 +33,8 @@ describe('getPostedReviewComments', () => {
     expect((response as any[]).length).toEqual(3);
   });
 
-  test('Should throw an error on getPostedReviewComments', async () => {
-    const spy = jest.spyOn(logger, 'error');
+  test('Should post a notice on getPostedReviewComments', async () => {
+    const spy = jest.spyOn(logger, 'notice');
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
@@ -78,12 +78,12 @@ describe('postErrorComment', () => {
     expect(spy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should throw an error on postErrorComment', async () => {
+  test('Should post a notice on postErrorComment', async () => {
     (createErrorSummary as any).mockReturnValueOnce('body');
     jest.spyOn(octokit.rest.issues, 'createComment').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'error');
+    const spy = jest.spyOn(logger, 'notice');
 
     const analysis = {
       completed: false,
@@ -138,12 +138,12 @@ describe('deletePreviousComments', () => {
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
-  test('Should throw an error on postErrorComment', async () => {
+  test('Should post a notice on postErrorComment', async () => {
     (createErrorSummary as any).mockReturnValueOnce('body');
     jest.spyOn(octokit.rest.issues, 'deleteComment').mockImplementationOnce(() => {
       throw new Error();
     });
-    const spy = jest.spyOn(logger, 'error');
+    const spy = jest.spyOn(logger, 'notice');
 
     deletePreviousComments([commentWithBody]);
 
