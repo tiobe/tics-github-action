@@ -1,8 +1,10 @@
 import { normalize } from 'canonical-path';
-import { logger } from '../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../configuration';
+
 import { ChangedFile } from './interfaces';
-import { handleOctokitError } from '../helper/error';
+import { logger } from '../helper/logger';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig, actionConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -24,7 +26,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
             // If a file is moved or renamed the status is 'renamed'.
             if (item.status === 'renamed') {
               // If a file has been moved without changes or if moved files are excluded, exclude them.
-              if ((ticsConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
+              if ((actionConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
                 return false;
               }
             }

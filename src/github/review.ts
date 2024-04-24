@@ -1,8 +1,9 @@
 import { logger } from '../helper/logger';
-import { githubConfig, octokit } from '../configuration';
 import { Events, Status } from '../helper/enums';
-import { generateStatusMarkdown } from '../helper/markdown';
-import { handleOctokitError } from '../helper/error';
+import { handleOctokitError } from '../helper/response';
+import { generateStatusMarkdown } from '../action/decorate/markdown';
+import { githubConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -15,31 +16,6 @@ export async function postReview(body: string, event: Events): Promise<void> {
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
     event: event,
-    body: body
-  };
-
-  try {
-    logger.header('Posting a review for this pull request.');
-    await octokit.rest.pulls.createReview(params);
-    logger.info('Posted review for this pull request.');
-  } catch (error: unknown) {
-    const message = handleOctokitError(error);
-    logger.notice(`Posting the review failed: ${message}`);
-  }
-}
-
-/**
- * Create review on the pull request with a body and approval.
- * @param message Message to display in the body of the review.
- */
-export async function postNothingAnalyzedReview(message: string): Promise<void> {
-  const body = `<h1>TICS Quality Gate</h1>\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
-
-  const params = {
-    owner: githubConfig.owner,
-    repo: githubConfig.reponame,
-    pull_number: githubConfig.pullRequestNumber,
-    event: Events.APPROVE,
     body: body
   };
 

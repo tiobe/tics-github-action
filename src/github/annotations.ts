@@ -1,8 +1,9 @@
-import { logger } from '../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../configuration';
 import { ReviewComment } from './interfaces';
+import { logger } from '../helper/logger';
 import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
-import { handleOctokitError } from '../helper/error';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig, actionConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -48,7 +49,7 @@ export function postAnnotations(projectResults: ProjectResult[]): void {
         startLine: reviewComment.line,
         title: reviewComment.title
       });
-    } else if (reviewComment.blocking === 'after' && ticsConfig.showBlockingAfter) {
+    } else if (reviewComment.blocking === 'after' && actionConfig.showBlockingAfter) {
       logger.notice(reviewComment.body, {
         file: reviewComment.path,
         startLine: reviewComment.line,

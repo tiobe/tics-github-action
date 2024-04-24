@@ -1,6 +1,13 @@
+import { EOL } from 'os';
+import { format } from 'date-fns';
+import { range } from 'underscore';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
-import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
+
+import { ChangedFile } from '../../github/interfaces';
+import { Status } from '../../helper/enums';
+import { logger } from '../../helper/logger';
+import { joinUrl } from '../../helper/url';
 import {
   AnalysisResult,
   Annotation,
@@ -10,15 +17,9 @@ import {
   Gate,
   TicsReviewComment,
   TicsReviewComments
-} from './interfaces';
-import { ChangedFile } from '../github/interfaces';
-import { githubConfig, viewerUrl } from '../configuration';
-import { Status } from './enums';
-import { range } from 'underscore';
-import { logger } from './logger';
-import { EOL } from 'os';
-import { format } from 'date-fns';
-import { joinUrl } from './url';
+} from '../../helper/interfaces';
+import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
+import { githubConfig, actionConfig } from '../../configuration/_config';
 
 export function createSummaryBody(analysisResult: AnalysisResult): string {
   logger.header('Creating summary.');
@@ -35,12 +36,12 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
       failedOrWarnConditions.forEach(condition => {
         const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
         if (condition.details && condition.details.items.length > 0) {
-          summary.addRaw(`\n<details><summary>${statusMarkdown}${condition.message}</summary>\n`);
+          summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
           summary.addBreak();
           summary.addTable(createConditionTable(condition.details));
           summary.addRaw('</details>', true);
         } else {
-          summary.addRaw(`\n&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+          summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
         }
       });
       summary.addEOL();
@@ -57,6 +58,57 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
 
   logger.info('Created summary.');
 
+  return summary.stringify();
+}
+
+/**
+ * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
+ * @param errorList list containing all the errors found in the TICS run.
+ * @param warningList list containing all the warnings found in the TICS run.
+ * @returns string containing the error summary.
+ */
+export function createErrorSummaryBody(errorList: string[], warningList: string[]): string {
+  logger.header('Creating summary.');
+
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(`${generateStatusMarkdown(Status.FAILED, true)}`, 3);
+
+  if (errorList.length > 0) {
+    summary.addHeading('The following errors have occurred during analysis:', 4);
+
+    for (const error of errorList) {
+      summary.addRaw(`> :x: ${error}${EOL}`);
+    }
+  }
+
+  summary.addBreak();
+
+  if (warningList.length > 0) {
+    summary.addHeading('The following warnings have occurred during analysis:', 4);
+
+    for (const warning of warningList) {
+      summary.addRaw(`> :x: ${warning}${EOL}`);
+    }
+  }
+
+  logger.info('Created summary.');
+  return summary.stringify();
+}
+
+/**
+ * Create a summary body for when no files had to be analyzed.
+ * @param message Message to display in the body of the comment.
+ * @returns string containing the error summary.
+ */
+export function createNothingAnalyzedSummaryBody(message: string): string {
+  logger.header('Creating summary.');
+
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(`${generateStatusMarkdown(Status.PASSED, true)}`, 3);
+
+  summary.addRaw(message);
+
+  logger.info('Created summary.');
   return summary.stringify();
 }
 
@@ -104,27 +156,6 @@ function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
 }
 
 /**
- * Creates a summary of all errors (and warnings optionally) to comment in a pull request.
- * @param errorList list containing all the errors found in the TICS run.
- * @param warningList list containing all the warnings found in the TICS run.
- * @returns string containing the error summary.
- */
-export function createErrorSummary(errorList: string[], warningList: string[]): string {
-  let summary = '<h1>TICS Quality Gate</h1>\r\n\r\n### :x: Failed';
-
-  if (errorList.length > 0) {
-    summary += '\r\n\r\n #### The following errors have occurred during analysis:\r\n\r\n';
-    errorList.forEach(error => (summary += `> :x: ${error}\r\n`));
-  }
-  if (warningList.length > 0 && githubConfig.debugger) {
-    summary += '\r\n\r\n #### The following warnings have occurred during analysis:\r\n\r\n';
-    warningList.forEach(warning => (summary += `> :warning: ${warning}\r\n`));
-  }
-
-  return summary;
-}
-
-/**
  * Creates a list of all the files analyzed.
  * @param fileList list of files.
  * @returns Dropdown with all the files analyzed.
@@ -168,7 +199,10 @@ function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
   details.items
     .filter(item => item.itemType === 'file')
     .forEach(item => {
-      const dataRow: SummaryTableRow = [`\n\n[${item.name}](${joinUrl(viewerUrl, item.link)})\n\n`, item.data.actualValue.formattedValue];
+      const dataRow: SummaryTableRow = [
+        `${EOL}${EOL}[${item.name}](${joinUrl(actionConfig.viewerUrl, item.link)})${EOL}${EOL}`,
+        item.data.actualValue.formattedValue
+      ];
 
       if (item.data.blockingAfter) {
         dataRow.push(item.data.blockingAfter.formattedValue);

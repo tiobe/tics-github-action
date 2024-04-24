@@ -5,6 +5,13 @@ export interface ChangedFiles {
   path: string;
 }
 
+export interface Verdict {
+  passed: boolean;
+  message: string;
+  errorList: string[];
+  warningList: string[];
+}
+
 export interface Analysis {
   completed: boolean;
   statusCode: number;
@@ -16,7 +23,6 @@ export interface Analysis {
 export interface AnalysisResult {
   passed: boolean;
   passedWithWarning: boolean;
-  failureMessage: string;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
 }

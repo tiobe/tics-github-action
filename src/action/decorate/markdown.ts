@@ -1,4 +1,4 @@
-import { Status } from './enums';
+import { Status } from '../../helper/enums';
 
 /**
  * Generates a status symbol with optional suffix.

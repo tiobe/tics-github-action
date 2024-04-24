@@ -1,17 +1,5 @@
+import { ticsCli } from '../configuration/_config';
 import { logger } from '../helper/logger';
-import { githubConfig, ticsConfig } from '../configuration';
-import { Analysis } from '../helper/interfaces';
-
-/**
- * Creates a cli summary of all errors and bugs based on the logLevel.
- * @param analysis the output of the TICS analysis run.
- */
-export function cliSummary(analysis: Analysis): void {
-  analysis.errorList.forEach(error => logger.error(error));
-  if (githubConfig.debugger) {
-    analysis.warningList.forEach(warning => logger.warning(warning));
-  }
-}
 
 /**
  * Gets query value form a url
@@ -38,5 +26,5 @@ export function getItemFromUrl(url: string, query: string): string {
  * @returns project name.
  */
 export function getProjectName(url: string): string {
-  return ticsConfig.project === 'auto' ? getItemFromUrl(url, 'Project') : ticsConfig.project;
+  return ticsCli.project === 'auto' ? getItemFromUrl(url, 'Project') : ticsCli.project;
 }

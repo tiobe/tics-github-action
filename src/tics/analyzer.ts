@@ -1,15 +1,15 @@
 import { exec } from '@actions/exec';
-import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
-import { Mode } from '../helper/enums';
-import { CliOptions } from '../action/cli_options';
-import { ActionConfiguration } from '../action/action_configuration';
 import { isOneOf } from '../helper/compare';
 import { joinUrl } from '../helper/url';
+import { actionConfig, githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
+import { httpClient } from '../viewer/_http-client';
+import { Mode } from '../configuration/tics';
+import { TicsCli } from '../configuration/tics-cli';
 
 let errorList: string[] = [];
 let warningList: string[] = [];
@@ -22,7 +22,7 @@ let completed: boolean;
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
-  logger.header(`Analyzing for project ${ticsConfig.project}`);
+  logger.header(`Analyzing for project ${ticsCli.project}`);
 
   const command = await buildRunCommand(fileListPath);
 
@@ -108,7 +108,7 @@ function findInStdOutOrErr(data: string): void {
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
     if (urlPath) {
-      explorerUrls.push(joinUrl(viewerUrl, urlPath));
+      explorerUrls.push(joinUrl(actionConfig.viewerUrl, urlPath));
     }
   }
 }
@@ -136,12 +136,12 @@ export function getTicsCommand(fileListPath: string) {
       break;
   }
 
-  if (ticsConfig.tmpdir || githubConfig.debugger) {
+  if (ticsCli.tmpdir || githubConfig.debugger) {
     command.push(`-tmpdir '${getTmpDir()}'`);
   }
 
-  if (ticsConfig.additionalFlags) {
-    command.push(`${ticsConfig.additionalFlags}`);
+  if (ticsCli.additionalFlags) {
+    command.push(`${ticsCli.additionalFlags}`);
   }
 
   // Add TICS debug flag when in debug mode, if this flag was not already set.
@@ -153,16 +153,18 @@ export function getTicsCommand(fileListPath: string) {
 }
 
 function getCliOptionsForCommand() {
-  const command = [`-project '${ticsConfig.project}'`];
+  const command = [`-project '${ticsCli.project}'`];
 
-  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
-    if (option.modes.includes(ticsConfig.mode)) {
-      const value = ticsConfig[option.cli as keyof ActionConfiguration];
-      if (value) {
-        command.push(`-${option.cli} ${value}`);
+  ticsCli.cliOptions
+    .filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir'))
+    .forEach(option => {
+      if (option.modes.includes(ticsConfig.mode)) {
+        const value = ticsCli[option.cli as keyof TicsCli];
+        if (value) {
+          command.push(`-${option.cli} ${value}`);
+        }
       }
-    }
-  });
+    });
 
   return command;
 }

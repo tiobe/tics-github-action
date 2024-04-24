@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
-import { ticsConfig } from '../configuration';
 import { AnnotationProperties } from '@actions/core';
+
+import { actionConfig } from '../configuration/_config';
 
 class Logger {
   called = '';
@@ -101,7 +102,7 @@ class Logger {
    */
   maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
-    ticsConfig.secretsFilter.forEach((secret: string) => {
+    actionConfig.secretsFilter.forEach((secret: string) => {
       if (data.match(new RegExp(secret, 'gi'))) {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
