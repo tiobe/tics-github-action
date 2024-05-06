@@ -1,4 +1,4 @@
-import { SummaryImageOptions, SummaryTableCell, SummaryTableRow, SummaryWriteOptions } from '@actions/core/lib/summary';
+import { SummaryImageOptions, SummaryTableRow, SummaryWriteOptions } from '@actions/core/lib/summary';
 import { EOL } from 'os';
 
 class Summary {
@@ -106,7 +106,7 @@ class Summary {
    * @returns {Summary} summary instance
    */
   addCodeBlock(code: string, lang: string): Summary {
-    const attrs = Object.assign({}, lang && { lang });
+    const attrs = { ...(lang && { lang }) };
     const element = this.wrap('pre', this.wrap('code', code), attrs);
     return this.addRaw(element).addEOL();
   }
@@ -141,7 +141,7 @@ class Summary {
             }
             const { header, data, colspan, rowspan } = cell;
             const tag = header ? 'th' : 'td';
-            const attrs = Object.assign(Object.assign({}, colspan && { colspan }), rowspan && { rowspan });
+            const attrs = { ...(colspan && { colspan }), ...(rowspan && { rowspan }) };
             return this.wrap(tag, data, attrs);
           })
           .join('');
@@ -174,8 +174,8 @@ class Summary {
    */
   addImage(src: string, alt: string, options: SummaryImageOptions): Summary {
     const { width, height } = options || {};
-    const attrs = Object.assign(Object.assign({}, width && { width }), height && { height });
-    const element = this.wrap('img', null, Object.assign({ src, alt }, attrs));
+    const attrs = { ...(width && { width }), ...(height && { height }) };
+    const element = this.wrap('img', null, { src, alt, ...attrs });
     return this.addRaw(element).addEOL();
   }
   /**
@@ -219,7 +219,7 @@ class Summary {
    * @returns {Summary} summary instance
    */
   addQuote(text: string, cite: string): Summary {
-    const attrs = Object.assign({}, cite && { cite });
+    const attrs = { ...(cite && { cite }) };
     const element = this.wrap('blockquote', text, attrs);
     return this.addRaw(element).addEOL();
   }

@@ -1,9 +1,8 @@
-import { AnalysisResult } from '../../../../src/helper/interfaces';
+import { AnalysisResult } from '../../../../../src/helper/interfaces';
 
 export const analysisResultsSoaked: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
-  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -40,7 +39,7 @@ export const analysisResultsSoaked: AnalysisResult = {
                       itemType: 'file'
                     },
                     blockingAfter: {
-                      title: 'Blocking after 2018‑03‑23',
+                      title: 'Blocking after 2018-03-23',
                       order: 2,
                       itemType: 'file'
                     }
@@ -120,7 +119,6 @@ export const analysisResultsSoaked: AnalysisResult = {
 export const analysisResultsNotSoaked: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
-  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -211,7 +209,6 @@ export const analysisResultsNotSoaked: AnalysisResult = {
 export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   passed: false,
   passedWithWarning: false,
-  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -248,7 +245,7 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
                       itemType: 'file'
                     },
                     blockingAfter: {
-                      title: 'Blocking after 2018‑03‑23',
+                      title: 'Blocking after 2018-03-23',
                       order: 2,
                       itemType: 'file'
                     }
@@ -324,7 +321,6 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
 export const analysisResultsNoSoakedPassed: AnalysisResult = {
   passed: true,
   passedWithWarning: false,
-  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -361,7 +357,7 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
                       itemType: 'file'
                     },
                     blockingAfter: {
-                      title: 'Blocking after 2018‑03‑23',
+                      title: 'Blocking after 2018-03-23',
                       order: 2,
                       itemType: 'file'
                     }
@@ -437,7 +433,6 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
 export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   passed: true,
   passedWithWarning: true,
-  failureMessage: 'Failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -474,7 +469,7 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
                       itemType: 'file'
                     },
                     blockingAfter: {
-                      title: 'Blocking after 2018‑03‑23',
+                      title: 'Blocking after 2018-03-23',
                       order: 2,
                       itemType: 'file'
                     }

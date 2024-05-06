@@ -1,4 +1,4 @@
-import { actionConfig, ticsCli } from '../configuration/_config';
+import { ticsCli, ticsConfig } from '../configuration/_config';
 import { QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
@@ -9,6 +9,7 @@ import { httpClient } from './_http-client';
  * Retrieves the TICS quality gate from the TICS viewer.
  * @param url The viewer call to retrieve the qualitygate from.
  * @returns the quality gates
+ * @throws Error
  */
 export async function getQualityGate(url: string): Promise<QualityGate> {
   logger.header('Retrieving the quality gates.');
@@ -33,7 +34,7 @@ export async function getQualityGate(url: string): Promise<QualityGate> {
  * @returns The url to get the quality gate analysis.
  */
 export function getQualityGateUrl({ date, cdtoken }: { date?: number; cdtoken?: string }) {
-  let qualityGateUrl = new URL(joinUrl(actionConfig.baseUrl, '/api/public/v1/QualityGateStatus'));
+  let qualityGateUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/QualityGateStatus'));
 
   qualityGateUrl.searchParams.append('project', ticsCli.project);
 
@@ -46,7 +47,9 @@ export function getQualityGateUrl({ date, cdtoken }: { date?: number; cdtoken?: 
 
   if (date) {
     qualityGateUrl.searchParams.append('date', date.toString());
-  } else if (cdtoken) {
+  }
+
+  if (cdtoken) {
     qualityGateUrl.searchParams.append('cdt', cdtoken);
   }
 

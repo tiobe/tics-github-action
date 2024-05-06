@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
-import { ticsCli } from '../../src/configuration/_config';
 
 export const githubConfigMock = {
   apiUrl: 'github.com/api/v1/',
@@ -21,7 +20,9 @@ export const ticsConfigMock = {
   installTics: false,
   mode: 'client',
   ticsConfiguration: '',
-  trustStrategy: 'strict'
+  trustStrategy: 'strict',
+  baseUrl: '',
+  viewerUrl: ''
 };
 
 export const actionConfigMock = {
@@ -30,7 +31,12 @@ export const actionConfigMock = {
     maxRetries: 100,
     codes: [502, 503, 504]
   },
-  secretsFilter: []
+  secretsFilter: ['random'],
+  excludeMovedFiles: false,
+  postAnnotations: false,
+  postToConversation: false,
+  pullRequestApproval: false,
+  showBlockingAfter: false
 };
 
 export const ticsCliMock = {
@@ -44,8 +50,7 @@ export const ticsCliMock = {
   norecalc: '',
   recalc: '',
   tmpdir: '',
-  additionalFlags: '',
-  cliOptions: []
+  additionalFlags: ''
 };
 
 jest.mock('../../src/configuration/_config', () => {
@@ -89,60 +94,47 @@ jest.mock('../../src/github/_octokit', () => {
     }
   };
 });
-// jest.mock('../../src/configuration', () => {
-//   return {
-//     ticsConfig: {
-//       project: 'project',
-//       ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
-//       calc: 'GATE',
-//       pullRequestApproval: false,
-//       secretsFilter: [],
-//       postToConversation: true
-//     },
-//     githubConfig: {
-//       repo: 'test',
-//       owner: 'tester',
-//       reponame: 'test',
-//       branchname: '',
-//       basebranchname: '',
-//       branchdir: '',
-//       eventName: '',
-//       runnerOS: '',
-//       pullRequestNumber: '1',
-//       id: '123-1',
-//       commitSha: 'asdfghjk'
-//     },
-//     retryConfig: {
-//       maxRetries: 10,
-//       retryCodes: [502, 503, 504]
-//     },
-//     octokit: {
-//       paginate: jest.fn(),
-//       rest: {
-//         pulls: {
-//           listFiles: () => {},
-//           listReviewComments: () => {},
-//           createReview: jest.fn(),
-//           deleteReviewComment: jest.fn()
-//         },
-//         issues: {
-//           listComments: jest.fn(),
-//           createComment: jest.fn(),
-//           deleteComment: jest.fn()
-//         },
-//         repos: {
-//           getCommit: jest.fn()
-//         }
-//       },
-//       graphql: jest.fn()
-//     },
-//     httpClient: {
-//       get: jest.fn()
-//     },
-//     viewerUrl: 'http://viewer.com',
-//     baseUrl: 'http://base.com'
-//   };
-// });
+
+export const contextMock: {
+  apiUrl: string;
+  repo: {
+    repo: string;
+    owner: string;
+  };
+  sha: string;
+  eventName: string;
+  runId: number;
+  runNumber: number;
+  payload: {
+    pull_request:
+      | {
+          number: number;
+        }
+      | undefined;
+  };
+} = {
+  apiUrl: 'api.github.com',
+  repo: {
+    repo: 'tics-github-action',
+    owner: 'tiobe'
+  },
+  sha: 'sha-128',
+  eventName: 'pull_request',
+  runId: 123,
+  runNumber: 1,
+  payload: {
+    pull_request: {
+      number: 1
+    }
+  }
+};
+
+jest.mock('@actions/github', () => {
+  return {
+    context: contextMock
+  };
+});
+
 jest.mock('@actions/core', () => {
   return {
     exportVariable: jest.fn(),
@@ -154,6 +146,7 @@ jest.mock('@actions/core', () => {
     setFailed: jest.fn(),
     getInput: jest.fn(),
     getBooleanInput: jest.fn(),
+    isDebug: jest.fn(),
     summary: summary
   };
 });

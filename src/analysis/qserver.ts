@@ -1,10 +1,7 @@
 import { decorateAction } from '../action/decorate/action';
 import { postToConversation } from '../action/decorate/pull-request';
 import { createNothingAnalyzedSummaryBody, createReviewComments } from '../action/decorate/summary';
-import { actionConfig, githubConfig, ticsCli } from '../configuration/_config';
-import { getChangedFilesOfCommit } from '../github/commits';
-import { ChangedFile } from '../github/interfaces';
-import { getChangedFilesOfPullRequest } from '../github/pulls';
+import { actionConfig, githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
 import { AnalysisResult, TicsReviewComments, Verdict } from '../helper/interfaces';
 import { joinUrl } from '../helper/url';
 import { runTicsAnalyzer } from '../tics/analyzer';
@@ -12,6 +9,7 @@ import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../viewer/analyzed-files'
 import { getAnnotations } from '../viewer/annotations';
 import { getLastQServerRunDate } from '../viewer/qserver';
 import { getQualityGate, getQualityGateUrl } from '../viewer/qualitygate';
+import { getChangedFiles } from './helper/changed-files';
 
 /**
  * Function for running the action in QServer mode.
@@ -56,16 +54,11 @@ async function getAnalysisResult() {
 
   let reviewComments: TicsReviewComments | undefined;
   if (actionConfig.postAnnotations) {
-    let changedFiles: ChangedFile[] = [];
-    if (githubConfig.eventName === 'pull_request') {
-      changedFiles = await getChangedFilesOfPullRequest();
-    } else {
-      changedFiles = await getChangedFilesOfCommit();
-    }
+    let changedFiles = await getChangedFiles();
 
     const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
     if (annotations.length > 0) {
-      reviewComments = createReviewComments(annotations, changedFiles);
+      reviewComments = createReviewComments(annotations, changedFiles.files);
     }
   }
 
@@ -77,7 +70,7 @@ async function getAnalysisResult() {
     projectResults: [
       {
         project: ticsCli.project,
-        explorerUrl: joinUrl(actionConfig.baseUrl, qualityGate.url),
+        explorerUrl: joinUrl(ticsConfig.baseUrl, qualityGate.url),
         analyzedFiles: analyzedFiles,
         qualityGate: qualityGate,
         reviewComments: reviewComments

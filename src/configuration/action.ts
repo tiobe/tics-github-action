@@ -1,6 +1,5 @@
 import { EOL } from 'os';
 import { getBooleanInput, getInput } from '@actions/core';
-import { getBaseUrl } from '@tiobe/install-tics';
 
 import { RetryConfig } from './interfaces';
 
@@ -12,20 +11,15 @@ export class ActionConfiguration {
   readonly retryConfig: RetryConfig;
   readonly secretsFilter: string[];
   readonly showBlockingAfter: boolean;
-  readonly baseUrl: string;
-  readonly viewerUrl: string;
 
-  constructor(ticsConfiguration: string) {
-    this.excludeMovedFiles = getBooleanInput('excludeMovedFiles') ?? false;
-    this.postAnnotations = getBooleanInput('postAnnotations') ?? false;
-    this.postToConversation = getBooleanInput('postToConversation') ?? false;
-    this.pullRequestApproval = getBooleanInput('pullRequestApproval') ?? false;
+  constructor() {
+    this.excludeMovedFiles = getBooleanInput('excludeMovedFiles');
+    this.postAnnotations = getBooleanInput('postAnnotations');
+    this.postToConversation = getBooleanInput('postToConversation');
+    this.pullRequestApproval = getBooleanInput('pullRequestApproval');
     this.retryConfig = this.validateAndGetRetryConfig(getInput('retryCodes'));
     this.secretsFilter = this.getSecretsFilter(getInput('secretsFilter'));
-    this.showBlockingAfter = getBooleanInput('showBlockingAfter') ?? false;
-
-    this.baseUrl = getBaseUrl(ticsConfiguration).href;
-    this.viewerUrl = this.validateAndGetUrl(getInput('viewerUrl'));
+    this.showBlockingAfter = getBooleanInput('showBlockingAfter');
   }
 
   /**
@@ -61,31 +55,17 @@ export class ActionConfiguration {
    * @param secretsFilter optional additional secrets that need filtering.
    * @returns Default filters plus optional set by the user.
    */
-  getSecretsFilter(secretsFilter: string): string[] {
+  private getSecretsFilter(secretsFilter: string): string[] {
     const defaults = ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization'];
-    const keys = secretsFilter.split(',').filter(s => s !== '');
+    const keys = secretsFilter
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s !== '');
 
     const combinedFilters = defaults.concat(keys);
 
     process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
 
     return combinedFilters;
-  }
-
-  /**
-   * Validates if the given input is a valid url and returns it.
-   * @returns the input if it is correct.
-   * @throws error if the input is incorrect.
-   */
-  validateAndGetUrl(url: string): string {
-    if (url) {
-      try {
-        return new URL(url).href;
-      } catch {
-        throw Error(`Parameter 'ticsConfiguration' is not a valid url`);
-      }
-    } else {
-      return this.baseUrl;
-    }
   }
 }

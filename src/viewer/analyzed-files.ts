@@ -1,4 +1,4 @@
-import { actionConfig, ticsCli } from '../configuration/_config';
+import { ticsCli, ticsConfig } from '../configuration/_config';
 import { AnalyzedFiles, AnalyzedFile } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
@@ -39,13 +39,19 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
  * @returns The url to get the quality gate analysis.
  */
 export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?: string }) {
-  let getAnalyzedFilesUrl = new URL(joinUrl(actionConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
+  let getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
   let filters = `Project(${ticsCli.project}),Window(-1),CodeType(Set(production,test,external,generated)),File()`;
 
+  if (ticsCli.branchname) {
+    filters += `Branch(${ticsCli.branchname})`;
+  }
+
   if (date) {
     filters += `,Date(${date.toString()})`;
-  } else if (cdtoken) {
+  }
+
+  if (cdtoken) {
     filters += `,ClientData(${cdtoken})`;
   }
 

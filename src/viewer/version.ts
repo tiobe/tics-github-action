@@ -3,14 +3,14 @@ import { VersionResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './_http-client';
-import { actionConfig } from '../configuration/_config';
+import { ticsConfig } from '../configuration/_config';
 
 /**
  * Gets the version of the TICS viewer used.
  * @returns Version of the used TICS viewer.
  */
 export async function getViewerVersion(): Promise<VersionResponse> {
-  const getViewerVersionUrl = joinUrl(actionConfig.baseUrl, '/api/v1/version');
+  const getViewerVersionUrl = joinUrl(ticsConfig.baseUrl, '/api/v1/version');
 
   try {
     logger.header('Retrieving the viewer version');

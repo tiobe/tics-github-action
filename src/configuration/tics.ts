@@ -2,6 +2,7 @@ import { getInput, getBooleanInput, exportVariable } from '@actions/core';
 
 import { isOneOf } from '../helper/compare';
 import { logger } from '../helper/logger';
+import { getBaseUrl } from '@tiobe/install-tics';
 
 export enum Mode {
   CLIENT = 'client',
@@ -10,6 +11,7 @@ export enum Mode {
 }
 
 export enum TrustStrategy {
+  NONE = '',
   STRICT = 'strict',
   SELFSIGNED = 'self-signed',
   ALL = 'all'
@@ -24,16 +26,20 @@ export class TicsConfiguration {
   readonly ticsAuthToken: string;
   readonly ticsConfiguration: string;
   readonly trustStrategy: TrustStrategy;
+  readonly baseUrl: string;
+  readonly viewerUrl: string;
 
   constructor() {
     this.ticsConfiguration = this.validateAndGetConfigUrl(getInput('ticsConfiguration', { required: true }));
     this.mode = this.validateAndGetMode(getInput('mode'));
     this.githubToken = getInput('githubToken');
-    this.installTics = getBooleanInput('installTics') ?? false;
+    this.installTics = getBooleanInput('installTics');
     this.hostnameVerification = this.validateAndGetHostnameVerification(getInput('hostnameVerification'));
     this.trustStrategy = this.validateAndGetTrustStrategy(getInput('trustStrategy'));
     this.filelist = getInput('filelist');
     this.ticsAuthToken = getInput('ticsAuthToken');
+    this.baseUrl = getBaseUrl(this.ticsConfiguration).href;
+    this.viewerUrl = this.validateAndGetViewerUrl(getInput('viewerUrl'));
 
     this.setVariables();
   }
@@ -43,8 +49,8 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  validateAndGetConfigUrl(url: string): string {
-    const uri = this.validateAndGetUrl(url);
+  private validateAndGetConfigUrl(url: string): string {
+    const uri = this.validateAndGetUrl(url, 'ticsConfiguration');
 
     if (uri.protocol !== 'http:' && uri.protocol !== 'https:') {
       throw Error(`Parameter 'ticsConfiguration' is missing the protocol (http(s)://)`);
@@ -62,11 +68,24 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  validateAndGetUrl(url: string): URL {
+  private validateAndGetViewerUrl(url: string): string {
+    if (url) {
+      return this.validateAndGetUrl(url, 'viewerUrl').href;
+    } else {
+      return this.baseUrl;
+    }
+  }
+
+  /**
+   * Validates if the given input is a valid url and returns it.
+   * @returns the input if it is correct.
+   * @throws error if the input is incorrect.
+   */
+  private validateAndGetUrl(url: string, param: string): URL {
     try {
       return new URL(url);
     } catch {
-      throw Error(`Parameter 'ticsConfiguration' is not a valid url`);
+      throw Error(`Parameter '${param}' with value '${url}' is not a valid url`);
     }
   }
 
@@ -75,7 +94,7 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  validateAndGetMode(input: string): Mode {
+  private validateAndGetMode(input: string): Mode {
     switch (input.toLowerCase()) {
       case Mode.CLIENT:
         return Mode.CLIENT;
@@ -93,8 +112,9 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  validateAndGetTrustStrategy(input: string): TrustStrategy {
+  private validateAndGetTrustStrategy(input: string): TrustStrategy {
     switch (input.toLowerCase()) {
+      case TrustStrategy.NONE:
       case TrustStrategy.STRICT:
         return TrustStrategy.STRICT;
       case TrustStrategy.SELFSIGNED:
@@ -111,7 +131,7 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  validateAndGetHostnameVerification(input: string): boolean {
+  private validateAndGetHostnameVerification(input: string): boolean {
     if (input === '') {
       return true;
     }
@@ -127,7 +147,7 @@ export class TicsConfiguration {
   /**
    * Set all environment variables TICS needs to run in the GitHub setting.
    */
-  setVariables() {
+  private setVariables() {
     if (this.mode !== Mode.QSERVER) {
       exportVariable('TICSIDE', 'GITHUB');
     }

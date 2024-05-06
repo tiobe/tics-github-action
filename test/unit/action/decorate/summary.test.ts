@@ -1,15 +1,15 @@
 import { summary } from '@actions/core';
-import { githubConfig } from '../../../src/configuration';
-import { ChangedFile } from '../../../src/github/interfaces';
-import { ExtendedAnnotation } from '../../../src/helper/interfaces';
+import { ChangedFile } from '../../../../src/github/interfaces';
+import { ExtendedAnnotation } from '../../../../src/helper/interfaces';
 import {
-  createErrorSummary,
+  createErrorSummaryBody,
   createFilesSummary,
+  createNothingAnalyzedSummaryBody,
   createReviewComments,
   createSummaryBody,
   createUnpostableAnnotationsDetails
-} from '../../../src/helper/summary';
-import '../../.setup/extend_jest';
+} from '../../../../src/action/decorate/summary';
+import '../../../.setup/extend_jest';
 import {
   analysisResultsSoaked,
   analysisResultsNotSoaked,
@@ -18,15 +18,19 @@ import {
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
 import { EOL } from 'os';
-
+import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 describe('createSummaryBody', () => {
+  beforeEach(() => {
+    ticsConfigMock.viewerUrl = 'http://viewer.url/';
+  });
+
   test('Should contain blocking after if there are soaked violations', () => {
     const string = createSummaryBody(analysisResultsSoaked);
 
     expect(string).toContain('<h3>:x: Failed </h3>');
     expect(string).toContain('<h3>1 Condition(s) failed</h3>');
     expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
     expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
     expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
     expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
@@ -54,7 +58,7 @@ describe('createSummaryBody', () => {
     expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
     expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
     expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
     expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
     expect(string).toContain('</td><td>+1</td><td>0</td></tr></table>');
 
@@ -70,7 +74,7 @@ describe('createSummaryBody', () => {
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
     expect(string).toContain('</td><td>+1</td></tr></table>');
     expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018‑03‑23</th></tr>');
+    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
     expect(string).toContain('</td><td>0</td><td>+3</td></tr></table>');
 
     summary.clear();
@@ -88,35 +92,50 @@ describe('createSummaryBody', () => {
 
 describe('createErrorSummary', () => {
   test('Should return summary of two errors', () => {
-    const response = createErrorSummary(['Error', 'Error'], []);
+    githubConfigMock.debugger = false;
 
-    expect(response).toContainTimes('Error', 2);
-    expect(response).toContainTimes('Warning', 0);
+    const body = createErrorSummaryBody(['Error', 'Error'], []);
+    summary.clear();
+
+    expect(body).toContainTimes('Error', 2);
+    expect(body).toContainTimes('Warning', 0);
   });
 
   test('Should return summary of zero warnings on logLevel default', () => {
-    const response = createErrorSummary([], ['Warning', 'Warning']);
+    githubConfigMock.debugger = false;
 
-    expect(response).toContainTimes('Error', 0);
-    expect(response).toContainTimes('Warning', 0);
+    const body = createErrorSummaryBody([], ['Warning', 'Warning']);
+    summary.clear();
+
+    expect(body).toContainTimes('Error', 0);
+    expect(body).toContainTimes('Warning', 0);
   });
 
   test('Should return summary of two  warnings on logLevel debug', () => {
-    githubConfig.debugger = true;
+    githubConfigMock.debugger = true;
 
-    const response = createErrorSummary([], ['Warning', 'Warning']);
+    const body = createErrorSummaryBody([], ['Warning', 'Warning']);
+    summary.clear();
 
-    expect(response).toContainTimes('Error', 0);
-    expect(response).toContainTimes('Warning', 2);
+    expect(body).toContainTimes('Error', 0);
+    expect(body).toContainTimes('Warning', 2);
   });
 
   test('Should return summary of one error and two warnings', () => {
-    githubConfig.debugger = true;
+    githubConfigMock.debugger = true;
 
-    const response = createErrorSummary(['Error'], ['Warning', 'Warning']);
+    const body = createErrorSummaryBody(['Error'], ['Warning', 'Warning']);
+    summary.clear();
 
-    expect(response).toContainTimes('Error', 1);
-    expect(response).toContainTimes('Warning', 2);
+    expect(body).toContainTimes('Error', 1);
+    expect(body).toContainTimes('Warning', 2);
+  });
+});
+
+describe('createNothingAnalyzedSummaryBody', () => {
+  test('Should return summary with the message given', async () => {
+    const body = createNothingAnalyzedSummaryBody('message');
+    expect(body).toEqual('<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage');
   });
 });
 
@@ -189,7 +208,7 @@ describe('createReviewComments', () => {
   });
 
   test('Should return one combined postable review comment for the same line', async () => {
-    githubConfig.eventName = 'pull_request';
+    githubConfigMock.eventName = 'pull_request';
     const changedFiles: ChangedFile[] = [
       {
         filename: 'src/test.js',
@@ -251,7 +270,7 @@ describe('createReviewComments', () => {
   });
 
   test('Should return one blocking now and a blocking after review comment for the same line', async () => {
-    githubConfig.eventName = 'pull_request';
+    githubConfigMock.eventName = 'pull_request';
     const changedFiles: ChangedFile[] = [
       {
         filename: 'src/test.js',
@@ -422,7 +441,7 @@ describe('createReviewComments', () => {
 });
 
 test('Should return one postable and one unpostable review comment', async () => {
-  githubConfig.eventName = 'push';
+  githubConfigMock.eventName = 'push';
   const changedFiles: ChangedFile[] = [
     {
       filename: 'src/test.js',

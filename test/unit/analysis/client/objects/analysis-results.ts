@@ -1,4 +1,4 @@
-import { ExtendedAnnotation, QualityGate, TicsReviewComments } from '../../../../src/helper/interfaces';
+import { ExtendedAnnotation, QualityGate, TicsReviewComments } from '../../../../../src/helper/interfaces';
 
 export const failedQualityGate: QualityGate = {
   passed: false,
@@ -29,7 +29,7 @@ export const passedQualityGate: QualityGate = {
   annotationsApiV1Links: []
 };
 
-export const annotations: ExtendedAnnotation[] = [
+export const annotationsMock: ExtendedAnnotation[] = [
   {
     instanceName: 'Coding Standard',
     fullPath: 'path/to/file.js',

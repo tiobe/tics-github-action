@@ -1,4 +1,4 @@
-import { actionConfig } from '../configuration/_config';
+import { ticsConfig } from '../configuration/_config';
 import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, Annotation } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
@@ -14,7 +14,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
   logger.header('Retrieving annotations.');
 
   for (const [index, link] of apiLinks.entries()) {
-    const annotationsUrl = new URL(`${actionConfig.baseUrl}/${link.url}`);
+    const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
 
     let fields = annotationsUrl.searchParams.get('fields');
     const requiredFields = 'default,ruleHelp,synopsis';

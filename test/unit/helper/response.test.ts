@@ -1,7 +1,7 @@
 import { RequestError } from '@octokit/request-error';
-import { getRetryErrorMessage, getRetryMessage, handleOctokitError } from '../../../src/helper/error';
 import { RequestError as TicsError } from '@tiobe/http-client/lib/retry';
 import { ClientResponse } from '@tiobe/http-client';
+import { getRetryErrorMessage, getRetryMessage, handleOctokitError } from '../../../src/helper/response';
 
 describe('handleOctokitError', () => {
   test('Should return error unknown on invalid error.', () => {

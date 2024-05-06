@@ -1,4 +1,4 @@
-import { actionConfig, ticsCli } from '../configuration/_config';
+import { ticsCli, ticsConfig } from '../configuration/_config';
 import { RunDateResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
@@ -11,7 +11,7 @@ import { httpClient } from './_http-client';
  * @throws Error if no date could be retrieved.
  */
 export async function getLastQServerRunDate(): Promise<number> {
-  const getRunDateUrl = joinUrl(actionConfig.baseUrl, `api/public/v1/Measure?filters=Project(${ticsCli.project})&metrics=lastRunInDatabase`);
+  const getRunDateUrl = joinUrl(ticsConfig.baseUrl, `api/public/v1/Measure?filters=Project(${ticsCli.project})&metrics=lastRunInDatabase`);
   try {
     logger.header('Retrieving the last QServer run date');
     logger.debug(`From ${getRunDateUrl}`);

@@ -23,7 +23,7 @@ export class GithubConfig {
     this.debugger = isDebug();
   }
 
-  getPullRequestNumber() {
+  private getPullRequestNumber() {
     if (context.payload.pull_request) {
       return context.payload.pull_request.number;
     } else if (process.env.PULL_REQUEST_NUMBER) {
@@ -36,9 +36,7 @@ export class GithubConfig {
   removeWarningListener() {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
-      if (this.debugger) {
-        logger.debug(warning.message.toString());
-      }
+      logger.debug(warning.message.toString());
     });
   }
 }

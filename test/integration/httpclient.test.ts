@@ -22,16 +22,9 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 // eslint-disable-next-line import/first
-import { httpClient } from '../../src/configuration';
+import { httpClient } from '../../src/viewer/_http-client';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
-
-jest.mock('../../src/tics/api_helper', () => {
-  return {
-    getTicsWebBaseUrlFromUrl: jest.fn(),
-    httpRequest: jest.requireActual('../../src/tics/api_helper').httpRequest
-  };
-});
 
 describe('@actions/http-client (using http_proxy)', () => {
   let proxyServer: ProxyServer;

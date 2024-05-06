@@ -19,7 +19,7 @@ import {
   TicsReviewComments
 } from '../../helper/interfaces';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { githubConfig, actionConfig } from '../../configuration/_config';
+import { githubConfig, ticsConfig } from '../../configuration/_config';
 
 export function createSummaryBody(analysisResult: AnalysisResult): string {
   logger.header('Creating summary.');
@@ -83,7 +83,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
 
   summary.addBreak();
 
-  if (warningList.length > 0) {
+  if (warningList.length > 0 && githubConfig.debugger) {
     summary.addHeading('The following warnings have occurred during analysis:', 4);
 
     for (const warning of warningList) {
@@ -200,7 +200,7 @@ function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
     .filter(item => item.itemType === 'file')
     .forEach(item => {
       const dataRow: SummaryTableRow = [
-        `${EOL}${EOL}[${item.name}](${joinUrl(actionConfig.viewerUrl, item.link)})${EOL}${EOL}`,
+        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.viewerUrl, item.link)})${EOL}${EOL}`,
         item.data.actualValue.formattedValue
       ];
 

@@ -12,6 +12,8 @@ process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 beforeEach(() => {
   jest.resetModules();
+
+  jest.spyOn(process.stdout, 'write').mockImplementation();
 });
 
 describe('pullRequestNumber', () => {
@@ -34,7 +36,7 @@ describe('pullRequestNumber', () => {
       };
     });
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(1);
   });
@@ -60,7 +62,7 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '2';
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(2);
   });
@@ -86,7 +88,7 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '';
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(0);
   });
@@ -94,13 +96,13 @@ describe('pullRequestNumber', () => {
 
 describe('urls', () => {
   test('Should return base url from ticsConfiguration', () => {
-    const baseUrl = require('../../src/configuration').baseUrl;
+    const baseUrl = require('../../src/configuration/_config').ticsConfig.baseUrl;
 
     expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
   test('Should return viewer url as base url from ticsConfiguration if viewerUrl is not set.', () => {
-    const viewerUrl = require('../../src/configuration').viewerUrl;
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
     expect(viewerUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
@@ -108,7 +110,7 @@ describe('urls', () => {
   test('Should return viewer url if viewerUrl is set without trailing slash', () => {
     process.env.INPUT_VIEWERURL = 'http://localhost';
 
-    const viewerUrl = require('../../src/configuration').viewerUrl;
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
     expect(viewerUrl).toEqual('http://localhost/');
   });
@@ -116,7 +118,7 @@ describe('urls', () => {
   test('Should return viewer url if viewerUrl is set with trailing slash', () => {
     process.env.INPUT_VIEWERURL = 'http://localhost/';
 
-    const viewerUrl = require('../../src/configuration').viewerUrl;
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
     expect(viewerUrl).toEqual('http://localhost/');
   });

@@ -1,41 +1,41 @@
-import { githubConfig, octokit } from '../../../src/configuration';
 import { logger } from '../../../src/helper/logger';
-import { deletePreviousComments, postErrorComment, getPostedComments, postNothingAnalyzedComment } from '../../../src/github/comments';
-import { createErrorSummary } from '../../../src/helper/summary';
+import { deletePreviousComments, getPostedComments, postComment } from '../../../src/github/comments';
 import { Comment } from '../../../src/github/interfaces';
-
-jest.mock('../../../src/helper/summary', () => {
-  return {
-    createErrorSummary: jest.fn()
-  };
-});
+import { octokit } from '../../../src/github/_octokit';
+import { githubConfig } from '../../../src/configuration/_config';
 
 describe('getPostedReviewComments', () => {
+  const octokitSpy = jest.spyOn(octokit, 'paginate');
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   test('Should return single file on getPostedReviewComments', async () => {
-    (octokit.paginate as any).mockReturnValueOnce([{ id: 1 }]);
+    octokitSpy.mockResolvedValue([{ id: 1 }]);
 
     const response = await getPostedComments();
     expect(response).toEqual([{ id: 1 }]);
   });
 
   test('Should be called with specific parameters on getPostedReviewComments', async () => {
-    (octokit.paginate as any).mockReturnValueOnce();
+    octokitSpy.mockResolvedValue([]);
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getPostedComments();
-    expect(spy).toHaveBeenCalledWith(octokit.rest.issues.listComments, { repo: 'test', owner: 'tester', issue_number: '1' });
+    expect(spy).toHaveBeenCalledWith(octokit.rest.issues.listComments, { repo: 'test', owner: 'tester', issue_number: 1 });
   });
 
   test('Should return three files on getPostedReviewComments', async () => {
-    (octokit.paginate as any).mockReturnValueOnce([{}, {}, {}]);
+    octokitSpy.mockResolvedValue([{}, {}, {}]);
 
     const response = await getPostedComments();
     expect((response as any[]).length).toEqual(3);
   });
 
-  test('Should post a notice on getPostedReviewComments', async () => {
+  test('Should post a notice on when octokit throws', async () => {
     const spy = jest.spyOn(logger, 'notice');
-    (octokit.paginate as any).mockImplementationOnce(() => {
+    octokitSpy.mockImplementationOnce(() => {
       throw new Error();
     });
     await getPostedComments();
@@ -43,111 +43,86 @@ describe('getPostedReviewComments', () => {
   });
 });
 
-describe('postErrorComment', () => {
+describe('postComment', () => {
+  let postCommentSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    postCommentSpy = jest.spyOn(octokit.rest.issues, 'createComment');
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   test('Should call createComment once', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    const spy = jest.spyOn(octokit.rest.issues, 'createComment');
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: []
-    };
-    await postErrorComment(analysis);
-    expect(spy).toHaveBeenCalledTimes(1);
+    await postComment('Comment body...');
+    expect(postCommentSpy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call createComment with values', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    const spy = jest.spyOn(octokit.rest.issues, 'createComment');
-    const analysis = {
-      completed: true,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: []
-    };
-    await postErrorComment(analysis);
+    await postComment('Comment body...');
     const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
-      issue_number: githubConfig.pullRequestNumber,
-      body: 'body'
+      issue_number: 1,
+      body: 'Comment body...'
     };
-    expect(spy).toHaveBeenCalledWith(calledWith);
+    expect(postCommentSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should post a notice on postErrorComment', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    jest.spyOn(octokit.rest.issues, 'createComment').mockImplementationOnce(() => {
-      throw new Error();
-    });
-    const spy = jest.spyOn(logger, 'notice');
+  test('Should post a notice when createComment throws', async () => {
+    postCommentSpy.mockRejectedValue(Error());
+    const noticeSpy = jest.spyOn(logger, 'notice');
 
-    const analysis = {
-      completed: false,
-      errorList: ['error1'],
-      warningList: [],
-      statusCode: 0,
-      explorerUrls: []
-    };
-    await postErrorComment(analysis);
+    await postComment('Comment body...');
 
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('postNothingAnalyzedComment', () => {
-  test('Should call createComment once', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    const spy = jest.spyOn(octokit.rest.issues, 'createComment');
-
-    const message = 'message';
-    await postNothingAnalyzedComment(message);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(noticeSpy).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('deletePreviousComments', () => {
-  test('Should call deleteComment once', async () => {
-    const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
+  let deleteCommentSpy: jest.SpyInstance;
 
-    deletePreviousComments([commentWithBody]);
-    expect(spy).toHaveBeenCalledTimes(1);
+  beforeEach(() => {
+    deleteCommentSpy = jest.spyOn(octokit.rest.issues, 'deleteComment');
   });
 
-  test('Should call createComment with values', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
 
+  test('Should call deleteComment once', async () => {
+    await deletePreviousComments([commentWithBody]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('Should call deleteComment twice', async () => {
+    await deletePreviousComments([commentWithBody, commentWithBody]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test('Should call deleteComment with values', async () => {
     deletePreviousComments([commentWithBody]);
     const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       comment_id: 0
     };
-    expect(spy).toHaveBeenCalledWith(calledWith);
+    expect(deleteCommentSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should call createComment with values', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    const spy = jest.spyOn(octokit.rest.issues, 'deleteComment');
-
-    deletePreviousComments([commentWithoutBody]);
-    expect(spy).toHaveBeenCalledTimes(0);
+  test('Should call deleteComment with values', async () => {
+    await deletePreviousComments([commentWithoutBody]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
   });
 
-  test('Should post a notice on postErrorComment', async () => {
-    (createErrorSummary as any).mockReturnValueOnce('body');
-    jest.spyOn(octokit.rest.issues, 'deleteComment').mockImplementationOnce(() => {
-      throw new Error();
-    });
-    const spy = jest.spyOn(logger, 'notice');
+  test('Should post a notice when deleteComment throws', async () => {
+    deleteCommentSpy.mockRejectedValue(Error());
+    const noticeSpy = jest.spyOn(logger, 'notice');
 
-    deletePreviousComments([commentWithBody]);
+    await deletePreviousComments([commentWithBody]);
 
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(noticeSpy).toHaveBeenCalledTimes(1);
   });
 });
 

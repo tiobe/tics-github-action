@@ -33,68 +33,11 @@ export class TicsCli {
     this.validateCliOptions(this, mode);
   }
 
-  readonly cliOptions: CliOption[] = [
-    {
-      action: 'projectName',
-      cli: 'project',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'branchDir',
-      cli: 'branchdir',
-      modes: [Mode.QSERVER]
-    },
-    {
-      action: 'branchName',
-      cli: 'branchname',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'clientData',
-      cli: 'cdtoken',
-      modes: [Mode.CLIENT]
-    },
-    {
-      action: 'codetype',
-      cli: 'codetype',
-      modes: [Mode.CLIENT]
-    },
-    {
-      action: 'calc',
-      cli: 'calc',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'nocalc',
-      cli: 'nocalc',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'norecalc',
-      cli: 'norecalc',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'recalc',
-      cli: 'recalc',
-      modes: [Mode.CLIENT, Mode.QSERVER]
-    },
-    {
-      action: 'tmpDir',
-      cli: 'tmpdir',
-      modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
-    },
-    {
-      action: 'additionalFlags',
-      modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
-    }
-  ];
-
   /**
    * Get the calc option or the default if not set by the user
    * @returns the calc option set by user or thedefault.
    */
-  getCalc(input: string, mode: Mode): string {
+  private getCalc(input: string, mode: Mode): string {
     if (input) {
       return input;
     } else if (mode === Mode.CLIENT) {
@@ -108,7 +51,7 @@ export class TicsCli {
    * Validates if the given cli options are valid.
    * @throws error if project auto is used incorrectly.
    */
-  validateCliOptions(cli: TicsCli, mode: Mode) {
+  private validateCliOptions(cli: TicsCli, mode: Mode) {
     // validate project
     if (mode === Mode.QSERVER) {
       if (cli.project === 'auto') {
@@ -116,7 +59,7 @@ export class TicsCli {
       }
     }
 
-    for (const option of this.cliOptions) {
+    for (const option of CliOptions) {
       const key = option.cli as keyof TicsCli;
       if (cli[key] !== '' && !option.modes.includes(mode)) {
         logger.warning(`Parameter '${option.action}' is not applicable to mode '${mode}' and will therefore not be used`);
@@ -124,3 +67,60 @@ export class TicsCli {
     }
   }
 }
+
+export const CliOptions: CliOption[] = [
+  {
+    action: 'projectName',
+    cli: 'project',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'branchDir',
+    cli: 'branchdir',
+    modes: [Mode.QSERVER]
+  },
+  {
+    action: 'branchName',
+    cli: 'branchname',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'clientData',
+    cli: 'cdtoken',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'codetype',
+    cli: 'codetype',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'calc',
+    cli: 'calc',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'nocalc',
+    cli: 'nocalc',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'norecalc',
+    cli: 'norecalc',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'recalc',
+    cli: 'recalc',
+    modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'tmpDir',
+    cli: 'tmpdir',
+    modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
+  },
+  {
+    action: 'additionalFlags',
+    modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
+  }
+];

@@ -1,9 +1,9 @@
 import * as artifact from '@actions/artifact';
 import * as fs from 'fs';
-import { githubConfig, ticsConfig } from '../../../src/configuration';
 import { getTmpDir, uploadArtifact } from '../../../src/github/artifacts';
 import { MockArtifactClient, MockDirent } from './objects/artifacts';
 import { logger } from '../../../src/helper/logger';
+import { githubConfigMock, ticsCliMock } from '../../.setup/mock';
 
 describe('Tempdir test', () => {
   it('Should return empty if variable not set and mode is not debug', () => {
@@ -13,14 +13,14 @@ describe('Tempdir test', () => {
   });
 
   it('Should return empty if variable not set and mode is debug', () => {
-    githubConfig.debugger = true;
+    githubConfigMock.debugger = true;
     const tmpdir = getTmpDir();
 
     expect(tmpdir).toStrictEqual('/tmp/tics/123-1');
   });
 
   it('Should return empty if variable is set', () => {
-    ticsConfig.tmpdir = 'something/else';
+    ticsCliMock.tmpdir = 'something/else';
     const tmpdir = getTmpDir();
 
     expect(tmpdir).toStrictEqual('something/else/123-1');
@@ -29,7 +29,7 @@ describe('Tempdir test', () => {
 
 describe('Artifacts test', () => {
   it('Should upload logfile to tmpdir', async () => {
-    ticsConfig.tmpdir = '/tmp';
+    ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient([]);
@@ -42,7 +42,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should upload logdir to tmpdir', async () => {
-    ticsConfig.tmpdir = '/tmp';
+    ticsCliMock.tmpdir = '/tmp';
 
     const direntOne = [new MockDirent(false, 'tics', '/tmp/123-1/ticstmpdir/tics')];
     const direntTwo = [new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/tics/file.log')];
@@ -59,7 +59,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should call debug logger on failing to upload logfile', async () => {
-    ticsConfig.tmpdir = '/tmp';
+    ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);
@@ -74,7 +74,7 @@ describe('Artifacts test', () => {
   });
 
   it('Should call debug logger on upload throwing an error', async () => {
-    ticsConfig.tmpdir = '/tmp';
+    ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);

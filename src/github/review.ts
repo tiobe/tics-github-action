@@ -1,7 +1,6 @@
 import { logger } from '../helper/logger';
-import { Events, Status } from '../helper/enums';
+import { Events } from '../helper/enums';
 import { handleOctokitError } from '../helper/response';
-import { generateStatusMarkdown } from '../action/decorate/markdown';
 import { githubConfig } from '../configuration/_config';
 import { octokit } from './_octokit';
 

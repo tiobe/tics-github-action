@@ -3,12 +3,7 @@ import * as fs from 'fs';
 import * as main from '../../src/main';
 import * as version from '../../src/viewer/version';
 import * as qserver from '../../src/analysis/qserver';
-
-import { actionConfigMock, githubConfigMock, ticsConfigMock } from '../.setup/mock';
-import { Mode } from '../../src/configuration/tics';
-import { logger } from '../../src/helper/logger';
-
-import { analysisFailedNoUrl, singleChangedFiles } from './main_helper';
+import { githubConfigMock, ticsConfigMock } from '../.setup/mock';
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -429,30 +424,4 @@ describe('meetsPrerequisites', () => {
 //   });
 // });
 
-// describe('Diagnostic mode checks', () => {
-//   beforeEach(() => {
-//     ticsConfig.mode = Mode.DIAGNOSTIC;
-//   });
-
-//   test('Diagnostic mode succeeds', async () => {
-//     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-
-//     const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-//     await main.main();
-
-//     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-//     expect(spySetFailed).toHaveBeenCalledTimes(0);
-//   });
-
-//   test('Diagnostic mode fails', async () => {
-//     const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
-
-//     const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-//     await main.main();
-
-//     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-//     expect(spySetFailed).toHaveBeenCalledTimes(1);
-//   });
-// });
+//

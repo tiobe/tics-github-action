@@ -1,15 +1,24 @@
 import * as exec from '@actions/exec';
 import * as os from 'os';
-import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
 import { getTicsCommand, runTicsAnalyzer } from '../../../src/tics/analyzer';
-import { Mode, TrustStrategy } from '../../../src/helper/enums';
+import { Mode, TrustStrategy } from '../../../src/configuration/tics';
+import { httpClient } from '../../../src/viewer/_http-client';
+import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
   const originalTrustStrategy = process.env.TICSTRUSTSTRATEGY;
 
   beforeAll(() => {
-    ticsConfig.ticsConfiguration = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
+    jest.spyOn(process.stdout, 'write').mockImplementation();
+
+    ticsConfigMock.ticsConfiguration = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
+  });
+
+  beforeEach(() => {
+    // set defaults
+    ticsCliMock.calc = 'GATE';
+    ticsCliMock.project = 'project';
   });
 
   afterEach(() => {
@@ -26,7 +35,7 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.mode = Mode.DIAGNOSTIC;
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
 
     const response = await runTicsAnalyzer('/path/to');
 
@@ -43,7 +52,7 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.mode = Mode.CLIENT;
+    ticsConfigMock.mode = Mode.CLIENT;
 
     const response = await runTicsAnalyzer('/path/to');
 
@@ -83,10 +92,10 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const response = await runTicsAnalyzer('/path/to');
 
@@ -107,10 +116,10 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const response = await runTicsAnalyzer('/path/to');
 
@@ -132,11 +141,11 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
-    ticsConfig.installTics = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+    ticsConfigMock.installTics = true;
 
     process.env.TICSTRUSTSTRATEGY = 'self-signed';
 
@@ -160,12 +169,12 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
-    ticsConfig.installTics = true;
-    ticsConfig.trustStrategy = TrustStrategy.STRICT;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+    ticsConfigMock.installTics = true;
+    ticsConfigMock.trustStrategy = TrustStrategy.STRICT;
 
     const response = await runTicsAnalyzer('/path/to');
 
@@ -187,17 +196,17 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '';
-    ticsConfig.installTics = true;
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.filelist = '/path/to/file.txt';
-    githubConfig.debugger = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '';
+    ticsConfigMock.installTics = true;
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsConfigMock.filelist = '/path/to/file.txt';
+    githubConfigMock.debugger = true;
 
     process.env.TICSTRUSTSTRATEGY = 'all';
 
@@ -221,18 +230,18 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '';
-    ticsConfig.installTics = true;
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.filelist = '.';
-    ticsConfig.branchname = 'main';
-    githubConfig.debugger = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '';
+    ticsConfigMock.installTics = true;
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsConfigMock.filelist = '.';
+    ticsCliMock.branchname = 'main';
+    githubConfigMock.debugger = true;
 
     process.env.TICSTRUSTSTRATEGY = 'all';
 
@@ -253,18 +262,18 @@ describe('test multiple types of configuration', () => {
 
 describe('getTicsCommand', () => {
   test('Should return full TICS Client command on mode client with all variables set (also non-client ones)', () => {
-    ticsConfig.mode = Mode.CLIENT;
-    ticsConfig.project = 'project';
-    ticsConfig.calc = 'CS';
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.branchname = 'main';
-    ticsConfig.branchdir = '.';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsConfigMock.mode = Mode.CLIENT;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const command = getTicsCommand('./filelist');
 
@@ -285,18 +294,18 @@ describe('getTicsCommand', () => {
   });
 
   test('Should return full TICSQServer command on mode qserver with all variables set (also non-qserver ones)', () => {
-    ticsConfig.mode = Mode.QSERVER;
-    ticsConfig.project = 'project';
-    ticsConfig.calc = 'CS';
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.branchname = 'main';
-    ticsConfig.branchdir = '.';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsConfigMock.mode = Mode.QSERVER;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const command = getTicsCommand('./filelist');
 
@@ -317,18 +326,18 @@ describe('getTicsCommand', () => {
   });
 
   test('Should return a diagnostic command on mode diagnostic with all variables set (also non-diagnostic ones)', () => {
-    ticsConfig.mode = Mode.DIAGNOSTIC;
-    ticsConfig.project = 'project';
-    ticsConfig.calc = 'CS';
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.cdtoken = 'token';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.branchname = 'main';
-    ticsConfig.branchdir = '.';
-    ticsConfig.tmpdir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const command = getTicsCommand('./filelist');
 
@@ -352,7 +361,7 @@ describe('getTicsCommand', () => {
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
   test('Should return single error if already exists in errorlist', async () => {
-    ticsConfig.installTics = false;
+    ticsConfigMock.installTics = false;
 
     const response = await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
@@ -381,6 +390,7 @@ describe('test callback functions', () => {
   });
 
   test('Should add ExplorerUrl in response', async () => {
+    ticsConfigMock.viewerUrl = 'http://viewer.com';
     await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('http://base.com/Explorer.html#axes=ClientData');
     (exec.exec as any).mockResolvedValueOnce(0);

@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../../src/github/pulls';
-import { octokit, ticsConfig } from '../../../src/configuration';
 import { logger } from '../../../src/helper/logger';
 import { changedFile } from './objects/pulls';
+import { octokit } from '../../../src/github/_octokit';
+import { actionConfigMock } from '../../.setup/mock';
 
 describe('getChangedFilesOfPullRequest', () => {
   test('Should return single file on getChangedFilesOfCommit', async () => {
@@ -51,7 +52,7 @@ describe('getChangedFilesOfPullRequest', () => {
   });
 
   test('Should include changed moved file on excludeMovedFiles', async () => {
-    ticsConfig.excludeMovedFiles = true;
+    actionConfigMock.excludeMovedFiles = true;
 
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfPullRequest();
@@ -78,7 +79,7 @@ describe('getChangedFilesOfPullRequest', () => {
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getChangedFilesOfPullRequest();
-    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listFiles, { repo: 'test', owner: 'tester', pull_number: '1' }, expect.any(Function));
+    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listFiles, { repo: 'test', owner: 'tester', pull_number: 1 }, expect.any(Function));
   });
 
   test('Should return three files on getChangedFilesOfCommit', async () => {

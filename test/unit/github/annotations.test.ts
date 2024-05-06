@@ -1,7 +1,8 @@
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
-import { octokit, ticsConfig } from '../../../src/configuration';
-import { logger } from '../../../src/helper/logger';
 import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
+import { logger } from '../../../src/helper/logger';
+import { octokit } from '../../../src/github/_octokit';
+import { actionConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
   test('Should return single file on getPostedReviewComments', async () => {
@@ -16,7 +17,7 @@ describe('getPostedReviewComments', () => {
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getPostedReviewComments();
-    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listReviewComments, { repo: 'test', owner: 'tester', pull_number: '1' });
+    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listReviewComments, { repo: 'test', owner: 'tester', pull_number: 1 });
   });
 
   test('Should return three files on getPostedReviewComments', async () => {
@@ -76,7 +77,7 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = true;
+    actionConfigMock.showBlockingAfter = true;
 
     postAnnotations(twoMixedAnalysisResults.projectResults);
 
@@ -99,7 +100,7 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = true;
+    actionConfigMock.showBlockingAfter = true;
 
     postAnnotations(fourMixedAnalysisResults.projectResults);
 
@@ -132,7 +133,7 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = false;
+    actionConfigMock.showBlockingAfter = false;
 
     postAnnotations(twoMixedAnalysisResults.projectResults);
 
@@ -150,7 +151,7 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = false;
+    actionConfigMock.showBlockingAfter = false;
 
     postAnnotations(fourMixedAnalysisResults.projectResults);
 

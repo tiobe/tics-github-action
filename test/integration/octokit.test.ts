@@ -24,7 +24,7 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 // eslint-disable-next-line import/first
-import { octokit } from '../../src/configuration';
+import { octokit } from '../../src/github/_octokit';
 import { RequestError } from '@octokit/request-error';
 
 describe('@octokit/action (using https_proxy)', () => {
