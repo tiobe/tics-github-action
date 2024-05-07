@@ -19,6 +19,7 @@ import {
 } from './objects/summary';
 import { EOL } from 'os';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
+
 describe('createSummaryBody', () => {
   beforeEach(() => {
     ticsConfigMock.viewerUrl = 'http://viewer.url/';

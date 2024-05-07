@@ -29,7 +29,7 @@ export async function clientAnalysis(): Promise<Verdict> {
   if (analysis.explorerUrls.length === 0) {
     failedMessage = await processIncompleteAnalysis(analysis);
   } else {
-    failedMessage = await processCompleteAnalysis(analysis.explorerUrls, changedFiles.files);
+    failedMessage = await processCompleteAnalysis(analysis, changedFiles.files);
   }
 
   if (failedMessage !== '') {

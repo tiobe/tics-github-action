@@ -1,15 +1,10 @@
 import { decorateAction } from '../action/decorate/action';
 import { postToConversation } from '../action/decorate/pull-request';
-import { createNothingAnalyzedSummaryBody, createReviewComments } from '../action/decorate/summary';
-import { actionConfig, githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
-import { AnalysisResult, TicsReviewComments, Verdict } from '../helper/interfaces';
-import { joinUrl } from '../helper/url';
+import { createNothingAnalyzedSummaryBody } from '../action/decorate/summary';
+import { githubConfig } from '../configuration/_config';
+import { AnalysisResult, Verdict } from '../helper/interfaces';
 import { runTicsAnalyzer } from '../tics/analyzer';
-import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../viewer/analyzed-files';
-import { getAnnotations } from '../viewer/annotations';
-import { getLastQServerRunDate } from '../viewer/qserver';
-import { getQualityGate, getQualityGateUrl } from '../viewer/qualitygate';
-import { getChangedFiles } from './helper/changed-files';
+import { getAnalysisResult } from './qserver/analysis-result';
 
 /**
  * Function for running the action in QServer mode.
@@ -19,13 +14,13 @@ export async function qServerAnalysis(): Promise<Verdict> {
   const analysis = await runTicsAnalyzer('');
 
   const verdict: Verdict = {
-    passed: analysis.completed,
+    passed: analysis.completed && analysis.statusCode === 0,
     message: '',
     errorList: analysis.errorList,
     warningList: analysis.warningList
   };
 
-  if (!analysis.completed) {
+  if (!verdict.passed) {
     verdict.message = 'Failed to complete TICSQServer analysis.';
   } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
     let summaryBody = createNothingAnalyzedSummaryBody('No changed files applicable for TICS analysis quality gating.');
@@ -33,7 +28,7 @@ export async function qServerAnalysis(): Promise<Verdict> {
       await postToConversation(false, summaryBody);
     }
   } else {
-    let analysisResult!: AnalysisResult;
+    let analysisResult: AnalysisResult | undefined;
     try {
       analysisResult = await getAnalysisResult();
     } catch (error) {
@@ -41,40 +36,8 @@ export async function qServerAnalysis(): Promise<Verdict> {
       verdict.message = error instanceof Error ? error.message : 'Something went wrong: reason unknown';
     }
 
-    await decorateAction(analysisResult);
+    await decorateAction(analysisResult, analysis);
   }
 
   return verdict;
-}
-
-async function getAnalysisResult() {
-  const date = await getLastQServerRunDate();
-  const qualityGate = await getQualityGate(getQualityGateUrl({ date }));
-  const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl({ date }));
-
-  let reviewComments: TicsReviewComments | undefined;
-  if (actionConfig.postAnnotations) {
-    let changedFiles = await getChangedFiles();
-
-    const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-    if (annotations.length > 0) {
-      reviewComments = createReviewComments(annotations, changedFiles.files);
-    }
-  }
-
-  return {
-    passed: qualityGate.passed,
-    passedWithWarning: qualityGate.passedWithWarning ?? false,
-    failureMessage: '',
-    missesQualityGate: false,
-    projectResults: [
-      {
-        project: ticsCli.project,
-        explorerUrl: joinUrl(ticsConfig.baseUrl, qualityGate.url),
-        analyzedFiles: analyzedFiles,
-        qualityGate: qualityGate,
-        reviewComments: reviewComments
-      }
-    ]
-  };
 }

@@ -44,6 +44,8 @@ describe('@octokit/action (using https_proxy)', () => {
 
   beforeEach(() => {
     proxyConnects = [];
+
+    jest.spyOn(process.stdout, 'write').mockImplementation();
   });
 
   afterAll(async () => {

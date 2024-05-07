@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
-import { exists } from 'fs';
 
 describe('GitHub Configuration', () => {
   let githubConfig: GithubConfig;

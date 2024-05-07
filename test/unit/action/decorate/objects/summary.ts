@@ -1,5 +1,21 @@
 import { AnalysisResult } from '../../../../../src/helper/interfaces';
 
+export const analysisFailed = {
+  completed: false,
+  statusCode: 1,
+  explorerUrls: [],
+  errorList: ['Error'],
+  warningList: []
+};
+
+export const analysisPassed = {
+  completed: true,
+  statusCode: 0,
+  explorerUrls: [],
+  errorList: [],
+  warningList: ['Warning']
+};
+
 export const analysisResultsSoaked: AnalysisResult = {
   passed: false,
   passedWithWarning: false,

@@ -40,6 +40,14 @@ export const analysisWithUrl = {
   warningList: ['Warning']
 };
 
+export const analysisWithDoubleUrl = {
+  completed: true,
+  statusCode: 0,
+  explorerUrls: ['url', 'url'],
+  errorList: [],
+  warningList: ['Warning']
+};
+
 export const analysisNoQualityGates: AnalysisResult = {
   passed: false,
   missesQualityGate: true,

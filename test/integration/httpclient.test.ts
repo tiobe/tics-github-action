@@ -53,6 +53,8 @@ describe('@actions/http-client (using http_proxy)', () => {
 
   beforeEach(() => {
     proxyConnects = [];
+
+    jest.spyOn(process.stdout, 'write').mockImplementation();
   });
 
   afterAll(async () => {

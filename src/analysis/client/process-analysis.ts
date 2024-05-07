@@ -34,8 +34,8 @@ export async function processIncompleteAnalysis(analysis: Analysis): Promise<str
   return failedMessage;
 }
 
-export async function processCompleteAnalysis(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<string> {
-  const analysisResult = await getClientAnalysisResults(explorerUrls, changedFiles);
+export async function processCompleteAnalysis(analysis: Analysis, changedFiles: ChangedFile[]): Promise<string> {
+  const analysisResult = await getClientAnalysisResults(analysis.explorerUrls, changedFiles);
 
   if (analysisResult.missesQualityGate) {
     return 'Some quality gates could not be retrieved.';
@@ -46,15 +46,15 @@ export async function processCompleteAnalysis(explorerUrls: string[], changedFil
 
   const failedProjectQualityGateCount = analysisResult.projectResults.filter(p => p.qualityGate && !p.qualityGate.passed).length;
   if (failedProjectQualityGateCount >= 1) {
-    if (explorerUrls.length > 1) {
-      failedMessage = `${failedProjectQualityGateCount} out of ${explorerUrls.length} projects`;
+    if (analysis.explorerUrls.length > 1) {
+      failedMessage = `${failedProjectQualityGateCount} out of ${analysis.explorerUrls.length} projects`;
     } else {
       failedMessage = 'Project';
     }
     failedMessage += ` failed quality gate(s)`;
   }
 
-  await decorateAction(analysisResult);
+  await decorateAction(analysisResult, analysis);
 
   return failedMessage;
 }

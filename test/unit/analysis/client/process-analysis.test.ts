@@ -12,7 +12,10 @@ import {
   analysisResultsDualQgFailed,
   analysisIncompleteFailedNoUrl,
   analysisCompleteFailedNoUrl,
-  analysisCompleteFailedWithWarning5057
+  analysisCompleteFailedWithWarning5057,
+  analysisPassedNoUrl,
+  analysisWithUrl,
+  analysisWithDoubleUrl
 } from './objects/process-analysis';
 
 describe('processIncompleteAnalysis', () => {
@@ -109,7 +112,7 @@ describe('processCompleteAnalysis', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
     jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
 
-    const message = await processCompleteAnalysis([], []);
+    const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
     expect(message).toEqual('Some quality gates could not be retrieved.');
   });
@@ -119,7 +122,7 @@ describe('processCompleteAnalysis', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
     jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
 
-    const message = await processCompleteAnalysis([], []);
+    const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
     expect(message).toEqual('Project failed quality gate(s)');
   });
@@ -129,7 +132,7 @@ describe('processCompleteAnalysis', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
     jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
 
-    const message = await processCompleteAnalysis(['url'], []);
+    const message = await processCompleteAnalysis(analysisWithUrl, []);
 
     expect(message).toEqual('Project failed quality gate(s)');
   });
@@ -139,7 +142,7 @@ describe('processCompleteAnalysis', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
     jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
 
-    const message = await processCompleteAnalysis(['url', 'url'], []);
+    const message = await processCompleteAnalysis(analysisWithDoubleUrl, []);
 
     expect(message).toEqual('2 out of 2 projects failed quality gate(s)');
   });
@@ -149,7 +152,7 @@ describe('processCompleteAnalysis', () => {
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
     jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
 
-    const message = await processCompleteAnalysis([], []);
+    const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
     expect(message).toEqual('');
   });
