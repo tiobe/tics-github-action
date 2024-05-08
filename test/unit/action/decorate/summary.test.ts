@@ -98,8 +98,10 @@ describe('createErrorSummary', () => {
     const body = createErrorSummaryBody(['Error', 'Error'], []);
     summary.clear();
 
-    expect(body).toContainTimes('Error', 2);
-    expect(body).toContainTimes('Warning', 0);
+    expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 1);
+    expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 0);
+    expect(body).toContainTimes(':x: Error', 2);
+    expect(body).toContainTimes(':warning: Warning', 0);
   });
 
   test('Should return summary of zero warnings on logLevel default', () => {
@@ -108,8 +110,10 @@ describe('createErrorSummary', () => {
     const body = createErrorSummaryBody([], ['Warning', 'Warning']);
     summary.clear();
 
-    expect(body).toContainTimes('Error', 0);
-    expect(body).toContainTimes('Warning', 0);
+    expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 0);
+    expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 0);
+    expect(body).toContainTimes(':x: Error', 0);
+    expect(body).toContainTimes(':warning: Warning', 0);
   });
 
   test('Should return summary of two  warnings on logLevel debug', () => {
@@ -118,8 +122,10 @@ describe('createErrorSummary', () => {
     const body = createErrorSummaryBody([], ['Warning', 'Warning']);
     summary.clear();
 
-    expect(body).toContainTimes('Error', 0);
-    expect(body).toContainTimes('Warning', 2);
+    expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 0);
+    expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);
+    expect(body).toContainTimes(':x: Error', 0);
+    expect(body).toContainTimes(':warning: Warning', 2);
   });
 
   test('Should return summary of one error and two warnings', () => {
@@ -128,8 +134,10 @@ describe('createErrorSummary', () => {
     const body = createErrorSummaryBody(['Error'], ['Warning', 'Warning']);
     summary.clear();
 
-    expect(body).toContainTimes('Error', 1);
-    expect(body).toContainTimes('Warning', 2);
+    expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 1);
+    expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);
+    expect(body).toContainTimes(':x: Error', 1);
+    expect(body).toContainTimes(':warning: Warning', 2);
   });
 });
 

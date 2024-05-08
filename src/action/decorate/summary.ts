@@ -74,20 +74,20 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
   summary.addHeading(`${generateStatusMarkdown(Status.FAILED, true)}`, 3);
 
   if (errorList.length > 0) {
-    summary.addHeading('The following errors have occurred during analysis:', 4);
+    summary.addHeading('The following errors have occurred during analysis:', 2);
 
     for (const error of errorList) {
-      summary.addRaw(`> :x: ${error}${EOL}`);
+      summary.addRaw(`:x: ${error}${EOL}${EOL}`);
     }
   }
 
   summary.addBreak();
 
   if (warningList.length > 0 && githubConfig.debugger) {
-    summary.addHeading('The following warnings have occurred during analysis:', 4);
+    summary.addHeading('The following warnings have occurred during analysis:', 2);
 
     for (const warning of warningList) {
-      summary.addRaw(`> :x: ${warning}${EOL}`);
+      summary.addRaw(`:warning: ${warning}${EOL}${EOL}`);
     }
   }
 
