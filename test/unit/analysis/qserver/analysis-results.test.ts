@@ -1,7 +1,6 @@
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as changed_files from '../../../../src/analysis/helper/changed-files';
-import * as qserver from '../../../../src/viewer/qserver';
 import * as qualityGate from '../../../../src/viewer/qualitygate';
 import * as summary from '../../../../src/action/decorate/summary';
 
@@ -26,7 +25,6 @@ describe('getAnalysisResult', () => {
   ticsConfigMock.baseUrl = 'http://base.url';
 
   beforeEach(() => {
-    jest.spyOn(qserver, 'getLastQServerRunDate').mockResolvedValue(12345000);
     jest.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
     jest.spyOn(qualityGate, 'getQualityGateUrl').mockReturnValue('QualityGate?filter=Project(project)');
 
@@ -41,7 +39,7 @@ describe('getAnalysisResult', () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(passedQualityGate);
 
-    const result = await getAnalysisResult();
+    const result = await getAnalysisResult(12345000);
 
     expect(result).toEqual({
       passed: true,
@@ -63,7 +61,7 @@ describe('getAnalysisResult', () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(failedQualityGate);
 
-    const result = await getAnalysisResult();
+    const result = await getAnalysisResult(12345000);
 
     expect(result).toEqual({
       passed: false,
@@ -90,7 +88,7 @@ describe('getAnalysisResult', () => {
     spyCreateReviewComments.mockReturnValueOnce(ticsReviewComments);
     spyCreateChangedFiles.mockResolvedValue(['file']);
 
-    const result = await getAnalysisResult();
+    const result = await getAnalysisResult(12345000);
 
     expect(result).toEqual({
       passed: false,

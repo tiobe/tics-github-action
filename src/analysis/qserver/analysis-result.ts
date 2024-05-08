@@ -4,12 +4,10 @@ import { AnalysisResult, TicsReviewComments } from '../../helper/interfaces';
 import { joinUrl } from '../../helper/url';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
 import { getAnnotations } from '../../viewer/annotations';
-import { getLastQServerRunDate } from '../../viewer/qserver';
 import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
 import { getChangedFiles } from '../helper/changed-files';
 
-export async function getAnalysisResult(): Promise<AnalysisResult> {
-  const date = await getLastQServerRunDate();
+export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
   const qualityGate = await getQualityGate(getQualityGateUrl({ date }));
   const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl({ date }));
 
