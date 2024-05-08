@@ -41,6 +41,10 @@ export async function qServerAnalysis(): Promise<Verdict> {
     let analysisResult: AnalysisResult | undefined;
     try {
       analysisResult = await getAnalysisResult(newDate);
+      if (!analysisResult.passed) {
+        verdict.passed = false;
+        verdict.message = 'Project failed quality gate';
+      }
     } catch (error) {
       verdict.passed = false;
       verdict.message = error instanceof Error ? error.message : 'Something went wrong: reason unknown';

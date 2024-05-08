@@ -32,8 +32,15 @@ export const analysisPassed: Analysis = {
   warningList: ['Warning']
 };
 
-export const analysisResult: AnalysisResult = {
+export const analysisResultPassed: AnalysisResult = {
   passed: true,
+  passedWithWarning: false,
+  missesQualityGate: false,
+  projectResults: []
+};
+
+export const analysisResultFailed: AnalysisResult = {
+  passed: false,
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: []

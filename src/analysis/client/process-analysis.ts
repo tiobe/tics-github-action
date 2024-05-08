@@ -47,7 +47,7 @@ export async function processCompleteAnalysis(analysis: Analysis, changedFiles: 
   const failedProjectQualityGateCount = analysisResult.projectResults.filter(p => p.qualityGate && !p.qualityGate.passed).length;
   if (failedProjectQualityGateCount >= 1) {
     if (analysis.explorerUrls.length > 1) {
-      failedMessage = `${failedProjectQualityGateCount} out of ${analysis.explorerUrls.length} projects`;
+      failedMessage = `${failedProjectQualityGateCount.toString()} out of ${analysis.explorerUrls.length.toString()} projects`;
     } else {
       failedMessage = 'Project';
     }

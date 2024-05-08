@@ -13,7 +13,7 @@ export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
 
   let reviewComments: TicsReviewComments | undefined;
   if (actionConfig.postAnnotations) {
-    let changedFiles = await getChangedFiles();
+    const changedFiles = await getChangedFiles();
 
     const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
     if (annotations.length > 0) {

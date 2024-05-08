@@ -6,7 +6,14 @@ import * as summary from '../../../src/action/decorate/summary';
 import * as viewer from '../../../src/viewer/qserver';
 
 import { githubConfigMock, ticsConfigMock } from '../../.setup/mock';
-import { analysisFailed, analysisNotCompleted, analysisPassed, analysisResult, analysisWarning5057 } from './objects/qserver';
+import {
+  analysisFailed,
+  analysisNotCompleted,
+  analysisPassed,
+  analysisResultFailed,
+  analysisResultPassed,
+  analysisWarning5057
+} from './objects/qserver';
 import { qServerAnalysis } from '../../../src/analysis/qserver';
 import { Mode } from '../../../src/configuration/tics';
 
@@ -136,11 +143,27 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return passing verdict if getAnalysisResult returns', async () => {
+  test('Should return failing verdict if getAnalysisResult returns failing Quality Gate', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
-    spyGetAnalysisResult.mockResolvedValue(analysisResult);
+    spyGetAnalysisResult.mockResolvedValue(analysisResultFailed);
+
+    const verdict = await qServerAnalysis();
+
+    expect(verdict).toEqual({
+      passed: false,
+      message: 'Project failed quality gate',
+      errorList: [],
+      warningList: ['Warning']
+    });
+  });
+
+  test('Should return passing verdict if getAnalysisResult returns passing Quality Gate', async () => {
+    spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
+    spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
+    spyAnalyzer.mockResolvedValue(analysisPassed);
+    spyGetAnalysisResult.mockResolvedValue(analysisResultPassed);
 
     const verdict = await qServerAnalysis();
 
