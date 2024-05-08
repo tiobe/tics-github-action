@@ -27,7 +27,7 @@ export async function postToConversation(isGate: boolean, body: string, event: E
   }
 }
 
-export async function decoratePullRequest(passed: boolean, summaryBody: string) {
+export async function decoratePullRequest(passed: boolean, summaryBody: string): Promise<void> {
   const previousReviewComments = await getPostedReviewComments();
   if (previousReviewComments.length > 0) {
     await deletePreviousReviewComments(previousReviewComments);

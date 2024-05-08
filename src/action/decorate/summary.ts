@@ -81,9 +81,8 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
     }
   }
 
-  summary.addBreak();
-
   if (warningList.length > 0 && githubConfig.debugger) {
+    summary.addBreak();
     summary.addHeading('The following warnings have occurred during analysis:', 2);
 
     for (const warning of warningList) {
