@@ -10,13 +10,13 @@ import { httpClient } from './_http-client';
  * @returns TICS annotations.
  */
 export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<ExtendedAnnotation[]> {
-  let annotations: ExtendedAnnotation[] = [];
+  const annotations: ExtendedAnnotation[] = [];
   logger.header('Retrieving annotations.');
 
   for (const [index, link] of apiLinks.entries()) {
     const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
 
-    let fields = annotationsUrl.searchParams.get('fields');
+    const fields = annotationsUrl.searchParams.get('fields');
     const requiredFields = 'default,ruleHelp,synopsis';
     if (fields !== null) {
       annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
@@ -28,18 +28,17 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
 
     try {
       const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
-      if (response) {
-        response.data.data.forEach((annotation: Annotation) => {
-          const extendedAnnotation: ExtendedAnnotation = {
-            ...annotation,
-            instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
-          };
-          extendedAnnotation.gateId = index;
 
-          logger.debug(JSON.stringify(extendedAnnotation));
-          annotations.push(extendedAnnotation);
-        });
-      }
+      response.data.data.forEach((annotation: Annotation) => {
+        const extendedAnnotation: ExtendedAnnotation = {
+          ...annotation,
+          instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
+        };
+        extendedAnnotation.gateId = index;
+
+        logger.debug(JSON.stringify(extendedAnnotation));
+        annotations.push(extendedAnnotation);
+      });
     } catch (error: unknown) {
       const message = getRetryErrorMessage(error);
       throw Error(`An error occured when trying to retrieve annotations: ${message}`);

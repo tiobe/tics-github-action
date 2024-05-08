@@ -33,8 +33,8 @@ export async function getQualityGate(url: string): Promise<QualityGate> {
  * @param cdtoken (only on client) the cdtoken of the last Client run.
  * @returns The url to get the quality gate analysis.
  */
-export function getQualityGateUrl({ date, cdtoken }: { date?: number; cdtoken?: string }) {
-  let qualityGateUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/QualityGateStatus'));
+export function getQualityGateUrl({ date, cdtoken }: { date?: number; cdtoken?: string }): string {
+  const qualityGateUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/QualityGateStatus'));
 
   qualityGateUrl.searchParams.append('project', ticsCli.project);
 

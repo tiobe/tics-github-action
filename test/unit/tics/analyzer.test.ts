@@ -360,6 +360,14 @@ describe('getTicsCommand', () => {
 
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  beforeEach(() => {
+    (exec.exec as any).mockResolvedValue(0);
+  });
+
   test('Should return single error if already exists in errorlist', async () => {
     ticsConfigMock.installTics = false;
 
@@ -391,9 +399,10 @@ describe('test callback functions', () => {
 
   test('Should add ExplorerUrl in response', async () => {
     ticsConfigMock.viewerUrl = 'http://viewer.com';
+
     await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('http://base.com/Explorer.html#axes=ClientData');
-    (exec.exec as any).mockResolvedValueOnce(0);
+
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.explorerUrls[0]).toEqual('http://viewer.com/Explorer.html#axes=ClientData');

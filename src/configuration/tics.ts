@@ -95,15 +95,12 @@ export class TicsConfiguration {
    * @throws error if the input is incorrect.
    */
   private validateAndGetMode(input: string): Mode {
-    switch (input.toLowerCase()) {
-      case Mode.CLIENT:
-        return Mode.CLIENT;
-      case Mode.QSERVER:
-        return Mode.QSERVER;
-      case Mode.DIAGNOSTIC:
-        return Mode.DIAGNOSTIC;
-      default:
-        throw Error(`Parameter 'mode' should be one of 'client', 'qserver' or 'diagnostic'. Input given is '${input}'`);
+    const mode = input.toLowerCase() as Mode;
+
+    if (Object.values(Mode).includes(mode)) {
+      return mode;
+    } else {
+      throw Error(`Parameter 'mode' should be one of 'client', 'qserver' or 'diagnostic'. Input given is '${input}'`);
     }
   }
 
@@ -113,16 +110,14 @@ export class TicsConfiguration {
    * @throws error if the input is incorrect.
    */
   private validateAndGetTrustStrategy(input: string): TrustStrategy {
-    switch (input.toLowerCase()) {
-      case TrustStrategy.NONE:
-      case TrustStrategy.STRICT:
-        return TrustStrategy.STRICT;
-      case TrustStrategy.SELFSIGNED:
-        return TrustStrategy.SELFSIGNED;
-      case TrustStrategy.ALL:
-        return TrustStrategy.ALL;
-      default:
-        throw Error(`Parameter 'trustStrategy' should be one of 'strict', 'self-signed' or 'all'. Input given is '${input}'`);
+    const trustStrategy = input.toLowerCase() as TrustStrategy;
+
+    if (trustStrategy === TrustStrategy.NONE) {
+      return TrustStrategy.STRICT;
+    } else if (Object.values(TrustStrategy).includes(trustStrategy)) {
+      return trustStrategy;
+    } else {
+      throw Error(`Parameter 'trustStrategy' should be one of 'strict', 'self-signed' or 'all'. Input given is '${input}'`);
     }
   }
 

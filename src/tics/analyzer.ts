@@ -11,9 +11,9 @@ import { httpClient } from '../viewer/_http-client';
 import { Mode } from '../configuration/tics';
 import { CliOptions, TicsCli } from '../configuration/tics-cli';
 
-let errorList: string[] = [];
-let warningList: string[] = [];
-let explorerUrls: string[] = [];
+const errorList: string[] = [];
+const warningList: string[] = [];
+const explorerUrls: string[] = [];
 let statusCode: number;
 let completed: boolean;
 
@@ -53,6 +53,7 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
     statusCode = -1;
   }
 
+  logger.info(`TICS closed with code ${statusCode.toString()}`);
   return {
     completed: completed,
     statusCode: statusCode,
@@ -95,12 +96,12 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
  */
 function findInStdOutOrErr(data: string): void {
   const error = data.toString().match(/\[ERROR.*/g);
-  if (error && !errorList.find(e => e === error?.toString())) {
+  if (error && !errorList.find(e => e === error.toString())) {
     errorList.push(error.toString());
   }
 
   const warning = data.toString().match(/\[WARNING.*/g);
-  if (warning && !warningList.find(w => w === warning?.toString())) {
+  if (warning && !warningList.find(w => w === warning.toString())) {
     warningList.push(warning.toString());
   }
 
@@ -118,7 +119,7 @@ function findInStdOutOrErr(data: string): void {
  * @param fileListPath
  * @returns string of the command to run TICS.
  */
-export function getTicsCommand(fileListPath: string) {
+export function getTicsCommand(fileListPath: string): string {
   let command: string[] = [];
 
   switch (ticsConfig.mode) {
@@ -141,7 +142,7 @@ export function getTicsCommand(fileListPath: string) {
   }
 
   if (ticsCli.additionalFlags) {
-    command.push(`${ticsCli.additionalFlags}`);
+    command.push(ticsCli.additionalFlags);
   }
 
   // Add TICS debug flag when in debug mode, if this flag was not already set.
@@ -156,7 +157,7 @@ function getCliOptionsForCommand() {
   const command = [`-project '${ticsCli.project}'`];
 
   CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
-    if (option.modes.includes(ticsConfig.mode)) {
+    if (option.cli && option.modes.includes(ticsConfig.mode)) {
       const value = ticsCli[option.cli as keyof TicsCli];
       if (value) {
         command.push(`-${option.cli} ${value}`);

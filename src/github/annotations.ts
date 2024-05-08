@@ -34,7 +34,7 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
 export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
-  let postableReviewComments: TicsReviewComment[] = [];
+  const postableReviewComments: TicsReviewComment[] = [];
 
   projectResults.forEach(projectResult => {
     if (projectResult.reviewComments) {

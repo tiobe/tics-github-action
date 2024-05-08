@@ -8,9 +8,9 @@ import { logger } from '../helper/logger';
  * @returns query value (e.g. c-demo)
  **/
 export function getItemFromUrl(url: string, query: string): string {
-  let regExpr = new RegExp(`${query}\\((.*?)\\)`);
-  let cleanUrl = url.replace(/\+/g, '%20');
-  let itemValue = RegExp(regExpr).exec(decodeURIComponent(cleanUrl));
+  const regExpr = new RegExp(`${query}\\((.*?)\\)`);
+  const cleanUrl = url.replace(/\+/g, '%20');
+  const itemValue = RegExp(regExpr).exec(decodeURIComponent(cleanUrl));
 
   if (itemValue && itemValue.length >= 2) {
     logger.debug(`Retrieved ${query} value: ${itemValue[1]}`);

@@ -6,9 +6,10 @@ export function handleOctokitError(error: unknown): string {
   let message = 'reason unkown';
   if (error instanceof Error) {
     message = '';
-    const retryCount = <number | undefined>(error as OctokitError).request?.request?.retryCount;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const retryCount = (error as OctokitError).request?.request?.retryCount as number | undefined;
     if (retryCount) {
-      message = `Retried ${retryCount} time(s), but got: `;
+      message = `Retried ${retryCount.toString()} time(s), but got: `;
     }
     message += error.message;
   }
@@ -22,7 +23,7 @@ export function getRetryErrorMessage(error: unknown): string {
 
     if (error instanceof TicsError) {
       if (error.retryCount > 0) {
-        message += ` (retried ${error.retryCount} times)`;
+        message += ` (retried ${error.retryCount.toString()} times)`;
       }
     }
   }
@@ -32,7 +33,7 @@ export function getRetryErrorMessage(error: unknown): string {
 
 export function getRetryMessage<T>(response: ClientResponse<T>, message: string): string {
   if (response.retryCount > 0) {
-    message += ` (retried ${response.retryCount} times)`;
+    message += ` (retried ${response.retryCount.toString()} times)`;
   }
   return message;
 }

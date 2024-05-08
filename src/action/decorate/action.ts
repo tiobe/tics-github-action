@@ -9,7 +9,7 @@ import { Analysis, AnalysisResult } from '../../helper/interfaces';
  * comment in the Pull Request conversation.
  * @param analysisResult
  */
-export async function decorateAction(analysisResult: AnalysisResult | undefined, analysis: Analysis) {
+export async function decorateAction(analysisResult: AnalysisResult | undefined, analysis: Analysis): Promise<void> {
   let summaryBody;
   if (analysisResult) {
     summaryBody = createSummaryBody(analysisResult);

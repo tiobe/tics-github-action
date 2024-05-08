@@ -8,7 +8,7 @@ import { runTicsAnalyzer } from '../tics/analyzer';
  */
 export async function diagnosticAnalysis(): Promise<Verdict> {
   logger.header('Running action in diagnostic mode');
-  let analysis = await runTicsAnalyzer('');
+  const analysis = await runTicsAnalyzer('');
 
   const passed = analysis.statusCode === 0;
 

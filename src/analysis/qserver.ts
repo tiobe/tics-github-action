@@ -23,7 +23,7 @@ export async function qServerAnalysis(): Promise<Verdict> {
   if (!verdict.passed) {
     verdict.message = 'Failed to complete TICSQServer analysis.';
   } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-    let summaryBody = createNothingAnalyzedSummaryBody('No changed files applicable for TICS analysis quality gating.');
+    const summaryBody = createNothingAnalyzedSummaryBody('No changed files applicable for TICS analysis quality gating.');
     if (githubConfig.eventName === 'pull_request') {
       await postToConversation(false, summaryBody);
     }

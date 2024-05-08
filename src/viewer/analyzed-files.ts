@@ -17,13 +17,12 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
   let analyzedFiles: string[] = [];
   try {
     const response = await httpClient.get<AnalyzedFiles>(url);
-    if (response) {
-      analyzedFiles = response.data.data.map((file: AnalyzedFile) => {
-        logger.debug(file.formattedValue);
-        return file.formattedValue;
-      });
-      logger.info(getRetryMessage(response, 'Retrieved the analyzed files.'));
-    }
+
+    analyzedFiles = response.data.data.map((file: AnalyzedFile) => {
+      logger.debug(file.formattedValue);
+      return file.formattedValue;
+    });
+    logger.info(getRetryMessage(response, 'Retrieved the analyzed files.'));
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error retrieving the analyzed files: ${message}`);
@@ -38,8 +37,8 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
  * @param cdtoken (only on client) the cdtoken of the last Client run.
  * @returns The url to get the quality gate analysis.
  */
-export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?: string }) {
-  let getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
+export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?: string }): string {
+  const getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
   let filters = `Project(${ticsCli.project}),Window(-1),CodeType(Set(production,test,external,generated)),File()`;
 

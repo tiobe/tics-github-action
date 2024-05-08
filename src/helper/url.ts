@@ -1,4 +1,4 @@
-export function joinUrl(url: string, ...paths: string[]) {
+export function joinUrl(url: string, ...paths: string[]): string {
   if (!url.endsWith('/')) {
     url += '/';
   }

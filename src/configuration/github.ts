@@ -21,6 +21,8 @@ export class GithubConfig {
     this.id = `${context.runId.toString()}-${context.runNumber.toString()}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
+
+    this.removeWarningListener();
   }
 
   private getPullRequestNumber() {
@@ -33,7 +35,7 @@ export class GithubConfig {
     }
   }
 
-  removeWarningListener() {
+  removeWarningListener(): void {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
       logger.debug(warning.message.toString());
