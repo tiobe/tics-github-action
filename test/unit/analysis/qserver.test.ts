@@ -21,8 +21,8 @@ describe('SetFailed checks (QServer)', () => {
     spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
     spyPostToConversation = jest.spyOn(pull_request, 'postToConversation');
     spyGetAnalysisResult = jest.spyOn(qserver, 'getAnalysisResult');
-    spyDecorateAction = jest.spyOn(action, 'decorateAction');
 
+    jest.spyOn(action, 'decorateAction');
     jest.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockReturnValue('body');
   });
 
