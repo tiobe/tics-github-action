@@ -35,8 +35,8 @@ jobs:
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:
-          projectName: project-name
-          ticsConfiguration: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          project: project-name
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
@@ -49,12 +49,12 @@ Linux and Windows based runners, both Github-hosted and self-hosted, are support
 
 The following inputs are recommended or required for this action:
 
-| Input               | Description                                                                                                                                                                                                      | Required |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `projectName`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                             | true     |
-| `ticsConfiguration` | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
-| `ticsAuthToken`     | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
-| `installTics`       | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
+| Input           | Description                                                                                                                                                                                                      | Required |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `project`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                             | true     |
+| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
+| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
+| `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ### Optional parameters
 
@@ -65,8 +65,8 @@ The following inputs are recommended or required for this action:
 | `filelist`             | Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request.                                 | -                                        |
 | `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be used. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                 | `GATE`                                   |
 | `recalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                    | -                                        |
-| `clientData`           | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                           | -                                        |
-| `branchName`           | Name of the branch in TICS.                                                                                                                                                                                                                                                              | -                                        |
+| `cdtoken`              | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                           | -                                        |
+| `branchname`           | Name of the branch in TICS.                                                                                                                                                                                                                                                              | -                                        |
 | `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE` and `EXTERNAL`.                                                                                                                                           | `PRODUCTION`                             |
 | `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                                                                                                                                                          | `false`                                  |
 | `hostnameVerification` | Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/latest/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).                                                                     | `true`                                   |
@@ -77,8 +77,8 @@ The following inputs are recommended or required for this action:
 | `retryCodes`           | Status codes to retry api calls for. The default codes will be overwritten if this option is set.                                                                                                                                                                                        | `419`, `500`, `501`, `502`, `503`, `504` |
 | `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                                                                                     | -                                        |
 | `showBlockingAfter`    | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                           | `true`                                   |
-| `tmpDir`               | Location to store debug information.                                                                                                                                                                                                                                                     | -                                        |
-| `viewerUrl`            | The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)                                                                                                                                                             | -                                        |
+| `tmpdir`               | Location to store debug information.                                                                                                                                                                                                                                                     | -                                        |
+| `displayUrl`           | The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)                                                                                                                                                             | -                                        |
 
 # Developer notes
 

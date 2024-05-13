@@ -12,7 +12,7 @@ describe('test multiple types of configuration', () => {
   beforeAll(() => {
     jest.spyOn(process.stdout, 'write').mockImplementation();
 
-    ticsConfigMock.ticsConfiguration = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
+    ticsConfigMock.viewerUrl = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
   });
 
   beforeEach(() => {
@@ -398,7 +398,7 @@ describe('test callback functions', () => {
   });
 
   test('Should add ExplorerUrl in response', async () => {
-    ticsConfigMock.viewerUrl = 'http://viewer.com';
+    ticsConfigMock.displayUrl = 'http://viewer.com';
 
     await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('http://base.com/Explorer.html#axes=ClientData');

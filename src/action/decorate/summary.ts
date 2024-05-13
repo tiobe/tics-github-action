@@ -199,7 +199,7 @@ function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
     .filter(item => item.itemType === 'file')
     .forEach(item => {
       const dataRow: SummaryTableRow = [
-        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.viewerUrl, item.link)})${EOL}${EOL}`,
+        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
         item.data.actualValue.formattedValue
       ];
 

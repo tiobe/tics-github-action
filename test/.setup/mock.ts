@@ -19,10 +19,10 @@ export const ticsConfigMock = {
   hostnameVerification: false,
   installTics: false,
   mode: 'client',
-  ticsConfiguration: '',
+  viewerUrl: '',
   trustStrategy: 'strict',
   baseUrl: '',
-  viewerUrl: ''
+  displayUrl: ''
 };
 
 export const actionConfigMock = {

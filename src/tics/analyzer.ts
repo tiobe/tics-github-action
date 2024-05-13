@@ -73,15 +73,15 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
 
   let installCommand = '';
   if (ticsConfig.installTics) {
-    installCommand = await installTics.getInstallCommand(ticsConfig.ticsConfiguration);
+    installCommand = await installTics.getInstallCommand(ticsConfig.viewerUrl);
 
     if (platform() === 'linux') {
       installCommand += ' &&';
     }
   } else if (platform() === 'linux') {
-    installCommand = `TICS='${ticsConfig.ticsConfiguration}';`;
+    installCommand = `TICS='${ticsConfig.viewerUrl}';`;
   } else {
-    installCommand = `$env:TICS='${ticsConfig.ticsConfiguration}'`;
+    installCommand = `$env:TICS='${ticsConfig.viewerUrl}'`;
   }
 
   if (platform() === 'linux') {
@@ -109,7 +109,7 @@ function findInStdOutOrErr(data: string): void {
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
     if (urlPath) {
-      explorerUrls.push(joinUrl(ticsConfig.viewerUrl, urlPath));
+      explorerUrls.push(joinUrl(ticsConfig.displayUrl, urlPath));
     }
   }
 }
@@ -156,7 +156,7 @@ export function getTicsCommand(fileListPath: string): string {
 function getCliOptionsForCommand() {
   const command = [`-project '${ticsCli.project}'`];
 
-  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
+  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'project', 'tmpdir')).forEach(option => {
     if (option.cli && option.modes.includes(ticsConfig.mode)) {
       const value = ticsCli[option.cli as keyof TicsCli];
       if (value) {

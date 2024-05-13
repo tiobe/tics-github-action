@@ -11,10 +11,10 @@ describe('TICS Configuration', () => {
     installTics: false,
     mode: '',
     ticsAuthToken: '',
-    ticsConfiguration: '',
+    viewerUrl: '',
     trustStrategy: 'strict',
     baseUrl: '',
-    viewerUrl: ''
+    displayUrl: ''
   };
 
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe('TICS Configuration', () => {
   describe('Validate URLs', () => {
     test('Should throw error on Should throw error on incorrect URL', () => {
       values = {
-        ticsConfiguration: 'tiobeweb/TICS/api/cfg?name=asdf'
+        viewerUrl: 'tiobeweb/TICS/api/cfg?name=asdf'
       };
 
       let error: any;
@@ -57,12 +57,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' with value 'tiobeweb/TICS/api/cfg?name=asdf' is not a valid url");
+      expect(error.message).toContain("Parameter 'viewerUrl' with value 'tiobeweb/TICS/api/cfg?name=asdf' is not a valid url");
     });
 
     test('Should throw error on incorrect URL missing http(s)', () => {
       values = {
-        ticsConfiguration: 'htt://test.com/tiobeweb/TICS/api/cfg?name=asdf'
+        viewerUrl: 'htt://test.com/tiobeweb/TICS/api/cfg?name=asdf'
       };
 
       let error: any;
@@ -73,12 +73,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' is missing the protocol (http(s)://)");
+      expect(error.message).toContain("Parameter 'viewerUrl' is missing the protocol (http(s)://)");
     });
 
     test('Should throw error on http URL missing /api/', () => {
       values = {
-        ticsConfiguration: 'http://test.com/tiobeweb/TICS/cfg?name='
+        viewerUrl: 'http://test.com/tiobeweb/TICS/cfg?name='
       };
 
       let error: any;
@@ -89,12 +89,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' is missing path /api/cfg");
+      expect(error.message).toContain("Parameter 'viewerUrl' is missing path /api/cfg");
     });
 
     test('Should throw error on https URL missing /api/', () => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/cfg?name='
+        viewerUrl: 'https://test.com/tiobeweb/TICS/cfg?name='
       };
 
       let error: any;
@@ -105,12 +105,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' is missing path /api/cfg");
+      expect(error.message).toContain("Parameter 'viewerUrl' is missing path /api/cfg");
     });
 
     test('Should throw error on http URL missing configuration name', () => {
       values = {
-        ticsConfiguration: 'http://test.com/tiobeweb/TICS/api/cfg?name='
+        viewerUrl: 'http://test.com/tiobeweb/TICS/api/cfg?name='
       };
 
       let error: any;
@@ -121,12 +121,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' is missing the configuration. (eg: /cfg?name=default)");
+      expect(error.message).toContain("Parameter 'viewerUrl' is missing the configuration. (eg: /cfg?name=default)");
     });
 
     test('Should throw error on https URL missing configuration name', () => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name='
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name='
       };
 
       let error: any;
@@ -137,12 +137,12 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'ticsConfiguration' is missing the configuration. (eg: /cfg?name=default)");
+      expect(error.message).toContain("Parameter 'viewerUrl' is missing the configuration. (eg: /cfg?name=default)");
     });
 
-    test('Should return correct http URL and set base- and viewerUrl', () => {
+    test('Should return correct http URL and set base- and displayUrl', () => {
       values = {
-        ticsConfiguration: 'http://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'http://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: 'client'
       };
 
@@ -150,16 +150,16 @@ describe('TICS Configuration', () => {
 
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
-        ticsConfiguration: 'http://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'http://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: Mode.CLIENT,
         baseUrl: 'http://test.com/tiobeweb/TICS',
-        viewerUrl: 'http://test.com/tiobeweb/TICS'
+        displayUrl: 'http://test.com/tiobeweb/TICS'
       });
     });
 
-    test('Should return correct https URL and set base- and viewerUrl', () => {
+    test('Should return correct https URL and set base- and displayUrl', () => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: 'client'
       };
 
@@ -167,18 +167,18 @@ describe('TICS Configuration', () => {
 
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
-        viewerUrl: 'https://test.com/tiobeweb/TICS'
+        displayUrl: 'https://test.com/tiobeweb/TICS'
       });
     });
 
-    test('Should throw error if incorrect viewerUrl', () => {
+    test('Should throw error if incorrect displayUrl', () => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: 'client',
-        viewerUrl: 'localhost'
+        displayUrl: 'localhost'
       };
 
       let error: any;
@@ -189,24 +189,24 @@ describe('TICS Configuration', () => {
       }
 
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toContain("Parameter 'viewerUrl' with value 'localhost' is not a valid url");
+      expect(error.message).toContain("Parameter 'displayUrl' with value 'localhost' is not a valid url");
     });
 
-    test('Should return different viewerUrl from baseUrl', () => {
+    test('Should return different displayUrl from baseUrl', () => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: 'client',
-        viewerUrl: 'http://viewer.url'
+        displayUrl: 'http://viewer.url'
       };
 
       const ticsConfig = new TicsConfiguration();
 
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
-        viewerUrl: 'http://viewer.url/'
+        displayUrl: 'http://viewer.url/'
       });
     });
   });
@@ -214,16 +214,16 @@ describe('TICS Configuration', () => {
   describe('Other validations', () => {
     beforeEach(() => {
       values = {
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: 'client'
       };
 
       expectDefault = {
         ...expectDefault,
-        ticsConfiguration: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
-        viewerUrl: 'https://test.com/tiobeweb/TICS'
+        displayUrl: 'https://test.com/tiobeweb/TICS'
       };
     });
 
@@ -385,9 +385,9 @@ describe('TICS Configuration', () => {
       installTics: 'true',
       mode: 'client',
       ticsAuthToken: 'auth-token',
-      ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
       trustStrategy: 'self-signed',
-      viewerUrl: 'http://viewer.url'
+      displayUrl: 'http://viewer.url'
     };
 
     const ticsConfig = new TicsConfiguration();
@@ -399,10 +399,10 @@ describe('TICS Configuration', () => {
       installTics: true,
       mode: Mode.CLIENT,
       ticsAuthToken: 'auth-token',
-      ticsConfiguration: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
       trustStrategy: TrustStrategy.SELFSIGNED,
       baseUrl: 'http://localhost/tiobeweb/TICS',
-      viewerUrl: 'http://viewer.url/'
+      displayUrl: 'http://viewer.url/'
     });
     expect(exportSpy).toHaveBeenCalledTimes(6);
     expect(exportSpy).toHaveBeenCalledWith('TICSIDE', 'GITHUB');

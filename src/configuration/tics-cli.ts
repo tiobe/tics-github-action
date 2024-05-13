@@ -18,16 +18,16 @@ export class TicsCli {
   readonly additionalFlags: string;
 
   constructor(mode: Mode) {
-    this.project = getInput('projectName');
-    this.branchname = getInput('branchName');
-    this.branchdir = getInput('branchDir');
-    this.cdtoken = getInput('clientData');
+    this.project = getInput('project');
+    this.branchname = getInput('branchname');
+    this.branchdir = getInput('branchdir');
+    this.cdtoken = getInput('cdtoken');
     this.codetype = getInput('codetype');
     this.calc = this.getCalc(getInput('calc'), mode);
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
-    this.tmpdir = getInput('tmpDir');
+    this.tmpdir = getInput('tmpdir');
     this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, mode);
@@ -70,22 +70,22 @@ export class TicsCli {
 
 export const CliOptions: CliOption[] = [
   {
-    action: 'projectName',
+    action: 'project',
     cli: 'project',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'branchDir',
+    action: 'branchdir',
     cli: 'branchdir',
     modes: [Mode.QSERVER]
   },
   {
-    action: 'branchName',
+    action: 'branchname',
     cli: 'branchname',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'clientData',
+    action: 'cdtoken',
     cli: 'cdtoken',
     modes: [Mode.CLIENT]
   },
@@ -115,7 +115,7 @@ export const CliOptions: CliOption[] = [
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'tmpDir',
+    action: 'tmpdir',
     cli: 'tmpdir',
     modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
   },

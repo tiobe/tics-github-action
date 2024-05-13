@@ -22,7 +22,7 @@ import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
-    ticsConfigMock.viewerUrl = 'http://viewer.url/';
+    ticsConfigMock.displayUrl = 'http://viewer.url/';
   });
 
   test('Should contain blocking after if there are soaked violations', () => {

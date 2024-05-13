@@ -24,13 +24,13 @@ export class TicsConfiguration {
   readonly installTics: boolean;
   readonly mode: Mode;
   readonly ticsAuthToken: string;
-  readonly ticsConfiguration: string;
+  readonly viewerUrl: string;
   readonly trustStrategy: TrustStrategy;
   readonly baseUrl: string;
-  readonly viewerUrl: string;
+  readonly displayUrl: string;
 
   constructor() {
-    this.ticsConfiguration = this.validateAndGetConfigUrl(getInput('ticsConfiguration', { required: true }));
+    this.viewerUrl = this.validateAndGetConfigUrl(getInput('viewerUrl', { required: true }));
     this.mode = this.validateAndGetMode(getInput('mode'));
     this.githubToken = getInput('githubToken');
     this.installTics = getBooleanInput('installTics');
@@ -38,8 +38,8 @@ export class TicsConfiguration {
     this.trustStrategy = this.validateAndGetTrustStrategy(getInput('trustStrategy'));
     this.filelist = getInput('filelist');
     this.ticsAuthToken = getInput('ticsAuthToken');
-    this.baseUrl = getBaseUrl(this.ticsConfiguration).href;
-    this.viewerUrl = this.validateAndGetViewerUrl(getInput('viewerUrl'));
+    this.baseUrl = getBaseUrl(this.viewerUrl).href;
+    this.displayUrl = this.validateAndGetViewerUrl(getInput('displayUrl'));
 
     this.setVariables();
   }
@@ -50,14 +50,14 @@ export class TicsConfiguration {
    * @throws error if the input is incorrect.
    */
   private validateAndGetConfigUrl(url: string): string {
-    const uri = this.validateAndGetUrl(url, 'ticsConfiguration');
+    const uri = this.validateAndGetUrl(url, 'viewerUrl');
 
     if (uri.protocol !== 'http:' && uri.protocol !== 'https:') {
-      throw Error(`Parameter 'ticsConfiguration' is missing the protocol (http(s)://)`);
+      throw Error(`Parameter 'viewerUrl' is missing the protocol (http(s)://)`);
     } else if (!uri.pathname.endsWith('/api/cfg')) {
-      throw Error(`Parameter 'ticsConfiguration' is missing path /api/cfg`);
+      throw Error(`Parameter 'viewerUrl' is missing path /api/cfg`);
     } else if (!uri.searchParams.has('name') || uri.searchParams.get('name') === '') {
-      throw Error(`Parameter 'ticsConfiguration' is missing the configuration. (eg: /cfg?name=default)`);
+      throw Error(`Parameter 'viewerUrl' is missing the configuration. (eg: /cfg?name=default)`);
     }
 
     return uri.href;
@@ -70,7 +70,7 @@ export class TicsConfiguration {
    */
   private validateAndGetViewerUrl(url: string): string {
     if (url) {
-      return this.validateAndGetUrl(url, 'viewerUrl').href;
+      return this.validateAndGetUrl(url, 'displayUrl').href;
     } else {
       return this.baseUrl;
     }

@@ -42,7 +42,7 @@ describe('Cli Configuration', () => {
 
   test('Should pass when mode is client diagnostic and project is auto', () => {
     values = {
-      projectName: 'auto'
+      project: 'auto'
     };
 
     const cliClient = new TicsCli(Mode.CLIENT);
@@ -54,7 +54,7 @@ describe('Cli Configuration', () => {
 
   test('Should pass when mode is client or diagnostic and project is given', () => {
     values = {
-      projectName: 'project'
+      project: 'project'
     };
 
     const cliClient = new TicsCli(Mode.CLIENT);
@@ -66,7 +66,7 @@ describe('Cli Configuration', () => {
 
   test('Should pass when mode is qserver and project is given', () => {
     values = {
-      projectName: 'project'
+      project: 'project'
     };
 
     const cliServer = new TicsCli(Mode.QSERVER);
@@ -76,7 +76,7 @@ describe('Cli Configuration', () => {
 
   test('Should throw error if mode is qserver and project is auto', () => {
     values = {
-      projectName: 'auto'
+      project: 'auto'
     };
 
     let error: any;
@@ -92,16 +92,16 @@ describe('Cli Configuration', () => {
 
   test('Should throw warnings on Client-only cli options if used in mode QServer', () => {
     values = {
-      projectName: 'project',
-      branchName: 'branch',
-      branchDir: 'dir',
-      clientData: 'cdtoken',
+      project: 'project',
+      branchname: 'branch',
+      branchdir: 'dir',
+      cdtoken: 'cdtoken',
       codetype: 'TEST',
       calc: 'CS',
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
-      tmpDir: '/tmp',
+      tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
 
@@ -122,22 +122,22 @@ describe('Cli Configuration', () => {
     });
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('clientData'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('cdtoken'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
   });
 
   test('Should throw warnings on QServer-only cli options if used in mode Client', () => {
     values = {
-      projectName: 'project',
-      branchName: 'branch',
-      branchDir: 'dir',
-      clientData: 'cdtoken',
+      project: 'project',
+      branchname: 'branch',
+      branchdir: 'dir',
+      cdtoken: 'cdtoken',
       codetype: 'TEST',
       calc: 'CS',
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
-      tmpDir: '/tmp',
+      tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
 
@@ -158,21 +158,21 @@ describe('Cli Configuration', () => {
     });
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchDir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
   });
 
   test('Should throw warnings on Client- and QServer-only cli options if used in mode Diagnostic', () => {
     values = {
-      projectName: 'project',
-      branchName: 'branch',
-      branchDir: 'dir',
-      clientData: 'cdtoken',
+      project: 'project',
+      branchname: 'branch',
+      branchdir: 'dir',
+      cdtoken: 'cdtoken',
       codetype: 'TEST',
       calc: 'CS',
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
-      tmpDir: '/tmp',
+      tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
 
@@ -193,10 +193,10 @@ describe('Cli Configuration', () => {
     });
 
     expect(warningSpy).toHaveBeenCalledTimes(9);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('projectName'));
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchDir'));
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchName'));
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('clientData'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('project'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchname'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('cdtoken'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('calc'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('nocalc'));

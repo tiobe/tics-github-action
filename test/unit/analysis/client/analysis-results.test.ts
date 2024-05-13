@@ -28,7 +28,7 @@ describe('getClientAnalysisResults', () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
 
-    const result = await getClientAnalysisResults(['https://url.com/Project(projectName)'], []);
+    const result = await getClientAnalysisResults(['https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: true,
@@ -36,8 +36,8 @@ describe('getClientAnalysisResults', () => {
       missesQualityGate: false,
       projectResults: [
         {
-          project: 'projectName',
-          explorerUrl: 'https://url.com/Project(projectName)',
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
           qualityGate: passedQualityGate
         }
@@ -71,7 +71,7 @@ describe('getClientAnalysisResults', () => {
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
 
-    const result = await getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+    const result = await getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -85,8 +85,8 @@ describe('getClientAnalysisResults', () => {
           qualityGate: failedQualityGate
         },
         {
-          project: 'projectName',
-          explorerUrl: 'https://url.com/Project(projectName)',
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
           qualityGate: passedQualityGate
         }
@@ -98,7 +98,7 @@ describe('getClientAnalysisResults', () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValue(failedQualityGate);
 
-    const result = await getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(projectName)'], []);
+    const result = await getClientAnalysisResults(['https://url.com/Project(project)', 'https://url.com/Project(project)'], []);
 
     expect(result).toEqual({
       passed: false,
@@ -112,8 +112,8 @@ describe('getClientAnalysisResults', () => {
           qualityGate: failedQualityGate
         },
         {
-          project: 'projectName',
-          explorerUrl: 'https://url.com/Project(projectName)',
+          project: 'project',
+          explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
           qualityGate: failedQualityGate
         }
