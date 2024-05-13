@@ -19,7 +19,75 @@ The TICS Github action integrates TICS Client analysis to measure your code qual
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
 - The connected runner should have Git installed.
 
-## Usage
+## Usage v3
+
+Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request. Below are some example of how to include the `TICS GitHub Action` step as part of your workflow.
+
+### Client (default)
+
+The default mode to run is TICS Client. In this mode the project can be either the project of the project to run or "project auto" (omit the project variable), in which mode TICS will figure out what project(s) are being run.
+
+```yaml
+on: [pull_request]
+
+jobs:
+  TICS:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TICS GitHub Action
+        uses: tiobe/tics-github-action@v3
+        with:
+          project: project-name
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
+### QServer
+
+As of v3 the option to do TICSQServer analyses has been available. In this mode the project has to be set and project "auto" is not available.
+
+```yaml
+on: [pull_request]
+
+jobs:
+  TICS:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TICS GitHub Action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: project-name
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
+### Diagnostic
+
+There is also the possibility to do a so called "diagnostic" run. This mode can be anabled to test if TICS has been setup properly and can run on the machine the action is run on.
+
+```yaml
+on: [pull_request]
+
+jobs:
+  TICS:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TICS GitHub Action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: diagnostic
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
+### Usage v2
 
 Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request.
 Below is an example of how to include the `TICS GitHub Action` step as part of your workflow:
@@ -35,13 +103,13 @@ jobs:
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v2
         with:
-          project: project-name
-          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          projectName: project-name
+          ticsConfiguration: https://domain.com/tiobeweb/TICS/api/cfg?name=config
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
 
-### Action Runners
+### Supported Platforms
 
 Linux and Windows based runners, both Github-hosted and self-hosted, are supported.
 
@@ -66,6 +134,7 @@ The following inputs are recommended or required for this action:
 | `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be used. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                 | `GATE`                                   |
 | `recalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                    | -                                        |
 | `cdtoken`              | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                           | -                                        |
+| `branchdir`            | Root directory of the source files for the branch.                                                                                                                                                                                                                                       | -                                        |
 | `branchname`           | Name of the branch in TICS.                                                                                                                                                                                                                                                              | -                                        |
 | `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE` and `EXTERNAL`.                                                                                                                                           | `PRODUCTION`                             |
 | `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                                                                                                                                                          | `false`                                  |
@@ -79,30 +148,3 @@ The following inputs are recommended or required for this action:
 | `showBlockingAfter`    | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                           | `true`                                   |
 | `tmpdir`               | Location to store debug information.                                                                                                                                                                                                                                                     | -                                        |
 | `displayUrl`           | The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)                                                                                                                                                             | -                                        |
-
-# Developer notes
-
-- This action requires Node16, it won't work with other Node versions.
-- This action is written in TypeScript. To compile the package to JavaScript run `npm run build`.
-- To package the build to run run `npm run package`.
-- To combine the last two steps run `npm run all`.
-- There is Prettier auto-formatting available, run `npm run format` or enable format on save to automate the formatting.
-- In order to run the integration tests the environment variable `INPUT_GITHUBTOKEN` needs to be set with a valid `GITHUB_TOKEN`
-
-## Git hooks
-
-To enable git hooks for auto building [githooks](https://github.com/gabyx/githooks) should be used. This enables the hooks in the `.githooks` folder. Which checks for a correct commit message and auto builds on commit.
-
-## Testing
-
-Testing this action can be done with [nektos/act](https://github.com/nektos/act). The following command can be run after installation to test the plugin.
-
-```
-act -s GITHUB_TOKEN=<TOKEN> -s TICSAUTHTOKEN=<TOKEN> -P self-hosted=catthehacker/ubuntu:act-latest --env PULL_REQUEST_NUMBER=<NUMBER>
-```
-
-| Variable              | Type        | Description                                          |
-| --------------------- | ----------- | ---------------------------------------------------- |
-| `GITHUB_TOKEN`        | Secret      | Personal Access Token connected to a GitHub account. |
-| `TICSAUTHTOKEN`       | Secret      | Auth token set in the TICS viewer.                   |
-| `PULL_REQUEST_NUMBER` | Environment | Number of the pull request to test with.             |
