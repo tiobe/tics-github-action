@@ -1,8 +1,8 @@
 import { postReview } from '../../../src/github/review';
-import { Events } from '../../../src/helper/enums';
+import { Events } from '../../../src/github/enums';
 import { logger } from '../../../src/helper/logger';
-import { octokit } from '../../../src/github/_octokit';
-import { githubConfig } from '../../../src/configuration/_config';
+import { octokit } from '../../../src/github/octokit';
+import { githubConfig } from '../../../src/configuration/config';
 
 describe('postReview', () => {
   let createReviewSpy: jest.SpyInstance;

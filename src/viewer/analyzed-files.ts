@@ -1,9 +1,9 @@
-import { ticsCli, ticsConfig } from '../configuration/_config';
+import { ticsCli, ticsConfig } from '../configuration/config';
 import { AnalyzedFiles, AnalyzedFile } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
-import { httpClient } from './_http-client';
+import { httpClient } from './http-client';
 
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
@@ -40,21 +40,23 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
 export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?: string }): string {
   const getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
-  let filters = `Project(${ticsCli.project}),Window(-1),CodeType(Set(production,test,external,generated)),File()`;
+  const filters = [`Project(${ticsCli.project})`];
 
   if (ticsCli.branchname) {
-    filters += `Branch(${ticsCli.branchname})`;
+    filters.push(`Branch(${ticsCli.branchname})`);
   }
 
   if (date) {
-    filters += `,Date(${date.toString()})`;
+    filters.push(`Date(${date.toString()})`);
   }
 
   if (cdtoken) {
-    filters += `,ClientData(${cdtoken})`;
+    filters.push(`ClientData(${cdtoken})`);
   }
 
-  getAnalyzedFilesUrl.searchParams.append('filters', filters);
+  filters.push(`Window(-1),CodeType(Set(production,test,external,generated)),File()`);
+
+  getAnalyzedFilesUrl.searchParams.append('filters', filters.join(','));
 
   return getAnalyzedFilesUrl.href;
 }

@@ -1,8 +1,8 @@
 import { logger } from '../../../src/helper/logger';
 import { deletePreviousComments, getPostedComments, postComment } from '../../../src/github/comments';
 import { Comment } from '../../../src/github/interfaces';
-import { octokit } from '../../../src/github/_octokit';
-import { githubConfig } from '../../../src/configuration/_config';
+import { octokit } from '../../../src/github/octokit';
+import { githubConfig } from '../../../src/configuration/config';
 
 describe('getPostedReviewComments', () => {
   const octokitSpy = jest.spyOn(octokit, 'paginate');

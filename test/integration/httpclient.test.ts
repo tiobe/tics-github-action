@@ -25,7 +25,7 @@ process.env.INPUT_TRUSTSTRATEGY = 'strict';
 jest.spyOn(process.stdout, 'write').mockImplementation();
 
 // eslint-disable-next-line import/first
-import { httpClient } from '../../src/viewer/_http-client';
+import { httpClient } from '../../src/viewer/http-client';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 

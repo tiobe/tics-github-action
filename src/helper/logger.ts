@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { AnnotationProperties } from '@actions/core';
 
-import { actionConfig } from '../configuration/_config';
+import { actionConfig } from '../configuration/config';
 
 class Logger {
   called = '';

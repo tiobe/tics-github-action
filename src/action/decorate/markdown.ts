@@ -1,3 +1,4 @@
+import { EOL } from 'os';
 import { Status } from '../../helper/enums';
 
 /**
@@ -27,5 +28,5 @@ export function generateStatusMarkdown(status: Status, hasSuffix = false): strin
  * @returns Dropdown item in markdown.
  */
 export function generateExpandableAreaMarkdown(header: string, body: string): string {
-  return `<details><summary>${header}</summary>\n${body}</details>\n\n`;
+  return `<details><summary>${header}</summary>${EOL}${body}</details>${EOL}${EOL}`;
 }

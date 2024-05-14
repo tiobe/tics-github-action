@@ -1,4 +1,4 @@
-import { githubConfig, ticsConfig } from '../../configuration/_config';
+import { githubConfig, ticsConfig } from '../../configuration/config';
 import { Mode } from '../../configuration/tics';
 import { getChangedFilesOfCommit } from '../../github/commits';
 import { ChangedFile } from '../../github/interfaces';

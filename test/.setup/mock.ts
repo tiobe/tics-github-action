@@ -53,7 +53,7 @@ export const ticsCliMock = {
   additionalFlags: ''
 };
 
-jest.mock('../../src/configuration/_config', () => {
+jest.mock('../../src/configuration/config', () => {
   return {
     githubConfig: githubConfigMock,
     ticsConfig: ticsConfigMock,
@@ -62,7 +62,7 @@ jest.mock('../../src/configuration/_config', () => {
   };
 });
 
-jest.mock('../../src/viewer/_http-client', () => {
+jest.mock('../../src/viewer/http-client', () => {
   return {
     httpClient: {
       get: jest.fn()
@@ -70,7 +70,7 @@ jest.mock('../../src/viewer/_http-client', () => {
   };
 });
 
-jest.mock('../../src/github/_octokit', () => {
+jest.mock('../../src/github/octokit', () => {
   return {
     octokit: {
       paginate: jest.fn(),

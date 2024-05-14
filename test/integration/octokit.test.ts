@@ -27,7 +27,7 @@ process.env.INPUT_TRUSTSTRATEGY = 'strict';
 jest.spyOn(process.stdout, 'write').mockImplementation();
 
 // eslint-disable-next-line import/first
-import { octokit } from '../../src/github/_octokit';
+import { octokit } from '../../src/github/octokit';
 import { RequestError } from '@octokit/request-error';
 
 describe('@octokit/action (using https_proxy)', () => {

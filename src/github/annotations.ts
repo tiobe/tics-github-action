@@ -2,14 +2,18 @@ import { ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
 import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/_config';
-import { octokit } from './_octokit';
+import { githubConfig, actionConfig } from '../configuration/config';
+import { octokit } from './octokit';
 
 /**
  * Gets a list of all reviews posted on the pull request.
  * @returns List of reviews posted on the pull request.
  */
 export async function getPostedReviewComments(): Promise<ReviewComment[]> {
+  if (!githubConfig.pullRequestNumber) {
+    throw Error('This function can only be run on a pull_request.');
+  }
+
   let response: ReviewComment[] = [];
   try {
     logger.header('Retrieving posted review comments.');

@@ -1,4 +1,4 @@
-import { httpClient } from '../../../src/viewer/_http-client';
+import { httpClient } from '../../../src/viewer/http-client';
 import { getAnnotations } from '../../../src/viewer/annotations';
 import { ticsConfigMock } from '../../.setup/mock';
 

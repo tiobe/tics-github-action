@@ -1,6 +1,6 @@
 import { getInput, getBooleanInput, exportVariable } from '@actions/core';
 
-import { isOneOf } from '../helper/compare';
+import { isOneOf } from '../helper/utils';
 import { logger } from '../helper/logger';
 import { getBaseUrl } from '@tiobe/install-tics';
 
@@ -24,13 +24,24 @@ export class TicsConfiguration {
   readonly installTics: boolean;
   readonly mode: Mode;
   readonly ticsAuthToken: string;
-  readonly viewerUrl: string;
   readonly trustStrategy: TrustStrategy;
+
+  /**
+   * The URL pointing to the "cfg" API endpoint of the TICS Viewer. Is used for running TICS.
+   */
+  readonly viewerUrl: string;
+  /**
+   * Derived of the viewerUrl. Is used for performing API calls.
+   */
   readonly baseUrl: string;
+  /**
+   * The publicly available Viewer URL of TICS viewer to link the links in the review to.
+   * If not set, this will be set to the baseUrl.
+   */
   readonly displayUrl: string;
 
   constructor() {
-    this.viewerUrl = this.validateAndGetConfigUrl(getInput('viewerUrl', { required: true }));
+    this.viewerUrl = this.validateAndGetViewerUrl(getInput('viewerUrl', { required: true }));
     this.mode = this.validateAndGetMode(getInput('mode'));
     this.githubToken = getInput('githubToken');
     this.installTics = getBooleanInput('installTics');
@@ -39,7 +50,7 @@ export class TicsConfiguration {
     this.filelist = getInput('filelist');
     this.ticsAuthToken = getInput('ticsAuthToken');
     this.baseUrl = getBaseUrl(this.viewerUrl).href;
-    this.displayUrl = this.validateAndGetViewerUrl(getInput('displayUrl'));
+    this.displayUrl = this.validateAndGetDisplayUrl(getInput('displayUrl'));
 
     this.setVariables();
   }
@@ -49,7 +60,7 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  private validateAndGetConfigUrl(url: string): string {
+  private validateAndGetViewerUrl(url: string): string {
     const uri = this.validateAndGetUrl(url, 'viewerUrl');
 
     if (uri.protocol !== 'http:' && uri.protocol !== 'https:') {
@@ -68,7 +79,7 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  private validateAndGetViewerUrl(url: string): string {
+  private validateAndGetDisplayUrl(url: string): string {
     if (url) {
       return this.validateAndGetUrl(url, 'displayUrl').href;
     } else {
@@ -143,9 +154,8 @@ export class TicsConfiguration {
    * Set all environment variables TICS needs to run in the GitHub setting.
    */
   private setVariables() {
-    if (this.mode !== Mode.QSERVER) {
-      exportVariable('TICSIDE', 'GITHUB');
-    }
+    // variable set to replace the loading bar with synchronising... in the install script
+    exportVariable('TICSIDE', 'GITHUB');
 
     // set ticsAuthToken
     if (this.ticsAuthToken) {

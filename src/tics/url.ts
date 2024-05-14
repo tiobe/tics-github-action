@@ -1,4 +1,4 @@
-import { ticsCli } from '../configuration/_config';
+import { ticsCli } from '../configuration/config';
 import { logger } from '../helper/logger';
 
 /**

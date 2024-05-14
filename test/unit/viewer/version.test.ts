@@ -1,4 +1,4 @@
-import { httpClient } from '../../../src/viewer/_http-client';
+import { httpClient } from '../../../src/viewer/http-client';
 import { getViewerVersion } from '../../../src/viewer/version';
 
 describe('getViewerVersion', () => {

@@ -3,7 +3,7 @@ import * as comments from '../../../../src/github/comments';
 import * as review from '../../../../src/github/review';
 
 import { actionConfigMock } from '../../../.setup/mock';
-import { Events } from '../../../../src/helper/enums';
+import { Events } from '../../../../src/github/enums';
 import { decoratePullRequest, postToConversation } from '../../../../src/action/decorate/pull-request';
 
 afterEach(() => {

@@ -4,14 +4,18 @@ import { normalize, resolve } from 'canonical-path';
 import { ChangedFile } from './interfaces';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/_config';
-import { octokit } from './_octokit';
+import { githubConfig, actionConfig } from '../configuration/config';
+import { octokit } from './octokit';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
 export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
+  if (!githubConfig.pullRequestNumber) {
+    throw Error('This function can only be run on a pull_request.');
+  }
+
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,

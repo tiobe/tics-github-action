@@ -60,7 +60,7 @@ export class TicsCli {
     }
 
     for (const option of CliOptions) {
-      const key = option.cli as keyof TicsCli;
+      const key = option.action as keyof TicsCli;
       if (cli[key] !== '' && !option.modes.includes(mode)) {
         logger.warning(`Parameter '${option.action}' is not applicable to mode '${mode}' and will therefore not be used`);
       }
@@ -71,52 +71,42 @@ export class TicsCli {
 export const CliOptions: CliOption[] = [
   {
     action: 'project',
-    cli: 'project',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'branchdir',
-    cli: 'branchdir',
     modes: [Mode.QSERVER]
   },
   {
     action: 'branchname',
-    cli: 'branchname',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'cdtoken',
-    cli: 'cdtoken',
     modes: [Mode.CLIENT]
   },
   {
     action: 'codetype',
-    cli: 'codetype',
     modes: [Mode.CLIENT]
   },
   {
     action: 'calc',
-    cli: 'calc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'nocalc',
-    cli: 'nocalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'norecalc',
-    cli: 'norecalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'recalc',
-    cli: 'recalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'tmpdir',
-    cli: 'tmpdir',
     modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
   },
   {

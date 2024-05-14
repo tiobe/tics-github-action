@@ -1,7 +1,7 @@
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
 import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
 import { logger } from '../../../src/helper/logger';
-import { octokit } from '../../../src/github/_octokit';
+import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {

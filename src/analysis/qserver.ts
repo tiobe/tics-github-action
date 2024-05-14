@@ -1,7 +1,7 @@
 import { decorateAction } from '../action/decorate/action';
 import { postToConversation } from '../action/decorate/pull-request';
 import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../action/decorate/summary';
-import { githubConfig } from '../configuration/_config';
+import { githubConfig } from '../configuration/config';
 import { AnalysisResult, Verdict } from '../helper/interfaces';
 import { runTicsAnalyzer } from '../tics/analyzer';
 import { getLastQServerRunDate } from '../viewer/qserver';

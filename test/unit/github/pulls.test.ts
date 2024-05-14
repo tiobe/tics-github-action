@@ -3,7 +3,7 @@ import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../../src/github/pulls';
 import { logger } from '../../../src/helper/logger';
 import { changedFile } from './objects/pulls';
-import { octokit } from '../../../src/github/_octokit';
+import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock } from '../../.setup/mock';
 
 describe('getChangedFilesOfPullRequest', () => {

@@ -1,9 +1,9 @@
-import { ticsCli, ticsConfig } from '../configuration/_config';
+import { ticsCli, ticsConfig } from '../configuration/config';
 import { QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
-import { httpClient } from './_http-client';
+import { httpClient } from './http-client';
 
 /**
  * Retrieves the TICS quality gate from the TICS viewer.

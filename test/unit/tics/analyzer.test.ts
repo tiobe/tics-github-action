@@ -2,7 +2,7 @@ import * as exec from '@actions/exec';
 import * as os from 'os';
 import { getTicsCommand, runTicsAnalyzer } from '../../../src/tics/analyzer';
 import { Mode, TrustStrategy } from '../../../src/configuration/tics';
-import { httpClient } from '../../../src/viewer/_http-client';
+import { httpClient } from '../../../src/viewer/http-client';
 import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 
 // test for multiple different types of configurations

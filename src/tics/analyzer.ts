@@ -4,10 +4,10 @@ import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
-import { isOneOf } from '../helper/compare';
+import { isOneOf } from '../helper/utils';
 import { joinUrl } from '../helper/url';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
-import { httpClient } from '../viewer/_http-client';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
+import { httpClient } from '../viewer/http-client';
 import { Mode } from '../configuration/tics';
 import { CliOptions, TicsCli } from '../configuration/tics-cli';
 
@@ -157,10 +157,10 @@ function getCliOptionsForCommand() {
   const command = [`-project '${ticsCli.project}'`];
 
   CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'project', 'tmpdir')).forEach(option => {
-    if (option.cli && option.modes.includes(ticsConfig.mode)) {
-      const value = ticsCli[option.cli as keyof TicsCli];
+    if (option.modes.includes(ticsConfig.mode)) {
+      const value = ticsCli[option.action as keyof TicsCli];
       if (value) {
-        command.push(`-${option.cli} ${value}`);
+        command.push(`-${option.action} ${value}`);
       }
     }
   });

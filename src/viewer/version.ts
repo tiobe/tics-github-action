@@ -2,8 +2,8 @@ import { getRetryErrorMessage, getRetryMessage } from '../helper/response';
 import { VersionResponse } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { joinUrl } from '../helper/url';
-import { httpClient } from './_http-client';
-import { ticsConfig } from '../configuration/_config';
+import { httpClient } from './http-client';
+import { ticsConfig } from '../configuration/config';
 
 /**
  * Gets the version of the TICS viewer used.

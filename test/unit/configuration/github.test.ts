@@ -47,14 +47,14 @@ describe('GitHub Configuration', () => {
     });
   });
 
-  test('Should get pull request number 0 if none are available', () => {
+  test('Should get pull request number undefined if none are available', () => {
     contextMock.payload.pull_request = undefined;
     delete process.env.PULL_REQUEST_NUMBER;
 
     githubConfig = new GithubConfig();
 
     expect(githubConfig).toMatchObject({
-      pullRequestNumber: 0
+      pullRequestNumber: undefined
     });
   });
 

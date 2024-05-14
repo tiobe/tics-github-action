@@ -1,6 +1,6 @@
 import { decoratePullRequest } from './pull-request';
 import { createErrorSummaryBody, createSummaryBody } from './summary';
-import { githubConfig, actionConfig } from '../../configuration/_config';
+import { githubConfig, actionConfig } from '../../configuration/config';
 import { postAnnotations } from '../../github/annotations';
 import { Analysis, AnalysisResult } from '../../helper/interfaces';
 

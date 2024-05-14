@@ -1,5 +1,5 @@
 import { createReviewComments } from '../../action/decorate/summary';
-import { actionConfig } from '../../configuration/_config';
+import { actionConfig } from '../../configuration/config';
 import { ChangedFile } from '../../github/interfaces';
 import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
 import { getItemFromUrl, getProjectName } from '../../tics/url';

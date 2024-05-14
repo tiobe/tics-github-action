@@ -36,7 +36,7 @@ describe('pullRequestNumber', () => {
       };
     });
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(1);
   });
@@ -62,12 +62,12 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '2';
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(2);
   });
 
-  test('Should set 0 as pullRequestNumber when no value was found', async () => {
+  test('Should set undefined as pullRequestNumber when no value was found', async () => {
     jest.mock('@actions/github', () => {
       return {
         context: {
@@ -88,21 +88,21 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '';
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
-    expect(pullRequestNumber).toEqual(0);
+    expect(pullRequestNumber).toEqual(undefined);
   });
 });
 
 describe('urls', () => {
   test('Should return base url from viewerUrl', () => {
-    const baseUrl = require('../../src/configuration/_config').ticsConfig.baseUrl;
+    const baseUrl = require('../../src/configuration/config').ticsConfig.baseUrl;
 
     expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
   test('Should return viewer url as base url from viewerUrl if displayUrl is not set.', () => {
-    const displayUrl = require('../../src/configuration/_config').ticsConfig.displayUrl;
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
     expect(displayUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
@@ -110,7 +110,7 @@ describe('urls', () => {
   test('Should return viewer url if displayUrl is set without trailing slash', () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost';
 
-    const displayUrl = require('../../src/configuration/_config').ticsConfig.displayUrl;
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
     expect(displayUrl).toEqual('http://localhost/');
   });
@@ -118,7 +118,7 @@ describe('urls', () => {
   test('Should return viewer url if displayUrl is set with trailing slash', () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost/';
 
-    const displayUrl = require('../../src/configuration/_config').ticsConfig.displayUrl;
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
     expect(displayUrl).toEqual('http://localhost/');
   });

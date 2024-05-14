@@ -1,8 +1,8 @@
-import { actionConfig } from '../../configuration/_config';
+import { actionConfig } from '../../configuration/config';
 import { getPostedReviewComments, deletePreviousReviewComments } from '../../github/annotations';
 import { getPostedComments, deletePreviousComments, postComment } from '../../github/comments';
 import { postReview } from '../../github/review';
-import { Events } from '../../helper/enums';
+import { Events } from '../../github/enums';
 
 // imported for testing
 import * as self from './pull-request';
