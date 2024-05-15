@@ -2,6 +2,7 @@ import { EOL } from 'os';
 import { getBooleanInput, getInput } from '@actions/core';
 
 import { RetryConfig } from './interfaces';
+import { logger } from '../helper/logger';
 
 export class ActionConfiguration {
   readonly excludeMovedFiles: boolean;
@@ -65,6 +66,7 @@ export class ActionConfiguration {
     const combinedFilters = defaults.concat(keys);
 
     process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
+    logger.setSecretsFilter(combinedFilters);
 
     return combinedFilters;
   }

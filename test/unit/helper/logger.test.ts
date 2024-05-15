@@ -34,7 +34,7 @@ describe('debug', () => {
     const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
-    actionConfigMock.secretsFilter = ['token'];
+    logger.setSecretsFilter(['token']);
     logger.debug('string token secret');
 
     expect(debug).toHaveBeenCalledTimes(1);

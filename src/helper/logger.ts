@@ -1,11 +1,15 @@
 import * as core from '@actions/core';
 import { AnnotationProperties } from '@actions/core';
 
-import { actionConfig } from '../configuration/config';
-
 class Logger {
   called = '';
   matched: string[] = [];
+
+  private secretsFilter: string[] = [];
+
+  setSecretsFilter(secretsFilter: string[]): void {
+    this.secretsFilter = secretsFilter;
+  }
 
   /**
    * Uses core.info to print to the console with a purple color.
@@ -102,7 +106,7 @@ class Logger {
    */
   maskSecrets(data: string): string {
     // Find secrets value and add them to this.matched
-    actionConfig.secretsFilter.forEach((secret: string) => {
+    this.secretsFilter.forEach((secret: string) => {
       if (data.match(new RegExp(secret, 'gi'))) {
         const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
