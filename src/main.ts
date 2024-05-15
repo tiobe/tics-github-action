@@ -20,6 +20,7 @@ main().catch((error: unknown) => {
 // exported for testing
 export async function main(): Promise<void> {
   // logging this to instantiate the configs and validate before running the rest.
+  logger.info('Testing log before initiating configurations');
   logger.info(`Running action on event: ${githubConfig.eventName} on mode: ${ticsConfig.mode}`);
 
   await meetsPrerequisites();
