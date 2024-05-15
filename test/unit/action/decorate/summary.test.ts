@@ -578,9 +578,9 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
-    expect(response).toContain(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`);
+    expect(response).toContain(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
-      `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
+      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
     );
   });
 
@@ -617,9 +617,9 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
-    expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
+    expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(
-      `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
+      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
       2
     );
   });
@@ -657,15 +657,15 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
-    expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
+    expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(
-      `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
+      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
       2
     );
   });
 
   test('Should return summary of two unpostable review comment for two files', () => {
-    const unpostable = [
+    const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
@@ -692,16 +692,25 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        blocking: {
+          state: 'no',
+          after: 1723795324000
+        }
       }
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
-    expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[0].path}</th></tr>`, 1);
-    expect(response).toContainTimes(`<table><tr><th colspan='3'>${unpostable[1].path}</th></tr>`, 1);
+    expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
+    expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[1].path}</th></tr>`, 1);
     expect(response).toContainTimes(
-      `<tr><td>:warning:</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
-      2
+      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
+      1
+    );
+    console.log(response);
+    expect(response).toContainTimes(
+      `<tr><td>:warning:</td><td>Blocking after 2024-08-16</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
+      1
     );
   });
 });

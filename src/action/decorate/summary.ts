@@ -231,10 +231,14 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
 
   groupedAnnotations.forEach(annotation => {
     const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
+    // It can occur that the blocking state is no in combination with an after date.
+    // In this case also mark it as state 'after'.
+    const blocking = annotation.blocking?.after ? 'after' : annotation.blocking?.state;
+
     if (githubConfig.eventName === 'pull_request') {
       if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
         const reviewComment = {
-          blocking: annotation.blocking?.state,
+          blocking: blocking,
           title: `${annotation.instanceName}: ${annotation.rule}`,
           body: createBody(annotation, displayCount),
           path: annotation.path,
@@ -249,7 +253,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
       }
     } else if (annotation.diffLines?.includes(annotation.line)) {
       const reviewComment = {
-        blocking: annotation.blocking?.state,
+        blocking: blocking,
         title: `${annotation.instanceName}: ${annotation.rule}`,
         body: createBody(annotation, displayCount),
         path: annotation.path,
@@ -269,10 +273,10 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
 
 function createBody(annotation: Annotation, displayCount: string) {
   let body = '';
-  if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
-  } else if (annotation.blocking?.state === 'yes') {
+  if (annotation.blocking?.state === 'yes') {
     body += `Blocking${EOL}`;
+  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
   }
 
   body += `Line: ${annotation.line.toString()}: ${displayCount}${annotation.msg}`;
@@ -371,12 +375,15 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
   unpostableReviewComments.forEach(reviewComment => {
     const path = reviewComment.path ? reviewComment.path : '';
     const displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
+    const icon = reviewComment.blocking?.after ? ':warning:' : ':x:';
+    const blocking = reviewComment.blocking?.after ? `Blocking after ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}` : 'Blocking';
+
     if (previousPath === '') {
-      body += `<table><tr><th colspan='3'>${path}</th></tr>`;
+      body += `<table><tr><th colspan='4'>${path}</th></tr>`;
     } else if (previousPath !== path) {
-      body += `</table><table><tr><th colspan='3'>${path}</th></tr>`;
+      body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level.toString()}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level.toString()}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';
