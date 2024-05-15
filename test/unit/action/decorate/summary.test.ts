@@ -694,7 +694,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
         count: 0,
         instanceName: 'test',
         blocking: {
-          state: 'no',
+          state: 'after',
           after: 1723795324000
         }
       }
