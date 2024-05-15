@@ -2,10 +2,23 @@ import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations 
 import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
 import { logger } from '../../../src/helper/logger';
 import { octokit } from '../../../src/github/octokit';
-import { actionConfigMock } from '../../.setup/mock';
+import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
+  test('Should throw error when a pullRequestNumber is not present', async () => {
+    githubConfigMock.pullRequestNumber = undefined;
+
+    try {
+      await getPostedReviewComments();
+      expect(false).toBeTruthy(); // should not be reached
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+    }
+  });
+
   test('Should return single file on getPostedReviewComments', async () => {
+    githubConfigMock.pullRequestNumber = 1;
     (octokit.paginate as any).mockReturnValueOnce([{ id: 1 }]);
 
     const response = await getPostedReviewComments();

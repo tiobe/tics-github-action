@@ -3,6 +3,7 @@ import { deletePreviousComments, getPostedComments, postComment } from '../../..
 import { Comment } from '../../../src/github/interfaces';
 import { octokit } from '../../../src/github/octokit';
 import { githubConfig } from '../../../src/configuration/config';
+import { githubConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
   const octokitSpy = jest.spyOn(octokit, 'paginate');
@@ -11,7 +12,20 @@ describe('getPostedReviewComments', () => {
     jest.resetAllMocks();
   });
 
+  test('Should throw error when a pullRequestNumber is not present', async () => {
+    githubConfigMock.pullRequestNumber = undefined;
+
+    try {
+      await getPostedComments();
+      expect(false).toBeTruthy(); // should not be reached
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+    }
+  });
+
   test('Should return single file on getPostedReviewComments', async () => {
+    githubConfigMock.pullRequestNumber = 1;
     octokitSpy.mockResolvedValue([{ id: 1 }]);
 
     const response = await getPostedComments();
@@ -54,7 +68,21 @@ describe('postComment', () => {
     jest.resetAllMocks();
   });
 
+  test('Should throw error when a pullRequestNumber is not present', async () => {
+    githubConfigMock.pullRequestNumber = undefined;
+
+    try {
+      await postComment('Comment body...');
+      expect(false).toBeTruthy(); // should not be reached
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+    }
+  });
+
   test('Should call createComment once', async () => {
+    githubConfigMock.pullRequestNumber = 1;
+
     await postComment('Comment body...');
     expect(postCommentSpy).toHaveBeenCalledTimes(1);
   });

@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import { logger } from '../../../src/helper/logger';
-import { actionConfigMock } from '../../.setup/mock';
 
 describe('info', () => {
   test('Should call core.info on info', () => {

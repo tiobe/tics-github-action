@@ -43,6 +43,7 @@ describe('SetFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisNotCompleted);
+    githubConfigMock.eventName = 'pull_request';
 
     const verdict = await qServerAnalysis();
 
@@ -58,6 +59,7 @@ describe('SetFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisFailed);
+    githubConfigMock.eventName = 'commit';
 
     const verdict = await qServerAnalysis();
 

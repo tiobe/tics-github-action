@@ -65,7 +65,7 @@ export class ActionConfiguration {
 
     const combinedFilters = defaults.concat(keys);
 
-    process.stdout.write(`::debug::SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
+    logger.debug(`SecretsFilter: ${JSON.stringify(combinedFilters) + EOL}`);
     logger.setSecretsFilter(combinedFilters);
 
     return combinedFilters;

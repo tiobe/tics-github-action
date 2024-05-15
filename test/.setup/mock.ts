@@ -1,7 +1,16 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
 
-export const githubConfigMock = {
+export const githubConfigMock: {
+  apiUrl: string;
+  owner: string;
+  reponame: string;
+  commitSha: string;
+  eventName: string;
+  id: string;
+  pullRequestNumber: number | undefined;
+  debugger: boolean;
+} = {
   apiUrl: 'github.com/api/v1/',
   owner: 'tester',
   reponame: 'test',
