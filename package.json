@@ -41,7 +41,7 @@
     "compare-versions": "^6.1.0",
     "date-fns": "^3.6.0",
     "proxy-agent": "^6.4.0",
-    "semver": "^7.6.0",
+    "semver": "^7.6.2",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
