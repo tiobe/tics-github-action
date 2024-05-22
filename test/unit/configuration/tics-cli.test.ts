@@ -90,40 +90,6 @@ describe('Cli Configuration', () => {
     expect(error.message).toContain("Running TICS with project 'auto' is not possible with QServer");
   });
 
-  test('Should return add BEGIN and END to calc when mode is qserver and a custom calc is given', () => {
-    values = {
-      project: 'project',
-      calc: 'CS'
-    };
-
-    const cliServer = new TicsCli(Mode.QSERVER);
-
-    expect(cliServer).toMatchObject({ ...expectCli, project: 'project', calc: 'BEGIN,CS,END' });
-  });
-
-  test('Should return add BEGIN and END to recalc when mode is qserver and a custom recalc is given', () => {
-    values = {
-      project: 'project',
-      recalc: 'CS'
-    };
-
-    const cliServer = new TicsCli(Mode.QSERVER);
-
-    expect(cliServer).toMatchObject({ ...expectCli, project: 'project', recalc: 'BEGIN,CS,END' });
-  });
-
-  test('Should return add BEGIN and END to recalc when mode is qserver and custom calc and recalc are given', () => {
-    values = {
-      project: 'project',
-      calc: 'CW',
-      recalc: 'CS'
-    };
-
-    const cliServer = new TicsCli(Mode.QSERVER);
-
-    expect(cliServer).toMatchObject({ ...expectCli, project: 'project', calc: 'CW', recalc: 'BEGIN,CS,END' });
-  });
-
   test('Should throw warnings on Client-only cli options if used in mode QServer', () => {
     values = {
       project: 'project',
@@ -150,7 +116,7 @@ describe('Cli Configuration', () => {
       calc: 'CS',
       nocalc: 'CW',
       norecalc: 'CY',
-      recalc: 'BEGIN,AI,END',
+      recalc: 'AI',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     });

@@ -23,12 +23,12 @@ export class TicsCli {
     this.branchdir = getInput('branchdir');
     this.cdtoken = getInput('cdtoken');
     this.codetype = getInput('codetype');
-    this.tmpdir = getInput('tmpdir');
-    this.additionalFlags = getInput('additionalFlags');
-
-    [this.calc, this.recalc] = this.getCalcAndRecalc(getInput('calc'), getInput('recalc'), mode);
+    this.calc = this.getCalc(getInput('calc'), mode);
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
+    this.recalc = getInput('recalc');
+    this.tmpdir = getInput('tmpdir');
+    this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, mode);
   }
@@ -37,39 +37,14 @@ export class TicsCli {
    * Get the calc option or the default if not set by the user
    * @returns the calc option set by user or thedefault.
    */
-  private getCalcAndRecalc(calc: string, recalc: string, mode: Mode): [string, string] {
-    switch (mode) {
-      case Mode.DIAGNOSTIC:
-        return [calc, recalc];
-      case Mode.CLIENT:
-        if (calc === '' && recalc === '') {
-          calc = 'GATE';
-        }
-        return [calc, recalc];
-      case Mode.QSERVER:
-        if (recalc !== '') {
-          recalc = this.addBeginEnd(recalc);
-        } else if (calc !== '') {
-          calc = this.addBeginEnd(calc);
-        }
-
-        return [calc, recalc];
+  private getCalc(input: string, mode: Mode): string {
+    if (input) {
+      return input;
+    } else if (mode === Mode.CLIENT) {
+      return 'GATE';
+    } else {
+      return '';
     }
-  }
-
-  /**
-   * In case of QServer runs, BEGIN and END need to be added if they are not included.
-   * @param input (re)calc option to add BEGIN and END to.
-   * @returns the input with BEGIN and END added if needed.
-   */
-  private addBeginEnd(input: string) {
-    if (!input.includes('BEGIN,')) {
-      input = 'BEGIN,' + input;
-    }
-    if (!input.includes(',END')) {
-      input = input + ',END';
-    }
-    return input;
   }
 
   /**
