@@ -25,7 +25,7 @@ Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and p
 
 ### Client (default)
 
-The default mode to run is TICS Client. In this mode the project can be either the project of the project to run or "project auto" (omit the project variable), in which mode TICS will figure out what project(s) are being run.
+The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode the project can be either the project of the project to run or "project auto" (omit the project variable), in which mode TICS will figure out what project(s) are being run.
 
 ```yaml
 on: [pull_request]
@@ -46,7 +46,7 @@ jobs:
 
 ### QServer
 
-As of v3 the option to do TICSQServer analyses has been available. In this mode the project has to be set and project "auto" is not available.
+As of v3 the option to do [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analyses has been available. In this mode the project has to be set and project "auto" is not available.
 
 ```yaml
 on: [pull_request]
