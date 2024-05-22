@@ -1,3 +1,17 @@
+import { ChangedFile } from '../github/interfaces';
+
+export interface ChangedFiles {
+  files: ChangedFile[];
+  path: string;
+}
+
+export interface Verdict {
+  passed: boolean;
+  message: string;
+  errorList: string[];
+  warningList: string[];
+}
+
 export interface Analysis {
   completed: boolean;
   statusCode: number;
@@ -6,10 +20,9 @@ export interface Analysis {
   explorerUrls: string[];
 }
 
-export interface AnalysisResults {
+export interface AnalysisResult {
   passed: boolean;
   passedWithWarning: boolean;
-  failureMessage: string;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
 }
@@ -166,7 +179,7 @@ export interface VersionResponse {
   revision?: string;
   version: string;
   fullVersion?: string;
-  projectName?: string;
+  project?: string;
   dbversion?: string;
 }
 
@@ -175,4 +188,24 @@ export interface Links {
   queryArtifact: string;
   uploadArtifact: string;
   installTics?: string;
+}
+
+export interface RunDateResponse {
+  data: {
+    formattedValue: string;
+    letter: string | undefined;
+    messages: string[];
+    coverage: number;
+    status: string;
+    value: number;
+  }[];
+  dates: string;
+  metrics: {
+    expression: string;
+    fullName: string;
+  }[];
+  nodes: {
+    name: string;
+    fullPath: string;
+  }[];
 }

@@ -1,18 +1,20 @@
 {
-  "plugins": [
-    "jest",
-    "@typescript-eslint"
-  ],
-  "extends": [
-    "prettier"
-  ],
+  "plugins": ["jest", "@typescript-eslint", "prettier"],
   "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/strict",
+    "plugin:@typescript-eslint/stylistic",
+    "plugin:@typescript-eslint/strict-type-checked"
+  ],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "rules": {},
+  "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "error"
+  },
   "env": {
     "node": true,
     "es6": true,

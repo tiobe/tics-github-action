@@ -1,10 +1,12 @@
 import { tmpdir } from 'os';
-import { githubConfig, ticsConfig } from '../configuration';
-import { create } from '@actions/artifact';
-import { logger } from '../helper/logger';
 import { readdirSync } from 'fs';
+
+import { create } from '@actions/artifact';
 import { join } from 'canonical-path';
-import { handleOctokitError } from '../helper/error';
+
+import { logger } from '../helper/logger';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig, ticsCli } from '../configuration/_config';
 
 export async function uploadArtifact(): Promise<void> {
   const artifactClient = create();
@@ -25,8 +27,8 @@ export async function uploadArtifact(): Promise<void> {
 }
 
 export function getTmpDir(): string {
-  if (ticsConfig.tmpDir) {
-    return `${ticsConfig.tmpDir}/${githubConfig.id}`;
+  if (ticsCli.tmpdir) {
+    return `${ticsCli.tmpdir}/${githubConfig.id}`;
   } else if (githubConfig.debugger) {
     return `${tmpdir()}/tics/${githubConfig.id}`;
   } else {

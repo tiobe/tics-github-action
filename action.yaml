@@ -2,12 +2,17 @@ name: TICS Code Quality Analysis
 author: TIOBE Software
 description: Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.
 inputs:
-  projectName:
-    description: Name of the TICS project
-    required: true
   ticsConfiguration:
-    description: A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration
+    description: The URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration
     required: true
+  mode:
+    description: Set the mode to run the action in. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. Default is `client`.
+    required: false
+    default: client
+  projectName:
+    description: Name of the TICS project.
+    required: false
+    default: auto
   githubToken:
     desctiption: Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)), can be overridden if needed.
     required: false
@@ -16,15 +21,14 @@ inputs:
     description: Option to add flags to the TICS command.
     required: false
   branchName:
-    description: Name of the branch in TICS
+    description: Name of the branch in TICS.
     required: false
   branchDir:
-    description: Location of the files to analyze
+    description: Location of the files to analyze (only applies to QServer runs).
     required: false
   calc:
-    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x. If not specified, GATE will be used by default.
+    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.
     required: false
-    default: GATE
   nocalc:
     description: Comma-separated list of metrics not to be calculated.
     required: false
@@ -35,10 +39,10 @@ inputs:
     description: Comma-separated list of metrics not to be recalculated.
     required: false
   clientData:
-    description: A custom client-data token for the purpose of the Client Viewer functionality.
+    description: A custom client-data token for the purpose of the Client Viewer functionality (only applies to Client runs).
     required: false
   codetype:
-    description: Allows you to pick which specific types of code you want to analyze with the TICS client
+    description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
     required: false
   excludeMovedFiles:
     description: Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.
@@ -59,10 +63,6 @@ inputs:
     description: Boolean parameter to install TICS command-line tools on a runner before executing the analysis.
     required: false
     default: false
-  mode:
-    description: Set the mode to run the action in. Options are `default` for a normal analysis run and `diagnostic` for a diagnostic testing of the setup.
-    required: false
-    default: default
   postAnnotations:
     description: Show the TICS violations in the changed files window. Options are `true` or `false` (default is `true`).
     required: false

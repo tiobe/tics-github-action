@@ -1,7 +1,8 @@
 import { getChangedFilesOfCommit } from '../../../src/github/commits';
-import { octokit, ticsConfig } from '../../../src/configuration';
 import { changedFile } from './objects/pulls';
 import { logger } from '../../../src/helper/logger';
+import { octokit } from '../../../src/github/_octokit';
+import { actionConfigMock } from '../../.setup/mock';
 
 describe('getChangedFilesOfCommit', () => {
   test('Should return single file on getChangedFilesOfCommit', async () => {
@@ -49,7 +50,7 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   test('Should include changed moved file on excludeMovedFiles', async () => {
-    ticsConfig.excludeMovedFiles = true;
+    actionConfigMock.excludeMovedFiles = true;
 
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
@@ -71,21 +72,21 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   test('Should be called with specific parameters on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockReturnValueOnce();
+    (octokit.paginate as any).mockResolvedValue([]);
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getChangedFilesOfCommit();
-    expect(spy).toHaveBeenCalledWith(octokit.rest.repos.getCommit, { repo: 'test', owner: 'tester', ref: 'asdfghjk' }, expect.any(Function));
+    expect(spy).toHaveBeenCalledWith(octokit.rest.repos.getCommit, { repo: 'test', owner: 'tester', ref: 'sha-128' }, expect.any(Function));
   });
 
   test('Should return three files on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockReturnValueOnce([{}, {}, {}]);
+    (octokit.paginate as any).mockResolvedValue([{}, {}, {}]);
 
     const response = await getChangedFilesOfCommit();
     expect((response as any[]).length).toEqual(3);
   });
 
-  test('Should call exit on thrown error on paginate', async () => {
+  test('Should call error on thrown error on paginate', async () => {
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });

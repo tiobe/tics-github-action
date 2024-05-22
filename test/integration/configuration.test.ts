@@ -1,4 +1,5 @@
 process.env.INPUT_GITHUBTOKEN = 'token';
+process.env.INPUT_MODE = 'client';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
 process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
@@ -7,9 +8,12 @@ process.env.INPUT_POSTANNOTATIONS = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
+process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 beforeEach(() => {
   jest.resetModules();
+
+  jest.spyOn(process.stdout, 'write').mockImplementation();
 });
 
 describe('pullRequestNumber', () => {
@@ -32,7 +36,7 @@ describe('pullRequestNumber', () => {
       };
     });
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(1);
   });
@@ -58,7 +62,7 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '2';
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(2);
   });
@@ -84,52 +88,38 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '';
 
-    const pullRequestNumber = require('../../src/configuration').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(0);
   });
 });
 
-describe('retryCodes', () => {
-  test('Should set default retryCodes if none are given', async () => {
-    process.env.INPUT_RETRYCODES = '';
+describe('urls', () => {
+  test('Should return base url from ticsConfiguration', () => {
+    const baseUrl = require('../../src/configuration/_config').ticsConfig.baseUrl;
 
-    const retryCodes = require('../../src/configuration').ticsConfig.retryCodes;
-
-    expect(retryCodes).toEqual([419, 500, 501, 502, 503, 504]);
+    expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should set custom retryCodes when given correctly', async () => {
-    process.env.INPUT_RETRYCODES = '500,502';
+  test('Should return viewer url as base url from ticsConfiguration if viewerUrl is not set.', () => {
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
-    const retryCodes = require('../../src/configuration').ticsConfig.retryCodes;
-
-    expect(retryCodes).toEqual([500, 502]);
+    expect(viewerUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should return NaN for retryCode when input is incorrect', async () => {
-    process.env.INPUT_RETRYCODES = '500;502';
+  test('Should return viewer url if viewerUrl is set without trailing slash', () => {
+    process.env.INPUT_VIEWERURL = 'http://localhost';
 
-    const retryCodes = require('../../src/configuration').ticsConfig.retryCodes;
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
-    expect(retryCodes).toEqual([NaN]);
-  });
-});
-
-describe('secretsFilter', () => {
-  test('Should set default secretsFilter if none are given', async () => {
-    process.env.INPUT_SECRETSFILTER = '';
-
-    const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
-
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization']);
+    expect(viewerUrl).toEqual('http://localhost/');
   });
 
-  test('Should add custom secretsFilter when given correctly', async () => {
-    process.env.INPUT_SECRETSFILTER = ',TOKEN,AUTH;STEM';
+  test('Should return viewer url if viewerUrl is set with trailing slash', () => {
+    process.env.INPUT_VIEWERURL = 'http://localhost/';
 
-    const secretsFilter = require('../../src/configuration').ticsConfig.secretsFilter;
+    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
 
-    expect(secretsFilter).toEqual(['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization', 'TOKEN', 'AUTH;STEM']);
+    expect(viewerUrl).toEqual('http://localhost/');
   });
 });

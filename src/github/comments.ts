@@ -1,11 +1,8 @@
-import { logger } from '../helper/logger';
-import { githubConfig, octokit } from '../configuration';
-import { Analysis } from '../helper/interfaces';
-import { createErrorSummary } from '../helper/summary';
-import { generateStatusMarkdown } from '../helper/markdown';
-import { Status } from '../helper/enums';
 import { Comment } from './interfaces';
-import { handleOctokitError } from '../helper/error';
+import { logger } from '../helper/logger';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Gets a list of all comments on the pull request.
@@ -27,26 +24,6 @@ export async function getPostedComments(): Promise<Comment[]> {
     logger.notice(`Could not retrieve the comments: ${message}`);
   }
   return response;
-}
-
-/**
- * Create error comment on the pull request from the analysis given.
- * @param analysis Analysis object returned from TICS analysis.
- */
-export async function postErrorComment(analysis: Analysis): Promise<void> {
-  let body = createErrorSummary(analysis.errorList, analysis.warningList);
-
-  await postComment(body);
-}
-
-/**
- * Create a comment on the pull request with a body and approval.
- * @param message Message to display in the body of the comment.
- */
-export async function postNothingAnalyzedComment(message: string): Promise<void> {
-  const body = `<h1>TICS Quality Gate</h1>\n\n### ${generateStatusMarkdown(Status.PASSED, true)}\n\n${message}`;
-
-  await postComment(body);
 }
 
 /**

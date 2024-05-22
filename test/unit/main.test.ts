@@ -1,45 +1,52 @@
-import { existsSync } from 'fs';
-import { githubConfig, ticsConfig } from '../../src/configuration';
-import { Events } from '../../src/helper/enums';
-import { logger } from '../../src/helper/logger';
+import * as fs from 'fs';
 
-import * as main from '../../src/main';
-import * as pulls from '../../src/github/pulls';
-import * as analyzer from '../../src/tics/analyzer';
-import * as fetcher from '../../src/tics/fetcher';
-import * as review from '../../src/github/review';
-import * as annotations from '../../src/github/annotations';
-import * as comments from '../../src/github/comments';
+import { summary as coreSummary } from '@actions/core';
+
 import * as artifacts from '../../src/github/artifacts';
-import * as api_helper from '../../src/tics/api_helper';
+import * as client from '../../src/analysis/client';
+import * as diagnostic from '../../src/analysis/diagnostic';
+import * as qserver from '../../src/analysis/qserver';
+import * as summary from '../../src/action/cli/summary';
+import * as version from '../../src/viewer/version';
 
-import {
-  analysisFailedNoUrl,
-  analysisPassed,
-  analysisPassedNoUrl,
-  analysisPassedNoUrlWarning5057,
-  analysisResultsDoubleFilePassed,
-  analysisResultsPassedNoUrl,
-  analysisResultsSingleFileFailed,
-  analysisResultsSingleFilePassed,
-  doubleChangedFiles,
-  singleAnnotations,
-  singleChangedFiles,
-  singlePreviousReviewComments
-} from './main_helper';
+import { main } from '../../src/main';
+import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../.setup/mock';
+import { logger } from '../../src/helper/logger';
+import { Mode } from '../../src/configuration/tics';
 
 afterEach(() => {
   jest.clearAllMocks();
-  delete main.actionFailed;
 });
 
-describe('pre checks', () => {
-  test('Should throw error if viewer version is too low', async () => {
-    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.0.0' });
+describe('meetsPrerequisites', () => {
+  let existsSpy: jest.SpyInstance;
+  let viewerVersionSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    viewerVersionSpy = jest.spyOn(version, 'getViewerVersion');
+    existsSpy = jest.spyOn(fs, 'existsSync');
+  });
+
+  test('Should throw error if viewer version is not parsable', async () => {
+    viewerVersionSpy.mockResolvedValue({ version: 'test' });
 
     let error: any;
     try {
-      await main.main();
+      await main();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version unknown.'));
+  });
+
+  test('Should throw error if viewer version is too low', async () => {
+    viewerVersionSpy.mockResolvedValue({ version: '2022.0.0' });
+
+    let error: any;
+    try {
+      await main();
     } catch (err) {
       error = err;
     }
@@ -49,11 +56,11 @@ describe('pre checks', () => {
   });
 
   test('Should throw error if viewer version is too low with prefix character', async () => {
-    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: 'r2022.0.0' });
+    viewerVersionSpy.mockResolvedValue({ version: 'r2022.0.0' });
 
     let error: any;
     try {
-      await main.main();
+      await main();
     } catch (err) {
       error = err;
     }
@@ -63,11 +70,11 @@ describe('pre checks', () => {
   });
 
   test('Should not throw version error if viewer version sufficient with prefix character', async () => {
-    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: 'r2022.4.0' });
+    viewerVersionSpy.mockResolvedValue({ version: 'r2022.4.0' });
 
     let error: any;
     try {
-      await main.main();
+      await main();
     } catch (err) {
       error = err;
     }
@@ -77,13 +84,14 @@ describe('pre checks', () => {
     );
   });
 
-  test('Should throw error if event is not pull request and', async () => {
-    jest.spyOn(fetcher, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
-    jest.spyOn(main, 'configure').mockImplementation();
+  test('Should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
+    viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
+    githubConfigMock.eventName = 'commit';
+    ticsConfigMock.filelist = '';
 
     let error: any;
     try {
-      await main.main();
+      await main();
     } catch (err) {
       error = err;
     }
@@ -92,14 +100,31 @@ describe('pre checks', () => {
     expect((error as Error).message).toEqual(
       expect.stringContaining('If the the action is run outside a pull request it should be run with a filelist.')
     );
+  });
+
+  test('Should throw no error on mode QServer when it is not a pull request and no filelist is given', async () => {
+    viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
+    existsSpy.mockReturnValue(true);
+    jest.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
+      passed: true,
+      message: '',
+      errorList: [],
+      warningList: []
+    });
+
+    githubConfigMock.eventName = 'commit';
+    ticsConfigMock.mode = 'qserver';
+    ticsConfigMock.filelist = '';
+
+    await main();
   });
 
   test('Should throw error if ".git" does not exist', async () => {
-    githubConfig.eventName = 'pull_request';
+    existsSpy.mockReturnValue(false);
 
     let error: any;
     try {
-      await main.main();
+      await main();
     } catch (err) {
       error = err;
     }
@@ -109,331 +134,91 @@ describe('pre checks', () => {
       expect.stringContaining('No checkout found to analyze. Please perform a checkout before running the TICS Action.')
     );
   });
-
-  test('Should throw error if retryCodes are incorrect', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-
-    ticsConfig.retryCodes = [NaN];
-
-    let error: any;
-    try {
-      await main.main();
-    } catch (err) {
-      error = err;
-    }
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toEqual(expect.stringContaining('Given retry codes could not be parsed. Please check if the input is correct.'));
-  });
 });
 
-describe('SetFailed checks', () => {
-  test('Should call info if no files are found', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce([]);
+describe('verdict', () => {
+  let spyClient: jest.SpyInstance;
+  let spyDiagnostic: jest.SpyInstance;
+  let spyQServer: jest.SpyInstance;
 
-    ticsConfig.retryCodes = [500];
+  let spyUpload: jest.SpyInstance;
+  let spySetFailed: jest.SpyInstance;
+  let spyPostCli: jest.SpyInstance;
+  let spySummaryWrite: jest.SpyInstance;
 
-    const spyInfo = jest.spyOn(logger, 'info');
+  beforeEach(() => {
+    spyClient = jest.spyOn(client, 'clientAnalysis');
+    spyDiagnostic = jest.spyOn(diagnostic, 'diagnosticAnalysis');
+    spyQServer = jest.spyOn(qserver, 'qServerAnalysis');
 
-    await main.main();
+    spyUpload = jest.spyOn(artifacts, 'uploadArtifact');
+    spySetFailed = jest.spyOn(logger, 'setFailed');
+    spyPostCli = jest.spyOn(summary, 'postCliSummary').mockImplementation();
+    spySummaryWrite = jest.spyOn(coreSummary, 'write');
 
-    expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
+    // meets prerequisites
+    jest.spyOn(version, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    githubConfigMock.eventName = 'pull_request';
   });
 
-  test('Should call setFailed if no Explorer URL and analysis failed', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
+  test('Should not call setfailed if the verdict is passing', async () => {
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
+    spyDiagnostic.mockResolvedValue({ passed: true });
+    await main();
 
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
+    ticsConfigMock.mode = Mode.CLIENT;
+    spyClient.mockResolvedValue({ passed: true });
+    await main();
 
-    await main.main();
+    ticsConfigMock.mode = Mode.QSERVER;
+    spyQServer.mockResolvedValue({ passed: true });
+    await main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Failed to run TICS Github Action.');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
+    expect(spyUpload).not.toHaveBeenCalled();
+    expect(spySetFailed).not.toHaveBeenCalled();
+    expect(spyPostCli).toHaveBeenCalledTimes(3);
+    expect(spyPostCli).toHaveBeenCalledWith({ passed: true });
+    expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
-  test('Should call setFailed if no Explorer URL and analysis passed', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrl);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
+  test('Should call setfailed if the verdict is failing', async () => {
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
+    ticsConfigMock.mode = Mode.CLIENT;
+    spyClient.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-    await main.main();
+    ticsConfigMock.mode = Mode.QSERVER;
+    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Explorer URL not returned from TICS analysis.');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
+    expect(spyUpload).not.toHaveBeenCalled();
+    expect(spySetFailed).toHaveBeenCalledTimes(3);
+    expect(spySetFailed).toHaveBeenCalledWith('message');
+    expect(spyPostCli).toHaveBeenCalledTimes(3);
+    expect(spyPostCli).toHaveBeenCalledWith({ passed: false, message: 'message' });
+    expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
-  test('Should call setFailed if analysis passed and quality gate undefined', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsPassedNoUrl);
-    jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
+  test('Should call uploadArtifact there is a tmpdir set or in the debug state', async () => {
+    githubConfigMock.debugger = true;
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
-    await main.main();
+    ticsCliMock.tmpdir = '/path/to/tmp';
+    ticsConfigMock.mode = Mode.CLIENT;
+    spyClient.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-    expect(spySetFailed).toHaveBeenCalledWith('Some quality gates could not be retrieved.');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
+    githubConfigMock.debugger = false;
+    ticsConfigMock.mode = Mode.QSERVER;
+    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
+    await main();
 
-  test('Should call setFailed if analysis passed and quality gate failed', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
-    jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-    await main.main();
-
-    expect(spySetFailed).toHaveBeenCalledWith('Project failed 2 out of 2 quality gates');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should not call setFailed if analysis passed and quality gate passed', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
-    jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-    await main.main();
-
-    expect(spySetFailed).toHaveBeenCalledTimes(0);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('postNothingAnalyzed', () => {
-  test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
-
-    const spyReview = jest.spyOn(review, 'postNothingAnalyzedReview').mockImplementationOnce(() => Promise.resolve());
-
-    ticsConfig.pullRequestApproval = true;
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should call postNothingAnalyzedReview when Explorer URL given and analysis failed with warning 5057', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassedNoUrlWarning5057);
-
-    const spyReview = jest.spyOn(comments, 'postNothingAnalyzedComment').mockImplementationOnce(() => Promise.resolve());
-
-    ticsConfig.pullRequestApproval = false;
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith('No changed files applicable for TICS analysis quality gating.');
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('PostReview checks', () => {
-  test('Should call postReview with one file analyzed, qualitygate failed and no annotations', async () => {
-    ticsConfig.pullRequestApproval = true;
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFileFailed);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-
-    const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith(expect.stringContaining('TICS Quality Gate'), Events.REQUEST_CHANGES);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should call postReview with one file analyzed, qualitygate passed and no annotations', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
-    jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
-
-    const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith(expect.stringContaining('TICS Quality Gate'), Events.APPROVE);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should call postReview when postAnnotations is true with no annotations and no previously posted review comments', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
-    jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce([]);
-    jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
-    jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
-
-    ticsConfig.postAnnotations = true;
-    const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith(expect.stringContaining('TICS Quality Gate'), Events.APPROVE);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should call postReview when postAnnotations is true with one annotation and no previously posted review comment', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
-    jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
-    jest.spyOn(annotations, 'getPostedReviewComments').mockResolvedValueOnce([]);
-    jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
-
-    ticsConfig.postAnnotations = true;
-    const spyReview = jest.spyOn(review, 'postReview').mockImplementationOnce(() => Promise.resolve());
-
-    await main.main();
-
-    expect(spyReview).toHaveBeenCalledWith(expect.stringContaining('TICS Quality Gate'), Events.APPROVE);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('Artifact upload tests', () => {
-  test('Should not call uploadArtifacts when tmpDir or isDebug are not set', async () => {
-    const spyArtifact = jest.spyOn(artifacts, 'uploadArtifact').mockImplementationOnce(() => Promise.resolve());
-    const spySummary = jest.spyOn(api_helper, 'cliSummary');
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-
-    await main.main();
-
-    expect(spyArtifact).toHaveBeenCalledTimes(0);
-    expect(spySummary).toHaveBeenCalledTimes(1);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-
-  test('Should not call uploadArtifacts when tmpDir is set but no analysis has been done', async () => {
-    const spyArtifact = jest.spyOn(artifacts, 'uploadArtifact').mockImplementationOnce(() => Promise.resolve());
-    const spySummary = jest.spyOn(api_helper, 'cliSummary');
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce([]);
-
-    await main.main();
-
-    expect(spyArtifact).toHaveBeenCalledTimes(0);
-    expect(spySummary).toHaveBeenCalledTimes(0);
-  });
-
-  test('Should call uploadArtifacts when action is run with debug', async () => {
-    const spyArtifact = jest.spyOn(artifacts, 'uploadArtifact').mockImplementationOnce(() => Promise.resolve());
-    const spySummary = jest.spyOn(api_helper, 'cliSummary');
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-
-    githubConfig.debugger = true;
-
-    await main.main();
-
-    expect(spyArtifact).toHaveBeenCalledTimes(1);
-    expect(spySummary).toHaveBeenCalledTimes(1);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-
-    githubConfig.debugger = false;
-  });
-
-  test('Should call uploadArtifacts when tmpDir is set', async () => {
-    const spyArtifact = jest.spyOn(artifacts, 'uploadArtifact').mockImplementationOnce(() => Promise.resolve());
-    const spySummary = jest.spyOn(api_helper, 'cliSummary');
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(singleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-
-    ticsConfig.tmpDir = '/tmp';
-
-    await main.main();
-
-    expect(spyArtifact).toHaveBeenCalledTimes(1);
-    expect(spySummary).toHaveBeenCalledTimes(1);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('DeletePreviousReviewComments check', () => {
-  test('Should call deletePreviousReviewComments when postAnnotations is true with one annotation and one previously posted review comment', async () => {
-    (existsSync as any).mockReturnValueOnce(true);
-    jest.spyOn(pulls, 'getChangedFilesOfPullRequest').mockResolvedValueOnce(doubleChangedFiles);
-    jest.spyOn(pulls, 'changedFilesToFile').mockReturnValueOnce('location/changedFiles.txt');
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-    jest.spyOn(fetcher, 'getAnalysisResults').mockResolvedValueOnce(analysisResultsDoubleFilePassed);
-    jest.spyOn(fetcher, 'getAnnotations').mockResolvedValueOnce(singleAnnotations);
-    jest.spyOn(annotations, 'getPostedReviewComments').mockImplementationOnce((): any => singlePreviousReviewComments);
-    jest.spyOn(comments, 'getPostedComments').mockImplementationOnce(() => Promise.resolve([]));
-
-    ticsConfig.postAnnotations = true;
-    const spyDelete = jest.spyOn(annotations, 'deletePreviousReviewComments').mockImplementationOnce(() => Promise.resolve());
-
-    await main.main();
-
-    expect(spyDelete).toHaveBeenCalledWith(singlePreviousReviewComments);
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('Diagnostic mode checks', () => {
-  test('Diagnostic mode succeeds', async () => {
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisPassed);
-
-    ticsConfig.mode = 'diagnostic';
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-    await main.main();
-
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-    expect(spySetFailed).toHaveBeenCalledTimes(0);
-  });
-
-  test('Diagnostic mode fails', async () => {
-    const spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer').mockResolvedValueOnce(analysisFailedNoUrl);
-
-    ticsConfig.mode = 'diagnostic';
-    const spySetFailed = jest.spyOn(logger, 'setFailed');
-
-    await main.main();
-
-    expect(spyAnalyzer).toHaveBeenCalledTimes(1);
-    expect(spySetFailed).toHaveBeenCalledTimes(1);
+    expect(spyUpload).toHaveBeenCalledTimes(3);
   });
 });

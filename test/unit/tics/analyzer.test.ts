@@ -1,14 +1,24 @@
 import * as exec from '@actions/exec';
 import * as os from 'os';
-import { githubConfig, ticsConfig, httpClient } from '../../../src/configuration';
-import { runTicsAnalyzer } from '../../../src/tics/analyzer';
+import { getTicsCommand, runTicsAnalyzer } from '../../../src/tics/analyzer';
+import { Mode, TrustStrategy } from '../../../src/configuration/tics';
+import { httpClient } from '../../../src/viewer/_http-client';
+import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
   const originalTrustStrategy = process.env.TICSTRUSTSTRATEGY;
 
   beforeAll(() => {
-    ticsConfig.ticsConfiguration = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
+    jest.spyOn(process.stdout, 'write').mockImplementation();
+
+    ticsConfigMock.ticsConfiguration = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
+  });
+
+  beforeEach(() => {
+    // set defaults
+    ticsCliMock.calc = 'GATE';
+    ticsCliMock.project = 'project';
   });
 
   afterEach(() => {
@@ -25,13 +35,13 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.mode = 'diagnostic';
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
-    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github -help "`, [], {
+    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github -help"`, [], {
       listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
       silent: true
     });
@@ -42,14 +52,14 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.mode = 'default';
+    ticsConfigMock.mode = Mode.CLIENT;
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE "`,
+      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE"`,
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -68,7 +78,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project \'project\' -calc GATE }"`,
+      `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE}"`,
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -82,17 +92,17 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
+      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -106,17 +116,17 @@ describe('test multiple types of configuration', () => {
     (exec.exec as any).mockResolvedValueOnce(0);
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
+      "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -131,11 +141,11 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('linux');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
-    ticsConfig.installTics = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+    ticsConfigMock.installTics = true;
 
     process.env.TICSTRUSTSTRATEGY = 'self-signed';
 
@@ -144,7 +154,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/tiobeweb/TICS/install-url') && TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
+      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/tiobeweb/TICS/install-url') && TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123-1' -log 9\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -159,19 +169,19 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '-log 9';
-    ticsConfig.installTics = true;
-    ticsConfig.trustStrategy = '';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+    ticsConfigMock.installTics = true;
+    ticsConfigMock.trustStrategy = TrustStrategy.STRICT;
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;  iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc CS -cdtoken token -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;  iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -186,17 +196,17 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '';
-    ticsConfig.installTics = true;
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.filelist = '/path/to/file.txt';
-    githubConfig.debugger = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '';
+    ticsConfigMock.installTics = true;
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsConfigMock.filelist = '/path/to/file.txt';
+    githubConfigMock.debugger = true;
 
     process.env.TICSTRUSTSTRATEGY = 'all';
 
@@ -205,7 +215,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -220,18 +230,18 @@ describe('test multiple types of configuration', () => {
     const spy = jest.spyOn(exec, 'exec');
     jest.spyOn(os, 'platform').mockReturnValue('win32');
 
-    ticsConfig.calc = 'CS';
-    ticsConfig.clientData = 'token';
-    ticsConfig.tmpDir = '/home/ubuntu/test';
-    ticsConfig.additionalFlags = '';
-    ticsConfig.installTics = true;
-    ticsConfig.nocalc = 'CW';
-    ticsConfig.recalc = 'CY';
-    ticsConfig.norecalc = 'CD';
-    ticsConfig.codetype = 'TESTCODE';
-    ticsConfig.filelist = '.';
-    ticsConfig.branchName = 'main';
-    githubConfig.debugger = true;
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '';
+    ticsConfigMock.installTics = true;
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsConfigMock.filelist = '.';
+    ticsCliMock.branchname = 'main';
+    githubConfigMock.debugger = true;
 
     process.env.TICSTRUSTSTRATEGY = 'all';
 
@@ -240,7 +250,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toEqual(0);
     expect(response.completed).toEqual(true);
     expect(spy).toHaveBeenCalledWith(
-      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github . -viewer -project 'project' -calc CS -nocalc CW -recalc CY -norecalc CD -codetype TESTCODE -cdtoken token -branchname main -tmpdir '/home/ubuntu/test/123-1'  -log 9}\"",
+      "powershell \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github . -viewer -project 'project' -branchname main -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123-1' -log 9}\"",
       [],
       {
         listeners: { stderr: expect.any(Function), stdout: expect.any(Function) },
@@ -250,10 +260,116 @@ describe('test multiple types of configuration', () => {
   });
 });
 
+describe('getTicsCommand', () => {
+  test('Should return full TICS Client command on mode client with all variables set (also non-client ones)', () => {
+    ticsConfigMock.mode = Mode.CLIENT;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICS ');
+    expect(command).toContain(`'@./filelist'`);
+    expect(command).toContain(`-viewer`);
+    expect(command).toContain(`-project 'project'`);
+    expect(command).toContain('-calc CS');
+    expect(command).toContain('-nocalc CW');
+    expect(command).toContain('-recalc CY');
+    expect(command).toContain('-norecalc CD');
+    expect(command).toContain('-cdtoken token');
+    expect(command).toContain('-codetype TESTCODE');
+    expect(command).toContain('-branchname main');
+    expect(command).not.toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
+  });
+
+  test('Should return full TICSQServer command on mode qserver with all variables set (also non-qserver ones)', () => {
+    ticsConfigMock.mode = Mode.QSERVER;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICSQServer ');
+    expect(command).not.toContain(`'@./filelist'`);
+    expect(command).not.toContain(`-viewer`);
+    expect(command).toContain(`-project 'project'`);
+    expect(command).toContain('-calc CS');
+    expect(command).toContain('-nocalc CW');
+    expect(command).toContain('-recalc CY');
+    expect(command).toContain('-norecalc CD');
+    expect(command).not.toContain('-cdtoken token');
+    expect(command).not.toContain('-codetype TESTCODE');
+    expect(command).toContain('-branchname main');
+    expect(command).toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
+  });
+
+  test('Should return a diagnostic command on mode diagnostic with all variables set (also non-diagnostic ones)', () => {
+    ticsConfigMock.mode = Mode.DIAGNOSTIC;
+    ticsCliMock.project = 'project';
+    ticsCliMock.calc = 'CS';
+    ticsCliMock.nocalc = 'CW';
+    ticsCliMock.recalc = 'CY';
+    ticsCliMock.norecalc = 'CD';
+    ticsCliMock.cdtoken = 'token';
+    ticsCliMock.codetype = 'TESTCODE';
+    ticsCliMock.branchname = 'main';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.additionalFlags = '-log 9';
+
+    const command = getTicsCommand('./filelist');
+
+    expect(command).toContain('TICS ');
+    expect(command).not.toContain(`'@./filelist'`);
+    expect(command).not.toContain(`-viewer`);
+    expect(command).not.toContain(`-project 'project'`);
+    expect(command).not.toContain('-calc CS');
+    expect(command).not.toContain('-nocalc CW');
+    expect(command).not.toContain('-recalc CY');
+    expect(command).not.toContain('-norecalc CD');
+    expect(command).not.toContain('-cdtoken token');
+    expect(command).not.toContain('-codetype TESTCODE');
+    expect(command).not.toContain('-branchname main');
+    expect(command).not.toContain('-branchdir .');
+    expect(command).toContain(`-tmpdir '/home/ubuntu/test/123-1'`);
+    expect(command).toContain('-log 9');
+  });
+});
+
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  beforeEach(() => {
+    (exec.exec as any).mockResolvedValue(0);
+  });
+
   test('Should return single error if already exists in errorlist', async () => {
-    ticsConfig.installTics = false;
+    ticsConfigMock.installTics = false;
 
     const response = await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stderr('[ERROR 666] Error');
@@ -282,11 +398,11 @@ describe('test callback functions', () => {
   });
 
   test('Should add ExplorerUrl in response', async () => {
-    jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    ticsConfigMock.viewerUrl = 'http://viewer.com';
 
     await runTicsAnalyzer('/path/to');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('http://base.com/Explorer.html#axes=ClientData');
-    (exec.exec as any).mockResolvedValueOnce(0);
+
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.explorerUrls[0]).toEqual('http://viewer.com/Explorer.html#axes=ClientData');

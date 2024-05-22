@@ -1,9 +1,11 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
-import { logger } from '../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../configuration';
+
 import { ChangedFile } from './interfaces';
-import { handleOctokitError } from '../helper/error';
+import { logger } from '../helper/logger';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig, actionConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -19,25 +21,22 @@ export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
   try {
     logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
-      if (response.data) {
-        return response.data
-          .filter(item => {
-            // If a file is moved or renamed the status is 'renamed'.
-            if (item.status === 'renamed') {
-              // If a file has been moved without changes or if moved files are excluded, exclude them.
-              if ((ticsConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
-                return false;
-              }
+      return response.data
+        .filter(item => {
+          // If a file is moved or renamed the status is 'renamed'.
+          if (item.status === 'renamed') {
+            // If a file has been moved without changes or if moved files are excluded, exclude them.
+            if ((actionConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
+              return false;
             }
-            return true;
-          })
-          .map(item => {
-            item.filename = normalize(item.filename);
-            logger.debug(item.filename);
-            return item;
-          });
-      }
-      return [];
+          }
+          return true;
+        })
+        .map(item => {
+          item.filename = normalize(item.filename);
+          logger.debug(item.filename);
+          return item;
+        });
     });
     logger.info('Retrieved changed files from pull request.');
   } catch (error: unknown) {

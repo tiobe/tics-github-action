@@ -1,7 +1,8 @@
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
-import { octokit, ticsConfig } from '../../../src/configuration';
-import { logger } from '../../../src/helper/logger';
 import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
+import { logger } from '../../../src/helper/logger';
+import { octokit } from '../../../src/github/_octokit';
+import { actionConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
   test('Should return single file on getPostedReviewComments', async () => {
@@ -16,7 +17,7 @@ describe('getPostedReviewComments', () => {
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getPostedReviewComments();
-    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listReviewComments, { repo: 'test', owner: 'tester', pull_number: '1' });
+    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listReviewComments, { repo: 'test', owner: 'tester', pull_number: 1 });
   });
 
   test('Should return three files on getPostedReviewComments', async () => {
@@ -41,21 +42,21 @@ describe('deletePreviousReviewComments', () => {
   test('Should call deleteReviewComment once on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([warningComment, emptyComment]);
+    await deletePreviousReviewComments([warningComment, emptyComment]);
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Should call deleteReviewComment twice on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([warningComment, warningComment]);
+    await deletePreviousReviewComments([warningComment, warningComment]);
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
   test('Should not call deleteReviewComment on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
-    deletePreviousReviewComments([emptyComment, emptyComment]);
+    await deletePreviousReviewComments([emptyComment, emptyComment]);
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
@@ -65,7 +66,7 @@ describe('deletePreviousReviewComments', () => {
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    deletePreviousReviewComments([warningComment]);
+    await deletePreviousReviewComments([warningComment]);
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -76,9 +77,9 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = true;
+    actionConfigMock.showBlockingAfter = true;
 
-    postAnnotations(twoMixedAnalysisResults);
+    postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -99,9 +100,9 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = true;
+    actionConfigMock.showBlockingAfter = true;
 
-    postAnnotations(fourMixedAnalysisResults);
+    postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -132,9 +133,9 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = false;
+    actionConfigMock.showBlockingAfter = false;
 
-    postAnnotations(twoMixedAnalysisResults);
+    postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {
@@ -150,9 +151,9 @@ describe('postAnnotations', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
-    ticsConfig.showBlockingAfter = false;
+    actionConfigMock.showBlockingAfter = false;
 
-    postAnnotations(fourMixedAnalysisResults);
+    postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith('body 0', {

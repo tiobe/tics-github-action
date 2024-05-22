@@ -1,8 +1,9 @@
-import { logger } from '../helper/logger';
-import { githubConfig, octokit, ticsConfig } from '../configuration';
 import { ReviewComment } from './interfaces';
-import { AnalysisResults, TicsReviewComment } from '../helper/interfaces';
-import { handleOctokitError } from '../helper/error';
+import { logger } from '../helper/logger';
+import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
+import { handleOctokitError } from '../helper/response';
+import { githubConfig, actionConfig } from '../configuration/_config';
+import { octokit } from './_octokit';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -18,11 +19,11 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
       pull_number: githubConfig.pullRequestNumber
     };
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
+    logger.info('Retrieve posted review comments.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);
     logger.notice(`Could not retrieve the review comments: ${message}`);
   }
-  logger.info('Retrieve posted review comments.');
   return response;
 }
 
@@ -30,12 +31,12 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function postAnnotations(analysisResult: AnalysisResults): void {
+export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
-  let postableReviewComments: TicsReviewComment[] = [];
+  const postableReviewComments: TicsReviewComment[] = [];
 
-  analysisResult.projectResults.forEach(projectResult => {
+  projectResults.forEach(projectResult => {
     if (projectResult.reviewComments) {
       postableReviewComments.push(...projectResult.reviewComments.postable);
     }
@@ -48,7 +49,7 @@ export function postAnnotations(analysisResult: AnalysisResults): void {
         startLine: reviewComment.line,
         title: reviewComment.title
       });
-    } else if (reviewComment.blocking === 'after' && ticsConfig.showBlockingAfter) {
+    } else if (reviewComment.blocking === 'after' && actionConfig.showBlockingAfter) {
       logger.notice(reviewComment.body, {
         file: reviewComment.path,
         startLine: reviewComment.line,
@@ -63,10 +64,10 @@ export function postAnnotations(analysisResult: AnalysisResults): void {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function deletePreviousReviewComments(postedReviewComments: ReviewComment[]): void {
+export async function deletePreviousReviewComments(postedReviewComments: ReviewComment[]): Promise<void> {
   logger.header('Deleting review comments of previous runs.');
-  postedReviewComments.map(async reviewComment => {
-    if (reviewComment.body.substring(0, 17) === ':warning: **TICS:') {
+  for (const reviewComment of postedReviewComments) {
+    if (reviewComment.body.startsWith(':warning: **TICS:')) {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -79,6 +80,6 @@ export function deletePreviousReviewComments(postedReviewComments: ReviewComment
         logger.notice(`Could not delete review comment: ${message}`);
       }
     }
-  });
+  }
   logger.info('Deleted review comments of previous runs.');
 }

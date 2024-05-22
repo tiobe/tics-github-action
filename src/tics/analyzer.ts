@@ -1,14 +1,19 @@
 import { exec } from '@actions/exec';
-import { githubConfig, httpClient, ticsConfig, viewerUrl } from '../configuration';
 import { logger } from '../helper/logger';
 import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
+import { isOneOf } from '../helper/compare';
+import { joinUrl } from '../helper/url';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
+import { httpClient } from '../viewer/_http-client';
+import { Mode } from '../configuration/tics';
+import { CliOptions, TicsCli } from '../configuration/tics-cli';
 
-let errorList: string[] = [];
-let warningList: string[] = [];
-let explorerUrls: string[] = [];
+const errorList: string[] = [];
+const warningList: string[] = [];
+const explorerUrls: string[] = [];
 let statusCode: number;
 let completed: boolean;
 
@@ -17,7 +22,7 @@ let completed: boolean;
  * @param fileListPath Path to changedFiles.txt.
  */
 export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
-  logger.header(`Analyzing for project ${ticsConfig.projectName}`);
+  logger.header(`Analyzing for project ${ticsCli.project}`);
 
   const command = await buildRunCommand(fileListPath);
 
@@ -48,6 +53,7 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
     statusCode = -1;
   }
 
+  logger.info(`TICS closed with code ${statusCode.toString()}`);
   return {
     completed: completed,
     statusCode: statusCode,
@@ -90,16 +96,20 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
  */
 function findInStdOutOrErr(data: string): void {
   const error = data.toString().match(/\[ERROR.*/g);
-  if (error && !errorList.find(e => e === error?.toString())) errorList.push(error.toString());
+  if (error && !errorList.find(e => e === error.toString())) {
+    errorList.push(error.toString());
+  }
 
   const warning = data.toString().match(/\[WARNING.*/g);
-  if (warning && !warningList.find(w => w === warning?.toString())) warningList.push(warning.toString());
+  if (warning && !warningList.find(w => w === warning.toString())) {
+    warningList.push(warning.toString());
+  }
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
     if (urlPath) {
-      explorerUrls.push(viewerUrl + urlPath);
+      explorerUrls.push(joinUrl(ticsConfig.viewerUrl, urlPath));
     }
   }
 }
@@ -109,29 +119,51 @@ function findInStdOutOrErr(data: string): void {
  * @param fileListPath
  * @returns string of the command to run TICS.
  */
-function getTicsCommand(fileListPath: string) {
-  let execString = 'TICS -ide github ';
-  if (ticsConfig.mode === 'diagnostic') {
-    execString += '-help ';
-  } else {
-    if (fileListPath === '.') {
-      execString += '. -viewer ';
-    } else {
-      execString += `'@${fileListPath}' -viewer `;
-    }
-    execString += `-project '${ticsConfig.projectName}' `;
-    execString += `-calc ${ticsConfig.calc} `;
-    execString += ticsConfig.nocalc ? `-nocalc ${ticsConfig.nocalc} ` : '';
-    execString += ticsConfig.recalc ? `-recalc ${ticsConfig.recalc} ` : '';
-    execString += ticsConfig.norecalc ? `-norecalc ${ticsConfig.norecalc} ` : '';
-    execString += ticsConfig.codetype ? `-codetype ${ticsConfig.codetype} ` : '';
-    execString += ticsConfig.clientData ? `-cdtoken ${ticsConfig.clientData} ` : '';
-    execString += ticsConfig.branchName ? `-branchname ${ticsConfig.branchName} ` : '';
-    execString += ticsConfig.tmpDir || githubConfig.debugger ? `-tmpdir '${getTmpDir()}' ` : '';
-  }
-  execString += ticsConfig.additionalFlags ? ticsConfig.additionalFlags : '';
-  // Add TICS debug flag when in debug mode, if this flag was not already set.
-  execString += githubConfig.debugger && !execString.includes('-log ') ? ' -log 9' : '';
+export function getTicsCommand(fileListPath: string): string {
+  let command: string[] = [];
 
-  return execString;
+  switch (ticsConfig.mode) {
+    case Mode.DIAGNOSTIC:
+      command.push('TICS -ide github -help');
+      break;
+    case Mode.CLIENT:
+      command.push('TICS -ide github');
+      command.push(fileListPath === '.' ? '. -viewer' : `'@${fileListPath}' -viewer`);
+      command = [...command, ...getCliOptionsForCommand()];
+      break;
+    case Mode.QSERVER:
+      command.push('TICSQServer');
+      command = [...command, ...getCliOptionsForCommand()];
+      break;
+  }
+
+  if (ticsCli.tmpdir || githubConfig.debugger) {
+    command.push(`-tmpdir '${getTmpDir()}'`);
+  }
+
+  if (ticsCli.additionalFlags) {
+    command.push(ticsCli.additionalFlags);
+  }
+
+  // Add TICS debug flag when in debug mode, if this flag was not already set.
+  if (githubConfig.debugger && !command.includes('-log ')) {
+    command.push('-log 9');
+  }
+
+  return command.join(' ');
+}
+
+function getCliOptionsForCommand() {
+  const command = [`-project '${ticsCli.project}'`];
+
+  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
+    if (option.cli && option.modes.includes(ticsConfig.mode)) {
+      const value = ticsCli[option.cli as keyof TicsCli];
+      if (value) {
+        command.push(`-${option.cli} ${value}`);
+      }
+    }
+  });
+
+  return command;
 }
