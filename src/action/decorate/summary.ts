@@ -19,12 +19,12 @@ import {
   TicsReviewComments
 } from '../../helper/interfaces';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
-import { githubConfig, ticsConfig } from '../../configuration/_config';
+import { githubConfig, ticsConfig } from '../../configuration/config';
 
 export function createSummaryBody(analysisResult: AnalysisResult): string {
   logger.header('Creating summary.');
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(getStatus(analysisResult.passed, analysisResult.passedWithWarning), true)}`, 3);
+  summary.addHeading(generateStatusMarkdown(getStatus(analysisResult.passed, analysisResult.passedWithWarning), true), 3);
 
   analysisResult.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
@@ -71,7 +71,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
   logger.header('Creating summary.');
 
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(Status.FAILED, true)}`, 3);
+  summary.addHeading(generateStatusMarkdown(Status.FAILED, true), 3);
 
   if (errorList.length > 0) {
     summary.addHeading('The following errors have occurred during analysis:', 2);
@@ -103,7 +103,7 @@ export function createNothingAnalyzedSummaryBody(message: string): string {
   logger.header('Creating summary.');
 
   summary.addHeading('TICS Quality Gate');
-  summary.addHeading(`${generateStatusMarkdown(Status.PASSED, true)}`, 3);
+  summary.addHeading(generateStatusMarkdown(Status.PASSED, true), 3);
 
   summary.addRaw(message);
 
@@ -116,10 +116,10 @@ function getConditionHeading(failedOrWarnConditions: Condition[]): string {
   const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
   const header = [];
   if (countFailedConditions > 0) {
-    header.push(`${countFailedConditions} Condition(s) failed`);
+    header.push(`${countFailedConditions.toString()} Condition(s) failed`);
   }
   if (countWarnConditions > 0) {
-    header.push(`${countWarnConditions} Condition(s) passed with warning`);
+    header.push(`${countWarnConditions.toString()} Condition(s) passed with warning`);
   }
 
   if (failedOrWarnConditions.length === 0) {
@@ -148,7 +148,7 @@ function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
   let failedOrWarnConditions: Condition[] = [];
 
   gates.forEach(gate => {
-    failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || (c.passed && c.passedWithWarning)));
+    failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || c.passedWithWarning));
   });
 
   return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
@@ -160,7 +160,7 @@ function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
  * @returns Dropdown with all the files analyzed.
  */
 export function createFilesSummary(fileList: string[]): string {
-  let header = 'The following files have been checked for this project';
+  const header = 'The following files have been checked for this project';
   let body = '<ul>';
   fileList.sort((a, b) => a.localeCompare(b));
   fileList.forEach(file => {
@@ -176,7 +176,7 @@ export function createFilesSummary(fileList: string[]): string {
  * @returns Table containing a summary for all conditions
  */
 function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
-  let rows: SummaryTableRow[] = [];
+  const rows: SummaryTableRow[] = [];
   const titleRow: SummaryTableRow = [
     {
       data: 'File',
@@ -199,7 +199,7 @@ function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
     .filter(item => item.itemType === 'file')
     .forEach(item => {
       const dataRow: SummaryTableRow = [
-        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.viewerUrl, item.link)})${EOL}${EOL}`,
+        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
         item.data.actualValue.formattedValue
       ];
 
@@ -226,13 +226,31 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
-  let unpostable: ExtendedAnnotation[] = [];
-  let postable: TicsReviewComment[] = [];
+  const unpostable: ExtendedAnnotation[] = [];
+  const postable: TicsReviewComment[] = [];
 
-  groupedAnnotations.forEach(annotation => {
-    const displayCount = annotation.count === 1 ? '' : `(${annotation.count}x) `;
-    if (githubConfig.eventName === 'pull_request') {
-      if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
+  groupedAnnotations
+    .filter(a => a.blocking?.state !== 'no')
+    .forEach(annotation => {
+      const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
+
+      if (githubConfig.eventName === 'pull_request') {
+        if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
+          const reviewComment = {
+            blocking: annotation.blocking?.state,
+            title: `${annotation.instanceName}: ${annotation.rule}`,
+            body: createBody(annotation, displayCount),
+            path: annotation.path,
+            line: annotation.line
+          };
+          logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
+          postable.push(reviewComment);
+        } else {
+          annotation.displayCount = displayCount;
+          logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
+          unpostable.push(annotation);
+        }
+      } else if (annotation.diffLines?.includes(annotation.line)) {
         const reviewComment = {
           blocking: annotation.blocking?.state,
           title: `${annotation.instanceName}: ${annotation.rule}`,
@@ -247,36 +265,21 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
         logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
         unpostable.push(annotation);
       }
-    } else if (annotation.diffLines?.includes(annotation.line)) {
-      const reviewComment = {
-        blocking: annotation.blocking?.state,
-        title: `${annotation.instanceName}: ${annotation.rule}`,
-        body: createBody(annotation, displayCount),
-        path: annotation.path,
-        line: annotation.line
-      };
-      logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
-      postable.push(reviewComment);
-    } else {
-      annotation.displayCount = displayCount;
-      logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-      unpostable.push(annotation);
-    }
-  });
+    });
   logger.info('Created review comments from annotations.');
   return { postable: postable, unpostable: unpostable };
 }
 
 function createBody(annotation: Annotation, displayCount: string) {
   let body = '';
-  if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
-  } else if (annotation.blocking?.state === 'yes') {
+  if (annotation.blocking?.state === 'yes') {
     body += `Blocking${EOL}`;
+  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
   }
 
-  body += `Line: ${annotation.line}: ${displayCount}${annotation.msg}`;
-  body += `${EOL}Level: ${annotation.level}, Category: ${annotation.category}`;
+  body += `Line: ${annotation.line.toString()}: ${displayCount}${annotation.msg}`;
+  body += `${EOL}Level: ${annotation.level.toString()}, Category: ${annotation.category}`;
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
   return body;
@@ -301,7 +304,7 @@ function sortAnnotations(annotations: ExtendedAnnotation[]): ExtendedAnnotation[
  * @returns grouped annotations.
  */
 function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ExtendedAnnotation[] {
-  let groupedAnnotations: ExtendedAnnotation[] = [];
+  const groupedAnnotations: ExtendedAnnotation[] = [];
   annotations.forEach(annotation => {
     const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
@@ -364,19 +367,25 @@ function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAn
  * @returns Summary of all the review comments that could not be posted.
  */
 export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
-  let label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
+  const label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
   let body = '';
   let previousPath = '';
 
   unpostableReviewComments.forEach(reviewComment => {
-    let path = reviewComment.path ? reviewComment.path : '';
-    let displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
+    const path = reviewComment.path ? reviewComment.path : '';
+    const displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
+    const icon = reviewComment.blocking?.state === 'after' ? ':warning:' : ':x:';
+    const blocking =
+      reviewComment.blocking?.state === 'after' && reviewComment.blocking.after
+        ? `Blocking after ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}`
+        : 'Blocking';
+
     if (previousPath === '') {
-      body += `<table><tr><th colspan='3'>${path}</th></tr>`;
+      body += `<table><tr><th colspan='4'>${path}</th></tr>`;
     } else if (previousPath !== path) {
-      body += `</table><table><tr><th colspan='3'>${path}</th></tr>`;
+      body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>:warning:</td><td><b>Line:</b> ${reviewComment.line} <b>Level:</b> ${reviewComment.level}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level.toString()}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';

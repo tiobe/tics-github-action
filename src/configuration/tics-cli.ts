@@ -18,16 +18,16 @@ export class TicsCli {
   readonly additionalFlags: string;
 
   constructor(mode: Mode) {
-    this.project = getInput('projectName');
-    this.branchname = getInput('branchName');
-    this.branchdir = getInput('branchDir');
-    this.cdtoken = getInput('clientData');
+    this.project = getInput('project');
+    this.branchname = getInput('branchname');
+    this.branchdir = getInput('branchdir');
+    this.cdtoken = getInput('cdtoken');
     this.codetype = getInput('codetype');
     this.calc = this.getCalc(getInput('calc'), mode);
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
-    this.tmpdir = getInput('tmpDir');
+    this.tmpdir = getInput('tmpdir');
     this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, mode);
@@ -60,7 +60,7 @@ export class TicsCli {
     }
 
     for (const option of CliOptions) {
-      const key = option.cli as keyof TicsCli;
+      const key = option.action as keyof TicsCli;
       if (cli[key] !== '' && !option.modes.includes(mode)) {
         logger.warning(`Parameter '${option.action}' is not applicable to mode '${mode}' and will therefore not be used`);
       }
@@ -70,53 +70,43 @@ export class TicsCli {
 
 export const CliOptions: CliOption[] = [
   {
-    action: 'projectName',
-    cli: 'project',
+    action: 'project',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'branchDir',
-    cli: 'branchdir',
+    action: 'branchdir',
     modes: [Mode.QSERVER]
   },
   {
-    action: 'branchName',
-    cli: 'branchname',
+    action: 'branchname',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'clientData',
-    cli: 'cdtoken',
+    action: 'cdtoken',
     modes: [Mode.CLIENT]
   },
   {
     action: 'codetype',
-    cli: 'codetype',
     modes: [Mode.CLIENT]
   },
   {
     action: 'calc',
-    cli: 'calc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'nocalc',
-    cli: 'nocalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'norecalc',
-    cli: 'norecalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
     action: 'recalc',
-    cli: 'recalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
   },
   {
-    action: 'tmpDir',
-    cli: 'tmpdir',
+    action: 'tmpdir',
     modes: [Mode.CLIENT, Mode.QSERVER, Mode.DIAGNOSTIC]
   },
   {

@@ -4,10 +4,10 @@ import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
 import { platform } from 'os';
-import { isOneOf } from '../helper/compare';
+import { isOneOf } from '../helper/utils';
 import { joinUrl } from '../helper/url';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/_config';
-import { httpClient } from '../viewer/_http-client';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
+import { httpClient } from '../viewer/http-client';
 import { Mode } from '../configuration/tics';
 import { CliOptions, TicsCli } from '../configuration/tics-cli';
 
@@ -73,15 +73,15 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
 
   let installCommand = '';
   if (ticsConfig.installTics) {
-    installCommand = await installTics.getInstallCommand(ticsConfig.ticsConfiguration);
+    installCommand = await installTics.getInstallCommand(ticsConfig.viewerUrl);
 
     if (platform() === 'linux') {
       installCommand += ' &&';
     }
   } else if (platform() === 'linux') {
-    installCommand = `TICS='${ticsConfig.ticsConfiguration}';`;
+    installCommand = `TICS='${ticsConfig.viewerUrl}';`;
   } else {
-    installCommand = `$env:TICS='${ticsConfig.ticsConfiguration}'`;
+    installCommand = `$env:TICS='${ticsConfig.viewerUrl}'`;
   }
 
   if (platform() === 'linux') {
@@ -109,7 +109,7 @@ function findInStdOutOrErr(data: string): void {
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();
     if (urlPath) {
-      explorerUrls.push(joinUrl(ticsConfig.viewerUrl, urlPath));
+      explorerUrls.push(joinUrl(ticsConfig.displayUrl, urlPath));
     }
   }
 }
@@ -156,11 +156,11 @@ export function getTicsCommand(fileListPath: string): string {
 function getCliOptionsForCommand() {
   const command = [`-project '${ticsCli.project}'`];
 
-  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'projectName', 'tmpDir')).forEach(option => {
-    if (option.cli && option.modes.includes(ticsConfig.mode)) {
-      const value = ticsCli[option.cli as keyof TicsCli];
+  CliOptions.filter(o => !isOneOf(o.action, 'additionalFlags', 'project', 'tmpdir')).forEach(option => {
+    if (option.modes.includes(ticsConfig.mode)) {
+      const value = ticsCli[option.action as keyof TicsCli];
       if (value) {
-        command.push(`-${option.cli} ${value}`);
+        command.push(`-${option.action} ${value}`);
       }
     }
   });

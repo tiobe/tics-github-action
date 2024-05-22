@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import { logger } from '../../../src/helper/logger';
-import { actionConfigMock } from '../../.setup/mock';
 
 describe('info', () => {
   test('Should call core.info on info', () => {
@@ -34,7 +33,7 @@ describe('debug', () => {
     const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
-    actionConfigMock.secretsFilter = ['token'];
+    logger.setSecretsFilter(['token']);
     logger.debug('string token secret');
 
     expect(debug).toHaveBeenCalledTimes(1);

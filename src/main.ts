@@ -3,7 +3,7 @@ import { getViewerVersion } from './viewer/version';
 import { Mode } from './configuration/tics';
 import { existsSync } from 'fs';
 import { logger } from './helper/logger';
-import { githubConfig, ticsCli, ticsConfig } from './configuration/_config';
+import { githubConfig, ticsCli, ticsConfig } from './configuration/config';
 import { postCliSummary } from './action/cli/summary';
 import { summary } from '@actions/core';
 import { Verdict } from './helper/interfaces';
@@ -12,14 +12,15 @@ import { diagnosticAnalysis } from './analysis/diagnostic';
 import { qServerAnalysis } from './analysis/qserver';
 import { clientAnalysis } from './analysis/client';
 
-main().catch(error => {
+main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : 'TICS failed with unknown reason';
   logger.setFailed(message);
 });
 
 // exported for testing
 export async function main(): Promise<void> {
-  logger.info(`Running action on event: ${githubConfig.eventName} on mode: ${ticsConfig.mode}`);
+  // logging this to instantiate the configs and validate before running the rest.
+  logger.info(`Running action on event: ${githubConfig.eventName} with mode: ${ticsConfig.mode}`);
 
   await meetsPrerequisites();
 

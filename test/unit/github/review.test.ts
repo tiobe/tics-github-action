@@ -1,8 +1,9 @@
 import { postReview } from '../../../src/github/review';
-import { Events } from '../../../src/helper/enums';
+import { Events } from '../../../src/github/enums';
 import { logger } from '../../../src/helper/logger';
-import { octokit } from '../../../src/github/_octokit';
-import { githubConfig } from '../../../src/configuration/_config';
+import { octokit } from '../../../src/github/octokit';
+import { githubConfig } from '../../../src/configuration/config';
+import { githubConfigMock } from '../../.setup/mock';
 
 describe('postReview', () => {
   let createReviewSpy: jest.SpyInstance;
@@ -10,7 +11,22 @@ describe('postReview', () => {
   beforeEach(() => {
     createReviewSpy = jest.spyOn(octokit.rest.pulls, 'createReview');
   });
+
+  test('Should throw error when a pullRequestNumber is not present', async () => {
+    githubConfigMock.pullRequestNumber = undefined;
+
+    try {
+      await postReview('ReviewBody...', Events.APPROVE);
+      expect(false).toBeTruthy(); // should not be reached
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+    }
+  });
+
   test('Should call createReview once', async () => {
+    githubConfigMock.pullRequestNumber = 1;
+
     await postReview('ReviewBody...', Events.APPROVE);
     expect(createReviewSpy).toHaveBeenCalledTimes(1);
   });

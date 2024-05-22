@@ -1,4 +1,4 @@
-import { httpClient } from '../../../src/viewer/_http-client';
+import { httpClient } from '../../../src/viewer/http-client';
 import { getQualityGate, getQualityGateUrl } from '../../../src/viewer/qualitygate';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 

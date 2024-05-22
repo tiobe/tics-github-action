@@ -1,5 +1,5 @@
 import { createReviewComments } from '../../action/decorate/summary';
-import { actionConfig, ticsCli, ticsConfig } from '../../configuration/_config';
+import { actionConfig, ticsCli, ticsConfig } from '../../configuration/config';
 import { AnalysisResult, TicsReviewComments } from '../../helper/interfaces';
 import { joinUrl } from '../../helper/url';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';

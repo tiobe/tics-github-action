@@ -6,6 +6,5 @@ export interface RetryConfig {
 
 export interface CliOption {
   action: string;
-  cli?: string;
   modes: Mode[];
 }

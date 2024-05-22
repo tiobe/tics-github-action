@@ -1,7 +1,16 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
 
-export const githubConfigMock = {
+export const githubConfigMock: {
+  apiUrl: string;
+  owner: string;
+  reponame: string;
+  commitSha: string;
+  eventName: string;
+  id: string;
+  pullRequestNumber: number | undefined;
+  debugger: boolean;
+} = {
   apiUrl: 'github.com/api/v1/',
   owner: 'tester',
   reponame: 'test',
@@ -19,10 +28,10 @@ export const ticsConfigMock = {
   hostnameVerification: false,
   installTics: false,
   mode: 'client',
-  ticsConfiguration: '',
+  viewerUrl: '',
   trustStrategy: 'strict',
   baseUrl: '',
-  viewerUrl: ''
+  displayUrl: ''
 };
 
 export const actionConfigMock = {
@@ -53,7 +62,7 @@ export const ticsCliMock = {
   additionalFlags: ''
 };
 
-jest.mock('../../src/configuration/_config', () => {
+jest.mock('../../src/configuration/config', () => {
   return {
     githubConfig: githubConfigMock,
     ticsConfig: ticsConfigMock,
@@ -62,7 +71,7 @@ jest.mock('../../src/configuration/_config', () => {
   };
 });
 
-jest.mock('../../src/viewer/_http-client', () => {
+jest.mock('../../src/viewer/http-client', () => {
   return {
     httpClient: {
       get: jest.fn()
@@ -70,7 +79,7 @@ jest.mock('../../src/viewer/_http-client', () => {
   };
 });
 
-jest.mock('../../src/github/_octokit', () => {
+jest.mock('../../src/github/octokit', () => {
   return {
     octokit: {
       paginate: jest.fn(),

@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "type-check": "tsc -noEmit",
-    "format": "prettier --write src/**/*.ts",
-    "format-check": "prettier --check src/**/*.ts",
+    "format": "prettier --write ./**/*.ts",
+    "format-check": "prettier --check ./**/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "npm run build && ncc build --license licenses.txt",
     "test": "jest",

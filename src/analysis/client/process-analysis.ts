@@ -1,7 +1,7 @@
 import { decorateAction } from '../../action/decorate/action';
 import { postToConversation } from '../../action/decorate/pull-request';
 import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../../action/decorate/summary';
-import { githubConfig } from '../../configuration/_config';
+import { githubConfig } from '../../configuration/config';
 import { getPostedComments, deletePreviousComments } from '../../github/comments';
 import { ChangedFile } from '../../github/interfaces';
 import { Analysis } from '../../helper/interfaces';

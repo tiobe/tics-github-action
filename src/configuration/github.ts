@@ -9,7 +9,7 @@ export class GithubConfig {
   readonly commitSha: string;
   readonly eventName: string;
   readonly id: string;
-  readonly pullRequestNumber: number;
+  readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
 
   constructor() {
@@ -25,13 +25,13 @@ export class GithubConfig {
     this.removeWarningListener();
   }
 
-  private getPullRequestNumber() {
+  private getPullRequestNumber(): number | undefined {
     if (context.payload.pull_request) {
       return context.payload.pull_request.number;
     } else if (process.env.PULL_REQUEST_NUMBER) {
       return parseInt(process.env.PULL_REQUEST_NUMBER);
     } else {
-      return 0;
+      return undefined;
     }
   }
 

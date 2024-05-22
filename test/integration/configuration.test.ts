@@ -1,7 +1,7 @@
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_MODE = 'client';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
-process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
+process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
@@ -36,7 +36,7 @@ describe('pullRequestNumber', () => {
       };
     });
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(1);
   });
@@ -62,12 +62,12 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '2';
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
     expect(pullRequestNumber).toEqual(2);
   });
 
-  test('Should set 0 as pullRequestNumber when no value was found', async () => {
+  test('Should set undefined as pullRequestNumber when no value was found', async () => {
     jest.mock('@actions/github', () => {
       return {
         context: {
@@ -88,38 +88,38 @@ describe('pullRequestNumber', () => {
 
     process.env.PULL_REQUEST_NUMBER = '';
 
-    const pullRequestNumber = require('../../src/configuration/_config').githubConfig.pullRequestNumber;
+    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
-    expect(pullRequestNumber).toEqual(0);
+    expect(pullRequestNumber).toEqual(undefined);
   });
 });
 
 describe('urls', () => {
-  test('Should return base url from ticsConfiguration', () => {
-    const baseUrl = require('../../src/configuration/_config').ticsConfig.baseUrl;
+  test('Should return base url from viewerUrl', () => {
+    const baseUrl = require('../../src/configuration/config').ticsConfig.baseUrl;
 
     expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should return viewer url as base url from ticsConfiguration if viewerUrl is not set.', () => {
-    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
+  test('Should return viewer url as base url from viewerUrl if displayUrl is not set.', () => {
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(viewerUrl).toEqual('http://localhost/tiobeweb/TICS');
+    expect(displayUrl).toEqual('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should return viewer url if viewerUrl is set without trailing slash', () => {
-    process.env.INPUT_VIEWERURL = 'http://localhost';
+  test('Should return viewer url if displayUrl is set without trailing slash', () => {
+    process.env.INPUT_DISPLAYURL = 'http://localhost';
 
-    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(viewerUrl).toEqual('http://localhost/');
+    expect(displayUrl).toEqual('http://localhost/');
   });
 
-  test('Should return viewer url if viewerUrl is set with trailing slash', () => {
-    process.env.INPUT_VIEWERURL = 'http://localhost/';
+  test('Should return viewer url if displayUrl is set with trailing slash', () => {
+    process.env.INPUT_DISPLAYURL = 'http://localhost/';
 
-    const viewerUrl = require('../../src/configuration/_config').ticsConfig.viewerUrl;
+    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(viewerUrl).toEqual('http://localhost/');
+    expect(displayUrl).toEqual('http://localhost/');
   });
 });

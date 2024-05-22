@@ -1,8 +1,8 @@
 import { logger } from '../helper/logger';
-import { Events } from '../helper/enums';
+import { Events } from './enums';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig } from '../configuration/_config';
-import { octokit } from './_octokit';
+import { githubConfig } from '../configuration/config';
+import { octokit } from './octokit';
 
 /**
  * Create review on the pull request from the analysis given.
@@ -10,6 +10,10 @@ import { octokit } from './_octokit';
  * @param event Either approve or request changes in the review.
  */
 export async function postReview(body: string, event: Events): Promise<void> {
+  if (!githubConfig.pullRequestNumber) {
+    throw Error('This function can only be run on a pull_request.');
+  }
+
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,

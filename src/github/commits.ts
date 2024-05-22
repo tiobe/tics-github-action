@@ -3,8 +3,8 @@ import { normalize } from 'canonical-path';
 import { ChangedFile } from './interfaces';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/_config';
-import { octokit } from './_octokit';
+import { githubConfig, actionConfig } from '../configuration/config';
+import { octokit } from './octokit';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.

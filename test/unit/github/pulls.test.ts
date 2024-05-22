@@ -3,11 +3,24 @@ import { resolve } from 'canonical-path';
 import { changedFilesToFile, getChangedFilesOfPullRequest } from '../../../src/github/pulls';
 import { logger } from '../../../src/helper/logger';
 import { changedFile } from './objects/pulls';
-import { octokit } from '../../../src/github/_octokit';
-import { actionConfigMock } from '../../.setup/mock';
+import { octokit } from '../../../src/github/octokit';
+import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 
 describe('getChangedFilesOfPullRequest', () => {
+  test('Should throw error when a pullRequestNumber is not present', async () => {
+    githubConfigMock.pullRequestNumber = undefined;
+
+    try {
+      await getChangedFilesOfPullRequest();
+      expect(false).toBeTruthy(); // should not be reached
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+    }
+  });
+
   test('Should return single file on getChangedFilesOfCommit', async () => {
+    githubConfigMock.pullRequestNumber = 1;
     const changedFiles = [changedFile];
 
     (octokit.paginate as any).mockResolvedValueOnce(changedFiles);

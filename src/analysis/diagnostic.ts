@@ -10,7 +10,7 @@ export async function diagnosticAnalysis(): Promise<Verdict> {
   logger.header('Running action in diagnostic mode');
   const analysis = await runTicsAnalyzer('');
 
-  const passed = analysis.statusCode === 0;
+  const passed = analysis.completed && analysis.statusCode === 0;
 
   return {
     passed: passed,

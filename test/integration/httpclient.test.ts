@@ -12,7 +12,7 @@ process.env.GITHUB_REPOSITORY = 'owner/repo';
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_MODE = 'client';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
-process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
+process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
@@ -21,8 +21,11 @@ process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
+// mock before importing httpClient
+jest.spyOn(process.stdout, 'write').mockImplementation();
+
 // eslint-disable-next-line import/first
-import { httpClient } from '../../src/viewer/_http-client';
+import { httpClient } from '../../src/viewer/http-client';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 
@@ -53,8 +56,6 @@ describe('@actions/http-client (using http_proxy)', () => {
 
   beforeEach(() => {
     proxyConnects = [];
-
-    jest.spyOn(process.stdout, 'write').mockImplementation();
   });
 
   afterAll(async () => {

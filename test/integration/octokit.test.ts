@@ -14,7 +14,7 @@ process.env.GITHUB_REPOSITORY = 'owner/repo';
 process.env.GITHUB_API_URL = 'https://api.github.com';
 process.env.INPUT_MODE = 'client';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
-process.env.INPUT_TICSCONFIGURATION = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
+process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
@@ -23,8 +23,11 @@ process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
+// mock before importing octokit
+jest.spyOn(process.stdout, 'write').mockImplementation();
+
 // eslint-disable-next-line import/first
-import { octokit } from '../../src/github/_octokit';
+import { octokit } from '../../src/github/octokit';
 import { RequestError } from '@octokit/request-error';
 
 describe('@octokit/action (using https_proxy)', () => {
@@ -44,8 +47,6 @@ describe('@octokit/action (using https_proxy)', () => {
 
   beforeEach(() => {
     proxyConnects = [];
-
-    jest.spyOn(process.stdout, 'write').mockImplementation();
   });
 
   afterAll(async () => {

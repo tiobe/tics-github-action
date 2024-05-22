@@ -1,8 +1,8 @@
-import { ticsConfig } from '../configuration/_config';
+import { ticsConfig } from '../configuration/config';
 import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, Annotation } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
-import { httpClient } from './_http-client';
+import { httpClient } from './http-client';
 
 /**
  * Gets the annotations from the TICS viewer.
