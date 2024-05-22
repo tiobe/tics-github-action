@@ -29,11 +29,13 @@ export class MockDirent implements Dirent {
   file: boolean;
   name: string;
   path: string;
+  parentPath: string;
 
   constructor(file: boolean, name: string, path: string) {
     this.file = file;
     this.name = name;
     this.path = path;
+    this.parentPath = path;
   }
 
   isFile(): boolean {
