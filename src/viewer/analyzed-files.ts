@@ -54,7 +54,7 @@ export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?
     filters.push(`ClientData(${cdtoken})`);
   }
 
-  filters.push(`Window(-1),CodeType(Set(production,test,external,generated)),File()`);
+  filters.push(`CodeType(Set(production,test,external,generated)),Window(-1),File()`);
 
   getAnalyzedFilesUrl.searchParams.append('filters', filters.join(','));
 

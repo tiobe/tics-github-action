@@ -54,7 +54,7 @@ describe('getAnalyzedFilesUrl', () => {
     const url = getAnalyzedFilesUrl({ date: 1714577689 });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CBranch%28branch%29%2CDate%281714577689%29%2CWindow%28-1%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CFile%28%29'
+      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CBranch%28branch%29%2CDate%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
     );
   });
 
@@ -64,7 +64,7 @@ describe('getAnalyzedFilesUrl', () => {
     const url = getAnalyzedFilesUrl({ cdtoken: '1714577689' });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CClientData%281714577689%29%2CWindow%28-1%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CFile%28%29'
+      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CClientData%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
     );
   });
 
@@ -72,7 +72,7 @@ describe('getAnalyzedFilesUrl', () => {
     const url = getAnalyzedFilesUrl({ date: 1714577689, cdtoken: '1714577689' });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CDate%281714577689%29%2CClientData%281714577689%29%2CWindow%28-1%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CFile%28%29'
+      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CDate%281714577689%29%2CClientData%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
     );
   });
 
@@ -80,7 +80,7 @@ describe('getAnalyzedFilesUrl', () => {
     const url = getAnalyzedFilesUrl({});
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CWindow%28-1%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CFile%28%29'
+      'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
     );
   });
 });
