@@ -135,8 +135,7 @@ Below, parameters are described to control infra structure and security related 
 | `trustStrategy`        | Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/latest/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).                                                                            | `strict`                                 | all             |
 | `retryCodes`           | Status codes to retry api calls for. The default codes will be overwritten if this option is set.                                                                                                                                                                                        | `419`, `500`, `501`, `502`, `503`, `504` | all             |
 | `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                                                                                     | -                                        | all             |
-| `displayUrl`           | The URL that end-users need to visit the TICS Viewer. This can differ from the viewerURL if TICS Client and TICSQServer communicate via a reverse proxy, but the end-users have direct access. (e.g. https://domain.com/tiobeweb/TICS)             
-| -                                        | all             |
+| `displayUrl`           | The URL that end-users need to visit the TICS Viewer. This can differ from the viewerURL if TICS Client and TICSQServer communicate via a reverse proxy, but the end-users have direct access. (e.g. https://domain.com/tiobeweb/TICS)             | -                                        | all             |
 
 ### Diagnostic Analysis mode
 
