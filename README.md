@@ -139,7 +139,7 @@ Below, parameters are described to control infra structure and security related 
 
 ### Diagnostic Analysis mode
 
-There is also the possibility to do a so called "diagnostic" run. This mode can be anabled to test if TICS has been setup properly and can run on the machine the action is run on.
+There is also the possibility to do a so called "diagnostic" run. This mode can be enabled to test if TICS has been setup properly and can run on the machine the action is run on.
 
 ```yaml
 on: [pull_request]
