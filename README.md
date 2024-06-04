@@ -4,7 +4,7 @@
 [![Tests](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml)
 [![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
-The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
+The TICS Github action integrates TICS analysis analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
 
 ## Before you start
 
@@ -19,13 +19,12 @@ The TICS Github action integrates TICS Client analysis to measure your code qual
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
 - The connected runner should have Git installed.
 
-## Usage v3
-
 Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request. Below are some example of how to include the `TICS GitHub Action` step as part of your workflow.
 
 ### Client (default)
 
-The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode the project can be either the project of the project to run or "project auto" (omit the project variable), in which mode TICS will figure out what project(s) are being run.
+The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The quality gate determines wether the commit or pull request qualifies for delivery.
+The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
 
 ```yaml
 on: [pull_request]
@@ -38,7 +37,6 @@ jobs:
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
         with:
-          project: project-name
           viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
@@ -46,7 +44,9 @@ jobs:
 
 ### QServer
 
-As of v3 the option to do [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analyses has been available. In this mode the project has to be set and project "auto" is not available.
+As of v3, the option to run [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analyses has been made available.
+With TICSQServer, persistent measurement points are created which are stored in your Quality Database. These measurement points are used by the Client to determine how the code quality evolved from that point.
+TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
 
 ```yaml
 on: [pull_request]
@@ -83,28 +83,6 @@ jobs:
         with:
           mode: diagnostic
           viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-          installTics: true
-```
-
-### Usage v2
-
-Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request.
-Below is an example of how to include the `TICS GitHub Action` step as part of your workflow:
-
-```yaml
-on: [pull_request]
-
-jobs:
-  TICS:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: TICS GitHub Action
-        uses: tiobe/tics-github-action@v2
-        with:
-          projectName: project-name
-          ticsConfiguration: https://domain.com/tiobeweb/TICS/api/cfg?name=config
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
