@@ -4,7 +4,7 @@
 [![Tests](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml)
 [![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
-The TICS Github action integrates TICS analysis analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
+The TICS Github action integrates TICS analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
 
 ## Before you start
 
