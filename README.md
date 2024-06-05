@@ -70,12 +70,12 @@ The following options allow to instrument TICS Client more specifically:
 | `nocalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -           |
 | `norecalc`             | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -           |
 | `filelist`             | Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request. | -       |
-| `cdtoken`              | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.         | -           |
-| `branchname`           | Name of the branch in TICS.                                                                                                                            | -           |
-| `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE` and `EXTERNAL`.         | `PRODUCTION`|
-| `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                        | `false`     |
-| `showBlockingAfter`    | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                         | `true`      |
-| `tmpdir`               | Location to store debug information.                                                                                                                   | -           |
+| `cdtoken`              | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.              | -           |
+| `branchname`           | Name of the branch in TICS.                                                                                                                                 | -           |
+| `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`. | `PRODUCTION`|
+| `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                             | `false`     |
+| `showBlockingAfter`    | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                              | `true`      |
+| `tmpdir`               | Location to store debug information.                                                                                                                        | -           |
 
 ## QServer
 
@@ -134,7 +134,7 @@ Below are some special parameters that can be used to control how the Github Act
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `postAnnotations`      | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                     | `true`                                   |
 | `postToConversation`   | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                           | `true`                                   |
-| `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between 2.0.0 and 2.5.0). | `false`                                  |
+| `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS Github Action 2.0.0 and 2.5.0). | `false`                                  |
 
 ### Infrastructural and Security related parameters
 Below, parameters are described to control infra structure and security related aspects:
@@ -144,12 +144,12 @@ Below, parameters are described to control infra structure and security related 
 | `hostnameVerification` | Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/latest/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).                                                                     | `true`                                   |
 | `trustStrategy`        | Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/latest/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).                                                                            | `strict`                                 |
 | `retryCodes`           | Status codes to retry api calls for. The default codes will be overwritten if this option is set.                                                                                                                                                                                        | `419`, `500`, `501`, `502`, `503`, `504` |
-| `secretsFilter`        | Comma-seperated list of extra secrets to mask in the console output.                                                                                                                                                                                                                     | -                                        |
+| `secretsFilter`        | Comma-separated list of extra secrets to mask in the console output.                                                                                                                                                                                                                     | -                                        |
 | `displayUrl`           | The URL that end-users need to visit the TICS Viewer. This can differ from the viewerURL if TICS Client and TICSQServer communicate via a reverse proxy, but the end-users have direct access. (e.g. https://domain.com/tiobeweb/TICS)             | -                                        |
 
 ### Diagnostic Analysis mode
 
-There is also the possibility to do a so called "diagnostic" run. This mode can be enabled to test if TICS has been setup properly and can run on the machine the action is run on.
+There is also the possibility to do a so called "diagnostic" run. This mode can be enabled to test if TICS has been set up properly and can run on the machine the action is run on.
 
 ```yaml
 on: [pull_request]
@@ -178,7 +178,7 @@ The following inputs are recommended or required for this action:
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ## Migration from v2 to v3
-The interface (running with params) have been changed to depict their usage better or to synchronise with the TICS command line usage and by synchronous with other plugins we provide.
+The interface (running with parameters) has been changed to better reflect its usage. This interface is now more synchronized with TICS command line usage, and have been changed to be closer to other plugins that TIOBE provides.
 Parameter Changes (v2/old -> v3/new):
 - ticsConfiguration -> viewerUrl
 - viewerUrl -> displayUrl
