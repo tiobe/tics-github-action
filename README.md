@@ -10,8 +10,8 @@ The incorporated `Quality Gating` feature can be used for `Pull Request` and `Co
 Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
 
 There are two types of analysis modes available:
-- Reference runs using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for branches where other branches are derived from and will be merged back to (Like main).
-- Qualification runs using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for any branch that needs to be merged back.
+- Reference runs using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for base branches of pull requests, e.g. `main`.
+- Qualification runs using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for pull requests and branches like feature or bug-fix branches.
 
 ## Before you start
 ### Prerequisites
@@ -120,7 +120,7 @@ The following options allow to instrument TICSQServer more specifically:
 
 | Input                  | Description                                                                                                                                            | Default |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------| ------- |
-| `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be used.             | `ALL`   |
+| `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.       | `ALL`   |
 | `recalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.     | -       |
 | `nocalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -       |
 | `norecalc`             | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -       |
@@ -138,7 +138,7 @@ Below are some special parameters that can be used to control how the GitHub Act
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `postAnnotations`      | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                     | `true`                                   |
 | `postToConversation`   | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                           | `true`                                   |
-| `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS Github Action 2.0.0 and 2.5.0). | `false`                                  |
+| `pullRequestApproval`  | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS GitHub Action 2.0.0 and 2.5.0). | `false`                                  |
 
 ### Infrastructural and Security related parameters
 Below, parameters are described to control infra structure and security related aspects:
