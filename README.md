@@ -67,7 +67,8 @@ The following options allow to instrument TICS Client more specifically:
 
 | Input                  | Description                                                                                                                                            | Default     |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be used. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.              | `GATE`  |
+| `calc`                 | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.              | `GATE`  |
+
 | `recalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x. | -       |
 | `nocalc`               | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -           |
 | `norecalc`             | Comma-separated list of [metrics](https://portal.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -           |
