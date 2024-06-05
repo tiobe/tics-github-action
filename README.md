@@ -131,7 +131,8 @@ The following options allow to instrument TICSQServer more specifically:
 
 ## Other features
 ### Action parameters
-Below are some special parameters that can be used to control how the Github Action posts its results:
+Below are some special parameters that can be used to control how the GitHub Action posts its results:
+
 | Input                  | Description                                                                                                                                                                                                                                                                              | Default                                  |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `postAnnotations`      | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                     | `true`                                   |
