@@ -18,7 +18,8 @@ There are two types of analysis modes available:
 A TICS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
 
 ### Supported Platforms
-Linux and Windows based runners, both Github-hosted and self-hosted, are supported.
+Linux and Windows based runners, both GitHub-hosted and self-hosted, are supported.
+
 
 ### Action Restrictions
 - It is not working for forked repositories.
