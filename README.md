@@ -4,7 +4,8 @@
 [![Tests](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml)
 [![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
-The TICS Github action integrates the [TICS code quality framework](https://www.tiobe.com/products/tics/) into your workflows. This allows you to effectively measure and monitor the software code quality of all your projects and its branches.
+The TICS GitHub action integrates the [TICS code quality framework](https://www.tiobe.com/products/tics/) into your workflows. This allows you to effectively measure and monitor the software code quality of all your projects and their branches.
+
 The incorporated `Quality Gating` feature can be used for `Pull Request` and `Commit` approvals. It can also decorate your pull request so the quality data is easily available. 
 Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
 
