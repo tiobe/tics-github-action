@@ -4,7 +4,13 @@
 [![Tests](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/test.yml)
 [![CodeQL](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/tiobe/tics-github-action/actions/workflows/codeql.yml)
 
-The TICS Github action integrates TICS analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.
+The TICS Github action integrates the [TICS code quality framework](https://www.tiobe.com/products/tics/) into your workflows. This allows you to effectively measure and monitor the software code quality of all your projects and its branches.
+The incorporated `Quality Gating` feature can be used for `Pull Request` and `Commit` approvals. It can also decorate your pull request so the quality data is easily available. 
+Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
+
+There are two types of analysis modes available:
+- Reference runs using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for branches where other branches are derived from and will be merged back to (Like main).
+- Qualification runs using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for any branch that needs to be merged back.
 
 ## Before you start
 ### Prerequisites
