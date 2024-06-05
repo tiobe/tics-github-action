@@ -176,3 +176,14 @@ The following inputs are recommended or required for this action:
 | `mode`          | Set the mode to run the action in. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                       | true     |
 | `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
+
+## Migration from v2 to v3
+The interface (running with params) have been changed to depict their usage better or to synchronise with the TICS command line usage and by synchronous with other plugins we provide.
+Parameter Changes (v2/old -> v3/new):
+- ticsConfiguration -> viewerUrl
+- viewerUrl -> displayUrl
+- projectName -> project
+- branchName -> branchname
+- branchDir -> branchdir
+- clientData -> cdtoken
+- tmpDir -> tmpdir
