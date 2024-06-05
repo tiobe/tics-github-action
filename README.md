@@ -10,8 +10,8 @@ The incorporated `Quality Gating` feature can be used for `Pull Request` and `Co
 Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
 
 There are two types of analysis modes available:
-- Reference runs using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for base branches of pull requests, e.g. `main`.
-- Qualification runs using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for pull requests and branches like feature or bug-fix branches.
+- `Reference runs` using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for base branches of pull requests, e.g. `main`.
+- `Qualification runs` using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for pull requests and branches like feature or bug-fix branches.
 
 ## Before you start
 ### Prerequisites
