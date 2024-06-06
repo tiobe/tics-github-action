@@ -16,9 +16,12 @@ jobs:
       - run: npm run test:coverage
         env:
           INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install and run TICSQSERVER
-        env:
-          TICSAUTHTOKEN: ${{ secrets.EBOIT_ANALYZER_TOKEN }}
-        run: |
-          . <(curl --silent --show-error "https://eboit.tiobe.com/tiobeweb/TICS/api/public/v1/fapi/installtics/Script?cfg=main&platform=linux&url=https://eboit.tiobe.com/tiobeweb/TICS/")
-          TICSQServer -project 'GitHub' -branchdir .
+      - name: Run TICSQSERVER
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: GitHub
+          branchdir: .
+          viewerUrl: https://eboit.tiobe.com/tiobeweb/TICS/api/cfg?name=main
+          ticsAuthToken: ${{ secrets.EBOIT_ANALYZER_TOKEN }}
+          installTics: true
