@@ -375,7 +375,7 @@ describe('TICS Configuration', () => {
     });
   });
 
-  test('Should set every value correctly and set the variables', () => {
+  test('Should set every value correctly and set the variables (Client)', () => {
     const exportSpy = jest.spyOn(core, 'exportVariable');
 
     values = {
@@ -404,8 +404,46 @@ describe('TICS Configuration', () => {
       baseUrl: 'http://localhost/tiobeweb/TICS',
       displayUrl: 'http://viewer.url/'
     });
-    expect(exportSpy).toHaveBeenCalledTimes(6);
+    expect(exportSpy).toHaveBeenCalledTimes(7);
+    expect(exportSpy).toHaveBeenCalledWith('TICSCI', 1);
     expect(exportSpy).toHaveBeenCalledWith('TICSIDE', 'GITHUB');
+    expect(exportSpy).toHaveBeenCalledWith('TICSAUTHTOKEN', 'auth-token');
+    expect(exportSpy).toHaveBeenCalledWith('TICSHOSTNAMEVERIFICATION', false);
+    expect(exportSpy).toHaveBeenCalledWith('TICSTRUSTSTRATEGY', 'self-signed');
+    expect(exportSpy).toHaveBeenCalledWith('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+  });
+
+  test('Should set every value correctly and set the variables (QServer)', () => {
+    const exportSpy = jest.spyOn(core, 'exportVariable');
+
+    values = {
+      filelist: './filelist',
+      githubToken: 'github-token',
+      hostnameVerification: 'false',
+      installTics: 'true',
+      mode: 'qserver',
+      ticsAuthToken: 'auth-token',
+      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+      trustStrategy: 'self-signed',
+      displayUrl: 'http://viewer.url'
+    };
+
+    const ticsConfig = new TicsConfiguration();
+
+    expect(ticsConfig).toMatchObject({
+      filelist: './filelist',
+      githubToken: 'github-token',
+      hostnameVerification: false,
+      installTics: true,
+      mode: Mode.QSERVER,
+      ticsAuthToken: 'auth-token',
+      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+      trustStrategy: TrustStrategy.SELFSIGNED,
+      baseUrl: 'http://localhost/tiobeweb/TICS',
+      displayUrl: 'http://viewer.url/'
+    });
+    expect(exportSpy).toHaveBeenCalledTimes(6);
+    expect(exportSpy).toHaveBeenCalledWith('TICSCI', 1);
     expect(exportSpy).toHaveBeenCalledWith('TICSAUTHTOKEN', 'auth-token');
     expect(exportSpy).toHaveBeenCalledWith('TICSHOSTNAMEVERIFICATION', false);
     expect(exportSpy).toHaveBeenCalledWith('TICSTRUSTSTRATEGY', 'self-signed');
