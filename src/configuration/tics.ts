@@ -155,7 +155,11 @@ export class TicsConfiguration {
    */
   private setVariables() {
     // variable set to replace the loading bar with synchronising... in the install script
-    exportVariable('TICSIDE', 'GITHUB');
+    exportVariable('TICSCI', 1);
+
+    if (this.mode === Mode.CLIENT || this.mode === Mode.DIAGNOSTIC) {
+      exportVariable('TICSIDE', 'GITHUB');
+    }
 
     // set ticsAuthToken
     if (this.ticsAuthToken) {

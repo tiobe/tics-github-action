@@ -1,4 +1,4 @@
-import { getItemFromUrl, getProjectName } from '../../../src/tics/url';
+import { getItemFromUrl, getProjectFromUrl } from '../../../src/tics/url';
 import { ticsCliMock } from '../../.setup/mock';
 
 describe('getItemFromUrl', () => {
@@ -17,14 +17,14 @@ describe('getProjectName', () => {
   test('Should return project name from url if project auto', async () => {
     ticsCliMock.project = 'auto';
 
-    const project = getProjectName('https://test.com/Project%28project%29');
+    const project = getProjectFromUrl('https://test.com/Project%28project%29');
     expect(project).toEqual('project');
   });
 
   test('Should return default project name from url if project is given', async () => {
     ticsCliMock.project = 'project';
 
-    const project = getProjectName('https://test.com/Project%28auto%29');
+    const project = getProjectFromUrl('https://test.com/Project%28auto%29');
     expect(project).toEqual(ticsCliMock.project);
   });
 });

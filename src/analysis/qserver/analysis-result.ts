@@ -8,8 +8,8 @@ import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
 import { getChangedFiles } from '../helper/changed-files';
 
 export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
-  const qualityGate = await getQualityGate(getQualityGateUrl({ date }));
-  const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl({ date }));
+  const qualityGate = await getQualityGate(getQualityGateUrl(ticsCli.project, { date }));
+  const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(ticsCli.project, { date }));
 
   let reviewComments: TicsReviewComments | undefined;
   if (actionConfig.postAnnotations) {

@@ -37,10 +37,10 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
  * @param cdtoken (only on client) the cdtoken of the last Client run.
  * @returns The url to get the quality gate analysis.
  */
-export function getAnalyzedFilesUrl({ date, cdtoken }: { date?: number; cdtoken?: string }): string {
+export function getAnalyzedFilesUrl(project: string, { date, cdtoken }: { date?: number; cdtoken?: string }): string {
   const getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
-  const filters = [`Project(${ticsCli.project})`];
+  const filters = [`Project(${project})`];
 
   if (ticsCli.branchname) {
     filters.push(`Branch(${ticsCli.branchname})`);

@@ -25,6 +25,6 @@ export function getItemFromUrl(url: string, query: string): string {
  * @param url the TICS explorer url.
  * @returns project name.
  */
-export function getProjectName(url: string): string {
+export function getProjectFromUrl(url: string): string {
   return ticsCli.project === 'auto' ? getItemFromUrl(url, 'Project') : ticsCli.project;
 }

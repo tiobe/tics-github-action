@@ -30,10 +30,10 @@ describe('getQualityGateUrl', () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
     ticsCliMock.branchname = 'branch';
 
-    const url = getQualityGateUrl({ date: 1714577689 });
+    const url = getQualityGateUrl('project', { date: 1714577689 });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=&branch=branch&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&branch=branch&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689'
     );
   });
 
@@ -41,30 +41,30 @@ describe('getQualityGateUrl', () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
     ticsCliMock.branchname = '';
 
-    const url = getQualityGateUrl({ cdtoken: '1714577689' });
+    const url = getQualityGateUrl('project', { cdtoken: '1714577689' });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&cdt=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&cdt=1714577689'
     );
   });
 
   test('Should return url containing both if both are given', async () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
 
-    const url = getQualityGateUrl({ date: 1714577689, cdtoken: '1714577689' });
+    const url = getQualityGateUrl('project', { date: 1714577689, cdtoken: '1714577689' });
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689&cdt=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689&cdt=1714577689'
     );
   });
 
   test('Should return url containing none if none are given', async () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
 
-    const url = getQualityGateUrl({});
+    const url = getQualityGateUrl('project', {});
 
     expect(url).toEqual(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter'
     );
   });
 });

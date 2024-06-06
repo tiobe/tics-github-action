@@ -2,7 +2,7 @@ import { createReviewComments } from '../../action/decorate/summary';
 import { actionConfig } from '../../configuration/config';
 import { ChangedFile } from '../../github/interfaces';
 import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
-import { getItemFromUrl, getProjectName } from '../../tics/url';
+import { getItemFromUrl, getProjectFromUrl } from '../../tics/url';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
 import { getAnnotations } from '../../viewer/annotations';
 import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
@@ -24,14 +24,15 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
 
   for (const url of explorerUrls) {
     const cdtoken = getItemFromUrl(url, 'ClientData');
+    const project = getProjectFromUrl(url);
 
     const projectResult: ProjectResult = {
-      project: getProjectName(url),
+      project: project,
       explorerUrl: url,
-      analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl({ cdtoken }))
+      analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }))
     };
 
-    const qualityGate = await getQualityGate(getQualityGateUrl({ cdtoken }));
+    const qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
 
     projectResult.qualityGate = qualityGate;
 
