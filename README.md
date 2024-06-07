@@ -15,7 +15,8 @@ There are two types of analysis modes available:
 
 ## Before you start
 ### Prerequisites
-A TICS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
+- A TICS Viewer (version 2022.4 or higher) running somewhere on the network that is HTTP(S) accessible by the runner on which you want to execute the action.
+- The connected runner should have Git installed.
 
 ### Supported Platforms
 Linux and Windows based runners, both GitHub-hosted and self-hosted, are supported.
@@ -25,7 +26,6 @@ Linux and Windows based runners, both GitHub-hosted and self-hosted, are support
 - It is not working for forked repositories.
 - It is not working for TICS installations using the legacy deployment architecture.
 - macOS runners (GitHub-hosted or self-hosted) are not yet supported.
-- The connected runner should have Git installed.
 
 # Setup
 Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request. Below are some example of how to include the `TICS GitHub Action` step as part of your workflow.
@@ -57,9 +57,9 @@ The following inputs are recommended or required for this action:
 
 | Input           | Description                                                                                                                                                                                                      | Required |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
+| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>     | true     |
+| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre>                                                                             | false    |
 | `project`       | Name of the TICS project present in the TICS Viewer. If not given it will use project `auto` when running Client. Is required for QServer.                                                                       | false    |
-| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ### Advanced parameters
@@ -71,7 +71,7 @@ The following options allow to instrument TICS Client more specifically:
 | `recalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x. | -       |
 | `nocalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -           |
 | `norecalc`             | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -           |
-| `filelist`             | Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request. | -       |
+| `filelist`             | Path to a file containing [a list of files](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/clientusecases.html%23client-file-list) (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request. | -       |
 | `cdtoken`              | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.              | -           |
 | `branchname`           | Name of the branch in TICS.                                                                                                                                 | -           |
 | `codetype`             | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`. | `PRODUCTION`|
@@ -99,6 +99,7 @@ jobs:
           mode: qserver
           project: project-name
           viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          branchdir: ${{ GITHUB_WORKSPACE }}
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
@@ -108,10 +109,10 @@ The following inputs are recommended or required for this action:
 
 | Input           | Description                                                                                                                                                                                                      | Required |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
-| `mode`          | Set the mode to run the action in. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                       | true     |
+| `mode`          | Set `mode` to `qserver` run the action in TICSQServer mode. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.              | true     |
 | `project`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                             | true     |
-| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
+| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>     | true     |
+| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre>                                                         | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ### Advanced parameters
@@ -123,7 +124,7 @@ The following options allow to instrument TICSQServer more specifically:
 | `recalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.     | -       |
 | `nocalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -       |
 | `norecalc`             | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -       |
-| `branchdir`            | Root directory of the source files for the branch.                                                                                                     | -       |
+| `branchdir`            | Root directory of the source files for the branch. TICS stores the last used branch directory in the database and uses this last known directory if this property is not set. It is `recommended` to set this variable. <br><br>Example:<pre lang="yaml">branchdir: ${{ GITHUB_WORKSPACE }}</pre>                              | -       |
 | `branchname`           | Name of the branch in TICS.                                                                                                                            | -       |
 | `excludeMovedFiles`    | Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.                        | `false` |
 | `showBlockingAfter`    | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                         | `true`  |
@@ -175,9 +176,9 @@ The following inputs are recommended or required for this action:
 
 | Input           | Description                                                                                                                                                                                                      | Required |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.                                                | true     |
-| `mode`          | Set the mode to run the action in. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                       | true     |
-| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer. (Only required if a token is needed to run TICS.)                                                                              | false    |
+| `mode`          | Set 'mode' to `qserver` run the action in Diagnostic mode. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.               | true     |
+| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>     | true     |
+| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre>                                                                              | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`. | false    |
 
 ## Migration from v2 to v3
