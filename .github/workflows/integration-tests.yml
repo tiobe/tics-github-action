@@ -17,5 +17,6 @@ jobs:
           owner: tiobetestlab
           repo: github-action-tests
           workflow_id: ticsclient.yml
+          data: '{ "ref": "main" }'
         env:
           GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
