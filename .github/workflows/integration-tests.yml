@@ -13,9 +13,9 @@ jobs:
       - uses: octokit/request-action@v2.x
         id: dispatch_client_test
         with:
-          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches 
+          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
           owner: tiobetestlab
-          repo: github-action-test
+          repo: github-action-tests
           workflow_id: ticsclient.yml
         env:
           GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
