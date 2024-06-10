@@ -3,6 +3,7 @@ import { getInput, getBooleanInput } from '@actions/core';
 import { isOneOf } from '../helper/utils';
 import { logger } from '../helper/logger';
 import { getBaseUrl } from '@tiobe/install-tics';
+import { setVariable, unsetVariable } from '../helper/environment';
 
 export enum Mode {
   CLIENT = 'client',
@@ -155,32 +156,32 @@ export class TicsConfiguration {
    */
   private setVariables() {
     // variable set to replace the loading bar with synchronising... in the install script
-    process.env.TICSCI = '1';
+    setVariable('TICSCI', '1');
 
     if (this.mode === Mode.CLIENT || this.mode === Mode.DIAGNOSTIC) {
-      process.env.TICSIDE = 'GITHUB';
+      setVariable('TICSIDE', 'GITHUB');
     } else if (process.env.TICSIDE) {
-      delete process.env.TICSIDE
+      unsetVariable('TICSIDE')
     }
 
     // set ticsAuthToken
     if (this.ticsAuthToken) {
-      process.env.TICSAUTHTOKEN = this.ticsAuthToken;
+      setVariable('TICSAUTHTOKEN', this.ticsAuthToken);
     }
 
     // set hostnameVerification
-    process.env.TICSHOSTNAMEVERIFICATION = this.hostnameVerification.toString();
+    setVariable('TICSHOSTNAMEVERIFICATION', this.hostnameVerification.toString());
 
     if (!this.hostnameVerification) {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      setVariable('NODE_TLS_REJECT_UNAUTHORIZED', '0');
       logger.debug('Hostname Verification disabled');
     }
 
     // set trustStrategy
-    process.env.TICSTRUSTSTRATEGY = this.trustStrategy;
+    setVariable('TICSTRUSTSTRATEGY', this.trustStrategy);
 
     if (isOneOf(this.trustStrategy, TrustStrategy.SELFSIGNED, TrustStrategy.ALL)) {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      setVariable('NODE_TLS_REJECT_UNAUTHORIZED', '0');
       logger.debug(`Trust strategy set to ${this.trustStrategy}`);
     }
   }
