@@ -3,6 +3,7 @@ import { Mode, TicsConfiguration, TrustStrategy } from '../../../src/configurati
 
 describe('TICS Configuration', () => {
   let values: Record<string, string>;
+  const environment = process.env;
 
   let expectDefault = {
     filelist: '',
@@ -18,6 +19,7 @@ describe('TICS Configuration', () => {
   };
 
   beforeEach(() => {
+    jest.resetModules() 
     jest.spyOn(core, 'getInput').mockImplementation((name, _options): string => {
       for (const value in values) {
         if (value === name) {
@@ -41,6 +43,7 @@ describe('TICS Configuration', () => {
 
   afterEach(() => {
     jest.resetAllMocks();
+    process.env = { ...environment }
   });
 
   describe('Validate URLs', () => {
@@ -375,78 +378,76 @@ describe('TICS Configuration', () => {
     });
   });
 
-  test('Should set every value correctly and set the variables (Client)', () => {
-    const exportSpy = jest.spyOn(core, 'exportVariable');
+  describe('Environment tests', () => {
+    test('Should set every value correctly and set the variables (Client)', () => {
+      values = {
+        filelist: './filelist',
+        githubToken: 'github-token',
+        hostnameVerification: 'false',
+        installTics: 'true',
+        mode: 'client',
+        ticsAuthToken: 'auth-token',
+        viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+        trustStrategy: 'self-signed',
+        displayUrl: 'http://viewer.url'
+      };
 
-    values = {
-      filelist: './filelist',
-      githubToken: 'github-token',
-      hostnameVerification: 'false',
-      installTics: 'true',
-      mode: 'client',
-      ticsAuthToken: 'auth-token',
-      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
-      trustStrategy: 'self-signed',
-      displayUrl: 'http://viewer.url'
-    };
-
-    const ticsConfig = new TicsConfiguration();
-
-    expect(ticsConfig).toMatchObject({
-      filelist: './filelist',
-      githubToken: 'github-token',
-      hostnameVerification: false,
-      installTics: true,
-      mode: Mode.CLIENT,
-      ticsAuthToken: 'auth-token',
-      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
-      trustStrategy: TrustStrategy.SELFSIGNED,
-      baseUrl: 'http://localhost/tiobeweb/TICS',
-      displayUrl: 'http://viewer.url/'
+      const ticsConfig = new TicsConfiguration();
+  
+      expect(ticsConfig).toMatchObject({
+        filelist: './filelist',
+        githubToken: 'github-token',
+        hostnameVerification: false,
+        installTics: true,
+        mode: Mode.CLIENT,
+        ticsAuthToken: 'auth-token',
+        viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+        trustStrategy: TrustStrategy.SELFSIGNED,
+        baseUrl: 'http://localhost/tiobeweb/TICS',
+        displayUrl: 'http://viewer.url/'
+      });
+      expect(process.env.TICSCI).toEqual('1')
+      expect(process.env.TICSIDE).toEqual('GITHUB');
+      expect(process.env.TICSAUTHTOKEN).toEqual('auth-token');
+      expect(process.env.TICSHOSTNAMEVERIFICATION).toEqual('false');
+      expect(process.env.TICSTRUSTSTRATEGY).toEqual('self-signed');
+      expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toEqual('0');
     });
-    expect(exportSpy).toHaveBeenCalledTimes(7);
-    expect(exportSpy).toHaveBeenCalledWith('TICSCI', 1);
-    expect(exportSpy).toHaveBeenCalledWith('TICSIDE', 'GITHUB');
-    expect(exportSpy).toHaveBeenCalledWith('TICSAUTHTOKEN', 'auth-token');
-    expect(exportSpy).toHaveBeenCalledWith('TICSHOSTNAMEVERIFICATION', false);
-    expect(exportSpy).toHaveBeenCalledWith('TICSTRUSTSTRATEGY', 'self-signed');
-    expect(exportSpy).toHaveBeenCalledWith('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-  });
+  
+    test('Should set every value correctly and set the variables (QServer)', () => {
+      values = {
+        filelist: './filelist',
+        githubToken: 'github-token',
+        hostnameVerification: 'false',
+        installTics: 'true',
+        mode: 'qserver',
+        ticsAuthToken: 'auth-token',
+        viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+        trustStrategy: 'self-signed',
+        displayUrl: 'http://viewer.url'
+      };
+  
+      const ticsConfig = new TicsConfiguration();
+  
+      expect(ticsConfig).toMatchObject({
+        filelist: './filelist',
+        githubToken: 'github-token',
+        hostnameVerification: false,
+        installTics: true,
+        mode: Mode.QSERVER,
+        ticsAuthToken: 'auth-token',
+        viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
+        trustStrategy: TrustStrategy.SELFSIGNED,
+        baseUrl: 'http://localhost/tiobeweb/TICS',
+        displayUrl: 'http://viewer.url/'
+      });
 
-  test('Should set every value correctly and set the variables (QServer)', () => {
-    const exportSpy = jest.spyOn(core, 'exportVariable');
-
-    values = {
-      filelist: './filelist',
-      githubToken: 'github-token',
-      hostnameVerification: 'false',
-      installTics: 'true',
-      mode: 'qserver',
-      ticsAuthToken: 'auth-token',
-      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
-      trustStrategy: 'self-signed',
-      displayUrl: 'http://viewer.url'
-    };
-
-    const ticsConfig = new TicsConfiguration();
-
-    expect(ticsConfig).toMatchObject({
-      filelist: './filelist',
-      githubToken: 'github-token',
-      hostnameVerification: false,
-      installTics: true,
-      mode: Mode.QSERVER,
-      ticsAuthToken: 'auth-token',
-      viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
-      trustStrategy: TrustStrategy.SELFSIGNED,
-      baseUrl: 'http://localhost/tiobeweb/TICS',
-      displayUrl: 'http://viewer.url/'
+      expect(process.env.TICSCI).toEqual('1')
+      expect(process.env.TICSIDE).toEqual(undefined);
+      expect(process.env.TICSAUTHTOKEN).toEqual('auth-token');
+      expect(process.env.TICSHOSTNAMEVERIFICATION).toEqual('false');
+      expect(process.env.TICSTRUSTSTRATEGY).toEqual('self-signed');
+      expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toEqual('0');
     });
-    expect(exportSpy).toHaveBeenCalledTimes(6);
-    expect(exportSpy).toHaveBeenCalledWith('TICSCI', 1);
-    expect(exportSpy).toHaveBeenCalledWith('TICSAUTHTOKEN', 'auth-token');
-    expect(exportSpy).toHaveBeenCalledWith('TICSHOSTNAMEVERIFICATION', false);
-    expect(exportSpy).toHaveBeenCalledWith('TICSTRUSTSTRATEGY', 'self-signed');
-    expect(exportSpy).toHaveBeenCalledWith('NODE_TLS_REJECT_UNAUTHORIZED', 0);
-  });
+  })
 });

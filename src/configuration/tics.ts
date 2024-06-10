@@ -1,4 +1,4 @@
-import { getInput, getBooleanInput, exportVariable } from '@actions/core';
+import { getInput, getBooleanInput } from '@actions/core';
 
 import { isOneOf } from '../helper/utils';
 import { logger } from '../helper/logger';
@@ -155,30 +155,32 @@ export class TicsConfiguration {
    */
   private setVariables() {
     // variable set to replace the loading bar with synchronising... in the install script
-    exportVariable('TICSCI', 1);
+    process.env.TICSCI = '1';
 
     if (this.mode === Mode.CLIENT || this.mode === Mode.DIAGNOSTIC) {
-      exportVariable('TICSIDE', 'GITHUB');
+      process.env.TICSIDE = 'GITHUB';
+    } else if (process.env.TICSIDE) {
+      delete process.env.TICSIDE
     }
 
     // set ticsAuthToken
     if (this.ticsAuthToken) {
-      exportVariable('TICSAUTHTOKEN', this.ticsAuthToken);
+      process.env.TICSAUTHTOKEN = this.ticsAuthToken;
     }
 
     // set hostnameVerification
-    exportVariable('TICSHOSTNAMEVERIFICATION', this.hostnameVerification);
+    process.env.TICSHOSTNAMEVERIFICATION = this.hostnameVerification.toString();
 
     if (!this.hostnameVerification) {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
       logger.debug('Hostname Verification disabled');
     }
 
     // set trustStrategy
-    exportVariable('TICSTRUSTSTRATEGY', this.trustStrategy);
+    process.env.TICSTRUSTSTRATEGY = this.trustStrategy;
 
     if (isOneOf(this.trustStrategy, TrustStrategy.SELFSIGNED, TrustStrategy.ALL)) {
-      exportVariable('NODE_TLS_REJECT_UNAUTHORIZED', 0);
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
       logger.debug(`Trust strategy set to ${this.trustStrategy}`);
     }
   }

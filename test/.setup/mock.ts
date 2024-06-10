@@ -146,7 +146,6 @@ jest.mock('@actions/github', () => {
 
 jest.mock('@actions/core', () => {
   return {
-    exportVariable: jest.fn(),
     info: jest.fn(),
     debug: jest.fn(),
     notice: jest.fn(),
