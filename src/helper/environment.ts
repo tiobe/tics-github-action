@@ -3,5 +3,5 @@ export function setVariable(key: string, value: string): void {
 }
 
 export function unsetVariable(key: string): void {
-  delete process.env[key];
+  process.env[key] = '';
 }
