@@ -8,6 +8,12 @@ describe('GitHub Configuration', () => {
 
   beforeEach(() => {
     debugSpy = jest.spyOn(core, 'isDebug');
+
+    jest.mock('@actions/github', () => ({
+      get context() {
+        return contextMock;
+      }
+    }));
   });
 
   afterEach(() => {
@@ -30,7 +36,7 @@ describe('GitHub Configuration', () => {
       owner: 'tiobe',
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
-      eventName: 'pull_request',
+      event: { name: 'pull_request', isPullRequest: true },
       id: '123-1',
       pullRequestNumber: 1
     });

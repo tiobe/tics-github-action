@@ -5,6 +5,7 @@ import { getChangedFiles } from '../../../../src/analysis/helper/changed-files';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { singleChangedFiles } from './objects/changed-files';
 import { Mode } from '../../../../src/configuration/tics';
+import { GithubEvent } from '../../../../src/configuration/event';
 
 let spyPullFiles: jest.SpyInstance;
 let spyCommitFiles: jest.SpyInstance;
@@ -24,7 +25,7 @@ afterEach(() => {
 
 describe('Pull Request', () => {
   beforeEach(() => {
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });
 
   test('Should return no changed files if there are no changes', async () => {
@@ -78,7 +79,7 @@ describe('Pull Request', () => {
 
 describe('Commit', () => {
   beforeEach(() => {
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.PUSH;
   });
 
   test('Should return no changed files if there are no changes', async () => {

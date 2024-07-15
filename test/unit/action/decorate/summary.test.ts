@@ -19,6 +19,7 @@ import {
 } from './objects/summary';
 import { EOL } from 'os';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
+import { GithubEvent } from '../../../../src/configuration/event';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
@@ -217,7 +218,7 @@ describe('createReviewComments', () => {
   });
 
   test('Should return one combined postable review comment for the same line', async () => {
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = [
       {
         filename: 'src/test.js',
@@ -279,7 +280,7 @@ describe('createReviewComments', () => {
   });
 
   test('Should return one blocking now and a blocking after review comment for the same line', async () => {
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = [
       {
         filename: 'src/test.js',
@@ -450,7 +451,7 @@ describe('createReviewComments', () => {
 });
 
 test('Should return one postable and one unpostable review comment', async () => {
-  githubConfigMock.eventName = 'push';
+  githubConfigMock.event = GithubEvent.PUSH;
   const changedFiles: ChangedFile[] = [
     {
       filename: 'src/test.js',
@@ -707,7 +708,6 @@ describe('createUnpostableReviewCommentsSummary', () => {
       `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
       1
     );
-    console.log(response);
     expect(response).toContainTimes(
       `<tr><td>:warning:</td><td>Blocking after 2024-08-16</td><td><b>Line:</b> ${unpostable[0].line} <b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
       1

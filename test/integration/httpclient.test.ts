@@ -3,7 +3,7 @@ import { ProxyServer, createProxy } from 'proxy';
 
 // Default values are set when the module is imported, so we need to set proxy first.
 // Running these tests with http_proxy
-const proxyUrl = 'http://127.0.0.1:8082';
+const proxyUrl = 'http://127.0.0.1:8083';
 const originalProxyUrl = process.env['http_proxy'];
 process.env['http_proxy'] = proxyUrl;
 
@@ -31,12 +31,12 @@ import { ProxyAgent } from 'proxy-agent';
 
 describe('@actions/http-client (using http_proxy)', () => {
   let proxyServer: ProxyServer;
+  let httpServer: http.Server;
   let proxyConnects: string[] = [];
 
   beforeAll(async () => {
-    // setup proxy server
-    proxyServer = createProxy(
-      http.createServer((req, res) => {
+    httpServer = http
+      .createServer((req, res) => {
         if (req.url == '/200') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end('{"data": "pass"}');
@@ -45,7 +45,9 @@ describe('@actions/http-client (using http_proxy)', () => {
           res.end('Internal Server Error');
         }
       })
-    );
+      .listen(8082);
+
+    proxyServer = createProxy();
     const port = Number(proxyUrl.split(':')[2]);
     proxyServer.listen(port);
 
@@ -60,6 +62,7 @@ describe('@actions/http-client (using http_proxy)', () => {
 
   afterAll(async () => {
     proxyServer.close();
+    httpServer.close();
 
     if (originalProxyUrl) {
       process.env['http_proxy'] = originalProxyUrl;

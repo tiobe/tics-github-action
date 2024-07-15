@@ -234,7 +234,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
     .forEach(annotation => {
       const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
 
-      if (githubConfig.eventName === 'pull_request') {
+      if (githubConfig.event.isPullRequest) {
         if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
           const reviewComment = {
             blocking: annotation.blocking?.state,

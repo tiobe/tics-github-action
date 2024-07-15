@@ -16,6 +16,7 @@ import {
 } from './objects/qserver';
 import { qServerAnalysis } from '../../../src/analysis/qserver';
 import { Mode } from '../../../src/configuration/tics';
+import { GithubEvent } from '../../../src/configuration/event';
 
 describe('SetFailed checks (QServer)', () => {
   let spyAnalyzer: jest.SpyInstance;
@@ -43,7 +44,7 @@ describe('SetFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisNotCompleted);
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
 
     const verdict = await qServerAnalysis();
 
@@ -59,7 +60,7 @@ describe('SetFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisFailed);
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.PUSH;
 
     const verdict = await qServerAnalysis();
 
@@ -102,7 +103,7 @@ describe('SetFailed checks (QServer)', () => {
 
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
     verdict = await qServerAnalysis();
     expect(verdict).toEqual({
       passed: true,

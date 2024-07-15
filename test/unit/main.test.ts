@@ -13,6 +13,7 @@ import { main } from '../../src/main';
 import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../.setup/mock';
 import { logger } from '../../src/helper/logger';
 import { Mode } from '../../src/configuration/tics';
+import { GithubEvent } from '../../src/configuration/event';
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -86,7 +87,7 @@ describe('meetsPrerequisites', () => {
 
   test('Should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
     viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.WORKFLOW_RUN;
     ticsConfigMock.filelist = '';
 
     let error: any;
@@ -112,7 +113,7 @@ describe('meetsPrerequisites', () => {
       warningList: []
     });
 
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.PUSH;
     ticsConfigMock.mode = 'qserver';
     ticsConfigMock.filelist = '';
 
@@ -159,7 +160,7 @@ describe('verdict', () => {
     // meets prerequisites
     jest.spyOn(version, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });
 
   test('Should not call setfailed if the verdict is passing', async () => {

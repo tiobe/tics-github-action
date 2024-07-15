@@ -11,7 +11,7 @@ import { octokit } from './octokit';
  */
 export async function postReview(body: string, event: Events): Promise<void> {
   if (!githubConfig.pullRequestNumber) {
-    throw Error('This function can only be run on a pull_request.');
+    throw Error('This function can only be run on a pull request.');
   }
 
   const params = {

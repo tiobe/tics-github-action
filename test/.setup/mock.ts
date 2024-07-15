@@ -1,12 +1,13 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
+import { GithubEvent } from '../../src/configuration/event';
 
 export const githubConfigMock: {
   apiUrl: string;
   owner: string;
   reponame: string;
   commitSha: string;
-  eventName: string;
+  event: GithubEvent;
   id: string;
   pullRequestNumber: number | undefined;
   debugger: boolean;
@@ -15,7 +16,7 @@ export const githubConfigMock: {
   owner: 'tester',
   reponame: 'test',
   commitSha: 'sha-128',
-  eventName: '',
+  event: GithubEvent.PUSH,
   id: '123-1',
   pullRequestNumber: 1,
   debugger: false
@@ -188,6 +189,6 @@ jest.mock('os', () => {
   return {
     tmpdir: jest.fn(() => '/tmp'),
     platform: jest.fn(),
-    EOL: jest.requireActual<typeof import('os')>('os').EOL
+    EOL: '\n'
   };
 });
