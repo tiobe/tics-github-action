@@ -16,9 +16,12 @@ class Logger {
    * @param string
    */
   header(string: string): void {
-    string = this.maskSecrets(string);
-    this.addNewline('header');
-    core.info(`\u001b[34m${string}`);
+    const output = this.maskOutput(string);
+    if (output) {
+      this.addNewline('header');
+      core.info(`\u001b[34m${output}`);
+    }
+
     this.called = 'header';
   }
 
@@ -27,8 +30,11 @@ class Logger {
    * @param string
    */
   info(string: string): void {
-    string = this.maskSecrets(string);
-    core.info(string);
+    const output = this.maskOutput(string);
+    if (output) {
+      core.info(output);
+    }
+
     this.called = 'info';
   }
 
@@ -37,8 +43,11 @@ class Logger {
    * @param string
    */
   debug(string: string): void {
-    string = this.maskSecrets(string);
-    core.debug(string);
+    const output = this.maskOutput(string);
+    if (output) {
+      core.debug(output);
+    }
+
     this.called = 'debug';
   }
 
@@ -48,8 +57,11 @@ class Logger {
    * @param properties (optional) properties to annotate to file
    */
   notice(string: string, properties?: AnnotationProperties): void {
-    string = this.maskSecrets(string);
-    core.notice(string, properties);
+    const output = this.maskOutput(string);
+    if (output) {
+      core.notice(output, properties);
+    }
+
     this.called = 'notice';
   }
 
@@ -59,8 +71,11 @@ class Logger {
    * @param properties (optional) properties to annotate to file
    */
   warning(string: string, properties?: AnnotationProperties): void {
-    string = this.maskSecrets(string);
-    core.warning(`\u001b[33m${string}`, properties);
+    const output = this.maskOutput(string);
+    if (output) {
+      core.warning(`\u001b[33m${output}`, properties);
+    }
+
     this.called = 'warning';
   }
 
@@ -70,9 +85,12 @@ class Logger {
    * @param properties (optional) properties to annotate to file
    */
   error(error: string, properties?: AnnotationProperties): void {
-    error = this.maskSecrets(error);
-    this.addNewline('error');
-    core.error(`\u001b[31m${error}`, properties);
+    const output = this.maskOutput(error);
+    if (output) {
+      this.addNewline('error');
+      core.error(`\u001b[31m${output}`, properties);
+    }
+
     this.called = 'error';
   }
 
@@ -81,9 +99,12 @@ class Logger {
    * @param error
    */
   setFailed(error: string): void {
-    error = this.maskSecrets(error);
-    this.addNewline('error');
-    core.setFailed(`\u001b[31m${error}`);
+    const output = this.maskOutput(error);
+    if (output) {
+      this.addNewline('error');
+      core.setFailed(`\u001b[31m${output}`);
+    }
+
     this.called = 'error';
   }
 
@@ -104,7 +125,12 @@ class Logger {
    * @param data string that is going to be logged to the console.
    * @returns the message with the secrets masked.
    */
-  maskSecrets(data: string): string {
+  maskOutput(data: string): string | undefined {
+    // Filter JAVA_OPTIONS
+    if (data.includes('Picked up') && data.includes('JAVA') && data.includes('OPTIONS')) {
+      return undefined;
+    }
+
     // Find secrets value and add them to this.matched
     this.secretsFilter.forEach((secret: string) => {
       if (data.match(new RegExp(secret, 'gi'))) {
@@ -121,6 +147,7 @@ class Logger {
     this.matched.forEach(match => {
       data = data.replaceAll(match, '***');
     });
+
     return data;
   }
 }
