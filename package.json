@@ -38,7 +38,7 @@
     "@tiobe/http-client": "^0.4.0",
     "@tiobe/install-tics": "^0.5.0",
     "canonical-path": "^1.0.0",
-    "compare-versions": "^6.1.0",
+    "compare-versions": "^6.1.1",
     "date-fns": "^3.6.0",
     "proxy-agent": "^6.4.0",
     "semver": "^7.6.2",
