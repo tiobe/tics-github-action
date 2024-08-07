@@ -10,47 +10,14 @@ jobs:
   trigger-workflows:
     runs-on: ubuntu-latest
     steps:
-      - name: Client
-        uses: octokit/request-action@v2.x
-        id: dispatch_client_test
-        with:
-          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
-          owner: tiobetestlab
-          repo: github-action-tests
-          workflow_id: ticsclient.yml
-          data: '{ "ref": "main" }'
-        env:
-          GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
-      - name: Client Multiproject
+      - name: Integration tests
         uses: octokit/request-action@v2.x
         id: dispatch_client_multiproject_test
         with:
           route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
           owner: tiobetestlab
           repo: github-action-tests
-          workflow_id: clientmultiproject.yml
-          data: '{ "ref": "main" }'
-        env:
-          GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
-      - name: Client Failing Quality Gate
-        uses: octokit/request-action@v2.x
-        id: dispatch_client_qgfail_test
-        with:
-          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
-          owner: tiobetestlab
-          repo: github-action-tests
-          workflow_id: ticsclient_qg_fail.yml
-          data: '{ "ref": "main" }'
-        env:
-          GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
-      - name: Client Failing Quality Gate
-        uses: octokit/request-action@v2.x
-        id: dispatch_qserver_test
-        with:
-          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches
-          owner: tiobetestlab
-          repo: github-action-tests
-          workflow_id: ticsqserver.yml
+          workflow_id: integration.yml
           data: '{ "ref": "main" }'
         env:
           GITHUB_TOKEN: ${{ secrets.TIOBETESTLAB_PAT }}
