@@ -33,16 +33,18 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
       silent: true,
       listeners: {
         stdout(data: Buffer) {
-          let filtered = data.toString();
-          filtered = logger.maskSecrets(filtered);
-          process.stdout.write(filtered);
-          findInStdOutOrErr(filtered);
+          const filtered = logger.maskOutput(data.toString());
+          if (filtered) {
+            process.stdout.write(filtered);
+            findInStdOutOrErr(filtered);
+          }
         },
         stderr(data: Buffer) {
-          let filtered = data.toString();
-          filtered = logger.maskSecrets(filtered);
-          process.stdout.write(filtered);
-          findInStdOutOrErr(filtered);
+          const filtered = logger.maskOutput(data.toString());
+          if (filtered) {
+            process.stdout.write(filtered);
+            findInStdOutOrErr(filtered);
+          }
         }
       }
     });
