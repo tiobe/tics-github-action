@@ -19,7 +19,7 @@ import {
 } from './objects/summary';
 import { EOL } from 'os';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
-import { GithubEvent } from '../../../../src/configuration/event';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {

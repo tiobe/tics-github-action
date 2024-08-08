@@ -16,7 +16,7 @@ import {
 } from './objects/qserver';
 import { qServerAnalysis } from '../../../src/analysis/qserver';
 import { Mode } from '../../../src/configuration/tics';
-import { GithubEvent } from '../../../src/configuration/event';
+import { GithubEvent } from '../../../src/configuration/github-event';
 
 describe('SetFailed checks (QServer)', () => {
   let spyAnalyzer: jest.SpyInstance;

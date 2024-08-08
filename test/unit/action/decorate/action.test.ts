@@ -5,7 +5,7 @@ import * as annotations from '../../../../src/github/annotations';
 import { decorateAction } from '../../../../src/action/decorate/action';
 import { actionConfigMock, githubConfigMock } from '../../../.setup/mock';
 import { analysisPassed, analysisResultsSoaked } from './objects/summary';
-import { GithubEvent } from '../../../../src/configuration/event';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('decorateAction', () => {
   let spyCreateSummaryBody: jest.SpyInstance;

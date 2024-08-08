@@ -6,7 +6,7 @@ export class GithubEvent {
   static readonly WORKFLOW_DISPATCH = new GithubEvent('workflow_dispatch', false);
   static readonly WORKFLOW_RUN = new GithubEvent('workflow_run', false);
 
-  constructor(
+  private constructor(
     readonly name: string,
     readonly isPullRequest: boolean
   ) {}

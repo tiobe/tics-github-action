@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
-import { GithubEvent } from '../../src/configuration/event';
+import { GithubEvent } from '../../src/configuration/github-event';
 
 export const githubConfigMock: {
   apiUrl: string;

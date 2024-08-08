@@ -17,7 +17,7 @@ import {
   analysisWithUrl,
   analysisWithDoubleUrl
 } from './objects/process-analysis';
-import { GithubEvent } from '../../../../src/configuration/event';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('processIncompleteAnalysis', () => {
   let spyGetPostedComments: jest.SpyInstance;

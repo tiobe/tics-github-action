@@ -5,7 +5,7 @@ import { getChangedFiles } from '../../../../src/analysis/helper/changed-files';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { singleChangedFiles } from './objects/changed-files';
 import { Mode } from '../../../../src/configuration/tics';
-import { GithubEvent } from '../../../../src/configuration/event';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 let spyPullFiles: jest.SpyInstance;
 let spyCommitFiles: jest.SpyInstance;

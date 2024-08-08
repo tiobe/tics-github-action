@@ -1,7 +1,7 @@
 import { isDebug } from '@actions/core';
 import { context } from '@actions/github';
 import { logger } from '../helper/logger';
-import { GithubEvent } from './event';
+import { GithubEvent } from './github-event';
 
 export class GithubConfig {
   readonly apiUrl: string;

@@ -13,7 +13,7 @@ import { main } from '../../src/main';
 import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../.setup/mock';
 import { logger } from '../../src/helper/logger';
 import { Mode } from '../../src/configuration/tics';
-import { GithubEvent } from '../../src/configuration/event';
+import { GithubEvent } from '../../src/configuration/github-event';
 
 afterEach(() => {
   jest.clearAllMocks();
