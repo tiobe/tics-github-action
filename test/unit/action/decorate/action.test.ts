@@ -5,6 +5,7 @@ import * as annotations from '../../../../src/github/annotations';
 import { decorateAction } from '../../../../src/action/decorate/action';
 import { actionConfigMock, githubConfigMock } from '../../../.setup/mock';
 import { analysisPassed, analysisResultsSoaked } from './objects/summary';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('decorateAction', () => {
   let spyCreateSummaryBody: jest.SpyInstance;
@@ -24,7 +25,7 @@ describe('decorateAction', () => {
   });
 
   test('Should call createSummaryBody if analysisResult is present', async () => {
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.PUSH;
     actionConfigMock.postAnnotations = false;
 
     await decorateAction(analysisResultsSoaked, analysisPassed);
@@ -34,7 +35,7 @@ describe('decorateAction', () => {
   });
 
   test('Should call createErrorSummaryBody if analysisResult is not present', async () => {
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST;
     actionConfigMock.postAnnotations = false;
 
     await decorateAction(undefined, analysisPassed);
@@ -44,7 +45,7 @@ describe('decorateAction', () => {
   });
 
   test('Should not call decoratePullRequest and postAnnotations if the event is not pull request and no post annotations', async () => {
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.PUSH;
     actionConfigMock.postAnnotations = false;
 
     await decorateAction(analysisResultsSoaked, analysisPassed);
@@ -55,7 +56,7 @@ describe('decorateAction', () => {
   });
 
   test('Should not call decoratePullRequest and postAnnotations if the event is not pull request and no post annotations', async () => {
-    githubConfigMock.eventName = 'commit';
+    githubConfigMock.event = GithubEvent.WORKFLOW_CALL;
     actionConfigMock.postAnnotations = false;
 
     await decorateAction(analysisResultsSoaked, analysisPassed);
@@ -66,7 +67,7 @@ describe('decorateAction', () => {
   });
 
   test('Should call decoratePullRequest and postAnnotations if the event is pull request and post annotations', async () => {
-    githubConfigMock.eventName = 'pull_request';
+    githubConfigMock.event = GithubEvent.PULL_REQUEST_TARGET;
     actionConfigMock.postAnnotations = true;
 
     await decorateAction(analysisResultsSoaked, analysisPassed);

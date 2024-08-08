@@ -17,6 +17,7 @@ import {
   analysisWithUrl,
   analysisWithDoubleUrl
 } from './objects/process-analysis';
+import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('processIncompleteAnalysis', () => {
   let spyGetPostedComments: jest.SpyInstance;
@@ -35,7 +36,7 @@ describe('processIncompleteAnalysis', () => {
 
   describe('non pull request', () => {
     beforeEach(() => {
-      githubConfigMock.eventName = 'commit';
+      githubConfigMock.event = GithubEvent.PUSH;
     });
 
     test('Should return failed message if incomplete analysis failed without url', async () => {
@@ -68,7 +69,7 @@ describe('processIncompleteAnalysis', () => {
 
   describe('pull request', () => {
     beforeEach(() => {
-      githubConfigMock.eventName = 'pull_request';
+      githubConfigMock.event = GithubEvent.PULL_REQUEST;
     });
 
     test('Should return failed message if incomplete analysis failed without url', async () => {

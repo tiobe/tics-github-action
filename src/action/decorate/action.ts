@@ -17,7 +17,7 @@ export async function decorateAction(analysisResult: AnalysisResult | undefined,
     summaryBody = createErrorSummaryBody(analysis.errorList, analysis.warningList);
   }
 
-  if (githubConfig.eventName === 'pull_request') {
+  if (githubConfig.event.isPullRequest) {
     await decoratePullRequest(analysisResult?.passed ?? false, summaryBody);
   }
 

@@ -9,7 +9,7 @@ export async function getChangedFiles(): Promise<ChangedFiles> {
   let changedFilesFilePath: string;
   let changedFiles: ChangedFile[];
 
-  if (githubConfig.eventName === 'pull_request') {
+  if (githubConfig.event.isPullRequest) {
     changedFiles = await getChangedFilesOfPullRequest();
   } else {
     changedFiles = await getChangedFilesOfCommit();

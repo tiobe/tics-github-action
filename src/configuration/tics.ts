@@ -161,7 +161,7 @@ export class TicsConfiguration {
     if (this.mode === Mode.CLIENT || this.mode === Mode.DIAGNOSTIC) {
       setVariable('TICSIDE', 'GITHUB');
     } else if (process.env.TICSIDE) {
-      unsetVariable('TICSIDE')
+      unsetVariable('TICSIDE');
     }
 
     // set ticsAuthToken

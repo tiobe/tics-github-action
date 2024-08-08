@@ -20,7 +20,7 @@ main().catch((error: unknown) => {
 // exported for testing
 export async function main(): Promise<void> {
   // logging this to instantiate the configs and validate before running the rest.
-  logger.info(`Running action on event: ${githubConfig.eventName} with mode: ${ticsConfig.mode}`);
+  logger.info(`Running action on event: ${githubConfig.event.name} with mode: ${ticsConfig.mode}`);
 
   await meetsPrerequisites();
 
@@ -64,7 +64,7 @@ async function meetsPrerequisites(): Promise<void> {
     throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
   } else if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     /* No need for checked out repository. */
-  } else if (ticsConfig.mode === Mode.CLIENT && githubConfig.eventName !== 'pull_request' && ticsConfig.filelist === '') {
+  } else if (ticsConfig.mode === Mode.CLIENT && !githubConfig.event.isPullRequest && ticsConfig.filelist === '') {
     throw Error('If the the action is run outside a pull request it should be run with a filelist.');
   } else if (!existsSync('.git')) {
     throw Error('No checkout found to analyze. Please perform a checkout before running the TICS Action.');

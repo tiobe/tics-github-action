@@ -1,13 +1,14 @@
 import { isDebug } from '@actions/core';
 import { context } from '@actions/github';
 import { logger } from '../helper/logger';
+import { GithubEvent } from './github-event';
 
 export class GithubConfig {
   readonly apiUrl: string;
   readonly owner: string;
   readonly reponame: string;
   readonly commitSha: string;
-  readonly eventName: string;
+  readonly event: GithubEvent;
   readonly id: string;
   readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
@@ -17,7 +18,7 @@ export class GithubConfig {
     this.owner = context.repo.owner;
     this.reponame = context.repo.repo;
     this.commitSha = context.sha;
-    this.eventName = context.eventName;
+    this.event = this.getGithubEvent();
     this.id = `${context.runId.toString()}-${context.runNumber.toString()}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
@@ -32,6 +33,25 @@ export class GithubConfig {
       return parseInt(process.env.PULL_REQUEST_NUMBER);
     } else {
       return undefined;
+    }
+  }
+
+  private getGithubEvent() {
+    switch (context.eventName) {
+      case GithubEvent.PULL_REQUEST.name:
+        return GithubEvent.PULL_REQUEST;
+      case GithubEvent.PULL_REQUEST_TARGET.name:
+        return GithubEvent.PULL_REQUEST_TARGET;
+      case GithubEvent.PUSH.name:
+        return GithubEvent.PUSH;
+      case GithubEvent.WORKFLOW_CALL.name:
+        return GithubEvent.WORKFLOW_CALL;
+      case GithubEvent.WORKFLOW_DISPATCH.name:
+        return GithubEvent.WORKFLOW_DISPATCH;
+      case GithubEvent.WORKFLOW_RUN.name:
+        return GithubEvent.WORKFLOW_RUN;
+      default:
+        return GithubEvent.PUSH;
     }
   }
 

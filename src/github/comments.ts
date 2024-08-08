@@ -10,7 +10,7 @@ import { octokit } from './octokit';
  */
 export async function getPostedComments(): Promise<Comment[]> {
   if (!githubConfig.pullRequestNumber) {
-    throw Error('This function can only be run on a pull_request.');
+    throw Error('This function can only be run on a pull request.');
   }
 
   let response: Comment[] = [];
@@ -36,7 +36,7 @@ export async function getPostedComments(): Promise<Comment[]> {
  */
 export async function postComment(body: string): Promise<void> {
   if (!githubConfig.pullRequestNumber) {
-    throw Error('This function can only be run on a pull_request.');
+    throw Error('This function can only be run on a pull request.');
   }
 
   const params = {

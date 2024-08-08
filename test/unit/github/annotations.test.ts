@@ -13,7 +13,7 @@ describe('getPostedReviewComments', () => {
       expect(false).toBeTruthy(); // should not be reached
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toEqual('This function can only be run on a pull_request.');
+      expect((error as Error).message).toEqual('This function can only be run on a pull request.');
     }
   });
 

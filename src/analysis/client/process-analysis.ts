@@ -8,7 +8,7 @@ import { Analysis } from '../../helper/interfaces';
 import { getClientAnalysisResults } from './analysis-results';
 
 export async function processIncompleteAnalysis(analysis: Analysis): Promise<string> {
-  if (githubConfig.eventName === 'pull_request') {
+  if (githubConfig.event.isPullRequest) {
     const previousComments = await getPostedComments();
     if (previousComments.length > 0) {
       await deletePreviousComments(previousComments);
@@ -27,7 +27,7 @@ export async function processIncompleteAnalysis(analysis: Analysis): Promise<str
     summaryBody = createErrorSummaryBody(analysis.errorList, analysis.warningList);
   }
 
-  if (githubConfig.eventName === 'pull_request') {
+  if (githubConfig.event.isPullRequest) {
     await postToConversation(false, summaryBody);
   }
 
