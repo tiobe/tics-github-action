@@ -107,6 +107,11 @@ function findInStdOutOrErr(data: string): void {
     warningList.push(warning.toString());
   }
 
+  const noFilesToAnalyze = data.toString().match(/No files to analyze with option '-changed':/g);
+  if (noFilesToAnalyze) {
+    warningList.push(`[WARNING 5057] ${data.toString()}`);
+  }
+
   const findExplorerUrl = data.match(/\/Explorer.*/g);
   if (findExplorerUrl) {
     const urlPath = findExplorerUrl.slice(-1).pop();

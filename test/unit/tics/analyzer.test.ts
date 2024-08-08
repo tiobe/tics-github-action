@@ -390,11 +390,18 @@ describe('test callback functions', () => {
 
   test('Should return warnings in warningList', async () => {
     const response = await runTicsAnalyzer('/path/to');
+    (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 5057] Warning');
+    (exec.exec as any).mock.calls[0][2].listeners.stdout(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
     (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 666] Warning');
     (exec.exec as any).mock.calls[0][2].listeners.stdout('[WARNING 777] Warning');
 
-    expect(response.warningList.length).toEqual(2);
-    expect(response.warningList).toEqual(['[WARNING 666] Warning', '[WARNING 777] Warning']);
+    expect(response.warningList.length).toEqual(4);
+    expect(response.warningList).toEqual([
+      '[WARNING 5057] Warning',
+      `[WARNING 5057] No files to analyze with option '-changed': all checkable files seem to be unchanged.`,
+      '[WARNING 666] Warning',
+      '[WARNING 777] Warning'
+    ]);
   });
 
   test('Should add ExplorerUrl in response', async () => {
