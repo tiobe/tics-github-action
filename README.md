@@ -21,7 +21,6 @@ There are two types of analysis modes available:
 ### Supported Platforms
 Linux and Windows based runners, both GitHub-hosted and self-hosted, are supported.
 
-
 ### Action Restrictions
 - It is not working for forked repositories.
 - It is not working for TICS installations using the legacy deployment architecture.
@@ -51,6 +50,11 @@ jobs:
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
+
+### Action triggers and events
+The most common use case to trigger a workflow running TICS Client is typically on `pull_request`. Depending on the applied way of working, other events may be also applicable.
+Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and 
+[events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
 
 ### Basic parameters
 The following inputs are recommended or required for this action:
@@ -86,7 +90,10 @@ With TICSQServer, persistent measurement points are created which are stored in 
 TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
 
 ```yaml
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   TICS:
@@ -103,6 +110,12 @@ jobs:
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
+
+### Action triggers and events
+The most common use case to trigger a workflow running TICSQServer is typically on `push` to `main`, or any other branch from which other branches are derived. Other examples are release and develop branches.
+Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and 
+[events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
+When triggering on multiple branches, please make sure to provide the correct `project` or `branchName` value, corresponding to the TICS branch QServer will be running on.
 
 ### Basic parameters
 The following inputs are recommended or required for this action:
@@ -156,7 +169,7 @@ Below, parameters are described to control infra structure and security related 
 There is also the possibility to do a so called "diagnostic" run. This mode can be enabled to test if TICS has been set up properly and can run on the machine the action is run on.
 
 ```yaml
-on: [pull_request]
+on: workflow_dispatch
 
 jobs:
   TICS:
@@ -171,6 +184,11 @@ jobs:
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
+### Action triggers and events
+The most common use case to trigger the diagnostic workflow is typically on `workflow_dispatch`. This way one can manually execute this.
+Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and 
+[events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
+
 #### Basic parameters
 The following inputs are recommended or required for this action:
 
