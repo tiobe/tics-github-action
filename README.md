@@ -94,7 +94,6 @@ on:
   push:
     branches:
       - main
-      - 'releases/**'
 
 jobs:
   TICS:
@@ -116,6 +115,7 @@ jobs:
 The most common use case to trigger a workflow running TICSQServer is typically on `push` to `main`, or any other branch from which other branches are derived. Other examples are release and develop branches.
 Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and 
 [events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
+When triggering on multiple branches, please make sure to provide the correct `project` or `branchName` value, corresponding to the TICS branch QServer will be running on.
 
 ### Basic parameters
 The following inputs are recommended or required for this action:
