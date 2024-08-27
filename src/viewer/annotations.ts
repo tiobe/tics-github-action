@@ -30,8 +30,14 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
       const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
 
       response.data.data.forEach((annotation: Annotation) => {
+        if (!annotation.line) {
+          annotation.line = 1;
+          logger.notice(`No line number reported for ${annotation.rule} in file ${annotation.fullPath}. Reporting the annotation on line 1.`);
+        }
+
         const extendedAnnotation: ExtendedAnnotation = {
           ...annotation,
+          line: annotation.line,
           count: annotation.count ?? 1,
           instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
         };

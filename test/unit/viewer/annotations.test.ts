@@ -17,8 +17,8 @@ describe('getAnnotations', () => {
     const response = await getAnnotations([{ url: 'url?fields=default,blocking' }, { url: 'url' }]);
 
     expect(response).toEqual([
-      { type: 'CS', gateId: 0, count: 1, instanceName: 'CS' },
-      { type: 'CS', gateId: 1, count: 1, instanceName: 'Coding Standard Violations' }
+      { type: 'CS', gateId: 0, line: 1, count: 1, instanceName: 'CS' },
+      { type: 'CS', gateId: 1, line: 1, count: 1, instanceName: 'Coding Standard Violations' }
     ]);
   });
 

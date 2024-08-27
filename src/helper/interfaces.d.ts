@@ -150,7 +150,7 @@ export interface AnnotationType {
 
 export interface Annotation {
   fullPath: string;
-  line: number;
+  line?: number;
   level?: number;
   category?: string;
   rule: string;
@@ -170,6 +170,7 @@ export interface Annotation {
 }
 
 export interface ExtendedAnnotation extends Annotation {
+  line: number;
   count: number;
   displayCount?: string;
   instanceName: string;
