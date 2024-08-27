@@ -10,7 +10,6 @@ import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
 import {
   AnalysisResult,
-  Annotation,
   Condition,
   ConditionDetails,
   ExtendedAnnotation,
