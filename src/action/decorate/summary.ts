@@ -278,8 +278,16 @@ function createBody(annotation: Annotation, displayCount: string) {
     body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
   }
 
+  const secondLine: string[] = [];
+  if (annotation.level) {
+    secondLine.push(`Level: ${annotation.level.toString()}`);
+  }
+  if (annotation.category) {
+    secondLine.push(`Category: ${annotation.category}`);
+  }
+
   body += `Line: ${annotation.line.toString()}: ${displayCount}${annotation.msg}`;
-  body += `${EOL}Level: ${annotation.level.toString()}, Category: ${annotation.category}`;
+  body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
   return body;
@@ -385,7 +393,7 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
     } else if (previousPath !== path) {
       body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level.toString()}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level?.toString() ?? ''}<br><b>Category:</b> ${reviewComment.category ?? ''}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';

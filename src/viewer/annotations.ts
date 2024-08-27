@@ -32,6 +32,7 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
       response.data.data.forEach((annotation: Annotation) => {
         const extendedAnnotation: ExtendedAnnotation = {
           ...annotation,
+          count: annotation.count ?? 1,
           instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
         };
         extendedAnnotation.gateId = index;

@@ -97,19 +97,19 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
  * @param data stdout or stderr
  */
 function findInStdOutOrErr(data: string): void {
-  const error = data.toString().match(/\[ERROR.*/g);
-  if (error && !errorList.find(e => e === error.toString())) {
-    errorList.push(error.toString());
+  const error = data.match(/\[ERROR.*/g)?.toString();
+  if (error && !errorList.find(e => e === error)) {
+    errorList.push(error);
   }
 
-  const warning = data.toString().match(/\[WARNING.*/g);
-  if (warning && !warningList.find(w => w === warning.toString())) {
-    warningList.push(warning.toString());
+  const warning = data.match(/\[WARNING.*/g)?.toString();
+  if (warning && !warningList.find(w => w === warning)) {
+    warningList.push(warning);
   }
 
-  const noFilesToAnalyze = data.toString().match(/No files to analyze with option '-changed':/g);
+  const noFilesToAnalyze = data.match(/No files to analyze with option '-changed':/g);
   if (noFilesToAnalyze) {
-    warningList.push(`[WARNING 5057] ${data.toString()}`);
+    warningList.push(`[WARNING 5057] ${data}`);
   }
 
   const findExplorerUrl = data.match(/\/Explorer.*/g);
