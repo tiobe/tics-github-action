@@ -153,7 +153,7 @@ export interface Annotation {
   line?: number;
   level?: number;
   category?: string;
-  rule: string;
+  rule?: string;
   msg: string;
   supp: boolean;
   type: string;
@@ -167,9 +167,12 @@ export interface Annotation {
     state: 'yes' | 'no' | 'after';
     after?: number;
   };
+  complexity?: number;
+  functionName?: string;
 }
 
 export interface ExtendedAnnotation extends Annotation {
+  msg: string;
   line: number;
   count: number;
   displayCount?: string;

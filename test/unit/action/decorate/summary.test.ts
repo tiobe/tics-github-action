@@ -311,12 +311,12 @@ describe('createReviewComments', () => {
         }
       },
       {
+        // testing one without a rule
         fullPath: 'c:/src/test.js',
         line: 0,
         level: 1,
         category: 'test',
         type: 'test',
-        rule: 'rule-after',
         msg: 'message-after',
         count: 1,
         supp: false,
@@ -338,7 +338,7 @@ describe('createReviewComments', () => {
       },
       {
         blocking: 'after',
-        title: 'test: rule-after',
+        title: 'test',
         path: 'src/test.js',
         line: 0,
         body: `Blocking after: 2024-02-19${EOL}Line: 0: message-after${EOL}Level: 1, Category: test`

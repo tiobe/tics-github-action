@@ -35,13 +35,19 @@ export async function getAnnotations(apiLinks: AnnotationApiLink[]): Promise<Ext
           logger.notice(`No line number reported for ${annotation.rule} in file ${annotation.fullPath}. Reporting the annotation on line 1.`);
         }
 
+        // In case complexity is given, the annotation does not have a message (should be fixed in newer Viewers ).
+        // Present in Viewers <= 2024.2.0
+        if (annotation.complexity && !annotation.msg) {
+          annotation.msg = `Function ${annotation.functionName} has a complexity of ${annotation.complexity.toString()}`;
+        }
+
         const extendedAnnotation: ExtendedAnnotation = {
           ...annotation,
+          gateId: index,
           line: annotation.line,
           count: annotation.count ?? 1,
           instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
         };
-        extendedAnnotation.gateId = index;
 
         logger.debug(JSON.stringify(extendedAnnotation));
         annotations.push(extendedAnnotation);

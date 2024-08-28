@@ -232,12 +232,13 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
     .filter(a => a.blocking?.state !== 'no')
     .forEach(annotation => {
       const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
+      const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
 
       if (githubConfig.event.isPullRequest) {
         if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
           const reviewComment = {
             blocking: annotation.blocking?.state,
-            title: `${annotation.instanceName}: ${annotation.rule}`,
+            title: title,
             body: createBody(annotation, displayCount),
             path: annotation.path,
             line: annotation.line
@@ -252,7 +253,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
       } else if (annotation.diffLines?.includes(annotation.line)) {
         const reviewComment = {
           blocking: annotation.blocking?.state,
-          title: `${annotation.instanceName}: ${annotation.rule}`,
+          title: title,
           body: createBody(annotation, displayCount),
           path: annotation.path,
           line: annotation.line
