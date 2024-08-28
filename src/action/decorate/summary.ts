@@ -10,7 +10,6 @@ import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
 import {
   AnalysisResult,
-  Annotation,
   Condition,
   ConditionDetails,
   ExtendedAnnotation,
@@ -233,12 +232,13 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
     .filter(a => a.blocking?.state !== 'no')
     .forEach(annotation => {
       const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
+      const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
 
       if (githubConfig.event.isPullRequest) {
         if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
           const reviewComment = {
             blocking: annotation.blocking?.state,
-            title: `${annotation.instanceName}: ${annotation.rule}`,
+            title: title,
             body: createBody(annotation, displayCount),
             path: annotation.path,
             line: annotation.line
@@ -253,7 +253,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
       } else if (annotation.diffLines?.includes(annotation.line)) {
         const reviewComment = {
           blocking: annotation.blocking?.state,
-          title: `${annotation.instanceName}: ${annotation.rule}`,
+          title: title,
           body: createBody(annotation, displayCount),
           path: annotation.path,
           line: annotation.line
@@ -270,7 +270,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
   return { postable: postable, unpostable: unpostable };
 }
 
-function createBody(annotation: Annotation, displayCount: string) {
+function createBody(annotation: ExtendedAnnotation, displayCount: string) {
   let body = '';
   if (annotation.blocking?.state === 'yes') {
     body += `Blocking${EOL}`;
@@ -278,8 +278,16 @@ function createBody(annotation: Annotation, displayCount: string) {
     body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
   }
 
+  const secondLine: string[] = [];
+  if (annotation.level) {
+    secondLine.push(`Level: ${annotation.level.toString()}`);
+  }
+  if (annotation.category) {
+    secondLine.push(`Category: ${annotation.category}`);
+  }
+
   body += `Line: ${annotation.line.toString()}: ${displayCount}${annotation.msg}`;
-  body += `${EOL}Level: ${annotation.level.toString()}, Category: ${annotation.category}`;
+  body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
   return body;
@@ -385,7 +393,7 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
     } else if (previousPath !== path) {
       body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level.toString()}<br><b>Category:</b> ${reviewComment.category}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level?.toString() ?? ''}<br><b>Category:</b> ${reviewComment.category ?? ''}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';
