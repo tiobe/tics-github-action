@@ -42,7 +42,7 @@
     "date-fns": "^3.6.0",
     "proxy-agent": "^6.4.0",
     "semver": "^7.6.3",
-    "underscore": "^1.13.6"
+    "underscore": "^1.13.7"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
