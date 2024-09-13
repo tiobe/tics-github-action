@@ -1,12 +1,13 @@
 import * as core from '@actions/core';
+import * as utils from '../../../src/helper/utils';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
-import * as utils from '../../../src/helper/utils';
+import { randomUUID } from 'crypto';
 
 describe('GitHub Configuration', () => {
   let githubConfig: GithubConfig;
   let debugSpy: jest.SpyInstance;
-  let uuid = crypto.randomUUID();
+  let uuid = randomUUID();
 
   beforeEach(() => {
     debugSpy = jest.spyOn(core, 'isDebug');
