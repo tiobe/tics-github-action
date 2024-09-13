@@ -1,10 +1,12 @@
 import * as core from '@actions/core';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
+import * as utils from '../../../src/helper/utils';
 
 describe('GitHub Configuration', () => {
   let githubConfig: GithubConfig;
   let debugSpy: jest.SpyInstance;
+  let uuid = crypto.randomUUID();
 
   beforeEach(() => {
     debugSpy = jest.spyOn(core, 'isDebug');
@@ -14,6 +16,8 @@ describe('GitHub Configuration', () => {
         return contextMock;
       }
     }));
+
+    jest.spyOn(utils, 'generateUuid').mockReturnValue(uuid);
   });
 
   afterEach(() => {
@@ -38,7 +42,7 @@ describe('GitHub Configuration', () => {
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
-      id: '123-TICS-1',
+      id: `123_TICS_1_${uuid.toString()}`,
       pullRequestNumber: 1
     });
   });

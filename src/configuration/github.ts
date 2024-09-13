@@ -2,6 +2,7 @@ import { isDebug } from '@actions/core';
 import { context } from '@actions/github';
 import { logger } from '../helper/logger';
 import { GithubEvent } from './github-event';
+import { generateUuid } from '../helper/utils';
 
 export class GithubConfig {
   readonly apiUrl: string;
@@ -21,7 +22,7 @@ export class GithubConfig {
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
     this.job = context.job;
-    this.id = `${context.runId.toString()}-${this.job}-${context.runNumber.toString()}`;
+    this.id = `${context.runId.toString()}_${this.job}_${context.runNumber.toString()}_${generateUuid().toString()}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
 
