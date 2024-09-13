@@ -9,6 +9,7 @@ export class GithubConfig {
   readonly reponame: string;
   readonly commitSha: string;
   readonly event: GithubEvent;
+  readonly job: string;
   readonly id: string;
   readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
@@ -19,7 +20,8 @@ export class GithubConfig {
     this.reponame = context.repo.repo;
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
-    this.id = `${context.runId.toString()}-${context.runNumber.toString()}`;
+    this.job = context.job;
+    this.id = `${context.runId.toString()}-${this.job}-${context.runNumber.toString()}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
 

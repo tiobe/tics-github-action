@@ -8,6 +8,7 @@ export const githubConfigMock: {
   reponame: string;
   commitSha: string;
   event: GithubEvent;
+  job: string;
   id: string;
   pullRequestNumber: number | undefined;
   debugger: boolean;
@@ -17,7 +18,8 @@ export const githubConfigMock: {
   reponame: 'test',
   commitSha: 'sha-128',
   event: GithubEvent.PUSH,
-  id: '123-1',
+  job: 'TICS',
+  id: '123-TICS-1',
   pullRequestNumber: 1,
   debugger: false
 };
@@ -113,6 +115,7 @@ export const contextMock: {
   };
   sha: string;
   eventName: string;
+  job: string;
   runId: number;
   runNumber: number;
   payload: {
@@ -130,6 +133,7 @@ export const contextMock: {
   },
   sha: 'sha-128',
   eventName: 'pull_request',
+  job: 'TICS',
   runId: 123,
   runNumber: 1,
   payload: {

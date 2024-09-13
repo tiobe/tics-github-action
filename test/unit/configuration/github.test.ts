@@ -26,6 +26,7 @@ describe('GitHub Configuration', () => {
     contextMock.sha = 'sha-128';
     contextMock.eventName = 'pull_request';
     contextMock.runId = 123;
+    contextMock.job = 'TICS';
     contextMock.runNumber = 1;
     contextMock.payload = { pull_request: { number: 1 } };
 
@@ -37,7 +38,7 @@ describe('GitHub Configuration', () => {
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
-      id: '123-1',
+      id: '123-TICS-1',
       pullRequestNumber: 1
     });
   });
