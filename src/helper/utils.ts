@@ -1,5 +1,3 @@
-import { randomUUID, UUID } from 'crypto';
-
 /**
  * Checks if the first value is one of the following ones.
  * Replaces value === arg1 || value === arg2 || ...
@@ -9,12 +7,4 @@ import { randomUUID, UUID } from 'crypto';
  */
 export function isOneOf<T>(value: T, ...args: [T, ...T[]]): boolean {
   return args.includes(value);
-}
-
-/**
- * Wrapper for generating a UUID (for testing).
- * @returns UUID
- */
-export function generateUuid(): UUID {
-  return randomUUID();
 }

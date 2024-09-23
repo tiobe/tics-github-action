@@ -9,6 +9,7 @@ export const githubConfigMock: {
   commitSha: string;
   event: GithubEvent;
   job: string;
+  action: string;
   id: string;
   pullRequestNumber: number | undefined;
   debugger: boolean;
@@ -19,7 +20,8 @@ export const githubConfigMock: {
   commitSha: 'sha-128',
   event: GithubEvent.PUSH,
   job: 'TICS',
-  id: '123-TICS-1',
+  action: '__tiobe_tics-github-action',
+  id: '123_TICS_1__tiobe_tics-github-action',
   pullRequestNumber: 1,
   debugger: false
 };
@@ -108,6 +110,7 @@ jest.mock('../../src/github/octokit', () => {
 });
 
 export const contextMock: {
+  action: string;
   apiUrl: string;
   repo: {
     repo: string;
@@ -126,6 +129,7 @@ export const contextMock: {
       | undefined;
   };
 } = {
+  action: '__tiobe_tics-github-action',
   apiUrl: 'api.github.com',
   repo: {
     repo: 'tics-github-action',

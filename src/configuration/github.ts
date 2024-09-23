@@ -2,7 +2,6 @@ import { isDebug } from '@actions/core';
 import { context } from '@actions/github';
 import { logger } from '../helper/logger';
 import { GithubEvent } from './github-event';
-import { generateUuid } from '../helper/utils';
 
 export class GithubConfig {
   readonly apiUrl: string;
@@ -11,6 +10,7 @@ export class GithubConfig {
   readonly commitSha: string;
   readonly event: GithubEvent;
   readonly job: string;
+  readonly action: string;
   readonly id: string;
   readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
@@ -22,7 +22,20 @@ export class GithubConfig {
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
     this.job = context.job;
-    this.id = `${context.runId.toString()}_${this.job}_${context.runNumber.toString()}_${generateUuid().toString()}`;
+    this.action = context.action;
+
+    /**
+     * Construct the id to use for storing tmpdirs. The action name will
+     * be appended with a number if there are multiple runs within a job.
+     * Example: 10897710852_2_TICSQServer__tiobe_tics-github-action_2
+     *
+     * According to the documentation:
+     * If you use the same script or action more than once in the same job, the name will
+     * include a suffix that consists of the sequence number preceded by an underscore.
+     * https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+     */
+    const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? '0';
+    this.id = `${context.runId.toString()}_${runAttempt}_${this.job}${this.action}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
 

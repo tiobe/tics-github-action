@@ -1,13 +1,10 @@
 import * as core from '@actions/core';
-import * as utils from '../../../src/helper/utils';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
-import { randomUUID } from 'crypto';
 
 describe('GitHub Configuration', () => {
   let githubConfig: GithubConfig;
   let debugSpy: jest.SpyInstance;
-  let uuid = randomUUID();
 
   beforeEach(() => {
     debugSpy = jest.spyOn(core, 'isDebug');
@@ -17,8 +14,6 @@ describe('GitHub Configuration', () => {
         return contextMock;
       }
     }));
-
-    jest.spyOn(utils, 'generateUuid').mockReturnValue(uuid);
   });
 
   afterEach(() => {
@@ -26,6 +21,7 @@ describe('GitHub Configuration', () => {
   });
 
   test('Should set variables taken from context', () => {
+    contextMock.action = '__tiobe_tics-github-action';
     contextMock.apiUrl = 'api.github.com';
     contextMock.repo = { repo: 'tics-github-action', owner: 'tiobe' };
     contextMock.sha = 'sha-128';
@@ -35,6 +31,8 @@ describe('GitHub Configuration', () => {
     contextMock.runNumber = 1;
     contextMock.payload = { pull_request: { number: 1 } };
 
+    process.env.GITHUB_RUN_ATTEMPT = '1';
+
     githubConfig = new GithubConfig();
 
     expect(githubConfig).toMatchObject({
@@ -43,7 +41,7 @@ describe('GitHub Configuration', () => {
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
-      id: `123_TICS_1_${uuid.toString()}`,
+      id: `123_1_TICS__tiobe_tics-github-action`,
       pullRequestNumber: 1
     });
   });

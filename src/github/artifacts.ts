@@ -15,7 +15,7 @@ export async function uploadArtifact(): Promise<void> {
     logger.header('Uploading artifact');
     const tmpdir = getTmpDir() + '/ticstmpdir';
     logger.info(`Logs gotten from ${tmpdir}`);
-    const response = await artifactClient.uploadArtifact(`${githubConfig.job}-ticstmpdir`, getFilesInFolder(tmpdir), tmpdir);
+    const response = await artifactClient.uploadArtifact(`${githubConfig.job}${githubConfig.action}_ticstmpdir`, getFilesInFolder(tmpdir), tmpdir);
 
     if (response.failedItems.length > 0) {
       logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
