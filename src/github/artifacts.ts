@@ -6,7 +6,7 @@ import { join } from 'canonical-path';
 
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig, ticsCli } from '../configuration/config';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
 
 export async function uploadArtifact(): Promise<void> {
   const artifactClient = create();
@@ -15,7 +15,12 @@ export async function uploadArtifact(): Promise<void> {
     logger.header('Uploading artifact');
     const tmpdir = getTmpDir() + '/ticstmpdir';
     logger.info(`Logs gotten from ${tmpdir}`);
-    const response = await artifactClient.uploadArtifact(`${githubConfig.job}${githubConfig.action}_ticstmpdir`, getFilesInFolder(tmpdir), tmpdir);
+    const response = await artifactClient.uploadArtifact(
+      // Example TICS_tics-github-action_2_qserver_ticstmpdir
+      `${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`,
+      getFilesInFolder(tmpdir),
+      tmpdir
+    );
 
     if (response.failedItems.length > 0) {
       logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);

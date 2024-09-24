@@ -21,7 +21,7 @@ describe('GitHub Configuration', () => {
   });
 
   test('Should set variables taken from context', () => {
-    contextMock.action = '__tiobe_tics-github-action';
+    contextMock.action = 'tics-github-action';
     contextMock.apiUrl = 'api.github.com';
     contextMock.repo = { repo: 'tics-github-action', owner: 'tiobe' };
     contextMock.sha = 'sha-128';
@@ -41,7 +41,7 @@ describe('GitHub Configuration', () => {
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
-      id: `123_1_TICS__tiobe_tics-github-action`,
+      id: `123_1_TICS_tics-github-action`,
       pullRequestNumber: 1
     });
   });

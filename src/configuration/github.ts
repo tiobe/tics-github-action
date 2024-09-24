@@ -22,12 +22,12 @@ export class GithubConfig {
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
     this.job = context.job;
-    this.action = context.action;
+    this.action = context.action.replace('__tiobe_', '');
 
     /**
      * Construct the id to use for storing tmpdirs. The action name will
      * be appended with a number if there are multiple runs within a job.
-     * Example: 10897710852_2_TICSQServer__tiobe_tics-github-action_2
+     * Example: 10897710852_2_TICSQServer_tics-github-action_2
      *
      * According to the documentation:
      * If you use the same script or action more than once in the same job, the name will
@@ -35,7 +35,7 @@ export class GithubConfig {
      * https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
      */
     const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? '0';
-    this.id = `${context.runId.toString()}_${runAttempt}_${this.job}${this.action}`;
+    this.id = `${context.runId.toString()}_${runAttempt}_${this.job}_${this.action}`;
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
 

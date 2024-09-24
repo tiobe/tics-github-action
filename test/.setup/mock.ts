@@ -20,8 +20,8 @@ export const githubConfigMock: {
   commitSha: 'sha-128',
   event: GithubEvent.PUSH,
   job: 'TICS',
-  action: '__tiobe_tics-github-action',
-  id: '123_TICS_1__tiobe_tics-github-action',
+  action: 'tics-github-action',
+  id: '123_TICS_1_tics-github-action',
   pullRequestNumber: 1,
   debugger: false
 };
@@ -129,7 +129,7 @@ export const contextMock: {
       | undefined;
   };
 } = {
-  action: '__tiobe_tics-github-action',
+  action: 'tics-github-action',
   apiUrl: 'api.github.com',
   repo: {
     repo: 'tics-github-action',
