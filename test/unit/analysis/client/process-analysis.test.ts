@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as analysisResults from '../../../../src/analysis/client/analysis-results';
 import * as comments from '../../../../src/github/comments';
 import * as decorate from '../../../../src/action/decorate/action';
@@ -20,9 +21,9 @@ import {
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('processIncompleteAnalysis', () => {
-  let spyGetPostedComments: jest.SpyInstance;
-  let spyDeletePreviousComments: jest.SpyInstance;
-  let spyPostToConversation: jest.SpyInstance;
+  let spyGetPostedComments: jest.SpiedFunction<any>;
+  let spyDeletePreviousComments: jest.SpiedFunction<typeof comments.deletePreviousComments>;
+  let spyPostToConversation: jest.SpiedFunction<typeof pullRequest.postToConversation>;
 
   beforeEach(() => {
     spyGetPostedComments = jest.spyOn(comments, 'getPostedComments');
@@ -39,28 +40,28 @@ describe('processIncompleteAnalysis', () => {
       githubConfigMock.event = GithubEvent.PUSH;
     });
 
-    test('Should return failed message if incomplete analysis failed without url', async () => {
+    it('should return failed message if incomplete analysis failed without url', async () => {
       const message = await processIncompleteAnalysis(analysisIncompleteFailedNoUrl);
 
-      expect(message).toEqual('Failed to complete TICS analysis.');
+      expect(message).toBe('Failed to complete TICS analysis.');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(0);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(0);
       expect(spyPostToConversation).toHaveBeenCalledTimes(0);
     });
 
-    test('Should not return failed message if complete analysis failed without url but with warning 5057', async () => {
+    it('should not return failed message if complete analysis failed without url but with warning 5057', async () => {
       const message = await processIncompleteAnalysis(analysisCompleteFailedWithWarning5057);
 
-      expect(message).toEqual('');
+      expect(message).toBe('');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(0);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(0);
       expect(spyPostToConversation).toHaveBeenCalledTimes(0);
     });
 
-    test('Should return failed message if complete analysis failed without url', async () => {
+    it('should return failed message if complete analysis failed without url', async () => {
       const message = await processIncompleteAnalysis(analysisCompleteFailedNoUrl);
 
-      expect(message).toEqual('Explorer URL not returned from TICS analysis.');
+      expect(message).toBe('Explorer URL not returned from TICS analysis.');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(0);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(0);
       expect(spyPostToConversation).toHaveBeenCalledTimes(0);
@@ -72,34 +73,34 @@ describe('processIncompleteAnalysis', () => {
       githubConfigMock.event = GithubEvent.PULL_REQUEST;
     });
 
-    test('Should return failed message if incomplete analysis failed without url', async () => {
+    it('should return failed message if incomplete analysis failed without url', async () => {
       spyGetPostedComments.mockResolvedValue(['']);
 
       const message = await processIncompleteAnalysis(analysisIncompleteFailedNoUrl);
 
-      expect(message).toEqual('Failed to complete TICS analysis.');
+      expect(message).toBe('Failed to complete TICS analysis.');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(1);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(1);
       expect(spyPostToConversation).toHaveBeenCalledTimes(1);
     });
 
-    test('Should not return failed message if complete analysis failed without url but with warning 5057', async () => {
+    it('should not return failed message if complete analysis failed without url but with warning 5057', async () => {
       spyGetPostedComments.mockResolvedValue(['']);
 
       const message = await processIncompleteAnalysis(analysisCompleteFailedWithWarning5057);
 
-      expect(message).toEqual('');
+      expect(message).toBe('');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(1);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(1);
       expect(spyPostToConversation).toHaveBeenCalledTimes(1);
     });
 
-    test('Should return failed message if complete analysis failed without url (no previous posted comments)', async () => {
+    it('should return failed message if complete analysis failed without url (no previous posted comments)', async () => {
       spyGetPostedComments.mockResolvedValue(['']);
 
       const message = await processIncompleteAnalysis(analysisCompleteFailedNoUrl);
 
-      expect(message).toEqual('Explorer URL not returned from TICS analysis.');
+      expect(message).toBe('Explorer URL not returned from TICS analysis.');
       expect(spyGetPostedComments).toHaveBeenCalledTimes(1);
       expect(spyDeletePreviousComments).toHaveBeenCalledTimes(1);
       expect(spyPostToConversation).toHaveBeenCalledTimes(1);
@@ -108,53 +109,53 @@ describe('processIncompleteAnalysis', () => {
 });
 
 describe('processCompleteAnalysis', () => {
-  test('Should return failed message if there are missing quality gates', async () => {
+  it('should return failed message if there are missing quality gates', async () => {
     jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisNoQualityGates);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
-    expect(message).toEqual('Some quality gates could not be retrieved.');
+    expect(message).toBe('Some quality gates could not be retrieved.');
   });
 
-  test('Should return failed message if there is a single quality gates failing with no Explorer Url', async () => {
+  it('should return failed message if there is a single quality gates failing with no Explorer Url', async () => {
     jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleQgFailed);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
-    expect(message).toEqual('Project failed quality gate(s)');
+    expect(message).toBe('Project failed quality gate(s)');
   });
 
-  test('Should return failed message if there a single quality gates failing with Explorer Urls', async () => {
+  it('should return failed message if there a single quality gates failing with Explorer Urls', async () => {
     jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleQgFailed);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
 
     const message = await processCompleteAnalysis(analysisWithUrl, []);
 
-    expect(message).toEqual('Project failed quality gate(s)');
+    expect(message).toBe('Project failed quality gate(s)');
   });
 
-  test('Should return failed message if there are two quality gates failing with Explorer Urls', async () => {
+  it('should return failed message if there are two quality gates failing with Explorer Urls', async () => {
     jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsDualQgFailed);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
 
     const message = await processCompleteAnalysis(analysisWithDoubleUrl, []);
 
-    expect(message).toEqual('2 out of 2 projects failed quality gate(s)');
+    expect(message).toBe('2 out of 2 projects failed quality gate(s)');
   });
 
-  test('Should return no message if analysis passed and quality gate passed', async () => {
+  it('should return no message if analysis passed and quality gate passed', async () => {
     jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockImplementationOnce(() => Promise.resolve());
+    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
-    expect(message).toEqual('');
+    expect(message).toBe('');
   });
 });

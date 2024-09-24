@@ -1,15 +1,16 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as core from '@actions/core';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
 
-describe('GitHub Configuration', () => {
+describe('gitHub Configuration', () => {
   let githubConfig: GithubConfig;
-  let debugSpy: jest.SpyInstance;
+  let debugSpy: jest.SpiedFunction<typeof core.isDebug>;
 
   beforeEach(() => {
     debugSpy = jest.spyOn(core, 'isDebug');
 
-    jest.mock('@actions/github', () => ({
+    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => ({
       get context() {
         return contextMock;
       }
@@ -20,7 +21,7 @@ describe('GitHub Configuration', () => {
     jest.resetAllMocks();
   });
 
-  test('Should set variables taken from context', () => {
+  it('should set variables taken from context', () => {
     contextMock.apiUrl = 'api.github.com';
     contextMock.repo = { repo: 'tics-github-action', owner: 'tiobe' };
     contextMock.sha = 'sha-128';
@@ -41,7 +42,8 @@ describe('GitHub Configuration', () => {
       pullRequestNumber: 1
     });
   });
-  test('Should get pull request number from environment if context is not available', () => {
+
+  it('should get pull request number from environment if context is not available', () => {
     contextMock.payload.pull_request = undefined;
 
     process.env.PULL_REQUEST_NUMBER = '2';
@@ -53,7 +55,7 @@ describe('GitHub Configuration', () => {
     });
   });
 
-  test('Should get pull request number undefined if none are available', () => {
+  it('should get pull request number undefined if none are available', () => {
     contextMock.payload.pull_request = undefined;
     delete process.env.PULL_REQUEST_NUMBER;
 
@@ -64,7 +66,7 @@ describe('GitHub Configuration', () => {
     });
   });
 
-  test('Should get debug false if the debug mode is off', () => {
+  it('should get debug false if the debug mode is off', () => {
     debugSpy.mockReturnValue(false);
 
     githubConfig = new GithubConfig();
@@ -74,7 +76,7 @@ describe('GitHub Configuration', () => {
     });
   });
 
-  test('Should get debug true if the debug mode is on', () => {
+  it('should get debug true if the debug mode is on', () => {
     debugSpy.mockReturnValue(true);
 
     githubConfig = new GithubConfig();
@@ -84,8 +86,10 @@ describe('GitHub Configuration', () => {
     });
   });
 
-  test('Should call removeWarningListener without errors', () => {
+  it('should call removeWarningListener without errors', () => {
     githubConfig = new GithubConfig();
     githubConfig.removeWarningListener();
+
+    expect(true).toBeTruthy();
   });
 });

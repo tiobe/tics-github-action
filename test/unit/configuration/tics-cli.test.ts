@@ -1,14 +1,15 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as core from '@actions/core';
 
 import { Mode } from '../../../src/configuration/tics';
 import { TicsCli } from '../../../src/configuration/tics-cli';
 import { logger } from '../../../src/helper/logger';
 
-describe('Cli Configuration', () => {
-  let warningSpy: jest.SpyInstance;
+describe('cli Configuration', () => {
+  let warningSpy: jest.SpiedFunction<typeof logger.warning>;
 
   let values: Record<string, string>;
-  let expectCli = {
+  const expectCli = {
     project: '',
     branchname: '',
     branchdir: '',
@@ -25,7 +26,7 @@ describe('Cli Configuration', () => {
   beforeEach(() => {
     warningSpy = jest.spyOn(logger, 'warning');
 
-    jest.spyOn(core, 'getInput').mockImplementation((name, _options): string => {
+    jest.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {
         if (value === name) {
           return values[value];
@@ -40,7 +41,7 @@ describe('Cli Configuration', () => {
     jest.resetAllMocks();
   });
 
-  test('Should pass when mode is client diagnostic and project is auto', () => {
+  it('should pass when mode is client diagnostic and project is auto', () => {
     values = {
       project: 'auto'
     };
@@ -52,7 +53,7 @@ describe('Cli Configuration', () => {
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'auto' });
   });
 
-  test('Should pass when mode is client or diagnostic and project is given', () => {
+  it('should pass when mode is client or diagnostic and project is given', () => {
     values = {
       project: 'project'
     };
@@ -64,7 +65,7 @@ describe('Cli Configuration', () => {
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'project' });
   });
 
-  test('Should pass when mode is qserver and project is given', () => {
+  it('should pass when mode is qserver and project is given', () => {
     values = {
       project: 'project'
     };
@@ -74,7 +75,7 @@ describe('Cli Configuration', () => {
     expect(cliServer).toMatchObject({ ...expectCli, project: 'project' });
   });
 
-  test('Should throw error if mode is qserver and project is auto', () => {
+  it('should throw error if mode is qserver and project is auto', () => {
     values = {
       project: 'auto'
     };
@@ -90,7 +91,7 @@ describe('Cli Configuration', () => {
     expect(error.message).toContain("Running TICS with project 'auto' is not possible with QServer");
   });
 
-  test('Should throw warnings on Client-only cli options if used in mode QServer', () => {
+  it('should throw warnings on Client-only cli options if used in mode QServer', () => {
     values = {
       project: 'project',
       branchname: 'branch',
@@ -126,7 +127,7 @@ describe('Cli Configuration', () => {
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
   });
 
-  test('Should throw warnings on QServer-only cli options if used in mode Client', () => {
+  it('should throw warnings on QServer-only cli options if used in mode Client', () => {
     values = {
       project: 'project',
       branchname: 'branch',
@@ -161,7 +162,7 @@ describe('Cli Configuration', () => {
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
   });
 
-  test('Should throw warnings on Client- and QServer-only cli options if used in mode Diagnostic', () => {
+  it('should throw warnings on Client- and QServer-only cli options if used in mode Diagnostic', () => {
     values = {
       project: 'project',
       branchname: 'branch',

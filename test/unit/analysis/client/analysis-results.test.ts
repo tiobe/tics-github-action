@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as qualityGate from '../../../../src/viewer/qualitygate';
@@ -13,7 +14,7 @@ describe('getClientAnalysisResults', () => {
   ticsCliMock.project = 'auto';
   ticsConfigMock.baseUrl = 'http://base.url';
 
-  test('Should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {
+  it('should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {
     const result = await getClientAnalysisResults([], []);
 
     expect(result).toEqual({
@@ -24,7 +25,7 @@ describe('getClientAnalysisResults', () => {
     });
   });
 
-  test('Should return on one passed quality gate with warnings', async () => {
+  it('should return on one passed quality gate with warnings', async () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
 
@@ -45,7 +46,7 @@ describe('getClientAnalysisResults', () => {
     });
   });
 
-  test('Should return on failed quality gate on single url', async () => {
+  it('should return on failed quality gate on single url', async () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
 
@@ -66,7 +67,7 @@ describe('getClientAnalysisResults', () => {
     });
   });
 
-  test('Should return on one failed quality gate on multiple urls', async () => {
+  it('should return on one failed quality gate on multiple urls', async () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(passedQualityGate);
@@ -94,7 +95,7 @@ describe('getClientAnalysisResults', () => {
     });
   });
 
-  test('Should return on all failed quality gates on multiple urls', async () => {
+  it('should return on all failed quality gates on multiple urls', async () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValue(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValue(failedQualityGate);
 
@@ -121,7 +122,7 @@ describe('getClientAnalysisResults', () => {
     });
   });
 
-  test('Should return on failed quality gate with annotations', async () => {
+  it('should return on failed quality gate with annotations', async () => {
     actionConfigMock.postAnnotations = true;
 
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);

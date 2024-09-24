@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import * as artifact from '@actions/artifact';
 import * as fs from 'fs';
 import { getTmpDir, uploadArtifact } from '../../../src/github/artifacts';
@@ -5,30 +6,30 @@ import { MockArtifactClient, MockDirent } from './objects/artifacts';
 import { logger } from '../../../src/helper/logger';
 import { githubConfigMock, ticsCliMock } from '../../.setup/mock';
 
-describe('Tempdir test', () => {
-  it('Should return empty if variable not set and mode is not debug', () => {
+describe('tempdir test', () => {
+  it('should return empty if variable not set and mode is not debug', () => {
     const tmpdir = getTmpDir();
 
-    expect(tmpdir).toStrictEqual('');
+    expect(tmpdir).toBe('');
   });
 
-  it('Should return empty if variable not set and mode is debug', () => {
+  it('should return empty if variable not set and mode is debug', () => {
     githubConfigMock.debugger = true;
     const tmpdir = getTmpDir();
 
-    expect(tmpdir).toStrictEqual('/tmp/tics/123-1');
+    expect(tmpdir).toBe('/tmp/tics/123-1');
   });
 
-  it('Should return empty if variable is set', () => {
+  it('should return empty if variable is set', () => {
     ticsCliMock.tmpdir = 'something/else';
     const tmpdir = getTmpDir();
 
-    expect(tmpdir).toStrictEqual('something/else/123-1');
+    expect(tmpdir).toBe('something/else/123-1');
   });
 });
 
-describe('Artifacts test', () => {
-  it('Should upload logfile to tmpdir', async () => {
+describe('artifacts test', () => {
+  it('should upload logfile to tmpdir', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
@@ -41,7 +42,7 @@ describe('Artifacts test', () => {
     expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/file.log'], '/tmp/123-1/ticstmpdir');
   });
 
-  it('Should upload logdir to tmpdir', async () => {
+  it('should upload logdir to tmpdir', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
     const direntOne = [new MockDirent(false, 'tics', '/tmp/123-1/ticstmpdir/tics')];
@@ -58,7 +59,7 @@ describe('Artifacts test', () => {
     expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/tics/file.log'], '/tmp/123-1/ticstmpdir');
   });
 
-  it('Should call debug logger on failing to upload logfile', async () => {
+  it('should call debug logger on failing to upload logfile', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
@@ -73,7 +74,7 @@ describe('Artifacts test', () => {
     expect(loggerSpy).toHaveBeenCalledWith(`Failed to upload file(s): /tmp/123-1/ticstmpdir/file.log`);
   });
 
-  it('Should call debug logger on upload throwing an error', async () => {
+  it('should call debug logger on upload throwing an error', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);

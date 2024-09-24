@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { postReview } from '../../../src/github/review';
 import { Events } from '../../../src/github/enums';
 import { logger } from '../../../src/helper/logger';
@@ -6,32 +7,35 @@ import { githubConfig } from '../../../src/configuration/config';
 import { githubConfigMock } from '../../.setup/mock';
 
 describe('postReview', () => {
-  let createReviewSpy: jest.SpyInstance;
+  let createReviewSpy: jest.SpiedFunction<typeof octokit.rest.pulls.createReview>;
 
   beforeEach(() => {
     createReviewSpy = jest.spyOn(octokit.rest.pulls, 'createReview');
   });
 
-  test('Should throw error when a pullRequestNumber is not present', async () => {
+  it('should throw error when a pullRequestNumber is not present', async () => {
     githubConfigMock.pullRequestNumber = undefined;
 
+    let err: any;
     try {
       await postReview('ReviewBody...', Events.APPROVE);
-      expect(false).toBeTruthy(); // should not be reached
     } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toEqual('This function can only be run on a pull request.');
+      err = error;
     }
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe('This function can only be run on a pull request.');
   });
 
-  test('Should call createReview once', async () => {
+  it('should call createReview once', async () => {
     githubConfigMock.pullRequestNumber = 1;
 
     await postReview('ReviewBody...', Events.APPROVE);
+
     expect(createReviewSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('Should call createReview with values passed and no comments', async () => {
+  it('should call createReview with values passed and no comments', async () => {
     await postReview('ReviewBody...', Events.APPROVE);
 
     const calledWith = {
@@ -42,10 +46,11 @@ describe('postReview', () => {
       body: 'ReviewBody...',
       comments: undefined
     };
+
     expect(createReviewSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should call createReview with values failed', async () => {
+  it('should call createReview with values failed', async () => {
     await postReview('ReviewBody...', Events.REQUEST_CHANGES);
 
     const calledWith = {
@@ -55,10 +60,11 @@ describe('postReview', () => {
       event: Events.REQUEST_CHANGES,
       body: 'ReviewBody...'
     };
+
     expect(createReviewSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should post a notice on createReview', async () => {
+  it('should post a notice on createReview', async () => {
     createReviewSpy.mockRejectedValue(new Error());
     const noticeSpy = jest.spyOn(logger, 'notice');
 
