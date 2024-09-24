@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as changed_files from '../../../../src/analysis/helper/changed-files';
@@ -14,11 +15,11 @@ afterEach(() => {
 
 // Should be executed last due to spying rules
 describe('getAnalysisResult', () => {
-  let spyAnalyzedFiles: jest.SpyInstance;
-  let spyQualityGate: jest.SpyInstance;
-  let spyGetAnnotations: jest.SpyInstance;
-  let spyCreateReviewComments: jest.SpyInstance;
-  let spyCreateChangedFiles: jest.SpyInstance;
+  let spyAnalyzedFiles: jest.SpiedFunction<typeof analyzedFiles.getAnalyzedFiles>;
+  let spyQualityGate: jest.SpiedFunction<typeof qualityGate.getQualityGate>;
+  let spyGetAnnotations: jest.SpiedFunction<typeof annotations.getAnnotations>;
+  let spyCreateReviewComments: jest.SpiedFunction<typeof summary.createReviewComments>;
+  let spyCreateChangedFiles: jest.SpiedFunction<any>;
 
   // For multiproject run with project auto
   ticsCliMock.project = 'project';
@@ -35,7 +36,7 @@ describe('getAnalysisResult', () => {
     spyCreateChangedFiles = jest.spyOn(changed_files, 'getChangedFiles');
   });
 
-  test('Should return on one passed quality gate with warnings', async () => {
+  it('should return on one passed quality gate with warnings', async () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(passedQualityGate);
 
@@ -57,7 +58,7 @@ describe('getAnalysisResult', () => {
     });
   });
 
-  test('Should return on failed quality gate on single url', async () => {
+  it('should return on failed quality gate on single url', async () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(failedQualityGate);
 
@@ -79,7 +80,7 @@ describe('getAnalysisResult', () => {
     });
   });
 
-  test('Should return on failed quality gate with annotations', async () => {
+  it('should return on failed quality gate with annotations', async () => {
     actionConfigMock.postAnnotations = true;
 
     spyAnalyzedFiles.mockResolvedValueOnce(['file']);

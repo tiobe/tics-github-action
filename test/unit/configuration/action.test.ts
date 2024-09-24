@@ -1,10 +1,11 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as core from '@actions/core';
 import { ActionConfiguration } from '../../../src/configuration/action';
 
-describe('Action Configuration', () => {
+describe('action Configuration', () => {
   let values: Record<string, string>;
 
-  let expectDefault = {
+  const expectDefault = {
     excludeMovedFiles: false,
     postAnnotations: false,
     postToConversation: false,
@@ -15,9 +16,9 @@ describe('Action Configuration', () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(process.stdout, 'write').mockImplementation();
+    jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 
-    jest.spyOn(core, 'getInput').mockImplementation((name, _options): string => {
+    jest.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {
         if (value === name) {
           return values[value];
@@ -26,7 +27,7 @@ describe('Action Configuration', () => {
 
       return '';
     });
-    jest.spyOn(core, 'getBooleanInput').mockImplementation((name, _options): boolean => {
+    jest.spyOn(core, 'getBooleanInput').mockImplementation((name): boolean => {
       for (const value in values) {
         if (value === name) {
           return values[value] === 'true';
@@ -42,13 +43,13 @@ describe('Action Configuration', () => {
     jest.resetAllMocks();
   });
 
-  test('Should return if nothing other then defaults are given', () => {
+  it('should return if nothing other then defaults are given', () => {
     const config = new ActionConfiguration();
 
     expect(config).toMatchObject(expectDefault);
   });
 
-  test('Should return if every variable is set', () => {
+  it('should return if every variable is set', () => {
     values = {
       excludeMovedFiles: 'true',
       postAnnotations: 'true',
@@ -72,8 +73,8 @@ describe('Action Configuration', () => {
     });
   });
 
-  describe('SecretsFilter', () => {
-    test('Should add filters containing spaces', async () => {
+  describe('secretsFilter', () => {
+    it('should add filters containing spaces', async () => {
       values = {
         secretsFilter: 'additional secrets, feature'
       };
@@ -86,7 +87,7 @@ describe('Action Configuration', () => {
       });
     });
 
-    test('Should not add filters that contain only spaces or nothing at all', async () => {
+    it('should not add filters that contain only spaces or nothing at all', async () => {
       values = {
         secretsFilter: ',TOKEN, ,AUTH, '
       };
@@ -99,7 +100,7 @@ describe('Action Configuration', () => {
       });
     });
 
-    test('Should add filters that are not delimited by a comma', async () => {
+    it('should add filters that are not delimited by a comma', async () => {
       values = {
         secretsFilter: 'TOKEN;AUTH:FILTER'
       };
@@ -113,8 +114,8 @@ describe('Action Configuration', () => {
     });
   });
 
-  describe('Retry Config', () => {
-    test('Should set default retryConfig if none are given', async () => {
+  describe('retry Config', () => {
+    it('should set default retryConfig if none are given', async () => {
       const config = new ActionConfiguration();
 
       expect(config).toMatchObject({
@@ -127,7 +128,7 @@ describe('Action Configuration', () => {
       });
     });
 
-    test('Should set custom retryCodes when given correctly', async () => {
+    it('should set custom retryCodes when given correctly', async () => {
       values = {
         retryCodes: '500, 502'
       };
@@ -144,7 +145,7 @@ describe('Action Configuration', () => {
       });
     });
 
-    test('Should throw Error for retryCode when input is Should throw error on incorrect', async () => {
+    it('should throw Error for retryCode when input is Should throw error on incorrect', async () => {
       values = {
         retryCodes: '404,500;502'
       };

@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getAnnotations } from '../../../src/viewer/annotations';
 import { ticsConfigMock } from '../../.setup/mock';
@@ -5,17 +6,16 @@ import { ticsConfigMock } from '../../.setup/mock';
 describe('getAnnotations', () => {
   ticsConfigMock.baseUrl = 'http://base.url';
 
-  test('Should return annotations from viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { data: [{ type: 'CS' }] } }));
-    jest.spyOn(httpClient, 'get').mockImplementationOnce(
-      (): Promise<any> =>
-        Promise.resolve({
-          data: {
-            data: [{ type: 'CS', line: 10, count: 2 }],
-            annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } }
-          }
-        })
-    );
+  it('should return annotations from viewer', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { data: [{ type: 'CS' }] }, retryCount: 0, status: 200 });
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({
+      data: {
+        data: [{ type: 'CS', line: 10, count: 2 }],
+        annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } }
+      },
+      retryCount: 0,
+      status: 200
+    });
 
     const response = await getAnnotations([{ url: 'url?fields=default,blocking' }, { url: 'url' }]);
 
@@ -25,18 +25,17 @@ describe('getAnnotations', () => {
     ]);
   });
 
-  test('Should return complexity annotations from the viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce(
-      (): Promise<any> =>
-        Promise.resolve({
-          data: {
-            data: [
-              { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main' },
-              { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing' }
-            ]
-          }
-        })
-    );
+  it('should return complexity annotations from the viewer', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({
+      data: {
+        data: [
+          { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main' },
+          { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing' }
+        ]
+      },
+      retryCount: 0,
+      status: 200
+    });
 
     const response = await getAnnotations([{ url: 'url' }]);
 
@@ -64,14 +63,14 @@ describe('getAnnotations', () => {
     ]);
   });
 
-  test('Should return no annotations when no urls are given', async () => {
+  it('should return no annotations when no urls are given', async () => {
     const response = await getAnnotations([]);
 
     expect(response).toEqual([]);
   });
 
-  test('Should throw error on faulty get in getAnnotations', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+  it('should throw error on faulty get in getAnnotations', async () => {
+    jest.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
 
     let error: any;
     try {

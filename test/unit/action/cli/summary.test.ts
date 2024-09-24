@@ -1,10 +1,11 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { logger } from '../../../../src/helper/logger';
 import { postCliSummary } from '../../../../src/action/cli/summary';
 import { Verdict } from '../../../../src/helper/interfaces';
 import { githubConfigMock } from '../../../.setup/mock';
 
 describe('cliSummary', () => {
-  test('Should post errors and warnings on logLevel debug, cliSummary.', async () => {
+  it('should post errors and warnings on logLevel debug, cliSummary.', async () => {
     const error = jest.spyOn(logger, 'error');
     const warning = jest.spyOn(logger, 'warning');
 
@@ -22,7 +23,7 @@ describe('cliSummary', () => {
     expect(warning).toHaveBeenCalledTimes(2);
   });
 
-  test('Should post errors and no warnings on logLevel default, cliSummary.', async () => {
+  it('should post errors and no warnings on logLevel default, cliSummary.', async () => {
     const error = jest.spyOn(logger, 'error');
     const warning = jest.spyOn(logger, 'warning');
 

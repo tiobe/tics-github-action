@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_MODE = 'client';
 process.env.INPUT_PROJECTNAME = 'tics-github-action';
@@ -13,12 +14,12 @@ process.env.INPUT_TRUSTSTRATEGY = 'strict';
 beforeEach(() => {
   jest.resetModules();
 
-  jest.spyOn(process.stdout, 'write').mockImplementation();
+  jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 });
 
 describe('pullRequestNumber', () => {
-  test('Should return pullRequestNumber from GitHub context', async () => {
-    jest.mock('@actions/github', () => {
+  it('should return pullRequestNumber from GitHub context', async () => {
+    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
           payload: {
@@ -38,11 +39,11 @@ describe('pullRequestNumber', () => {
 
     const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
-    expect(pullRequestNumber).toEqual(1);
+    expect(pullRequestNumber).toBe(1);
   });
 
-  test('Should return pullRequestNumber from environment variable if no GitHub context', async () => {
-    jest.mock('@actions/github', () => {
+  it('should return pullRequestNumber from environment variable if no GitHub context', async () => {
+    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
           payload: {
@@ -64,11 +65,11 @@ describe('pullRequestNumber', () => {
 
     const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
-    expect(pullRequestNumber).toEqual(2);
+    expect(pullRequestNumber).toBe(2);
   });
 
-  test('Should set undefined as pullRequestNumber when no value was found', async () => {
-    jest.mock('@actions/github', () => {
+  it('should set undefined as pullRequestNumber when no value was found', async () => {
+    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
           payload: {
@@ -90,36 +91,36 @@ describe('pullRequestNumber', () => {
 
     const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
 
-    expect(pullRequestNumber).toEqual(undefined);
+    expect(pullRequestNumber).toBeUndefined();
   });
 });
 
 describe('urls', () => {
-  test('Should return base url from viewerUrl', () => {
+  it('should return base url from viewerUrl', () => {
     const baseUrl = require('../../src/configuration/config').ticsConfig.baseUrl;
 
-    expect(baseUrl).toEqual('http://localhost/tiobeweb/TICS');
+    expect(baseUrl).toBe('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should return viewer url as base url from viewerUrl if displayUrl is not set.', () => {
+  it('should return viewer url as base url from viewerUrl if displayUrl is not set.', () => {
     const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(displayUrl).toEqual('http://localhost/tiobeweb/TICS');
+    expect(displayUrl).toBe('http://localhost/tiobeweb/TICS');
   });
 
-  test('Should return viewer url if displayUrl is set without trailing slash', () => {
+  it('should return viewer url if displayUrl is set without trailing slash', () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost';
 
     const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(displayUrl).toEqual('http://localhost/');
+    expect(displayUrl).toBe('http://localhost/');
   });
 
-  test('Should return viewer url if displayUrl is set with trailing slash', () => {
+  it('should return viewer url if displayUrl is set with trailing slash', () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost/';
 
     const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
 
-    expect(displayUrl).toEqual('http://localhost/');
+    expect(displayUrl).toBe('http://localhost/');
   });
 });

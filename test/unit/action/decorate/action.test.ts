@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as summary from '../../../../src/action/decorate/summary';
 import * as pullRequest from '../../../../src/action/decorate/pull-request';
 import * as annotations from '../../../../src/github/annotations';
@@ -8,23 +9,23 @@ import { analysisPassed, analysisResultsSoaked } from './objects/summary';
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('decorateAction', () => {
-  let spyCreateSummaryBody: jest.SpyInstance;
-  let spyCreateErrorSummaryBody: jest.SpyInstance;
-  let spyDecoratePullRequest: jest.SpyInstance;
-  let spyPostAnnotations: jest.SpyInstance;
+  let spyCreateSummaryBody: jest.SpiedFunction<typeof summary.createSummaryBody>;
+  let spyCreateErrorSummaryBody: jest.SpiedFunction<typeof summary.createErrorSummaryBody>;
+  let spyDecoratePullRequest: jest.SpiedFunction<typeof pullRequest.decoratePullRequest>;
+  let spyPostAnnotations: jest.SpiedFunction<typeof annotations.postAnnotations>;
 
   beforeEach(() => {
     spyCreateSummaryBody = jest.spyOn(summary, 'createSummaryBody').mockReturnValue('body');
     spyCreateErrorSummaryBody = jest.spyOn(summary, 'createErrorSummaryBody').mockReturnValue('body');
-    spyDecoratePullRequest = jest.spyOn(pullRequest, 'decoratePullRequest').mockImplementation();
-    spyPostAnnotations = jest.spyOn(annotations, 'postAnnotations').mockImplementation();
+    spyDecoratePullRequest = jest.spyOn(pullRequest, 'decoratePullRequest').mockImplementation((): any => {});
+    spyPostAnnotations = jest.spyOn(annotations, 'postAnnotations').mockImplementation((): any => {});
   });
 
   afterEach(() => {
     jest.resetAllMocks();
   });
 
-  test('Should call createSummaryBody if analysisResult is present', async () => {
+  it('should call createSummaryBody if analysisResult is present', async () => {
     githubConfigMock.event = GithubEvent.PUSH;
     actionConfigMock.postAnnotations = false;
 
@@ -34,7 +35,7 @@ describe('decorateAction', () => {
     expect(spyCreateErrorSummaryBody).not.toHaveBeenCalled();
   });
 
-  test('Should call createErrorSummaryBody if analysisResult is not present', async () => {
+  it('should call createErrorSummaryBody if analysisResult is not present', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     actionConfigMock.postAnnotations = false;
 
@@ -44,7 +45,7 @@ describe('decorateAction', () => {
     expect(spyCreateErrorSummaryBody).toHaveBeenCalledWith([], ['Warning']);
   });
 
-  test('Should not call decoratePullRequest and postAnnotations if the event is not pull request and no post annotations', async () => {
+  it('should not call decoratePullRequest and postAnnotations if the event is push and no post annotations', async () => {
     githubConfigMock.event = GithubEvent.PUSH;
     actionConfigMock.postAnnotations = false;
 
@@ -55,7 +56,7 @@ describe('decorateAction', () => {
     expect(spyPostAnnotations).not.toHaveBeenCalled();
   });
 
-  test('Should not call decoratePullRequest and postAnnotations if the event is not pull request and no post annotations', async () => {
+  it('should not call decoratePullRequest and postAnnotations if the event is workflow_call and no post annotations', async () => {
     githubConfigMock.event = GithubEvent.WORKFLOW_CALL;
     actionConfigMock.postAnnotations = false;
 
@@ -66,7 +67,7 @@ describe('decorateAction', () => {
     expect(spyPostAnnotations).not.toHaveBeenCalled();
   });
 
-  test('Should call decoratePullRequest and postAnnotations if the event is pull request and post annotations', async () => {
+  it('should call decoratePullRequest and postAnnotations if the event is pull request and post annotations', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST_TARGET;
     actionConfigMock.postAnnotations = true;
 

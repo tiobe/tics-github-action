@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as processResults from '../../../src/analysis/client/process-analysis';
 import * as changedFiles from '../../../src/analysis/helper/changed-files';
 import * as analyzer from '../../../src/tics/analyzer';
@@ -8,13 +9,13 @@ import { clientAnalysis } from '../../../src/analysis/client';
 import { Mode } from '../../../src/configuration/tics';
 import { logger } from '../../../src/helper/logger';
 
-describe('SetFailed checks (TICS Client)', () => {
-  let spyInfo: jest.SpyInstance;
+describe('setFailed checks (TICS Client)', () => {
+  let spyInfo: jest.SpiedFunction<typeof logger.info>;
 
-  let spyChangedFiles: jest.SpyInstance;
-  let spyAnalyzer: jest.SpyInstance;
-  let spyIncomplete: jest.SpyInstance;
-  let spyComplete: jest.SpyInstance;
+  let spyChangedFiles: jest.SpiedFunction<typeof changedFiles.getChangedFiles>;
+  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
+  let spyIncomplete: jest.SpiedFunction<typeof processResults.processIncompleteAnalysis>;
+  let spyComplete: jest.SpiedFunction<typeof processResults.processCompleteAnalysis>;
 
   beforeEach(() => {
     ticsConfigMock.mode = Mode.CLIENT;
@@ -30,7 +31,7 @@ describe('SetFailed checks (TICS Client)', () => {
     jest.resetAllMocks();
   });
 
-  test('Should return passing verdict if no files have been changed', async () => {
+  it('should return passing verdict if no files have been changed', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: [], path: '' });
 
     const verdict = await clientAnalysis();
@@ -44,7 +45,7 @@ describe('SetFailed checks (TICS Client)', () => {
     expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
 
-  test('Should return failing verdict if there is no Explorer URL and processIncomplete returns a failed message', async () => {
+  it('should return failing verdict if there is no Explorer URL and processIncomplete returns a failed message', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: singleChangedFiles, path: 'location/changedFiles.txt' });
     spyAnalyzer.mockResolvedValue(analysisNoUrl);
     spyIncomplete.mockResolvedValueOnce('Failed to complete TICS analysis.');
@@ -59,7 +60,7 @@ describe('SetFailed checks (TICS Client)', () => {
     });
   });
 
-  test('Should return passing verdict if there is no Explorer URL and processIncomplete returns no message', async () => {
+  it('should return passing verdict if there is no Explorer URL and processIncomplete returns no message', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: singleChangedFiles, path: 'location/changedFiles.txt' });
     spyAnalyzer.mockResolvedValue(analysisNoUrl);
     spyIncomplete.mockResolvedValueOnce('');
@@ -74,7 +75,7 @@ describe('SetFailed checks (TICS Client)', () => {
     });
   });
 
-  test('Should return failing verdict if there is an Explorer URL and processComplete returns a failed message', async () => {
+  it('should return failing verdict if there is an Explorer URL and processComplete returns a failed message', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: singleChangedFiles, path: 'location/changedFiles.txt' });
     spyAnalyzer.mockResolvedValue(analysisWithUrl);
     spyComplete.mockResolvedValueOnce('Failed to complete TICS analysis.');
@@ -89,7 +90,7 @@ describe('SetFailed checks (TICS Client)', () => {
     });
   });
 
-  test('Should return passing verdict if there is an Explorer URL and processComplete returns no message', async () => {
+  it('should return passing verdict if there is an Explorer URL and processComplete returns no message', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: singleChangedFiles, path: 'location/changedFiles.txt' });
     spyAnalyzer.mockResolvedValue(analysisWithUrl);
     spyComplete.mockResolvedValueOnce('');

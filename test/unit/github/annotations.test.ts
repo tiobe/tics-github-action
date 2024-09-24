@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
 import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
 import { logger } from '../../../src/helper/logger';
@@ -5,75 +6,83 @@ import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
-  test('Should throw error when a pullRequestNumber is not present', async () => {
+  it('should throw error when a pullRequestNumber is not present', async () => {
     githubConfigMock.pullRequestNumber = undefined;
 
+    let error: any;
     try {
       await getPostedReviewComments();
-      expect(false).toBeTruthy(); // should not be reached
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toEqual('This function can only be run on a pull request.');
+    } catch (err) {
+      error = err;
     }
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe('This function can only be run on a pull request.');
   });
 
-  test('Should return single file on getPostedReviewComments', async () => {
+  it('should return single file on getPostedReviewComments', async () => {
     githubConfigMock.pullRequestNumber = 1;
     (octokit.paginate as any).mockReturnValueOnce([{ id: 1 }]);
 
     const response = await getPostedReviewComments();
+
     expect(response).toEqual([{ id: 1 }]);
   });
 
-  test('Should be called with specific parameters on getPostedReviewComments', async () => {
+  it('should be called with specific parameters on getPostedReviewComments', async () => {
     (octokit.paginate as any).mockReturnValueOnce();
     const spy = jest.spyOn(octokit, 'paginate');
 
     await getPostedReviewComments();
+
     expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listReviewComments, { repo: 'test', owner: 'tester', pull_number: 1 });
   });
 
-  test('Should return three files on getPostedReviewComments', async () => {
+  it('should return three files on getPostedReviewComments', async () => {
     (octokit.paginate as any).mockReturnValueOnce([{}, {}, {}]);
 
     const response = await getPostedReviewComments();
-    expect((response as any[]).length).toEqual(3);
+
+    expect(response as any[]).toHaveLength(3);
   });
 
-  test('Should post a notice when getPostedReviewComments fails', async () => {
+  it('should post a notice when getPostedReviewComments fails', async () => {
     const spy = jest.spyOn(logger, 'notice');
 
     (octokit.paginate as any).mockImplementationOnce(() => {
       throw new Error();
     });
     await getPostedReviewComments();
+
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('deletePreviousReviewComments', () => {
-  test('Should call deleteReviewComment once on deletePreviousReviewComments', async () => {
+  it('should call deleteReviewComment once on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([warningComment, emptyComment]);
+
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  test('Should call deleteReviewComment twice on deletePreviousReviewComments', async () => {
+  it('should call deleteReviewComment twice on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([warningComment, warningComment]);
+
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  test('Should not call deleteReviewComment on deletePreviousReviewComments', async () => {
+  it('should not call deleteReviewComment on deletePreviousReviewComments', async () => {
     const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([emptyComment, emptyComment]);
+
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
-  test('Should post a notice when deletePreviousReviewComments fails', async () => {
+  it('should post a notice when deletePreviousReviewComments fails', async () => {
     const spy = jest.spyOn(logger, 'notice');
 
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
@@ -86,7 +95,7 @@ describe('deletePreviousReviewComments', () => {
 });
 
 describe('postAnnotations', () => {
-  test('Should post two annotations when showBlockingAfter is true', () => {
+  it('should post two annotations when showBlockingAfter is true', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
@@ -109,7 +118,7 @@ describe('postAnnotations', () => {
     });
   });
 
-  test('Should post four annotations when showBlockingAfter is true', () => {
+  it('should post four annotations when showBlockingAfter is true', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
@@ -142,7 +151,7 @@ describe('postAnnotations', () => {
     });
   });
 
-  test('Should post only a blocking annotation when showBlockingAfter is false', () => {
+  it('should post only a blocking annotation when showBlockingAfter is false', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 
@@ -160,7 +169,7 @@ describe('postAnnotations', () => {
     expect(noticeSpy).toHaveBeenCalledTimes(0);
   });
 
-  test('Should post only two blocking annotations when showBlockingAfter is false', () => {
+  it('should post only two blocking annotations when showBlockingAfter is false', () => {
     const warningSpy = jest.spyOn(logger, 'warning');
     const noticeSpy = jest.spyOn(logger, 'notice');
 

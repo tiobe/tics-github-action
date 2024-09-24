@@ -1,8 +1,9 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import * as core from '@actions/core';
 import { logger } from '../../../src/helper/logger';
 
 describe('info', () => {
-  test('Should call core.info on info', () => {
+  it('should call core.info on info', () => {
     const info = jest.spyOn(core, 'info');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -11,10 +12,10 @@ describe('info', () => {
     expect(info).toHaveBeenCalledTimes(1);
     expect(info).toHaveBeenCalledWith('string');
     expect(addNewline).toHaveBeenCalledTimes(0);
-    expect(logger.called).toEqual('info');
+    expect(logger.called).toBe('info');
   });
 
-  test('Should call core.info on header', () => {
+  it('should call core.info on header', () => {
     const info = jest.spyOn(core, 'info');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -24,12 +25,12 @@ describe('info', () => {
     expect(info).toHaveBeenCalledWith(expect.stringContaining('string'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('header');
-    expect(logger.called).toEqual('header');
+    expect(logger.called).toBe('header');
   });
 });
 
 describe('debug', () => {
-  test('Should call core.debug on debug', () => {
+  it('should call core.debug on debug', () => {
     const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -39,12 +40,12 @@ describe('debug', () => {
     expect(debug).toHaveBeenCalledTimes(1);
     expect(debug).toHaveBeenCalledWith('string token ***');
     expect(addNewline).toHaveBeenCalledTimes(0);
-    expect(logger.called).toEqual('debug');
+    expect(logger.called).toBe('debug');
   });
 });
 
 describe('notice', () => {
-  test('Should call core.notice on notice', () => {
+  it('should call core.notice on notice', () => {
     const debug = jest.spyOn(core, 'notice');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -53,12 +54,12 @@ describe('notice', () => {
     expect(debug).toHaveBeenCalledTimes(1);
     expect(debug).toHaveBeenCalledWith('string', undefined);
     expect(addNewline).toHaveBeenCalledTimes(0);
-    expect(logger.called).toEqual('notice');
+    expect(logger.called).toBe('notice');
   });
 });
 
 describe('warning', () => {
-  test('Should call core.warning on warning', () => {
+  it('should call core.warning on warning', () => {
     const debug = jest.spyOn(core, 'warning');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -67,12 +68,12 @@ describe('warning', () => {
     expect(debug).toHaveBeenCalledTimes(1);
     expect(debug).toHaveBeenCalledWith('\u001b[33mstring', undefined);
     expect(addNewline).toHaveBeenCalledTimes(0);
-    expect(logger.called).toEqual('warning');
+    expect(logger.called).toBe('warning');
   });
 });
 
 describe('error', () => {
-  test('Should call core.error on error', () => {
+  it('should call core.error on error', () => {
     const error = jest.spyOn(core, 'error');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -82,12 +83,12 @@ describe('error', () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining('error'), undefined);
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
-    expect(logger.called).toEqual('error');
+    expect(logger.called).toBe('error');
   });
 });
 
 describe('setFailed', () => {
-  test('Should call core.setFailed on setFailed', () => {
+  it('should call core.setFailed on setFailed', () => {
     const setFailed = jest.spyOn(core, 'setFailed');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
@@ -97,6 +98,6 @@ describe('setFailed', () => {
     expect(setFailed).toHaveBeenCalledWith(expect.stringContaining('error'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
-    expect(logger.called).toEqual('error');
+    expect(logger.called).toBe('error');
   });
 });

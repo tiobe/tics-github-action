@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as http from 'http';
 import { ProxyServer, createProxy } from 'proxy';
 
@@ -22,9 +23,8 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 // mock before importing httpClient
-jest.spyOn(process.stdout, 'write').mockImplementation();
+jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 
-// eslint-disable-next-line import/first
 import { httpClient } from '../../src/viewer/http-client';
 import HttpClient from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
@@ -69,15 +69,15 @@ describe('@actions/http-client (using http_proxy)', () => {
     }
   });
 
-  test('Should return basic REST request through the proxy', async () => {
+  it('should return basic REST request through the proxy', async () => {
     const response = await httpClient.get('http://0.0.0.0:8082/200');
 
     expect(response).toMatchObject({ data: { data: 'pass' }, status: 200, retryCount: 0 });
     expect(proxyConnects).toContain('http://0.0.0.0:8082/200');
-    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/200').length).toEqual(1);
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/200')).toHaveLength(1);
   });
 
-  test('Should retry 3 times basic REST request through the proxy', async () => {
+  it('should retry 3 times basic REST request through the proxy', async () => {
     const httpClient = new HttpClient(
       true,
       {
@@ -100,13 +100,13 @@ describe('@actions/http-client (using http_proxy)', () => {
     }
 
     expect(Date.now() - time).toBeGreaterThanOrEqual(600);
-    expect(response).toEqual(undefined);
+    expect(response).toBeUndefined();
     expect(errorMessage).toContain('502');
     expect(proxyConnects).toContain('http://0.0.0.0:8082/502');
-    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(4);
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502')).toHaveLength(4);
   }, 10000);
 
-  test('Should retry 4 times basic REST request through the proxy', async () => {
+  it('should retry 4 times basic REST request through the proxy', async () => {
     const httpClient = new HttpClient(
       true,
       {
@@ -129,13 +129,13 @@ describe('@actions/http-client (using http_proxy)', () => {
     }
 
     expect(Date.now() - time).toBeGreaterThanOrEqual(800);
-    expect(response).toEqual(undefined);
+    expect(response).toBeUndefined();
     expect(errorMessage).toContain('502');
     expect(proxyConnects).toContain('http://0.0.0.0:8082/502');
-    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(5);
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502')).toHaveLength(5);
   }, 10000);
 
-  test('Should retry on basic REST request, but not through the proxy', async () => {
+  it('should retry on basic REST request, but not through the proxy', async () => {
     // setting no_proxy
     const originalNoProxy = process.env['no_proxy'];
     process.env['no_proxy'] = '0.0.0.0';
@@ -165,8 +165,8 @@ describe('@actions/http-client (using http_proxy)', () => {
     process.env['no_proxy'] = originalNoProxy;
 
     expect(Date.now() - time).toBeGreaterThanOrEqual(800);
-    expect(response).toEqual(undefined);
+    expect(response).toBeUndefined();
     expect(errorMessage).toContain('502');
-    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502').length).toEqual(0);
+    expect(proxyConnects.filter(p => p === 'http://0.0.0.0:8082/502')).toHaveLength(0);
   }, 10000);
 });
