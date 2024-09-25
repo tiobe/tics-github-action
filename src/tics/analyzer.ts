@@ -152,11 +152,6 @@ export function getTicsCommand(fileListPath: string): string {
     command.push(ticsCli.additionalFlags);
   }
 
-  // Add TICS debug flag when in debug mode, if this flag was not already set.
-  if (githubConfig.debugger && !command.includes('-log ')) {
-    command.push('-log 9');
-  }
-
   return command.join(' ');
 }
 

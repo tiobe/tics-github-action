@@ -16,14 +16,14 @@ describe('Tempdir test', () => {
     githubConfigMock.debugger = true;
     const tmpdir = getTmpDir();
 
-    expect(tmpdir).toStrictEqual('/tmp/tics/123-1');
+    expect(tmpdir).toStrictEqual('/tmp/tics/123_TICS_1_tics-github-action');
   });
 
   it('Should return empty if variable is set', () => {
     ticsCliMock.tmpdir = 'something/else';
     const tmpdir = getTmpDir();
 
-    expect(tmpdir).toStrictEqual('something/else/123-1');
+    expect(tmpdir).toStrictEqual('something/else/123_TICS_1_tics-github-action');
   });
 });
 
@@ -31,21 +31,25 @@ describe('Artifacts test', () => {
   it('Should upload logfile to tmpdir', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
+    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log')]);
     const mockArtifactClient = new MockArtifactClient([]);
     jest.spyOn(artifact, 'create').mockReturnValue(mockArtifactClient);
     const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact');
 
     await uploadArtifact();
 
-    expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/file.log'], '/tmp/123-1/ticstmpdir');
+    expect(uploadSpy).toHaveBeenCalledWith(
+      'TICS_tics-github-action_client_ticstmpdir',
+      ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
+      '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
+    );
   });
 
   it('Should upload logdir to tmpdir', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    const direntOne = [new MockDirent(false, 'tics', '/tmp/123-1/ticstmpdir/tics')];
-    const direntTwo = [new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/tics/file.log')];
+    const direntOne = [new MockDirent(false, 'tics', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics')];
+    const direntTwo = [new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics/file.log')];
 
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntOne);
     jest.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntTwo);
@@ -55,36 +59,48 @@ describe('Artifacts test', () => {
 
     await uploadArtifact();
 
-    expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/tics/file.log'], '/tmp/123-1/ticstmpdir');
+    expect(uploadSpy).toHaveBeenCalledWith(
+      'TICS_tics-github-action_client_ticstmpdir',
+      ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics/file.log'],
+      '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
+    );
   });
 
   it('Should call debug logger on failing to upload logfile', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
-    const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);
+    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log')]);
+    const mockArtifactClient = new MockArtifactClient(['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log']);
     jest.spyOn(artifact, 'create').mockReturnValue(mockArtifactClient);
     const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact');
     const loggerSpy = jest.spyOn(logger, 'debug');
 
     await uploadArtifact();
 
-    expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/file.log'], '/tmp/123-1/ticstmpdir');
-    expect(loggerSpy).toHaveBeenCalledWith(`Failed to upload file(s): /tmp/123-1/ticstmpdir/file.log`);
+    expect(uploadSpy).toHaveBeenCalledWith(
+      'TICS_tics-github-action_client_ticstmpdir',
+      ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
+      '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
+    );
+    expect(loggerSpy).toHaveBeenCalledWith(`Failed to upload file(s): /tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log`);
   });
 
   it('Should call debug logger on upload throwing an error', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123-1/ticstmpdir/file.log')]);
-    const mockArtifactClient = new MockArtifactClient(['/tmp/123-1/ticstmpdir/file.log']);
+    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_tics-github-action/ticstmpdir/file.log')]);
+    const mockArtifactClient = new MockArtifactClient(['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log']);
     jest.spyOn(artifact, 'create').mockReturnValue(mockArtifactClient);
     const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact').mockRejectedValue(Error('connection issues'));
     const loggerSpy = jest.spyOn(logger, 'debug');
 
     await uploadArtifact();
 
-    expect(uploadSpy).toHaveBeenCalledWith('ticstmpdir', ['/tmp/123-1/ticstmpdir/file.log'], '/tmp/123-1/ticstmpdir');
+    expect(uploadSpy).toHaveBeenCalledWith(
+      'TICS_tics-github-action_client_ticstmpdir',
+      ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
+      '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
+    );
     expect(loggerSpy).toHaveBeenCalledWith(`Failed to upload artifact: connection issues`);
   });
 });

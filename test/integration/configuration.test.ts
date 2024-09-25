@@ -21,6 +21,7 @@ describe('pullRequestNumber', () => {
     jest.mock('@actions/github', () => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: { number: 1 }
           },
@@ -45,6 +46,7 @@ describe('pullRequestNumber', () => {
     jest.mock('@actions/github', () => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: undefined
           },
@@ -71,6 +73,7 @@ describe('pullRequestNumber', () => {
     jest.mock('@actions/github', () => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: undefined
           },

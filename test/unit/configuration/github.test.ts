@@ -21,13 +21,17 @@ describe('GitHub Configuration', () => {
   });
 
   test('Should set variables taken from context', () => {
+    contextMock.action = 'tics-github-action';
     contextMock.apiUrl = 'api.github.com';
     contextMock.repo = { repo: 'tics-github-action', owner: 'tiobe' };
     contextMock.sha = 'sha-128';
     contextMock.eventName = 'pull_request';
     contextMock.runId = 123;
+    contextMock.job = 'TICS';
     contextMock.runNumber = 1;
     contextMock.payload = { pull_request: { number: 1 } };
+
+    process.env.GITHUB_RUN_ATTEMPT = '1';
 
     githubConfig = new GithubConfig();
 
@@ -37,7 +41,7 @@ describe('GitHub Configuration', () => {
       reponame: 'tics-github-action',
       commitSha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
-      id: '123-1',
+      id: `123_1_TICS_tics-github-action`,
       pullRequestNumber: 1
     });
   });
