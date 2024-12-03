@@ -36,6 +36,8 @@ describe('createSummaryBody', () => {
     expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
     expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
     expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
+    expect(string).toContain('<tr><th>Function</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
+    expect(string).toContain('</td><td>+25</td><td>0</td></tr>');
 
     summary.clear();
   });
