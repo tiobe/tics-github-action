@@ -97,7 +97,7 @@ function shouldCommentBeDeleted(body?: string): boolean {
 }
 
 function isWorkflowAndJobInAnotherRun(body: string): boolean {
-  const regex = /<i>([^\s]+)<\/i>/g;
+  const regex = /<!--([^\s]+)-->/g;
 
   let identifier = '';
   // Get the last match of the <i> tag.

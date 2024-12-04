@@ -203,20 +203,20 @@ const commentWithoutBody: Comment = {
 
 const commentWithIdentifierSameJob: Comment = {
   ...commentWithBody,
-  body: '<h1>TICS Quality Gate</h1><i>This distracts</i>Message Here<i>tics-client_TICS_1_1</i>'
+  body: '<h1>TICS Quality Gate</h1><!--This distracts-->Message Here<!--tics-client_TICS_1_1-->'
 };
 
 const commentWithIdentifierSameJobAndRun: Comment = {
   ...commentWithBody,
-  body: '<h1>TICS Quality Gate</h1>Message Here<i>tics-client_TICS_1_2</i>'
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_TICS_1_2-->'
 };
 
 const commentWithIdentifierOtherJob: Comment = {
   ...commentWithBody,
-  body: '<h1>TICS Quality Gate</h1>Message Here<i>tics-client_OTHER_1_1</i>'
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_OTHER_1_1-->'
 };
 
 const commentWithIdentifierWrongFormat: Comment = {
   ...commentWithBody,
-  body: '<h1>TICS Quality Gate</h1>Message Here<i>tics-client_OTHER_1</i>'
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_OTHER_1-->'
 };

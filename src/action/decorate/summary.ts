@@ -54,7 +54,7 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
-  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
+  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
 
   logger.info('Created summary.');
 
@@ -89,7 +89,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
       summary.addRaw(`:warning: ${warning}${EOL}${EOL}`);
     }
   }
-  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
+  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
 
   logger.info('Created summary.');
   return summary.stringify();
@@ -107,7 +107,7 @@ export function createNothingAnalyzedSummaryBody(message: string): string {
   summary.addHeading(generateStatusMarkdown(Status.PASSED, true), 3);
 
   summary.addRaw(message);
-  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
+  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
 
   logger.info('Created summary.');
   return summary.stringify();

@@ -24,9 +24,9 @@ export class GithubConfig {
     this.reponame = context.repo.repo;
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
-    this.job = context.job.replace(/\s+/g, '-').replace(/_+/g, '-');
+    this.job = context.job.replace(/[\s|_]+/g, '-');
     this.action = context.action.replace('__tiobe_', '');
-    this.workflow = context.workflow.replace(/\s+/g, '-').replace(/_+/g, '-');
+    this.workflow = context.workflow.replace(/[\s|_]+/g, '-');
     this.runNumber = context.runNumber;
     this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT ?? '0', 10);
     this.pullRequestNumber = this.getPullRequestNumber();
@@ -76,7 +76,7 @@ export class GithubConfig {
     }
   }
 
-  getIdentifier(): string {
+  getCommentIdentifier(): string {
     return [this.workflow, this.job, this.runNumber, this.runAttempt].join('_');
   }
 
