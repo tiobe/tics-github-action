@@ -90,16 +90,41 @@ function shouldCommentBeDeleted(body?: string): boolean {
   }
 
   if (includesTitle) {
-    return containsIdentifier(body);
+    return isWorkflowAndJobInAnotherRun(body);
   }
 
   return false;
 }
 
-function containsIdentifier(body: string): boolean {
-  const index = body.indexOf(`${githubConfig.workflow}_${githubConfig.job}`);
+function isWorkflowAndJobInAnotherRun(body: string): boolean {
+  const regex = /<i>([^\s]+)<\/i>/g;
 
-  if (index === -1) return true;
+  let identifier = '';
+  // Get the last match of the <i> tag.
+  let match: RegExpExecArray | null = null;
+  while ((match = regex.exec(body))) {
+    if (match[1] !== '') {
+      identifier = match[1];
+    }
+  }
 
-  return body.substring(index, body.length - 4) !== githubConfig.getIdentifier();
+  // If no identifier is found, the comment is
+  // of the old format and should be replaced.
+  if (identifier === '') return true;
+
+  const split = identifier.split('_');
+
+  // If the identifier does not match the correct format, do not replace.
+  if (split.length !== 4) {
+    logger.debug(`Identifier is not of the correct format: ${identifier}`);
+    return false;
+  }
+
+  // If the workflow or job are different, do not replace.
+  if (split[0] !== githubConfig.workflow || split[1] !== githubConfig.job) {
+    return false;
+  }
+
+  // Only replace if the run number or run attempt are different.
+  return parseInt(split[2], 10) !== githubConfig.runNumber || parseInt(split[3], 10) !== githubConfig.runAttempt;
 }
