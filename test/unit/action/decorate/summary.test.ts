@@ -145,7 +145,7 @@ describe('createErrorSummary', () => {
 describe('createNothingAnalyzedSummaryBody', () => {
   test('Should return summary with the message given', async () => {
     const body = createNothingAnalyzedSummaryBody('message');
-    expect(body).toEqual('<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage');
+    expect(body).toEqual('<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage<i>tics-client_TICS_1_2</i>');
   });
 });
 

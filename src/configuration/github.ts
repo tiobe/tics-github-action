@@ -11,9 +11,12 @@ export class GithubConfig {
   readonly event: GithubEvent;
   readonly job: string;
   readonly action: string;
-  readonly id: string;
+  readonly workflow: string;
+  readonly runNumber: number;
+  readonly runAttempt: number;
   readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
+  readonly id: string;
 
   constructor() {
     this.apiUrl = context.apiUrl;
@@ -21,8 +24,13 @@ export class GithubConfig {
     this.reponame = context.repo.repo;
     this.commitSha = context.sha;
     this.event = this.getGithubEvent();
-    this.job = context.job;
+    this.job = context.job.replace(/\s+/g, '-').replace(/_+/g, '-');
     this.action = context.action.replace('__tiobe_', '');
+    this.workflow = context.workflow.replace(/\s+/g, '-').replace(/_+/g, '-');
+    this.runNumber = context.runNumber;
+    this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT ?? '0', 10);
+    this.pullRequestNumber = this.getPullRequestNumber();
+    this.debugger = isDebug();
 
     /**
      * Construct the id to use for storing tmpdirs. The action name will
@@ -34,10 +42,7 @@ export class GithubConfig {
      * include a suffix that consists of the sequence number preceded by an underscore.
      * https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
      */
-    const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? '0';
-    this.id = `${context.runId.toString()}_${runAttempt}_${this.job}_${this.action}`;
-    this.pullRequestNumber = this.getPullRequestNumber();
-    this.debugger = isDebug();
+    this.id = `${context.runId.toString()}_${this.runAttempt.toString()}_${this.job}_${this.action}`;
 
     this.removeWarningListener();
   }
@@ -69,6 +74,10 @@ export class GithubConfig {
       default:
         return GithubEvent.PUSH;
     }
+  }
+
+  getIdentifier(): string {
+    return [this.workflow, this.job, this.runNumber, this.runAttempt].join('_');
   }
 
   removeWarningListener(): void {

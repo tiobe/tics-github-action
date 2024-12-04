@@ -54,6 +54,7 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
+  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
 
   logger.info('Created summary.');
 
@@ -88,6 +89,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
       summary.addRaw(`:warning: ${warning}${EOL}${EOL}`);
     }
   }
+  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
 
   logger.info('Created summary.');
   return summary.stringify();
@@ -105,6 +107,7 @@ export function createNothingAnalyzedSummaryBody(message: string): string {
   summary.addHeading(generateStatusMarkdown(Status.PASSED, true), 3);
 
   summary.addRaw(message);
+  summary.addRaw(`<i>${githubConfig.getIdentifier()}</i>`);
 
   logger.info('Created summary.');
   return summary.stringify();
@@ -374,6 +377,7 @@ function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAn
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
+// Exported for testing
 export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
   const label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
   let body = '';

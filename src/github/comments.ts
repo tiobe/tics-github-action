@@ -59,7 +59,7 @@ export async function postComment(body: string): Promise<void> {
 export async function deletePreviousComments(comments: Comment[]): Promise<void> {
   logger.header('Deleting comments of previous runs.');
   for (const comment of comments) {
-    if (commentIncludesTicsTitle(comment.body)) {
+    if (shouldCommentBeDeleted(comment.body)) {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -76,16 +76,30 @@ export async function deletePreviousComments(comments: Comment[]): Promise<void>
   logger.info('Deleted review comments of previous runs.');
 }
 
-function commentIncludesTicsTitle(body?: string): boolean {
-  const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
-
+function shouldCommentBeDeleted(body?: string): boolean {
   if (!body) return false;
+
+  const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
 
   let includesTitle = false;
 
-  titles.forEach(title => {
-    if (body.startsWith(title)) includesTitle = true;
-  });
+  for (const title of titles) {
+    if (body.startsWith(title)) {
+      includesTitle = true;
+    }
+  }
 
-  return includesTitle;
+  if (includesTitle) {
+    return containsIdentifier(body);
+  }
+
+  return false;
+}
+
+function containsIdentifier(body: string): boolean {
+  const index = body.indexOf(`${githubConfig.workflow}_${githubConfig.job}`);
+
+  if (index === -1) return true;
+
+  return body.substring(index, body.length - 4) !== githubConfig.getIdentifier();
 }
