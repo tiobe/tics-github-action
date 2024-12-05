@@ -1,27 +1,46 @@
 import * as core from '@actions/core';
 import { logger } from '../../../src/helper/logger';
 
+let infoSpy: jest.SpyInstance;
+let debugSpy: jest.SpyInstance;
+let noticeSpy: jest.SpyInstance;
+let errorSpy: jest.SpyInstance;
+let warningSpy: jest.SpyInstance;
+let setFailedSpy: jest.SpyInstance;
+
+beforeEach(() => {
+  infoSpy = jest.spyOn(core, 'info');
+  debugSpy = jest.spyOn(core, 'debug');
+  noticeSpy = jest.spyOn(core, 'notice');
+  errorSpy = jest.spyOn(core, 'error');
+  warningSpy = jest.spyOn(core, 'warning');
+  setFailedSpy = jest.spyOn(core, 'setFailed');
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
+
 describe('info', () => {
   test('Should call core.info on info', () => {
-    const info = jest.spyOn(core, 'info');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.info('string');
 
-    expect(info).toHaveBeenCalledTimes(1);
-    expect(info).toHaveBeenCalledWith('string');
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledWith('string');
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(logger.called).toEqual('info');
   });
 
   test('Should call core.info on header', () => {
-    const info = jest.spyOn(core, 'info');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
+    logger.info('error');
     logger.header('string');
 
-    expect(info).toHaveBeenCalledTimes(2); // once for header, once for newline
-    expect(info).toHaveBeenCalledWith(expect.stringContaining('string'));
+    expect(infoSpy).toHaveBeenCalledTimes(2); // once for header, once for newline
+    expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('string'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('header');
     expect(logger.called).toEqual('header');
@@ -30,14 +49,13 @@ describe('info', () => {
 
 describe('debug', () => {
   test('Should call core.debug on debug', () => {
-    const debug = jest.spyOn(core, 'debug');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.setSecretsFilter(['token']);
     logger.debug('string token secret');
 
-    expect(debug).toHaveBeenCalledTimes(1);
-    expect(debug).toHaveBeenCalledWith('string token ***');
+    expect(debugSpy).toHaveBeenCalledTimes(1);
+    expect(debugSpy).toHaveBeenCalledWith('string token ***');
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(logger.called).toEqual('debug');
   });
@@ -45,13 +63,12 @@ describe('debug', () => {
 
 describe('notice', () => {
   test('Should call core.notice on notice', () => {
-    const debug = jest.spyOn(core, 'notice');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.notice('string');
 
-    expect(debug).toHaveBeenCalledTimes(1);
-    expect(debug).toHaveBeenCalledWith('string', undefined);
+    expect(noticeSpy).toHaveBeenCalledTimes(1);
+    expect(noticeSpy).toHaveBeenCalledWith('string', undefined);
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(logger.called).toEqual('notice');
   });
@@ -59,13 +76,12 @@ describe('notice', () => {
 
 describe('warning', () => {
   test('Should call core.warning on warning', () => {
-    const debug = jest.spyOn(core, 'warning');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.warning('string');
 
-    expect(debug).toHaveBeenCalledTimes(1);
-    expect(debug).toHaveBeenCalledWith('\u001b[33mstring', undefined);
+    expect(warningSpy).toHaveBeenCalledTimes(1);
+    expect(warningSpy).toHaveBeenCalledWith('\u001b[33mstring', undefined);
     expect(addNewline).toHaveBeenCalledTimes(0);
     expect(logger.called).toEqual('warning');
   });
@@ -73,13 +89,12 @@ describe('warning', () => {
 
 describe('error', () => {
   test('Should call core.error on error', () => {
-    const error = jest.spyOn(core, 'error');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.error('error');
 
-    expect(error).toHaveBeenCalledTimes(1);
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('error'), undefined);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('error'), undefined);
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
     expect(logger.called).toEqual('error');
@@ -88,15 +103,34 @@ describe('error', () => {
 
 describe('setFailed', () => {
   test('Should call core.setFailed on setFailed', () => {
-    const setFailed = jest.spyOn(core, 'setFailed');
     const addNewline = jest.spyOn(logger, 'addNewline');
 
     logger.setFailed('error');
 
-    expect(setFailed).toHaveBeenCalledTimes(1);
-    expect(setFailed).toHaveBeenCalledWith(expect.stringContaining('error'));
+    expect(setFailedSpy).toHaveBeenCalledTimes(1);
+    expect(setFailedSpy).toHaveBeenCalledWith(expect.stringContaining('error'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('error');
     expect(logger.called).toEqual('error');
+  });
+});
+
+describe('maskOutput', () => {
+  test('Should filter out JAVA options', () => {
+    const message = 'Picked up JAVA_OPTIONS testing once';
+
+    logger.info(message);
+    logger.notice(message);
+    logger.debug(message);
+    logger.warning(message);
+    logger.error(message);
+    logger.setFailed(message);
+
+    expect(infoSpy).toHaveBeenCalledTimes(0);
+    expect(noticeSpy).toHaveBeenCalledTimes(0);
+    expect(debugSpy).toHaveBeenCalledTimes(0);
+    expect(warningSpy).toHaveBeenCalledTimes(0);
+    expect(errorSpy).toHaveBeenCalledTimes(0);
+    expect(setFailedSpy).toHaveBeenCalledTimes(0);
   });
 });

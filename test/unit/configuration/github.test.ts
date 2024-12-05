@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
+import { GithubEvent } from '../../../src/configuration/github-event';
 
 describe('GitHub Configuration', () => {
   let githubConfig: GithubConfig;
@@ -91,5 +92,27 @@ describe('GitHub Configuration', () => {
   test('Should call removeWarningListener without errors', () => {
     githubConfig = new GithubConfig();
     githubConfig.removeWarningListener();
+  });
+
+  test('getCommentIdentifier', () => {
+    githubConfig = new GithubConfig();
+    expect(githubConfig.getCommentIdentifier()).toEqual('tics-client_TICS_1_1');
+  });
+
+  test('getGithubEvent', () => {
+    contextMock.eventName = 'undefined';
+    expect(new GithubConfig().event).toEqual(GithubEvent.PUSH);
+    contextMock.eventName = GithubEvent.PUSH.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.PUSH);
+    contextMock.eventName = GithubEvent.PULL_REQUEST.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.PULL_REQUEST);
+    contextMock.eventName = GithubEvent.PULL_REQUEST_TARGET.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.PULL_REQUEST_TARGET);
+    contextMock.eventName = GithubEvent.WORKFLOW_CALL.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.WORKFLOW_CALL);
+    contextMock.eventName = GithubEvent.WORKFLOW_DISPATCH.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.WORKFLOW_DISPATCH);
+    contextMock.eventName = GithubEvent.WORKFLOW_RUN.name;
+    expect(new GithubConfig().event).toEqual(GithubEvent.WORKFLOW_RUN);
   });
 });

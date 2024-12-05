@@ -139,8 +139,13 @@ describe('deletePreviousComments', () => {
     expect(deleteCommentSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  test('Should not call deleteComment if body is not TICS', async () => {
+  test('Should not call deleteComment if body is undefined', async () => {
     await deletePreviousComments([commentWithoutBody]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
+  });
+
+  test('Should not call deleteComment if body is not TICS', async () => {
+    await deletePreviousComments([commentWithoutTics]);
     expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -199,6 +204,11 @@ const commentWithBody: Comment = {
 const commentWithoutBody: Comment = {
   ...commentWithBody,
   body: undefined
+};
+
+const commentWithoutTics: Comment = {
+  ...commentWithBody,
+  body: 'Other action content'
 };
 
 const commentWithIdentifierSameJob: Comment = {
