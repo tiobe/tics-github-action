@@ -45,7 +45,7 @@
     "underscore": "^1.13.7"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.5.5",
     "@types/semver": "^7.5.8",
     "@types/underscore": "^1.11.15",
