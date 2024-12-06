@@ -20,6 +20,8 @@ import { generateComment, generateExpandableAreaMarkdown, generateItalic, genera
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepName } from '../../github/runs';
 
+const capitalize = (s: string): string => s && String(s[0]).toUpperCase() + String(s).slice(1);
+
 export async function createSummaryBody(analysisResult: AnalysisResult): Promise<string> {
   logger.header('Creating summary.');
   setSummaryHeader(getStatus(analysisResult.passed, analysisResult.passedWithWarning));
@@ -36,7 +38,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
         if (condition.details && condition.details.items.length > 0) {
           summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
           summary.addBreak();
-          summary.addTable(createConditionTable(condition.details));
+          createConditionTables(condition.details).forEach(table => summary.addTable(table));
           summary.addRaw('</details>', true);
         } else {
           summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
@@ -185,43 +187,45 @@ export function createFilesSummary(fileList: string[]): string {
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
-  const rows: SummaryTableRow[] = [];
-  const titleRow: SummaryTableRow = [
-    {
-      data: 'File',
-      header: true
-    },
-    {
-      data: details.dataKeys.actualValue.title,
-      header: true
-    }
-  ];
-  if (details.dataKeys.blockingAfter) {
-    titleRow.push({
-      data: details.dataKeys.blockingAfter.title,
-      header: true
-    });
-  }
-  rows.push(titleRow);
-
-  details.items
-    .filter(item => item.itemType === 'file')
-    .forEach(item => {
-      const dataRow: SummaryTableRow = [
-        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
-        item.data.actualValue.formattedValue
-      ];
-
-      if (item.data.blockingAfter) {
-        dataRow.push(item.data.blockingAfter.formattedValue);
-      } else if (details.dataKeys.blockingAfter) {
-        dataRow.push('0');
+function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
+  return details.itemTypes.map(itemType => {
+    const rows: SummaryTableRow[] = [];
+    const titleRow: SummaryTableRow = [
+      {
+        data: capitalize(itemType),
+        header: true
+      },
+      {
+        data: details.dataKeys.actualValue.title,
+        header: true
       }
+    ];
+    if (details.dataKeys.blockingAfter) {
+      titleRow.push({
+        data: details.dataKeys.blockingAfter.title,
+        header: true
+      });
+    }
+    rows.push(titleRow);
 
-      rows.push(dataRow);
-    });
-  return rows;
+    details.items
+      .filter(item => item.itemType === itemType)
+      .forEach(item => {
+        const dataRow: SummaryTableRow = [
+          `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
+          item.data.actualValue.formattedValue
+        ];
+
+        if (item.data.blockingAfter) {
+          dataRow.push(item.data.blockingAfter.formattedValue);
+        } else if (details.dataKeys.blockingAfter) {
+          dataRow.push('0');
+        }
+
+        rows.push(dataRow);
+      });
+    return rows;
+  });
 }
 
 /**
@@ -405,7 +409,10 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
     } else if (previousPath !== path) {
       body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level?.toString() ?? ''}<br><b>Category:</b> ${reviewComment.category ?? ''}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()}`;
+    body += reviewComment.level ? `<br><b>Level:</b> ${reviewComment.level.toString()}` : '';
+    body += reviewComment.category ? `<br><b>Category:</b> ${reviewComment.category}` : '';
+    body += `</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';

@@ -47,7 +47,7 @@ export const analysisResultsSoaked: AnalysisResult = {
                 message:
                   'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
                 details: {
-                  itemTypes: ['file'],
+                  itemTypes: ['file', 'function'],
                   dataKeys: {
                     actualValue: {
                       title: 'Blocking now',
@@ -108,6 +108,25 @@ export const analysisResultsSoaked: AnalysisResult = {
                       data: {
                         actualValue: {
                           formattedValue: '+24',
+                          value: 24.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        },
+                        blockingAfter: {
+                          formattedValue: '0',
+                          value: 0.0,
+                          classes: [],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp)),Blocking(deferred)\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        }
+                      }
+                    },
+                    {
+                      itemType: 'function',
+                      name: 'PADAnalysis/ApplicationNative/src/views/AboutBoxs.cpp',
+                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
+                      data: {
+                        actualValue: {
+                          formattedValue: '+25',
                           value: 24.0,
                           classes: ['delta-worse'],
                           link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,views,AboutBox.cpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
