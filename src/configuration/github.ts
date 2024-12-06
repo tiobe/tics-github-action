@@ -12,6 +12,7 @@ export class GithubConfig {
   readonly job: string;
   readonly action: string;
   readonly workflow: string;
+  readonly runId: number;
   readonly runNumber: number;
   readonly runAttempt: number;
   readonly pullRequestNumber: number | undefined;
@@ -27,6 +28,7 @@ export class GithubConfig {
     this.job = context.job.replace(/[\s|_]+/g, '-');
     this.action = context.action.replace('__tiobe_', '');
     this.workflow = context.workflow.replace(/[\s|_]+/g, '-');
+    this.runId = context.runId;
     this.runNumber = context.runNumber;
     this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT ?? '0', 10);
     this.pullRequestNumber = this.getPullRequestNumber();
@@ -42,7 +44,7 @@ export class GithubConfig {
      * include a suffix that consists of the sequence number preceded by an underscore.
      * https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
      */
-    this.id = `${context.runId.toString()}_${this.runAttempt.toString()}_${this.job}_${this.action}`;
+    this.id = `${this.runId.toString()}_${this.runAttempt.toString()}_${this.job}_${this.action}`;
 
     this.removeWarningListener();
   }

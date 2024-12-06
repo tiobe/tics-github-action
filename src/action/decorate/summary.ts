@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { range } from 'underscore';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
-
 import { ChangedFile } from '../../github/interfaces';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
@@ -17,13 +16,13 @@ import {
   TicsReviewComment,
   TicsReviewComments
 } from '../../helper/interfaces';
-import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
+import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
+import { getCurrentStepName } from '../../github/runs';
 
-export function createSummaryBody(analysisResult: AnalysisResult): string {
+export async function createSummaryBody(analysisResult: AnalysisResult): Promise<string> {
   logger.header('Creating summary.');
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(getStatus(analysisResult.passed, analysisResult.passedWithWarning), true), 3);
+  setSummaryHeader(getStatus(analysisResult.passed, analysisResult.passedWithWarning));
 
   analysisResult.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
@@ -54,7 +53,7 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
-  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
+  await setSummaryFooter();
 
   logger.info('Created summary.');
 
@@ -67,11 +66,10 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
  * @param warningList list containing all the warnings found in the TICS run.
  * @returns string containing the error summary.
  */
-export function createErrorSummaryBody(errorList: string[], warningList: string[]): string {
+export async function createErrorSummaryBody(errorList: string[], warningList: string[]): Promise<string> {
   logger.header('Creating summary.');
 
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(Status.FAILED, true), 3);
+  setSummaryHeader(Status.FAILED);
 
   if (errorList.length > 0) {
     summary.addHeading('The following errors have occurred during analysis:', 2);
@@ -89,7 +87,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
       summary.addRaw(`:warning: ${warning}${EOL}${EOL}`);
     }
   }
-  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
+  await setSummaryFooter();
 
   logger.info('Created summary.');
   return summary.stringify();
@@ -100,17 +98,27 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
  * @param message Message to display in the body of the comment.
  * @returns string containing the error summary.
  */
-export function createNothingAnalyzedSummaryBody(message: string): string {
+export async function createNothingAnalyzedSummaryBody(message: string): Promise<string> {
   logger.header('Creating summary.');
 
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(Status.PASSED, true), 3);
+  setSummaryHeader(Status.PASSED);
 
   summary.addRaw(message);
-  summary.addRaw(`<!--${githubConfig.getCommentIdentifier()}-->`);
+  await setSummaryFooter();
 
   logger.info('Created summary.');
   return summary.stringify();
+}
+
+function setSummaryHeader(status: Status) {
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(generateStatusMarkdown(status, true), 3);
+}
+
+async function setSummaryFooter() {
+  summary.addEOL();
+  summary.addRaw(generateItalic(`Step: ${await getCurrentStepName()}`), true);
+  summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 
 function getConditionHeading(failedOrWarnConditions: Condition[]): string {

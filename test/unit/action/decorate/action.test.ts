@@ -14,8 +14,8 @@ describe('decorateAction', () => {
   let spyPostAnnotations: jest.SpyInstance;
 
   beforeEach(() => {
-    spyCreateSummaryBody = jest.spyOn(summary, 'createSummaryBody').mockReturnValue('body');
-    spyCreateErrorSummaryBody = jest.spyOn(summary, 'createErrorSummaryBody').mockReturnValue('body');
+    spyCreateSummaryBody = jest.spyOn(summary, 'createSummaryBody').mockResolvedValue('body');
+    spyCreateErrorSummaryBody = jest.spyOn(summary, 'createErrorSummaryBody').mockResolvedValue('body');
     spyDecoratePullRequest = jest.spyOn(pullRequest, 'decoratePullRequest').mockImplementation();
     spyPostAnnotations = jest.spyOn(annotations, 'postAnnotations').mockImplementation();
   });

@@ -19,12 +19,12 @@ export async function processIncompleteAnalysis(analysis: Analysis): Promise<str
   let summaryBody: string;
   if (!analysis.completed) {
     failedMessage = 'Failed to complete TICS analysis.';
-    summaryBody = createErrorSummaryBody(analysis.errorList, analysis.warningList);
+    summaryBody = await createErrorSummaryBody(analysis.errorList, analysis.warningList);
   } else if (analysis.warningList.find(w => w.includes('[WARNING 5057]'))) {
-    summaryBody = createNothingAnalyzedSummaryBody('No changed files applicable for TICS analysis quality gating.');
+    summaryBody = await createNothingAnalyzedSummaryBody('No changed files applicable for TICS analysis quality gating.');
   } else {
     failedMessage = 'Explorer URL not returned from TICS analysis.';
-    summaryBody = createErrorSummaryBody(analysis.errorList, analysis.warningList);
+    summaryBody = await createErrorSummaryBody(analysis.errorList, analysis.warningList);
   }
 
   if (githubConfig.event.isPullRequest) {
