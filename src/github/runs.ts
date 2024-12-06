@@ -20,9 +20,13 @@ export async function getCurrentStepName(): Promise<string> {
   try {
     logger.debug('Retrieving step name for current step...');
     const response = await octokit.rest.actions.listJobsForWorkflowRunAttempt(params);
-    const jobs = response.data.jobs.filter(j => j.status === 'in_progress');
+    const jobs = response.data.jobs.filter(j => j.name.replace(/[\s|_]+/g, '-') === githubConfig.job);
+
     if (jobs.length === 1) {
-      stepname = jobs[0].name;
+      const steps = jobs[0].steps?.filter(s => s.status === 'in_progress');
+      if (steps?.length === 1) {
+        stepname = steps[0].name;
+      }
     }
   } catch (error: unknown) {
     const message = handleOctokitError(error);

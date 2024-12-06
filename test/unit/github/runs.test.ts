@@ -14,12 +14,30 @@ describe('postReview', () => {
       data: {
         jobs: [
           {
-            name: 'Step 1',
-            status: 'completed'
+            name: 'TICS',
+            steps: [
+              {
+                name: 'Step 1',
+                status: 'completed'
+              },
+              {
+                name: 'Step 2',
+                status: 'in_progress'
+              }
+            ]
           },
           {
-            name: 'Step 2',
-            status: 'in_progress'
+            name: 'TICS2',
+            steps: [
+              {
+                name: 'Step 1',
+                status: 'in_progress'
+              },
+              {
+                name: 'Step 2',
+                status: 'in_progress'
+              }
+            ]
           }
         ]
       }
@@ -30,17 +48,35 @@ describe('postReview', () => {
     expect(name).toStrictEqual('Step 2');
   });
 
-  test('Should not return name when only one step is in progress', async () => {
+  test('Should not return name when multiple steps are in progress', async () => {
     listJobsSpy.mockResolvedValue({
       data: {
         jobs: [
           {
-            name: 'Step 1',
-            status: 'in_progress'
+            name: 'TICS',
+            steps: [
+              {
+                name: 'Step 1',
+                status: 'in_progress'
+              },
+              {
+                name: 'Step 2',
+                status: 'in_progress'
+              }
+            ]
           },
           {
-            name: 'Step 2',
-            status: 'in_progress'
+            name: 'TICS2',
+            steps: [
+              {
+                name: 'Step 1',
+                status: 'completed'
+              },
+              {
+                name: 'Step 2',
+                status: 'completed'
+              }
+            ]
           }
         ]
       }
