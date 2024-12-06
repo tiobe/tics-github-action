@@ -127,7 +127,7 @@ describe('createErrorSummary', () => {
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);
     expect(body).toContainTimes(':x: Error', 0);
     expect(body).toContainTimes(':warning: Warning', 2);
-    expect(body).toContainTimes('\n<i>tics-github-action</i>', 1);
+    expect(body).toContainTimes('\n<i>Step: tics-github-action</i>', 1);
     expect(body).toContain('\n<!--tics-client_TICS_1_2-->');
   });
 
@@ -141,7 +141,7 @@ describe('createErrorSummary', () => {
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);
     expect(body).toContainTimes(':x: Error', 1);
     expect(body).toContainTimes(':warning: Warning', 2);
-    expect(body).toContainTimes('\n<i>tics-github-action</i>', 1);
+    expect(body).toContainTimes('\n<i>Step: tics-github-action</i>', 1);
     expect(body).toContainTimes('\n<!--tics-client_TICS_1_2-->', 1);
   });
 });
@@ -150,7 +150,7 @@ describe('createNothingAnalyzedSummaryBody', () => {
   test('Should return summary with the message given', async () => {
     const body = await createNothingAnalyzedSummaryBody('message');
     expect(body).toEqual(
-      '<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage\n<i>tics-github-action</i>\n<!--tics-client_TICS_1_2-->'
+      '<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage\n<i>Step: tics-github-action</i>\n<!--tics-client_TICS_1_2-->'
     );
   });
 });

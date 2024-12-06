@@ -112,6 +112,9 @@ jest.mock('../../src/github/octokit', () => {
         },
         repos: {
           getCommit: jest.fn()
+        },
+        actions: {
+          listJobsForWorkflowRunAttempt: jest.fn()
         }
       },
       graphql: jest.fn()
