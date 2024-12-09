@@ -17,6 +17,7 @@ export class GithubConfig {
   readonly runAttempt: number;
   readonly pullRequestNumber: number | undefined;
   readonly debugger: boolean;
+  readonly runnerName: string;
   readonly id: string;
 
   constructor() {
@@ -33,6 +34,7 @@ export class GithubConfig {
     this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT ?? '0', 10);
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
+    this.runnerName = process.env.RUNNER_NAME ?? '';
 
     /**
      * Construct the id to use for storing tmpdirs. The action name will

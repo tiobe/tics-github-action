@@ -119,7 +119,7 @@ function setSummaryHeader(status: Status) {
 
 async function setSummaryFooter() {
   summary.addEOL();
-  summary.addRaw(generateItalic(`Step: ${await getCurrentStepName()}`), true);
+  summary.addRaw(generateItalic(`Workflow: ${githubConfig.workflow}, Job: ${githubConfig.job}, Step: ${await getCurrentStepName()}`), true);
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 

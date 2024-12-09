@@ -21,7 +21,7 @@ export async function getCurrentStepName(): Promise<string> {
     logger.debug('Retrieving step name for current step...');
     const response = await octokit.rest.actions.listJobsForWorkflowRunAttempt(params);
     logger.debug(JSON.stringify(response.data));
-    const jobs = response.data.jobs.filter(j => j.name.replace(/[\s|_]+/g, '-') === githubConfig.job);
+    const jobs = response.data.jobs.filter(j => j.status === 'in_progress' && j.runner_name === githubConfig.runnerName);
 
     if (jobs.length === 1) {
       const steps = jobs[0].steps?.filter(s => s.status === 'in_progress');
@@ -31,7 +31,7 @@ export async function getCurrentStepName(): Promise<string> {
     }
   } catch (error: unknown) {
     const message = handleOctokitError(error);
-    logger.notice(`Posting the review failed: ${message}`);
+    logger.notice(`Retrieving the step name failed: ${message}`);
   }
   return stepname;
 }

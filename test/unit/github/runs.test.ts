@@ -14,7 +14,8 @@ describe('postReview', () => {
       data: {
         jobs: [
           {
-            name: 'TICS',
+            runner_name: 'Github Actions 1',
+            status: 'in_progress',
             steps: [
               {
                 name: 'Step 1',
@@ -27,7 +28,8 @@ describe('postReview', () => {
             ]
           },
           {
-            name: 'TICS2',
+            name: 'Github Actions 2',
+            status: 'completed',
             steps: [
               {
                 name: 'Step 1',
@@ -53,7 +55,8 @@ describe('postReview', () => {
       data: {
         jobs: [
           {
-            name: 'TICS',
+            runner_name: 'Github Actions 1',
+            status: 'in_progress',
             steps: [
               {
                 name: 'Step 1',
@@ -66,7 +69,8 @@ describe('postReview', () => {
             ]
           },
           {
-            name: 'TICS2',
+            name: 'Github Actions 1',
+            status: 'completed',
             steps: [
               {
                 name: 'Step 1',

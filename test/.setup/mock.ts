@@ -16,6 +16,7 @@ export const githubConfigMock: {
   workflow: string;
   runNumber: number;
   runAttempt: number;
+  runnerName: string;
   getCommentIdentifier(): string;
 } = {
   apiUrl: 'github.com/api/v1/',
@@ -31,6 +32,7 @@ export const githubConfigMock: {
   workflow: 'tics-client',
   runNumber: 1,
   runAttempt: 2,
+  runnerName: 'Github Actions 1',
   getCommentIdentifier(): string {
     return [this.workflow, this.job, this.runNumber, this.runAttempt].join('_');
   }
