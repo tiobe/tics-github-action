@@ -18,7 +18,7 @@ import {
 } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
-import { getCurrentStepName } from '../../github/runs';
+import { getCurrentStepPath } from '../../github/runs';
 
 const capitalize = (s: string): string => s && String(s[0]).toUpperCase() + String(s).slice(1);
 
@@ -119,7 +119,7 @@ function setSummaryHeader(status: Status) {
 
 async function setSummaryFooter() {
   summary.addEOL();
-  summary.addRaw(generateItalic(`Workflow: ${githubConfig.workflow}, Job: ${githubConfig.job}, Step: ${await getCurrentStepName()}`), true);
+  summary.addRaw(generateItalic(await getCurrentStepPath()), true);
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 

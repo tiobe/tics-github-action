@@ -1,4 +1,4 @@
-import { getCurrentStepName } from '../../../src/github/runs';
+import { getCurrentStepPath } from '../../../src/github/runs';
 import { octokit } from '../../../src/github/octokit';
 import { githubConfigMock } from '../../.setup/mock';
 
@@ -14,6 +14,7 @@ describe('postReview', () => {
       data: {
         jobs: [
           {
+            name: 'TICS Client',
             runner_name: 'Github Actions 1',
             status: 'in_progress',
             steps: [
@@ -28,7 +29,8 @@ describe('postReview', () => {
             ]
           },
           {
-            name: 'Github Actions 2',
+            name: 'TICS Client',
+            runner_name: 'Github Actions 2',
             status: 'completed',
             steps: [
               {
@@ -45,9 +47,9 @@ describe('postReview', () => {
       }
     });
 
-    const name = await getCurrentStepName();
+    const name = await getCurrentStepPath();
 
-    expect(name).toStrictEqual('Step 2');
+    expect(name).toStrictEqual('tics-client / TICS Client / Step 2');
   });
 
   test('Should not return name when multiple steps are in progress', async () => {
@@ -55,6 +57,7 @@ describe('postReview', () => {
       data: {
         jobs: [
           {
+            name: 'TICS',
             runner_name: 'Github Actions 1',
             status: 'in_progress',
             steps: [
@@ -69,7 +72,8 @@ describe('postReview', () => {
             ]
           },
           {
-            name: 'Github Actions 1',
+            name: 'TICS',
+            runner_name: 'Github Actions 1',
             status: 'completed',
             steps: [
               {
@@ -86,16 +90,16 @@ describe('postReview', () => {
       }
     });
 
-    const name = await getCurrentStepName();
+    const name = await getCurrentStepPath();
 
-    expect(name).toStrictEqual(githubConfigMock.action);
+    expect(name).toStrictEqual('tics-client / TICS / tics-github-action');
   });
 
   test('Should post a notice on createReview', async () => {
     listJobsSpy.mockRejectedValue(new Error());
 
-    const name = await getCurrentStepName();
+    const name = await getCurrentStepPath();
 
-    expect(name).toStrictEqual(githubConfigMock.action);
+    expect(name).toStrictEqual('tics-client / TICS / tics-github-action');
   });
 });
