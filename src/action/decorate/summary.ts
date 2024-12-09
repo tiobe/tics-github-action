@@ -119,7 +119,8 @@ function setSummaryHeader(status: Status) {
 
 async function setSummaryFooter() {
   summary.addEOL();
-  summary.addRaw(generateItalic(await getCurrentStepPath()), true);
+  summary.addRaw('<h2></h2>');
+  summary.addRaw(generateItalic(await getCurrentStepPath(), 'Workflow / Job / Step'), true);
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 

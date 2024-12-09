@@ -35,8 +35,8 @@ export function generateExpandableAreaMarkdown(header: string, body: string): st
  * Generates italic text for markdown.
  * @param text The text to make italic.
  */
-export function generateItalic(text: string): string {
-  return `<i>${text}</i>`;
+export function generateItalic(text: string, title?: string): string {
+  return `<i ${title ? `title="${title}"` : ''}>${text}</i>`;
 }
 
 /**
