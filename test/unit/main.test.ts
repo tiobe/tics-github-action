@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as fs from 'fs';
 
 import { summary as coreSummary } from '@actions/core';
@@ -20,15 +21,15 @@ afterEach(() => {
 });
 
 describe('meetsPrerequisites', () => {
-  let existsSpy: jest.SpyInstance;
-  let viewerVersionSpy: jest.SpyInstance;
+  let existsSpy: jest.SpiedFunction<typeof fs.existsSync>;
+  let viewerVersionSpy: jest.SpiedFunction<typeof version.getViewerVersion>;
 
   beforeEach(() => {
     viewerVersionSpy = jest.spyOn(version, 'getViewerVersion');
     existsSpy = jest.spyOn(fs, 'existsSync');
   });
 
-  test('Should throw error if viewer version is not parsable', async () => {
+  it('should throw error if viewer version is not parsable', async () => {
     viewerVersionSpy.mockResolvedValue({ version: 'test' });
 
     let error: any;
@@ -42,7 +43,7 @@ describe('meetsPrerequisites', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version unknown.'));
   });
 
-  test('Should throw error if viewer version is too low', async () => {
+  it('should throw error if viewer version is too low', async () => {
     viewerVersionSpy.mockResolvedValue({ version: '2022.0.0' });
 
     let error: any;
@@ -56,7 +57,7 @@ describe('meetsPrerequisites', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
-  test('Should throw error if viewer version is too low with prefix character', async () => {
+  it('should throw error if viewer version is too low with prefix character', async () => {
     viewerVersionSpy.mockResolvedValue({ version: 'r2022.0.0' });
 
     let error: any;
@@ -70,7 +71,7 @@ describe('meetsPrerequisites', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
   });
 
-  test('Should not throw version error if viewer version sufficient with prefix character', async () => {
+  it('should not throw version error if viewer version sufficient with prefix character', async () => {
     viewerVersionSpy.mockResolvedValue({ version: 'r2022.4.0' });
 
     let error: any;
@@ -79,13 +80,14 @@ describe('meetsPrerequisites', () => {
     } catch (err) {
       error = err;
     }
+
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toEqual(
       expect.stringContaining('If the the action is run outside a pull request it should be run with a filelist.')
     );
   });
 
-  test('Should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
+  it('should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
     viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
     githubConfigMock.event = GithubEvent.WORKFLOW_RUN;
     ticsConfigMock.filelist = '';
@@ -103,7 +105,7 @@ describe('meetsPrerequisites', () => {
     );
   });
 
-  test('Should throw no error on mode QServer when it is not a pull request and no filelist is given', async () => {
+  it('should throw no error on mode QServer when it is not a pull request and no filelist is given', async () => {
     viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
     existsSpy.mockReturnValue(true);
     jest.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
@@ -118,9 +120,11 @@ describe('meetsPrerequisites', () => {
     ticsConfigMock.filelist = '';
 
     await main();
+
+    expect(true).toBeTruthy();
   });
 
-  test('Should throw error if ".git" does not exist', async () => {
+  it('should throw error if ".git" does not exist', async () => {
     existsSpy.mockReturnValue(false);
 
     let error: any;
@@ -138,14 +142,14 @@ describe('meetsPrerequisites', () => {
 });
 
 describe('verdict', () => {
-  let spyClient: jest.SpyInstance;
-  let spyDiagnostic: jest.SpyInstance;
-  let spyQServer: jest.SpyInstance;
+  let spyClient: jest.SpiedFunction<typeof client.clientAnalysis>;
+  let spyDiagnostic: jest.SpiedFunction<typeof diagnostic.diagnosticAnalysis>;
+  let spyQServer: jest.SpiedFunction<typeof qserver.qServerAnalysis>;
 
-  let spyUpload: jest.SpyInstance;
-  let spySetFailed: jest.SpyInstance;
-  let spyPostCli: jest.SpyInstance;
-  let spySummaryWrite: jest.SpyInstance;
+  let spyUpload: jest.SpiedFunction<typeof artifacts.uploadArtifact>;
+  let spySetFailed: jest.SpiedFunction<typeof logger.setFailed>;
+  let spyPostCli: jest.SpiedFunction<typeof summary.postCliSummary>;
+  let spySummaryWrite: jest.SpiedFunction<typeof coreSummary.write>;
 
   beforeEach(() => {
     spyClient = jest.spyOn(client, 'clientAnalysis');
@@ -154,7 +158,7 @@ describe('verdict', () => {
 
     spyUpload = jest.spyOn(artifacts, 'uploadArtifact');
     spySetFailed = jest.spyOn(logger, 'setFailed');
-    spyPostCli = jest.spyOn(summary, 'postCliSummary').mockImplementation();
+    spyPostCli = jest.spyOn(summary, 'postCliSummary').mockImplementation(() => {});
     spySummaryWrite = jest.spyOn(coreSummary, 'write');
 
     // meets prerequisites
@@ -163,61 +167,61 @@ describe('verdict', () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });
 
-  test('Should not call setfailed if the verdict is passing', async () => {
+  it('should not call setfailed if the verdict is passing', async () => {
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: true });
+    spyDiagnostic.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
     await main();
 
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: true });
+    spyClient.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
     await main();
 
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: true });
+    spyQServer.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
     await main();
 
     expect(spyUpload).not.toHaveBeenCalled();
     expect(spySetFailed).not.toHaveBeenCalled();
     expect(spyPostCli).toHaveBeenCalledTimes(3);
-    expect(spyPostCli).toHaveBeenCalledWith({ passed: true });
+    expect(spyPostCli).toHaveBeenCalledWith({ passed: true, message: '', errorList: [], warningList: [] });
     expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
-  test('Should call setfailed if the verdict is failing', async () => {
+  it('should call setfailed if the verdict is failing', async () => {
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
     await main();
 
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: false, message: 'message' });
+    spyClient.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
     await main();
 
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
+    spyQServer.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
     await main();
 
     expect(spyUpload).not.toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledTimes(3);
     expect(spySetFailed).toHaveBeenCalledWith('message');
     expect(spyPostCli).toHaveBeenCalledTimes(3);
-    expect(spyPostCli).toHaveBeenCalledWith({ passed: false, message: 'message' });
+    expect(spyPostCli).toHaveBeenCalledWith({ passed: false, message: 'message', errorList: [], warningList: [] });
     expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
-  test('Should call uploadArtifact there is a tmpdir set or in the debug state', async () => {
+  it('should call uploadArtifact there is a tmpdir set or in the debug state', async () => {
     githubConfigMock.debugger = true;
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
-    await main();
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    main();
 
     ticsCliMock.tmpdir = '/path/to/tmp';
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: false, message: 'message' });
+    spyClient.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
     await main();
 
     githubConfigMock.debugger = false;
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
+    spyQServer.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
     await main();
 
     expect(spyUpload).toHaveBeenCalledTimes(3);

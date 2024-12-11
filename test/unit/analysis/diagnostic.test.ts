@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as analyzer from '../../../src/tics/analyzer';
 
 import { Mode } from '../../../src/configuration/tics';
@@ -5,8 +6,8 @@ import { ticsConfigMock } from '../../.setup/mock';
 import { analysisFailed, analysisPassed } from './objects/diagnostic';
 import { diagnosticAnalysis } from '../../../src/analysis/diagnostic';
 
-describe('Diagnostic mode checks', () => {
-  let spyAnalyzer: jest.SpyInstance;
+describe('diagnostic mode checks', () => {
+  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
 
   beforeEach(() => {
     spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
@@ -14,7 +15,7 @@ describe('Diagnostic mode checks', () => {
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
   });
 
-  test('Diagnostic mode succeeds', async () => {
+  it('diagnostic mode succeeds', async () => {
     spyAnalyzer.mockResolvedValueOnce(analysisPassed);
 
     const verdict = await diagnosticAnalysis();
@@ -28,7 +29,7 @@ describe('Diagnostic mode checks', () => {
     });
   });
 
-  test('Diagnostic mode fails', async () => {
+  it('diagnostic mode fails', async () => {
     spyAnalyzer.mockResolvedValueOnce(analysisFailed);
 
     const verdict = await diagnosticAnalysis();

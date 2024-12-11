@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as analyzer from '../../../src/tics/analyzer';
 import * as action from '../../../src/action/decorate/action';
 import * as pull_request from '../../../src/action/decorate/pull-request';
@@ -18,11 +19,11 @@ import { qServerAnalysis } from '../../../src/analysis/qserver';
 import { Mode } from '../../../src/configuration/tics';
 import { GithubEvent } from '../../../src/configuration/github-event';
 
-describe('SetFailed checks (QServer)', () => {
-  let spyAnalyzer: jest.SpyInstance;
-  let spyPostToConversation: jest.SpyInstance;
-  let spyGetAnalysisResult: jest.SpyInstance;
-  let spyGetLastQServerRunDate: jest.SpyInstance;
+describe('setFailed checks (QServer)', () => {
+  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
+  let spyPostToConversation: jest.SpiedFunction<typeof pull_request.postToConversation>;
+  let spyGetAnalysisResult: jest.SpiedFunction<typeof qserver.getAnalysisResult>;
+  let spyGetLastQServerRunDate: jest.SpiedFunction<typeof viewer.getLastQServerRunDate>;
 
   beforeEach(() => {
     ticsConfigMock.mode = Mode.QSERVER;
@@ -40,7 +41,7 @@ describe('SetFailed checks (QServer)', () => {
     jest.resetAllMocks();
   });
 
-  test('Should return failing verdict if the analysis has not been completed', async () => {
+  it('should return failing verdict if the analysis has not been completed', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisNotCompleted);
@@ -56,7 +57,7 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return failing verdict if the analysis has failed', async () => {
+  it('should return failing verdict if the analysis has failed', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisFailed);
@@ -72,7 +73,7 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return failing verdict if the analysis date is not new', async () => {
+  it('should return failing verdict if the analysis date is not new', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
@@ -87,12 +88,13 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return passing verdict if the analysis has been completed and no files have been analyzed [WARNING 5057]', async () => {
+  it('should return passing verdict if the analysis has been completed and no files have been analyzed [WARNING 5057]', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisWarning5057);
 
     let verdict = await qServerAnalysis();
+
     expect(verdict).toEqual({
       passed: true,
       message: '',
@@ -105,6 +107,7 @@ describe('SetFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     verdict = await qServerAnalysis();
+
     expect(verdict).toEqual({
       passed: true,
       message: '',
@@ -114,7 +117,7 @@ describe('SetFailed checks (QServer)', () => {
     expect(spyPostToConversation).toHaveBeenCalled();
   });
 
-  test('Should return failing verdict if getAnalysisResult throws', async () => {
+  it('should return failing verdict if getAnalysisResult throws', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
@@ -130,7 +133,7 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return failing verdict if getAnalysisResult throws unknown object', async () => {
+  it('should return failing verdict if getAnalysisResult throws unknown object', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
@@ -146,7 +149,7 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return failing verdict if getAnalysisResult returns failing Quality Gate', async () => {
+  it('should return failing verdict if getAnalysisResult returns failing Quality Gate', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
@@ -162,7 +165,7 @@ describe('SetFailed checks (QServer)', () => {
     });
   });
 
-  test('Should return passing verdict if getAnalysisResult returns passing Quality Gate', async () => {
+  it('should return passing verdict if getAnalysisResult returns passing Quality Gate', async () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);

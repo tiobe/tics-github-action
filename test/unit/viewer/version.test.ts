@@ -1,17 +1,18 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getViewerVersion } from '../../../src/viewer/version';
 
 describe('getViewerVersion', () => {
-  test('Should version of the viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.resolve({ data: { version: '2022.0.0' } }));
+  it('should version of the viewer', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: '2022.0.0' }, retryCount: 0, status: 200 });
 
     const response = await getViewerVersion();
 
-    expect(response?.version).toEqual('2022.0.0');
+    expect(response?.version).toBe('2022.0.0');
   });
 
-  test('Should throw error on faulty get in getViewerVersion', async () => {
-    jest.spyOn(httpClient, 'get').mockImplementationOnce((): Promise<any> => Promise.reject(new Error()));
+  it('should throw error on faulty get in getViewerVersion', async () => {
+    jest.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
 
     let error: any;
     try {

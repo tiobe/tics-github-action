@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as commits from '../../../../src/github/commits';
 import * as pulls from '../../../../src/github/pulls';
 
@@ -7,9 +8,9 @@ import { singleChangedFiles } from './objects/changed-files';
 import { Mode } from '../../../../src/configuration/tics';
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
-let spyPullFiles: jest.SpyInstance;
-let spyCommitFiles: jest.SpyInstance;
-let spyFilesToFile: jest.SpyInstance;
+let spyPullFiles: jest.SpiedFunction<any>;
+let spyCommitFiles: jest.SpiedFunction<any>;
+let spyFilesToFile: jest.SpiedFunction<typeof pulls.changedFilesToFile>;
 
 beforeEach(() => {
   ticsConfigMock.mode = Mode.CLIENT;
@@ -23,12 +24,12 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-describe('Pull Request', () => {
+describe('pull Request', () => {
   beforeEach(() => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });
 
-  test('Should return no changed files if there are no changes', async () => {
+  it('should return no changed files if there are no changes', async () => {
     spyPullFiles.mockResolvedValue([]);
 
     const files = await getChangedFiles();
@@ -39,7 +40,7 @@ describe('Pull Request', () => {
     });
   });
 
-  test('Should return no changed files and a filelist if there are no changes but a filelist is given', async () => {
+  it('should return no changed files and a filelist if there are no changes but a filelist is given', async () => {
     ticsConfigMock.filelist = './filelist';
     spyPullFiles.mockResolvedValue([]);
 
@@ -51,7 +52,7 @@ describe('Pull Request', () => {
     });
   });
 
-  test('Should return changed files and a filelist if there are changes and a filelist is given', async () => {
+  it('should return changed files and a filelist if there are changes and a filelist is given', async () => {
     ticsConfigMock.filelist = './filelist';
     spyPullFiles.mockResolvedValue([singleChangedFiles]);
 
@@ -63,7 +64,7 @@ describe('Pull Request', () => {
     });
   });
 
-  test('Should return changed files and a filelist if there are changes and a filelist is given', async () => {
+  it('should return changed files and a filelist if there are changes and no filelist is given', async () => {
     ticsConfigMock.filelist = '';
     spyPullFiles.mockResolvedValue([singleChangedFiles]);
     spyFilesToFile.mockReturnValue('/path/to/filelist');
@@ -77,12 +78,12 @@ describe('Pull Request', () => {
   });
 });
 
-describe('Commit', () => {
+describe('commit', () => {
   beforeEach(() => {
     githubConfigMock.event = GithubEvent.PUSH;
   });
 
-  test('Should return no changed files if there are no changes', async () => {
+  it('should return no changed files if there are no changes', async () => {
     spyCommitFiles.mockResolvedValue([]);
 
     const files = await getChangedFiles();
@@ -93,7 +94,7 @@ describe('Commit', () => {
     });
   });
 
-  test('Should return no changed files and a filelist if there are no changes but a filelist is given', async () => {
+  it('should return no changed files and a filelist if there are no changes but a filelist is given', async () => {
     ticsConfigMock.filelist = './filelist';
     spyCommitFiles.mockResolvedValue([]);
 
@@ -105,7 +106,7 @@ describe('Commit', () => {
     });
   });
 
-  test('Should return changed files and a filelist if there are changes and a filelist is given', async () => {
+  it('should return changed files and a filelist if there are changes and a filelist is given', async () => {
     ticsConfigMock.filelist = './filelist';
     spyCommitFiles.mockResolvedValue([singleChangedFiles]);
 
@@ -117,7 +118,7 @@ describe('Commit', () => {
     });
   });
 
-  test('Should return changed files and a filelist if there are changes and a filelist is given', async () => {
+  it('should return changed files and a filelist if there are changes and no filelist is given', async () => {
     ticsConfigMock.filelist = '';
     spyCommitFiles.mockResolvedValue([singleChangedFiles]);
     spyFilesToFile.mockReturnValue('/path/to/filelist');

@@ -6,8 +6,7 @@ export function handleOctokitError(error: unknown): string {
   let message = 'reason unkown';
   if (error instanceof Error) {
     message = '';
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    const retryCount = (error as OctokitError).request?.request?.retryCount as number | undefined;
+    const retryCount = error instanceof OctokitError ? (error.request.request?.retryCount as number) : undefined;
     if (retryCount) {
       message = `Retried ${retryCount.toString()} time(s), but got: `;
     }

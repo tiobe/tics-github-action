@@ -26,7 +26,7 @@ describe('createSummaryBody', () => {
     ticsConfigMock.displayUrl = 'http://viewer.url/';
   });
 
-  test('Should contain blocking after if there are soaked violations', async () => {
+  it('should contain blocking after if there are soaked violations', async () => {
     const string = await createSummaryBody(analysisResultsSoaked);
 
     expect(string).toContain('<h3>:x: Failed </h3>');
@@ -42,7 +42,7 @@ describe('createSummaryBody', () => {
     summary.clear();
   });
 
-  test('Should not contain blocking after if there are no soaked violations', async () => {
+  it('should not contain blocking after if there are no soaked violations', async () => {
     const string = await createSummaryBody(analysisResultsNotSoaked);
 
     expect(string).toContain('<h3>:x: Failed </h3>');
@@ -56,7 +56,7 @@ describe('createSummaryBody', () => {
     summary.clear();
   });
 
-  test('Should contain blocking after if there are partly violations', async () => {
+  it('Should contain blocking after if there are partly violations', async () => {
     const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
 
     expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
@@ -69,7 +69,7 @@ describe('createSummaryBody', () => {
     summary.clear();
   });
 
-  test('Should contain blocking after for one of the two conditions', async () => {
+  it('Should contain blocking after for one of the two conditions', async () => {
     const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
 
     expect(string).toContain('<h3>:x: Failed </h3>');
@@ -84,7 +84,7 @@ describe('createSummaryBody', () => {
     summary.clear();
   });
 
-  test('Should pass with no conditions that passed with warnings', async () => {
+  it('Should pass with no conditions that passed with warnings', async () => {
     const string = await createSummaryBody(analysisResultsNoSoakedPassed);
 
     expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
@@ -95,7 +95,7 @@ describe('createSummaryBody', () => {
 });
 
 describe('createErrorSummary', () => {
-  test('Should return summary of two errors', async () => {
+  it('Should return summary of two errors', async () => {
     githubConfigMock.debugger = false;
 
     const body = await createErrorSummaryBody(['Error', 'Error'], []);
@@ -107,7 +107,7 @@ describe('createErrorSummary', () => {
     expect(body).toContainTimes(':warning: Warning', 0);
   });
 
-  test('Should return summary of zero warnings on logLevel default', async () => {
+  it('Should return summary of zero warnings on logLevel default', async () => {
     githubConfigMock.debugger = false;
 
     const body = await createErrorSummaryBody([], ['Warning', 'Warning']);
@@ -119,7 +119,7 @@ describe('createErrorSummary', () => {
     expect(body).toContainTimes(':warning: Warning', 0);
   });
 
-  test('Should return summary of two  warnings on logLevel debug', async () => {
+  it('Should return summary of two  warnings on logLevel debug', async () => {
     githubConfigMock.debugger = true;
 
     const body = await createErrorSummaryBody([], ['Warning', 'Warning']);
@@ -133,7 +133,7 @@ describe('createErrorSummary', () => {
     expect(body).toContain('\n<!--tics-client_TICS_1_2-->');
   });
 
-  test('Should return summary of one error and two warnings', async () => {
+  it('Should return summary of one error and two warnings', async () => {
     githubConfigMock.debugger = true;
 
     const body = await createErrorSummaryBody(['Error'], ['Warning', 'Warning']);
@@ -149,7 +149,7 @@ describe('createErrorSummary', () => {
 });
 
 describe('createNothingAnalyzedSummaryBody', () => {
-  test('Should return summary with the message given', async () => {
+  it('Should return summary with the message given', async () => {
     const body = await createNothingAnalyzedSummaryBody('message');
     expect(body).toEqual(
       '<h1>TICS Quality Gate</h1>\n<h3>:heavy_check_mark: Passed </h3>\nmessage\n<h2></h2><i title="Workflow / Job / Step">tics-client / TICS / tics-github-action</i>\n<!--tics-client_TICS_1_2-->'
@@ -158,16 +158,16 @@ describe('createNothingAnalyzedSummaryBody', () => {
 });
 
 describe('createFilesSummary', () => {
-  test('Should return summary list of a single file', () => {
+  it('should return summary list of a single file', () => {
     const response = createFilesSummary(['test.js']);
 
-    expect(response).toEqual(
+    expect(response).toBe(
       '<details><summary>The following files have been checked for this project</summary>\n<ul><li>test.js</li></ul></details>\n\n'
     );
     expect(response).toContainTimes('<li>test.js</li>', 1);
   });
 
-  test('Should return summary list of two files', () => {
+  it('should return summary list of two files', () => {
     const response = createFilesSummary(['test.js', 'test.ts']);
 
     expect(response).toContainTimes('<li>test.js</li>', 1);
@@ -176,12 +176,13 @@ describe('createFilesSummary', () => {
 });
 
 describe('createReviewComments', () => {
-  test('Should return no review comments on empty input', async () => {
+  it('should return no review comments on empty input', async () => {
     const response = createReviewComments([], []);
+
     expect(response).toEqual({ postable: [], unpostable: [] });
   });
 
-  test('Should return one postable review comment', async () => {
+  it('should return one postable review comment', async () => {
     const changedFiles: ChangedFile[] = [
       {
         sha: 'sha',
@@ -222,10 +223,11 @@ describe('createReviewComments', () => {
     ];
 
     const response = createReviewComments(annotations, changedFiles);
+
     expect(response).toEqual({ postable: expected_postable, unpostable: [] });
   });
 
-  test('Should return one combined postable review comment for the same line', async () => {
+  it('should return one combined postable review comment for the same line', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = [
       {
@@ -284,10 +286,11 @@ describe('createReviewComments', () => {
     ];
 
     const response = createReviewComments(annotations, changedFiles);
+
     expect(response).toEqual({ postable: expected_postable, unpostable: [] });
   });
 
-  test('Should return one blocking now and a blocking after review comment for the same line', async () => {
+  it('should return one blocking now and a blocking after review comment for the same line', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = [
       {
@@ -354,10 +357,11 @@ describe('createReviewComments', () => {
     ];
 
     const response = createReviewComments(annotations, changedFiles);
+
     expect(response).toEqual({ postable: expected_postable, unpostable: [] });
   });
 
-  test('Should return one postable and one unpostable review comment', async () => {
+  it('should return one postable and one unpostable review comment', async () => {
     const changedFiles: ChangedFile[] = [
       {
         filename: 'src/test.js',
@@ -454,11 +458,12 @@ describe('createReviewComments', () => {
     ];
 
     const response = createReviewComments(annotations, changedFiles);
+
     expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
   });
 });
 
-test('Should return one postable and one unpostable review comment', async () => {
+it('should return one postable and one unpostable review comment', async () => {
   githubConfigMock.event = GithubEvent.PUSH;
   const changedFiles: ChangedFile[] = [
     {
@@ -557,18 +562,20 @@ test('Should return one postable and one unpostable review comment', async () =>
   ];
 
   const response = createReviewComments(annotations, changedFiles);
+
   expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
 });
 
 describe('createUnpostableReviewCommentsSummary', () => {
-  test('Should return summary of zero unpostable review comments on empty input', () => {
+  it('should return summary of zero unpostable review comments on empty input', () => {
     const response = createUnpostableAnnotationsDetails([]);
-    expect(response).toEqual(
+
+    expect(response).toBe(
       '<details><summary>Quality gate failures that cannot be annotated in <b>Files Changed</b></summary>\n</table></details>\n\n'
     );
   });
 
-  test('Should return summary of one unpostable review comment', () => {
+  it('should return summary of one unpostable review comment', () => {
     const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
@@ -587,13 +594,14 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
+
     expect(response).toContain(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
       `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
     );
   });
 
-  test('Should return summary of two unpostable review comment for one file', () => {
+  it('should return summary of two unpostable review comment for one file', () => {
     const unpostable = [
       {
         fullPath: '/home/src/hello.js',
@@ -626,6 +634,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
+
     expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(
       `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
@@ -633,7 +642,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
     );
   });
 
-  test('Should return summary of two unpostable review comment for one file', () => {
+  it('should return summary of two unpostable review comments for one file', () => {
     const unpostable = [
       {
         fullPath: '/home/src/hello.js',
@@ -666,6 +675,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
+
     expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(
       `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`,
@@ -673,7 +683,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
     );
   });
 
-  test('Should return summary of two unpostable review comment for two files', () => {
+  it('should return summary of two unpostable review comment for two files', () => {
     const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
@@ -708,6 +718,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
     ];
 
     const response = createUnpostableAnnotationsDetails(unpostable);
+
     expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`, 1);
     expect(response).toContainTimes(`<table><tr><th colspan='4'>${unpostable[1].path}</th></tr>`, 1);
     expect(response).toContainTimes(

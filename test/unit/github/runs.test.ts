@@ -1,6 +1,5 @@
 import { getCurrentStepPath } from '../../../src/github/runs';
 import { octokit } from '../../../src/github/octokit';
-import { githubConfigMock } from '../../.setup/mock';
 
 describe('postReview', () => {
   let listJobsSpy: jest.SpyInstance;

@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as http from 'http';
 import { createProxy } from 'proxy';
 
@@ -27,9 +28,8 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 // mock before importing octokit
-jest.spyOn(process.stdout, 'write').mockImplementation();
+jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 
-// eslint-disable-next-line import/first
 import { octokit } from '../../src/github/octokit';
 import { RequestError } from '@octokit/request-error';
 
@@ -67,7 +67,7 @@ describe('@octokit/action (using https_proxy)', () => {
     }
   });
 
-  test('Should return basic REST request, but not through the proxy', async () => {
+  it('should return basic REST request, but not through the proxy', async () => {
     // setting no_proxy
     const originalNoProxy = process.env['no_proxy'];
     process.env['no_proxy'] = 'api.github.com';
@@ -81,38 +81,41 @@ describe('@octokit/action (using https_proxy)', () => {
     // resetting no_proxy
     process.env['no_proxy'] = originalNoProxy;
 
-    expect(branch.data.name).toEqual('main');
-    expect(proxyConnects.length).toEqual(0);
+    expect(branch.data.name).toBe('main');
+    expect(proxyConnects).toHaveLength(0);
   });
 
-  test('Should return basic REST request through the proxy', async () => {
+  it('should return basic REST request through the proxy', async () => {
     const branch = await octokit.rest.repos.getBranch({
       owner: 'tiobe',
       repo: 'tics-github-action',
       branch: 'main'
     });
-    expect(branch.data.name).toEqual('main');
+
+    expect(branch.data.name).toBe('main');
     expect(proxyConnects).toEqual(['api.github.com:443']);
   });
 
-  test('Should return basic pagination request through the proxy', async () => {
+  it('should return basic pagination request through the proxy', async () => {
     const branch = await octokit.paginate(octokit.rest.repos.listBranches, {
       owner: 'tiobe',
       repo: 'tics-github-action',
       branch: 'main'
     });
-    expect(branch.find(b => b.name === 'main')).not.toBeUndefined();
+
+    expect(branch.find(b => b.name === 'main')).toBeDefined();
     expect(proxyConnects).toEqual(['api.github.com:443']);
   });
 
-  test('Should return basic GraphQL request through the proxy', async () => {
+  it('should return basic GraphQL request through the proxy', async () => {
     const repository = await octokit.graphql('{repository(owner:"tiobe", name:"tics-github-action"){name}}');
+
     expect(repository).toEqual({ repository: { name: 'tics-github-action' } });
     expect(proxyConnects).toEqual(['api.github.com:443']);
   });
 
-  test('Should retry 3 times on request through the proxy', async () => {
-    proxyServer.on('request', (req, res) => {
+  it('should retry 3 times on request through the proxy', async () => {
+    proxyServer.on('request', req => {
       if (req.url?.startsWith('http')) {
         proxyConnects.push(req.url);
       }
@@ -134,7 +137,7 @@ describe('@octokit/action (using https_proxy)', () => {
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
     expect(proxyConnects).toContain('http://0.0.0.0:8081/');
-    expect(proxyConnects.length).toEqual(4);
-    expect(retryCount).toEqual(3);
+    expect(proxyConnects).toHaveLength(4);
+    expect(retryCount).toBe(3);
   }, 10000);
 });
