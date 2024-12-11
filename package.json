@@ -38,7 +38,7 @@
     "canonical-path": "^1.0.0",
     "compare-versions": "^6.1.1",
     "date-fns": "^4.1.0",
-    "proxy-agent": "^6.4.0",
+    "proxy-agent": "^6.5.0",
     "semver": "^7.6.3",
     "underscore": "^1.13.7"
   },
