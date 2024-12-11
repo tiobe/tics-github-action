@@ -13,6 +13,11 @@ export const githubConfigMock: {
   id: string;
   pullRequestNumber: number | undefined;
   debugger: boolean;
+  workflow: string;
+  runNumber: number;
+  runAttempt: number;
+  runnerName: string;
+  getCommentIdentifier(): string;
 } = {
   apiUrl: 'github.com/api/v1/',
   owner: 'tester',
@@ -23,7 +28,14 @@ export const githubConfigMock: {
   action: 'tics-github-action',
   id: '123_TICS_1_tics-github-action',
   pullRequestNumber: 1,
-  debugger: false
+  debugger: false,
+  workflow: 'tics-client',
+  runNumber: 1,
+  runAttempt: 2,
+  runnerName: 'Github Actions 1',
+  getCommentIdentifier(): string {
+    return [this.workflow, this.job, this.runNumber, this.runAttempt].join('_');
+  }
 };
 
 export const ticsConfigMock = {
@@ -102,6 +114,9 @@ jest.mock('../../src/github/octokit', () => {
         },
         repos: {
           getCommit: jest.fn()
+        },
+        actions: {
+          listJobsForWorkflowRunAttempt: jest.fn()
         }
       },
       graphql: jest.fn()
@@ -121,6 +136,7 @@ export const contextMock: {
   job: string;
   runId: number;
   runNumber: number;
+  workflow: string;
   payload: {
     pull_request:
       | {
@@ -140,6 +156,7 @@ export const contextMock: {
   job: 'TICS',
   runId: 123,
   runNumber: 1,
+  workflow: 'tics_client',
   payload: {
     pull_request: {
       number: 1

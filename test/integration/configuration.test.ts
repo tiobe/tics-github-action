@@ -28,6 +28,8 @@ describe('pullRequestNumber', () => {
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'
@@ -53,6 +55,8 @@ describe('pullRequestNumber', () => {
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'
@@ -80,6 +84,8 @@ describe('pullRequestNumber', () => {
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'
