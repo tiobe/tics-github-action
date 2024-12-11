@@ -30,3 +30,19 @@ export function generateStatusMarkdown(status: Status, hasSuffix = false): strin
 export function generateExpandableAreaMarkdown(header: string, body: string): string {
   return `<details><summary>${header}</summary>${EOL}${body}</details>${EOL}${EOL}`;
 }
+
+/**
+ * Generates italic text for markdown.
+ * @param text The text to make italic.
+ */
+export function generateItalic(text: string, title?: string): string {
+  return `<i ${title ? `title="${title}"` : ''}>${text}</i>`;
+}
+
+/**
+ * Generates a hidden comment for markdown.
+ * @param comment The text of the comment.
+ */
+export function generateComment(comment: string): string {
+  return `<!--${comment}-->`;
+}

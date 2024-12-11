@@ -34,7 +34,7 @@ describe('setFailed checks (QServer)', () => {
     spyGetLastQServerRunDate = jest.spyOn(viewer, 'getLastQServerRunDate');
 
     jest.spyOn(action, 'decorateAction');
-    jest.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockReturnValue('body');
+    jest.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockResolvedValue('body');
   });
 
   afterEach(() => {

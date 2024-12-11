@@ -3,8 +3,7 @@
 - This action requires Node16, it won't work with other Node versions.
 - This action is written in TypeScript. To compile the package to JavaScript run `npm run build`.
 - To package the build to run run `npm run package`.
-- To combine the last two steps run `npm run all`.
-- There is Prettier auto-formatting available, run `npm run format` or enable format on save to automate the formatting.
+- There is Prettier auto-formatting available, run `npm run lint -- --fix`.
 - In order to run the integration tests the environment variable `INPUT_GITHUBTOKEN` needs to be set with a valid `GITHUB_TOKEN`
 
 ## Git hooks

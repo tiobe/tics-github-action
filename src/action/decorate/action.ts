@@ -12,9 +12,9 @@ import { Analysis, AnalysisResult } from '../../helper/interfaces';
 export async function decorateAction(analysisResult: AnalysisResult | undefined, analysis: Analysis): Promise<void> {
   let summaryBody;
   if (analysisResult) {
-    summaryBody = createSummaryBody(analysisResult);
+    summaryBody = await createSummaryBody(analysisResult);
   } else {
-    summaryBody = createErrorSummaryBody(analysis.errorList, analysis.warningList);
+    summaryBody = await createErrorSummaryBody(analysis.errorList, analysis.warningList);
   }
 
   if (githubConfig.event.isPullRequest) {

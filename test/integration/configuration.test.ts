@@ -22,12 +22,15 @@ describe('pullRequestNumber', () => {
     jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: { number: 1 }
           },
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'
@@ -46,12 +49,15 @@ describe('pullRequestNumber', () => {
     jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: undefined
           },
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'
@@ -72,12 +78,15 @@ describe('pullRequestNumber', () => {
     jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
       return {
         context: {
+          action: '_tics-github-action',
           payload: {
             pull_request: undefined
           },
           eventName: 'pull_request',
           runId: 1,
           runNumber: 1,
+          job: 'TICS',
+          workflow: 'tics_client',
           repo: {
             owner: 'owner',
             repo: 'repo'

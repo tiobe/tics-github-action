@@ -144,8 +144,8 @@ describe('deletePreviousComments', () => {
     expect(deleteCommentSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should call deleteComment with values', async () => {
-    deletePreviousComments([commentWithBody]);
+  it('Should call deleteComment with values', async () => {
+    await deletePreviousComments([commentWithBody]);
     const calledWith = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
@@ -155,13 +155,48 @@ describe('deletePreviousComments', () => {
     expect(deleteCommentSpy).toHaveBeenCalledWith(calledWith);
   });
 
-  it('should call deleteComment without body', async () => {
+  it('Should not call deleteComment if body is undefined', async () => {
     await deletePreviousComments([commentWithoutBody]);
 
     expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post a notice when deleteComment throws', async () => {
+  it('Should not call deleteComment if body is not TICS', async () => {
+    await deletePreviousComments([commentWithoutTics]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('Should call deleteComment if identifier workflow and job match', async () => {
+    await deletePreviousComments([commentWithIdentifierSameJob]);
+    const calledWith = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      comment_id: 0
+    };
+    expect(deleteCommentSpy).toHaveBeenCalledWith(calledWith);
+  });
+
+  it('Should not call deleteComment if identifier workflow and job match, but they are in the same run', async () => {
+    await deletePreviousComments([commentWithIdentifierSameJobAndRun]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('Should not call deleteComment if identifier workflow and job do not match', async () => {
+    await deletePreviousComments([commentWithIdentifierOtherJob]);
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('Should not call deleteComment if identifier is of the wrong format', async () => {
+    const debugSpy = jest.spyOn(logger, 'debug');
+
+    await deletePreviousComments([commentWithIdentifierWrongFormat]);
+
+    expect(deleteCommentSpy).toHaveBeenCalledTimes(0);
+    expect(debugSpy).toHaveBeenCalledTimes(1);
+    expect(debugSpy).toHaveBeenCalledWith('Identifier is not of the correct format: tics-client_OTHER_1');
+  });
+
+  it('Should post a notice when deleteComment throws', async () => {
     deleteCommentSpy.mockRejectedValue(Error());
     const noticeSpy = jest.spyOn(logger, 'notice');
 
@@ -184,13 +219,31 @@ const commentWithBody: Comment = {
 };
 
 const commentWithoutBody: Comment = {
-  url: '',
-  html_url: '',
-  issue_url: '',
-  id: 0,
-  node_id: '',
-  user: null,
-  created_at: '',
-  updated_at: '',
+  ...commentWithBody,
   body: undefined
+};
+
+const commentWithoutTics: Comment = {
+  ...commentWithBody,
+  body: 'Other action content'
+};
+
+const commentWithIdentifierSameJob: Comment = {
+  ...commentWithBody,
+  body: '<h1>TICS Quality Gate</h1><!--This distracts-->Message Here<!--tics-client_TICS_1_1-->'
+};
+
+const commentWithIdentifierSameJobAndRun: Comment = {
+  ...commentWithBody,
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_TICS_1_2-->'
+};
+
+const commentWithIdentifierOtherJob: Comment = {
+  ...commentWithBody,
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_OTHER_1_1-->'
+};
+
+const commentWithIdentifierWrongFormat: Comment = {
+  ...commentWithBody,
+  body: '<h1>TICS Quality Gate</h1>Message Here<!--tics-client_OTHER_1-->'
 };

@@ -59,7 +59,7 @@ export async function postComment(body: string): Promise<void> {
 export async function deletePreviousComments(comments: Comment[]): Promise<void> {
   logger.header('Deleting comments of previous runs.');
   for (const comment of comments) {
-    if (commentIncludesTicsTitle(comment.body)) {
+    if (shouldCommentBeDeleted(comment.body)) {
       try {
         const params = {
           owner: githubConfig.owner,
@@ -76,16 +76,55 @@ export async function deletePreviousComments(comments: Comment[]): Promise<void>
   logger.info('Deleted review comments of previous runs.');
 }
 
-function commentIncludesTicsTitle(body?: string): boolean {
-  const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
-
+function shouldCommentBeDeleted(body?: string): boolean {
   if (!body) return false;
+
+  const titles = ['<h1>TICS Quality Gate</h1>', '## TICS Quality Gate', '## TICS Analysis'];
 
   let includesTitle = false;
 
-  titles.forEach(title => {
-    if (body.startsWith(title)) includesTitle = true;
-  });
+  for (const title of titles) {
+    if (body.startsWith(title)) {
+      includesTitle = true;
+    }
+  }
 
-  return includesTitle;
+  if (includesTitle) {
+    return isWorkflowAndJobInAnotherRun(body);
+  }
+
+  return false;
+}
+
+function isWorkflowAndJobInAnotherRun(body: string): boolean {
+  const regex = /<!--([^\s]+)-->/g;
+
+  let identifier = '';
+  // Get the last match of the <i> tag.
+  let match: RegExpExecArray | null = null;
+  while ((match = regex.exec(body))) {
+    if (match[1] !== '') {
+      identifier = match[1];
+    }
+  }
+
+  // If no identifier is found, the comment is
+  // of the old format and should be replaced.
+  if (identifier === '') return true;
+
+  const split = identifier.split('_');
+
+  // If the identifier does not match the correct format, do not replace.
+  if (split.length !== 4) {
+    logger.debug(`Identifier is not of the correct format: ${identifier}`);
+    return false;
+  }
+
+  // If the workflow or job are different, do not replace.
+  if (split[0] !== githubConfig.workflow || split[1] !== githubConfig.job) {
+    return false;
+  }
+
+  // Only replace if the run number or run attempt are different.
+  return parseInt(split[2], 10) !== githubConfig.runNumber || parseInt(split[3], 10) !== githubConfig.runAttempt;
 }

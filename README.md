@@ -50,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
         with:
@@ -110,6 +112,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
         with:
@@ -192,6 +196,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
         with:

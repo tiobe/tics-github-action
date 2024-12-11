@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { range } from 'underscore';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
-
 import { ChangedFile } from '../../github/interfaces';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
@@ -17,13 +16,15 @@ import {
   TicsReviewComment,
   TicsReviewComments
 } from '../../helper/interfaces';
-import { generateExpandableAreaMarkdown, generateStatusMarkdown } from './markdown';
+import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
+import { getCurrentStepPath } from '../../github/runs';
 
-export function createSummaryBody(analysisResult: AnalysisResult): string {
+const capitalize = (s: string): string => s && String(s[0]).toUpperCase() + String(s).slice(1);
+
+export async function createSummaryBody(analysisResult: AnalysisResult): Promise<string> {
   logger.header('Creating summary.');
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(getStatus(analysisResult.passed, analysisResult.passedWithWarning), true), 3);
+  setSummaryHeader(getStatus(analysisResult.passed, analysisResult.passedWithWarning));
 
   analysisResult.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
@@ -37,7 +38,7 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
         if (condition.details && condition.details.items.length > 0) {
           summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
           summary.addBreak();
-          summary.addTable(createConditionTable(condition.details));
+          createConditionTables(condition.details).forEach(table => summary.addTable(table));
           summary.addRaw('</details>', true);
         } else {
           summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
@@ -54,6 +55,7 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
     }
   });
+  await setSummaryFooter();
 
   logger.info('Created summary.');
 
@@ -66,11 +68,10 @@ export function createSummaryBody(analysisResult: AnalysisResult): string {
  * @param warningList list containing all the warnings found in the TICS run.
  * @returns string containing the error summary.
  */
-export function createErrorSummaryBody(errorList: string[], warningList: string[]): string {
+export async function createErrorSummaryBody(errorList: string[], warningList: string[]): Promise<string> {
   logger.header('Creating summary.');
 
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(Status.FAILED, true), 3);
+  setSummaryHeader(Status.FAILED);
 
   if (errorList.length > 0) {
     summary.addHeading('The following errors have occurred during analysis:', 2);
@@ -88,6 +89,7 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
       summary.addRaw(`:warning: ${warning}${EOL}${EOL}`);
     }
   }
+  await setSummaryFooter();
 
   logger.info('Created summary.');
   return summary.stringify();
@@ -98,16 +100,28 @@ export function createErrorSummaryBody(errorList: string[], warningList: string[
  * @param message Message to display in the body of the comment.
  * @returns string containing the error summary.
  */
-export function createNothingAnalyzedSummaryBody(message: string): string {
+export async function createNothingAnalyzedSummaryBody(message: string): Promise<string> {
   logger.header('Creating summary.');
 
-  summary.addHeading('TICS Quality Gate');
-  summary.addHeading(generateStatusMarkdown(Status.PASSED, true), 3);
+  setSummaryHeader(Status.PASSED);
 
   summary.addRaw(message);
+  await setSummaryFooter();
 
   logger.info('Created summary.');
   return summary.stringify();
+}
+
+function setSummaryHeader(status: Status) {
+  summary.addHeading('TICS Quality Gate');
+  summary.addHeading(generateStatusMarkdown(status, true), 3);
+}
+
+async function setSummaryFooter() {
+  summary.addEOL();
+  summary.addRaw('<h2></h2>');
+  summary.addRaw(generateItalic(await getCurrentStepPath(), 'Workflow / Job / Step'), true);
+  summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 
 function getConditionHeading(failedOrWarnConditions: Condition[]): string {
@@ -174,43 +188,45 @@ export function createFilesSummary(fileList: string[]): string {
  * @param conditions Conditions of the quality gate
  * @returns Table containing a summary for all conditions
  */
-function createConditionTable(details: ConditionDetails): SummaryTableRow[] {
-  const rows: SummaryTableRow[] = [];
-  const titleRow: SummaryTableRow = [
-    {
-      data: 'File',
-      header: true
-    },
-    {
-      data: details.dataKeys.actualValue.title,
-      header: true
-    }
-  ];
-  if (details.dataKeys.blockingAfter) {
-    titleRow.push({
-      data: details.dataKeys.blockingAfter.title,
-      header: true
-    });
-  }
-  rows.push(titleRow);
-
-  details.items
-    .filter(item => item.itemType === 'file')
-    .forEach(item => {
-      const dataRow: SummaryTableRow = [
-        `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
-        item.data.actualValue.formattedValue
-      ];
-
-      if (item.data.blockingAfter) {
-        dataRow.push(item.data.blockingAfter.formattedValue);
-      } else if (details.dataKeys.blockingAfter) {
-        dataRow.push('0');
+function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
+  return details.itemTypes.map(itemType => {
+    const rows: SummaryTableRow[] = [];
+    const titleRow: SummaryTableRow = [
+      {
+        data: capitalize(itemType),
+        header: true
+      },
+      {
+        data: details.dataKeys.actualValue.title,
+        header: true
       }
+    ];
+    if (details.dataKeys.blockingAfter) {
+      titleRow.push({
+        data: details.dataKeys.blockingAfter.title,
+        header: true
+      });
+    }
+    rows.push(titleRow);
 
-      rows.push(dataRow);
-    });
-  return rows;
+    details.items
+      .filter(item => item.itemType === itemType)
+      .forEach(item => {
+        const dataRow: SummaryTableRow = [
+          `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
+          item.data.actualValue.formattedValue
+        ];
+
+        if (item.data.blockingAfter) {
+          dataRow.push(item.data.blockingAfter.formattedValue);
+        } else if (details.dataKeys.blockingAfter) {
+          dataRow.push('0');
+        }
+
+        rows.push(dataRow);
+      });
+    return rows;
+  });
 }
 
 /**
@@ -374,6 +390,7 @@ function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAn
  * @param unpostableReviewComments Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
+// Exported for testing
 export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
   const label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
   let body = '';
@@ -393,7 +410,10 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
     } else if (previousPath !== path) {
       body += `</table><table><tr><th colspan='4'>${path}</th></tr>`;
     }
-    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()} <b>Level:</b> ${reviewComment.level?.toString() ?? ''}<br><b>Category:</b> ${reviewComment.category ?? ''}</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
+    body += `<tr><td>${icon}</td><td>${blocking}</td><td><b>Line:</b> ${reviewComment.line.toString()}`;
+    body += reviewComment.level ? `<br><b>Level:</b> ${reviewComment.level.toString()}` : '';
+    body += reviewComment.category ? `<br><b>Category:</b> ${reviewComment.category}` : '';
+    body += `</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
     previousPath = reviewComment.path ? reviewComment.path : '';
   });
   body += '</table>';
