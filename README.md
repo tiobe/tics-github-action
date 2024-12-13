@@ -37,7 +37,7 @@ Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and p
 
 ## Client (default)
 
-The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines wether the commit or pull request qualifies for delivery.
+The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines whether the commit or pull request qualifies for delivery.
 The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
 
 Below is an example of the minimum configuration that needs to be created in the workflow to enable TICS Client analysis:
