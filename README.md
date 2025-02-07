@@ -228,13 +228,11 @@ The following inputs are recommended or required for this action:
 ### Environment Variables
 
 There are environment variables to control several aspects of TICS. Please refer to the TICS documentation for more information.
-The most common environment variables to use in context of Github are:
+To control the location where TICS is installed, `TICSINSTALLDIR` can be used.
 
 | Input                      | Description                                                                               | Permitted values         |
 | -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
 | `TICSINSTALLDIR`           | Custom path to the location where TICS must be installed.                                 |                          |
-| `TICSHOSTNAMEVERIFICATION` | When using self-signed certificates, hostname verification might be need to be disabled.  | 0, 1                     |
-| `TICSTRUSTSTRATEGY`        | When using self-signed certificates, certificate validation might be need to be disabled. | all, self-signed, strict |
 
 Example:
 ```yaml
