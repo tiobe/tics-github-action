@@ -224,6 +224,37 @@ The following inputs are recommended or required for this action:
 | `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre> | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`.                                                                                                                                                                                                               | false    |
 
+
+### Environment Variables
+
+There are environment variables to control several aspects of TICS. Please refer to the TICS documentation for more information.
+To control the location where TICS is installed, `TICSINSTALLDIR` can be used.
+
+| Input                      | Description                                                                               | Permitted values         |
+| -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
+| `TICSINSTALLDIR`           | Custom path to the location where TICS must be installed.                                 |                          |
+
+Example:
+```yaml
+on: workflow_dispatch
+
+jobs:
+  TICS:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TICS GitHub Action
+        uses: tiobe/tics-github-action@v3
+        env:
+          TICSINSTALLDIR: /tmp/tics/wrapper
+        with:
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
 ## Migration from v2 to v3
 
 The interface (running with parameters) has been changed to better reflect its usage. This interface is now more synchronized with TICS command line usage, and has been changed to be closer to other plugins that TIOBE provides.
