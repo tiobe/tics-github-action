@@ -1,6 +1,6 @@
 import { EOL } from 'os';
 import { format } from 'date-fns';
-import { range } from 'underscore';
+import { range } from 'lodash';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { ChangedFile } from '../../github/interfaces';

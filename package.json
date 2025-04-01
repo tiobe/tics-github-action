@@ -38,18 +38,18 @@
     "canonical-path": "^1.0.0",
     "compare-versions": "^6.1.1",
     "date-fns": "^4.1.0",
+    "lodash": "^4.17.21",
     "proxy-agent": "^6.5.0",
-    "semver": "^7.6.3",
-    "underscore": "^1.13.7"
+    "semver": "^7.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.10.0",
     "@jest/globals": "^29.7.0",
     "@types/eslint__js": "^8.42.3",
     "@types/jest": "^29.5.14",
+    "@types/lodash": "^4.17.16",
     "@types/node": "^22.5.5",
     "@types/semver": "^7.5.8",
-    "@types/underscore": "^1.11.15",
     "@vercel/ncc": "^0.38.3",
     "async-listen": "^3.0.1",
     "eslint": "^9.19.0",
