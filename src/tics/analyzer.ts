@@ -34,15 +34,15 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
       listeners: {
         stdline(data: string) {
           const filtered = logger.maskOutput(data);
+          process.stdout.write(filtered ?? '' + EOL);
           if (filtered) {
-            process.stdout.write(filtered + EOL);
             findInStdOutOrErr(filtered);
           }
         },
         errline(data: string) {
           const filtered = logger.maskOutput(data);
+          process.stdout.write(filtered ?? '' + EOL);
           if (filtered) {
-            process.stdout.write(filtered + EOL);
             findInStdOutOrErr(filtered);
           }
         }
