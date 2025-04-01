@@ -20,6 +20,7 @@ describe('tICS Configuration', () => {
   };
 
   beforeEach(() => {
+    process.env = {};
     jest.resetModules();
     jest.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {

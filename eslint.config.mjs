@@ -9,7 +9,7 @@ export default tseslint.config(
   },
   {
     files: ['src/**/*.ts'],
-    extends: [eslint.configs.strict, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked, prettier],
+    extends: [eslint.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked, prettier],
     languageOptions: {
       parserOptions: {
         projectService: true,

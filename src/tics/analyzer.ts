@@ -32,15 +32,15 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
     statusCode = await exec(command, [], {
       silent: true,
       listeners: {
-        stdout(data: Buffer) {
-          const filtered = logger.maskOutput(data.toString());
+        stdline(data: string) {
+          const filtered = logger.maskOutput(data);
           if (filtered) {
             process.stdout.write(filtered);
             findInStdOutOrErr(filtered);
           }
         },
-        stderr(data: Buffer) {
-          const filtered = logger.maskOutput(data.toString());
+        errline(data: string) {
+          const filtered = logger.maskOutput(data);
           if (filtered) {
             process.stdout.write(filtered);
             findInStdOutOrErr(filtered);
