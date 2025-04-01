@@ -1,6 +1,6 @@
 import { EOL } from 'os';
 import { format } from 'date-fns';
-import { range } from 'underscore';
+import { range } from 'lodash';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { ChangedFile } from '../../github/interfaces';
@@ -397,8 +397,8 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
   let previousPath = '';
 
   unpostableReviewComments.forEach(reviewComment => {
-    const path = reviewComment.path ? reviewComment.path : '';
-    const displayCount = reviewComment.displayCount ? reviewComment.displayCount : '';
+    const path = reviewComment.path ?? '';
+    const displayCount = reviewComment.displayCount ?? '';
     const icon = reviewComment.blocking?.state === 'after' ? ':warning:' : ':x:';
     const blocking =
       reviewComment.blocking?.state === 'after' && reviewComment.blocking.after
@@ -414,7 +414,7 @@ export function createUnpostableAnnotationsDetails(unpostableReviewComments: Ext
     body += reviewComment.level ? `<br><b>Level:</b> ${reviewComment.level.toString()}` : '';
     body += reviewComment.category ? `<br><b>Category:</b> ${reviewComment.category}` : '';
     body += `</td><td><b>${reviewComment.type} violation:</b> ${reviewComment.rule ?? ''} <b>${displayCount}</b><br>${reviewComment.msg}</td></tr>`;
-    previousPath = reviewComment.path ? reviewComment.path : '';
+    previousPath = reviewComment.path ?? '';
   });
   body += '</table>';
   return generateExpandableAreaMarkdown(label, body);

@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { AnnotationProperties } from '@actions/core';
+import { escapeRegExp } from 'lodash';
 
 class Logger {
   called = '';
@@ -133,8 +134,9 @@ class Logger {
 
     // Find secrets value and add them to this.matched
     this.secretsFilter.forEach((secret: string) => {
-      if (data.match(new RegExp(secret, 'gi'))) {
-        const regex = new RegExp(`\\w*${secret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
+      const safeSecret = escapeRegExp(secret);
+      if (data.match(new RegExp(safeSecret, 'gi'))) {
+        const regex = new RegExp(`\\w*${safeSecret}\\w*(?:[ \\t]*[:=>]*[ \\t]*)(.*)`, 'gi');
         let match: RegExpExecArray | null = null;
         while ((match = regex.exec(data))) {
           if (match[1] !== '') {

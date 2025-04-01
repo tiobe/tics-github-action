@@ -3,7 +3,7 @@ import { logger } from '../helper/logger';
 import { Analysis } from '../helper/interfaces';
 import { getTmpDir } from '../github/artifacts';
 import { InstallTics } from '@tiobe/install-tics';
-import { platform } from 'os';
+import { EOL, platform } from 'os';
 import { isOneOf } from '../helper/utils';
 import { joinUrl } from '../helper/url';
 import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
@@ -32,17 +32,17 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
     statusCode = await exec(command, [], {
       silent: true,
       listeners: {
-        stdout(data: Buffer) {
-          const filtered = logger.maskOutput(data.toString());
+        stdline(data: string) {
+          const filtered = logger.maskOutput(data);
+          process.stdout.write((filtered ?? '') + EOL);
           if (filtered) {
-            process.stdout.write(filtered);
             findInStdOutOrErr(filtered);
           }
         },
-        stderr(data: Buffer) {
-          const filtered = logger.maskOutput(data.toString());
+        errline(data: string) {
+          const filtered = logger.maskOutput(data);
+          process.stdout.write((filtered ?? '') + EOL);
           if (filtered) {
-            process.stdout.write(filtered);
             findInStdOutOrErr(filtered);
           }
         }
