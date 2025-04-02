@@ -61,7 +61,7 @@ export class TicsCli {
 
     for (const option of CliOptions) {
       const key = option.action as keyof TicsCli;
-      if (cli[key] !== '' && !option.modes.includes(mode)) {
+      if (cli[key] !== '' && key !== 'branchdir' && !option.modes.includes(mode)) {
         logger.warning(`Parameter '${option.action}' is not applicable to mode '${mode}' and will therefore not be used`);
       }
     }

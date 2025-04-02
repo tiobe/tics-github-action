@@ -158,8 +158,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
+    expect(warningSpy).toHaveBeenCalledTimes(0);
   });
 
   it('should throw warnings on Client- and QServer-only cli options if used in mode Diagnostic', () => {
@@ -193,9 +192,8 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(9);
+    expect(warningSpy).toHaveBeenCalledTimes(8);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('project'));
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchname'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('cdtoken'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
