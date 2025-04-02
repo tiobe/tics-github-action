@@ -67,12 +67,13 @@ describe('cli Configuration', () => {
 
   it('should pass when mode is qserver and project is given', () => {
     values = {
-      project: 'project'
+      project: 'project',
+      branchdir: 'dir'
     };
 
     const cliServer = new TicsCli(Mode.QSERVER);
 
-    expect(cliServer).toMatchObject({ ...expectCli, project: 'project' });
+    expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
 
   it('should throw error if mode is qserver and project is auto', () => {
@@ -89,6 +90,33 @@ describe('cli Configuration', () => {
 
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toContain("Running TICS with project 'auto' is not possible with QServer");
+  });
+
+  it('should add default branchdir if mode is qserver no branchdir is given', () => {
+    values = {
+      project: 'project'
+    };
+    process.env.GITHUB_WORKSPACE = '/workspace/project';
+    const cliServer = new TicsCli(Mode.QSERVER);
+
+    expect(cliServer).toMatchObject({ project: 'project', branchdir: '/workspace/project' });
+  });
+
+  it('should throw if mode is qserver, no branchdir is given, and GITHUB_WORKSPACE is empty', () => {
+    values = {
+      project: 'project'
+    };
+    process.env.GITHUB_WORKSPACE = '';
+
+    let error: any;
+    try {
+      new TicsCli(Mode.QSERVER);
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toContain('Parameter `branchdir` is not set and environment variable `GITHUB_WORKSPACE` is empty. TICSQServer cannot run.');
   });
 
   it('should throw warnings on Client-only cli options if used in mode QServer', () => {
@@ -158,7 +186,8 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(0);
+    expect(warningSpy).toHaveBeenCalledTimes(1);
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
   });
 
   it('should throw warnings on Client- and QServer-only cli options if used in mode Diagnostic', () => {
@@ -192,7 +221,8 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(8);
+    expect(warningSpy).toHaveBeenCalledTimes(9);
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('project'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchname'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('cdtoken'));
