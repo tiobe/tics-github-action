@@ -120,7 +120,6 @@ jobs:
           mode: qserver
           project: project-name
           viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-          branchdir: ${{ GITHUB_WORKSPACE }}
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
 ```
@@ -141,7 +140,7 @@ The following inputs are recommended or required for this action:
 | `mode`          | Set `mode` to `qserver` run the action in TICSQServer mode. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                                                                                                                                                                                                            | true     |
 | `project`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                                                                                                                                                                                                                                           | true     |
 | `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>                                                                                                                                                       | true     |
-| `branchdir`     | Root directory of the source files for the branch. TICS stores the last used branch directory in the database and uses this last known directory if this property is not set. It is `recommended` to set this variable. <br><br>Example:<pre lang="yaml">branchdir: ${{ GITHUB_WORKSPACE }}</pre>                                                                                                                              | false    |
+| `branchdir`     | Root directory of the source files for the branch. By default this is set to `github.workspace`, which is the root of the repository.                                                                                                                                                                                                                                                                                          | false    |
 | `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre> | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`.                                                                                                                                                                                                               | false    |
 
@@ -224,17 +223,17 @@ The following inputs are recommended or required for this action:
 | `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre> | false    |
 | `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`.                                                                                                                                                                                                               | false    |
 
-
 ### Environment Variables
 
 There are environment variables to control several aspects of TICS. Please refer to the TICS documentation for more information.
 To control the location where TICS is installed, `TICSINSTALLDIR` can be used.
 
-| Input                      | Description                                                                               | Permitted values         |
-| -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
-| `TICSINSTALLDIR`           | Custom path to the location where TICS must be installed.                                 |                          |
+| Input            | Description                                               | Permitted values |
+| ---------------- | --------------------------------------------------------- | ---------------- |
+| `TICSINSTALLDIR` | Custom path to the location where TICS must be installed. |                  |
 
 Example:
+
 ```yaml
 on: workflow_dispatch
 
