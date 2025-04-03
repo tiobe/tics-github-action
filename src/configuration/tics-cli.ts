@@ -31,6 +31,14 @@ export class TicsCli {
     this.additionalFlags = getInput('additionalFlags');
 
     this.validateCliOptions(this, mode);
+
+    // if no branchdir has been set for QServer, set it to the GitHub workspace.
+    if (mode === Mode.QSERVER && this.branchdir === '') {
+      if (!process.env.GITHUB_WORKSPACE) {
+        throw Error('Parameter `branchdir` is not set and environment variable `GITHUB_WORKSPACE` is empty. TICSQServer cannot run.');
+      }
+      this.branchdir = process.env.GITHUB_WORKSPACE;
+    }
   }
 
   /**
