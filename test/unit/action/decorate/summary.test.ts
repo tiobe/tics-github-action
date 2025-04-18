@@ -14,7 +14,7 @@ import {
   analysisResultsSoaked,
   analysisResultsNotSoaked,
   analysisResultsPartlySoakedPassed,
-  analysisResultsNoSoakedPassed,
+  analysisResultsPassedNoSoaked,
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
 import { EOL } from 'os';
@@ -24,13 +24,16 @@ import { GithubEvent } from '../../../../src/configuration/github-event';
 describe('createSummaryBody', () => {
   beforeEach(() => {
     ticsConfigMock.displayUrl = 'http://viewer.url/';
+    summary.clear();
   });
 
   it('should contain blocking after if there are soaked violations', async () => {
     const string = await createSummaryBody(analysisResultsSoaked);
 
+    expect(string).toContain('<h1>TICS Quality Gate</h1>');
     expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+    expect(string).toContain('<h2>Project 32163/4</h2>');
+    expect(string).toContain('<h3>Gate for #32163</h3>');
     expect(string).toContain(':x: No new Coding Standard Violations');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
     expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
@@ -45,8 +48,10 @@ describe('createSummaryBody', () => {
   it('should not contain blocking after if there are no soaked violations', async () => {
     const string = await createSummaryBody(analysisResultsNotSoaked);
 
+    expect(string).toContain('<h1>TICS Quality Gate</h1>');
     expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+    expect(string).toContain('<h2>Project 32163/4</h2>');
+    expect(string).toContain('<h3>Gate for #32163</h3>');
     expect(string).toContain(':x: No new Coding Standard Violations');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
     expect(string).toContain('</td><td>+39</td></tr><tr><td>');
@@ -58,13 +63,18 @@ describe('createSummaryBody', () => {
 
   it('Should contain blocking after if there are partly violations', async () => {
     const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
+    console.log(string);
 
+    expect(string).toContain('<h1>TICS Quality Gate</h1>');
     expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
-    expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
+    expect(string).toContain('<h2>Project 32163/4</h2>');
+    expect(string).toContain('<h3>Gate for #32163</h3>');
     expect(string).toContain(':warning: No new Coding Standard Violations');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
     expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
     expect(string).toContain('</td><td>+1</td><td>0</td></tr></table>');
+    expect(string).toContain('<h3>Gate for #32164</h3>');
+    expect(string).toContainTimes(':heavy_check_mark: No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis', 2);
 
     summary.clear();
   });
@@ -72,8 +82,10 @@ describe('createSummaryBody', () => {
   it('Should contain blocking after for one of the two conditions', async () => {
     const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
 
+    expect(string).toContain('<h1>TICS Quality Gate</h1>');
     expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
+    expect(string).toContain('<h2>Project 32163/4</h2>');
+    expect(string).toContain('<h3>Gate for #32163</h3>');
     expect(string).toContain(':x: No new Coding Standard Violations');
     expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
     expect(string).toContain('</td><td>+1</td></tr></table>');
@@ -84,11 +96,14 @@ describe('createSummaryBody', () => {
     summary.clear();
   });
 
-  it('Should pass with no conditions that passed with warnings', async () => {
-    const string = await createSummaryBody(analysisResultsNoSoakedPassed);
+  it('Should pass with all conditions passed', async () => {
+    const string = await createSummaryBody(analysisResultsPassedNoSoaked);
 
+    expect(string).toContain('<h1>TICS Quality Gate</h1>');
     expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
-    expect(string).toContain('<h3>All conditions passed</h3>');
+    expect(string).toContain('<h2>Project 32163/4</h2>');
+    expect(string).toContain('<h3>Gate for #32163</h3>');
+    expect(string).toContainTimes(':heavy_check_mark: No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis', 2);
 
     summary.clear();
   });

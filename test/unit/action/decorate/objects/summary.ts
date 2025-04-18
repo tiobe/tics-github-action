@@ -22,7 +22,7 @@ export const analysisResultsSoaked: AnalysisResult = {
   missesQualityGate: false,
   projectResults: [
     {
-      project: '',
+      project: 'Project 32163/4',
       explorerUrl: '',
       analyzedFiles: [
         'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
@@ -157,7 +157,7 @@ export const analysisResultsNotSoaked: AnalysisResult = {
   missesQualityGate: false,
   projectResults: [
     {
-      project: '',
+      project: 'Project 32163/4',
       explorerUrl: '',
       analyzedFiles: [
         'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
@@ -247,7 +247,7 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   missesQualityGate: false,
   projectResults: [
     {
-      project: '',
+      project: 'Project 32163/4',
       explorerUrl: '',
       analyzedFiles: [
         'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
@@ -353,13 +353,13 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   ]
 };
 
-export const analysisResultsNoSoakedPassed: AnalysisResult = {
+export const analysisResultsPassedNoSoaked: AnalysisResult = {
   passed: true,
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: [
     {
-      project: '',
+      project: 'Project 32163/4',
       explorerUrl: '',
       analyzedFiles: [
         'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
@@ -381,80 +381,15 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
                 passed: true,
                 passedWithWarning: false,
                 error: false,
-                message:
-                  'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
-                details: {
-                  itemTypes: ['file'],
-                  dataKeys: {
-                    actualValue: {
-                      title: 'Blocking now',
-                      order: 1,
-                      itemType: 'file'
-                    },
-                    blockingAfter: {
-                      title: 'Blocking after 2018-03-23',
-                      order: 2,
-                      itemType: 'file'
-                    }
-                  },
-                  itemCount: 146,
-                  itemLimit: 100,
-                  items: [
-                    {
-                      itemType: 'file',
-                      name: 'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
-                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
-                      data: {
-                        actualValue: {
-                          formattedValue: '0',
-                          value: 0.0,
-                          classes: ['delta-worse'],
-                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
-                        },
-                        blockingAfter: {
-                          formattedValue: '+3',
-                          value: 3.0,
-                          classes: ['delta-worse'],
-                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(deferred)\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
-                        }
-                      }
-                    }
-                  ]
-                }
+                message: 'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis',
+                details: undefined
               },
               {
                 passed: true,
                 passedWithWarning: false,
                 error: false,
-                message:
-                  'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
-                details: {
-                  itemTypes: ['file'],
-                  dataKeys: {
-                    actualValue: {
-                      title: 'Blocking now',
-                      order: 1,
-                      itemType: 'file'
-                    }
-                  },
-                  itemCount: 146,
-                  itemLimit: 100,
-                  items: [
-                    {
-                      itemType: 'file',
-                      name: 'PADAnalysis/ApplicationNative/src/controllers/IPerfusionController.h',
-                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,controllers,IPerfusionController.h))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
-                      data: {
-                        actualValue: {
-                          formattedValue: '+1',
-                          value: 1.0,
-                          classes: ['delta-worse'],
-                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,src,controllers,IPerfusionController.h)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
-                        }
-                      }
-                    }
-                  ]
-                }
+                message: 'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis',
+                details: undefined
               }
             ]
           }
@@ -471,7 +406,7 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   missesQualityGate: false,
   projectResults: [
     {
-      project: '',
+      project: 'Project 32163/4',
       explorerUrl: '',
       analyzedFiles: [
         'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
@@ -546,6 +481,27 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
                     }
                   ]
                 }
+              }
+            ]
+          },
+          {
+            passed: true,
+            passedWithWarning: false,
+            name: 'Gate for #32164',
+            conditions: [
+              {
+                passed: true,
+                passedWithWarning: false,
+                error: false,
+                message: 'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis',
+                details: undefined
+              },
+              {
+                passed: true,
+                passedWithWarning: false,
+                error: false,
+                message: 'No new Coding Standard Violations for levels 1, 2, 3 with respect to first analysis',
+                details: undefined
               }
             ]
           }

@@ -7,15 +7,7 @@ import { ChangedFile } from '../../github/interfaces';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
-import {
-  AnalysisResult,
-  Condition,
-  ConditionDetails,
-  ExtendedAnnotation,
-  Gate,
-  TicsReviewComment,
-  TicsReviewComments
-} from '../../helper/interfaces';
+import { AnalysisResult, ConditionDetails, ExtendedAnnotation, TicsReviewComment, TicsReviewComments } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
@@ -28,23 +20,23 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 
   analysisResult.projectResults.forEach(projectResult => {
     if (projectResult.qualityGate) {
-      const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
-
       summary.addHeading(projectResult.project, 2);
-      summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
 
-      failedOrWarnConditions.forEach(condition => {
-        const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
-        if (condition.details && condition.details.items.length > 0) {
-          summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
-          summary.addBreak();
-          createConditionTables(condition.details).forEach(table => summary.addTable(table));
-          summary.addRaw('</details>', true);
-        } else {
-          summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+      for (const gate of projectResult.qualityGate.gates) {
+        summary.addHeading(gate.name, 3);
+        for (const condition of gate.conditions) {
+          const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
+          if (condition.details && condition.details.items.length > 0) {
+            summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+            summary.addBreak();
+            createConditionTables(condition.details).forEach(table => summary.addTable(table));
+            summary.addRaw('</details>', true);
+          } else {
+            summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+          }
         }
-      });
-      summary.addEOL();
+        summary.addEOL();
+      }
 
       summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
@@ -124,24 +116,6 @@ async function setSummaryFooter() {
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 
-function getConditionHeading(failedOrWarnConditions: Condition[]): string {
-  const countFailedConditions = failedOrWarnConditions.filter(c => !c.passed).length;
-  const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
-  const header = [];
-  if (countFailedConditions > 0) {
-    header.push(`${countFailedConditions.toString()} Condition(s) failed`);
-  }
-  if (countWarnConditions > 0) {
-    header.push(`${countWarnConditions.toString()} Condition(s) passed with warning`);
-  }
-
-  if (failedOrWarnConditions.length === 0) {
-    header.push('All conditions passed');
-  }
-
-  return header.join(', ');
-}
-
 function getStatus(passed: boolean, passedWithWarning?: boolean) {
   if (!passed) {
     return Status.FAILED;
@@ -150,21 +124,6 @@ function getStatus(passed: boolean, passedWithWarning?: boolean) {
   } else {
     return Status.PASSED;
   }
-}
-
-/**
- * Extract conditions that have failed or have passed with warning(s)
- * @param gates Gates of a quality gate
- * @returns Extracted conditions
- */
-function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
-  let failedOrWarnConditions: Condition[] = [];
-
-  gates.forEach(gate => {
-    failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || c.passedWithWarning));
-  });
-
-  return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
 }
 
 /**
