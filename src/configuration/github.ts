@@ -61,8 +61,10 @@ export class GithubConfig {
     }
   }
 
-  private getGithubEvent() {
-    switch (context.eventName) {
+  private getGithubEvent(): GithubEvent {
+    const eventName = process.env.GITHUB_EVENT_NAME ?? context.eventName;
+  
+    switch (eventName) {
       case GithubEvent.PULL_REQUEST.name:
         return GithubEvent.PULL_REQUEST;
       case GithubEvent.PULL_REQUEST_TARGET.name:
@@ -79,6 +81,7 @@ export class GithubConfig {
         return GithubEvent.PUSH;
     }
   }
+
 
   getCommentIdentifier(): string {
     return [this.workflow, this.job, this.runNumber, this.runAttempt].join('_');
