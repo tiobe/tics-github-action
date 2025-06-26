@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as analyzer from '../../../src/tics/analyzer';
+import * as diagnostic from '../../../src/github/diagnostic';
 
 import { Mode } from '../../../src/configuration/tics';
 import { ticsConfigMock } from '../../.setup/mock';
@@ -11,6 +12,14 @@ describe('diagnostic mode checks', () => {
 
   beforeEach(() => {
     spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
+    jest.spyOn(diagnostic, 'getRateLimit').mockResolvedValue({
+      rate: {
+        limit: 5000,
+        used: 1,
+        remaining: 4999,
+        reset: 1372700873
+      }
+    });
 
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
   });

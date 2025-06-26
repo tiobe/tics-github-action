@@ -138,6 +138,7 @@ export interface ChangedFile {
 export interface RateLimit {
   rate: {
     limit: number;
+    used: number;
     remaining: number;
     reset: number;
   };
