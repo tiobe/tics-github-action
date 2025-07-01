@@ -16,7 +16,7 @@ beforeEach(() => {
   ticsConfigMock.mode = Mode.CLIENT;
 
   spyCommitFiles = jest.spyOn(commits, 'getChangedFilesOfCommit');
-  spyPullFiles = jest.spyOn(pulls, 'getChangedFilesOfPullRequest');
+  spyPullFiles = jest.spyOn(pulls, 'getChangedFilesOfPullRequestRest');
   spyFilesToFile = jest.spyOn(pulls, 'changedFilesToFile');
 });
 

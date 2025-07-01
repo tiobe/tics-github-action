@@ -1,17 +1,82 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 
-import { ChangedFile } from './interfaces';
+import { ChangedFile, ChangedFilesQueryResponse } from './interfaces';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
 import { octokit } from './octokit';
+import { ChangeType } from './enums';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
  * @returns List of changed files within the GitHub Pull request.
  */
-export async function getChangedFilesOfPullRequest(): Promise<ChangedFile[]> {
+export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
+  if (!githubConfig.pullRequestNumber) {
+    throw Error('This function can only be run on a pull request.');
+  }
+  const params = {
+    owner: githubConfig.owner,
+    repo: githubConfig.reponame,
+    pull_number: githubConfig.pullRequestNumber,
+    per_page: 100,
+    cursor: undefined
+  };
+
+  let response: ChangedFilesQueryResponse;
+  try {
+    response = await octokit.graphql.paginate<ChangedFilesQueryResponse>(
+      `query changedFiles($owner: String!, $repo: String!, $pull_number: Int!, $per_page: Int!, $cursor: String) {
+        rateLimit {
+          remaining
+        }
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pull_number) {
+            files(first: $per_page, after: $cursor) {
+              totalCount
+              nodes {
+                path
+                changeType
+                additions
+                deletions
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            }
+          }
+        }
+      }`,
+      params
+    );
+    logger.debug(JSON.stringify(response));
+  } catch (error: unknown) {
+    const message = handleOctokitError(error);
+    throw Error(`Could not retrieve the changed files: ${message}`);
+  }
+
+  if (!response.repository?.pullRequest?.files?.nodes) {
+    throw new Error('Missing data in GraphQL (changed files) response.');
+  }
+
+  return response.repository.pullRequest.files.nodes.map(n => {
+    return {
+      filename: n.path,
+      additions: n.additions,
+      deletions: n.deletions,
+      changes: n.additions + n.deletions,
+      status: ChangeType[n.changeType]
+    };
+  });
+}
+
+/**
+ * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
+ * @returns List of changed files within the GitHub Pull request.
+ */
+export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]> {
   if (!githubConfig.pullRequestNumber) {
     throw Error('This function can only be run on a pull request.');
   }
