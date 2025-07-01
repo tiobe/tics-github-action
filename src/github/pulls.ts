@@ -40,6 +40,7 @@ export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
                 changeType
                 additions
                 deletions
+                viewerViewedState
               }
               pageInfo {
                 hasNextPage
@@ -61,15 +62,17 @@ export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
     throw new Error('Missing data in GraphQL (changed files) response.');
   }
 
-  return response.repository.pullRequest.files.nodes.map(n => {
-    return {
-      filename: n.path,
-      additions: n.additions,
-      deletions: n.deletions,
-      changes: n.additions + n.deletions,
-      status: ChangeType[n.changeType]
-    };
-  });
+  return response.repository.pullRequest.files.nodes
+    .map(n => {
+      return {
+        filename: n.path,
+        additions: n.additions,
+        deletions: n.deletions,
+        changes: n.additions + n.deletions,
+        status: ChangeType[n.changeType]
+      };
+    })
+    .filter(n => n.status !== ChangeType.RENAMED || n.changes !== 0);
 }
 
 /**
