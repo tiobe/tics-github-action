@@ -62,17 +62,20 @@ export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
     throw new Error('Missing data in GraphQL (changed files) response.');
   }
 
-  return response.repository.pullRequest.files.nodes
-    .map(n => {
-      return {
-        filename: n.path,
-        additions: n.additions,
-        deletions: n.deletions,
-        changes: n.additions + n.deletions,
-        status: ChangeType[n.changeType]
-      };
-    })
-    .filter(n => n.status !== ChangeType.RENAMED || n.changes !== 0);
+  return (
+    response.repository.pullRequest.files.nodes
+      .map(n => {
+        return {
+          filename: n.path,
+          additions: n.additions,
+          deletions: n.deletions,
+          changes: n.additions + n.deletions,
+          status: ChangeType[n.changeType]
+        };
+      })
+      // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
+      .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
+  );
 }
 
 /**
@@ -93,22 +96,16 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
   try {
     logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
-      return response.data
-        .filter(item => {
-          // If a file is moved or renamed the status is 'renamed'.
-          if (item.status === 'renamed') {
-            // If a file has been moved without changes or if moved files are excluded, exclude them.
-            if ((actionConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
-              return false;
-            }
-          }
-          return true;
-        })
-        .map(item => {
-          item.filename = normalize(item.filename);
-          logger.debug(item.filename);
-          return item;
-        });
+      return (
+        response.data
+          // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
+          .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
+          .map(item => {
+            item.filename = normalize(item.filename);
+            logger.debug(item.filename);
+            return item;
+          })
+      );
     });
     logger.info('Retrieved changed files from pull request.');
   } catch (error: unknown) {

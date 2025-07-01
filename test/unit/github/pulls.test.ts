@@ -60,7 +60,8 @@ describe('getChangedFilesOfPullRequestQL', () => {
     ]);
   });
 
-  test('Should include changed moved file on excludeMovedFiles', async () => {
+  test('Should exclude changed moved file on excludeMovedFiles', async () => {
+    actionConfigMock.excludeMovedFiles = true;
     (octokit.graphql.paginate as any).mockReturnValueOnce(renamedChangedFileResponse);
 
     const response = await getChangedFilesOfPullRequestQL();
@@ -71,15 +72,10 @@ describe('getChangedFilesOfPullRequestQL', () => {
         deletions: 1,
         filename: 'test.js',
         status: 'modified'
-      },
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'jest.js',
-        status: 'renamed'
       }
     ]);
+
+    actionConfigMock.excludeMovedFiles = false;
   });
 
   test('Should return four files on getChangedFilesOfPullRequest', async () => {
@@ -138,7 +134,10 @@ describe('getChangedFilesOfPullRequestRest', () => {
     await getChangedFilesOfPullRequestRest();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }]
+      data: [
+        { filename: 'test.js', status: 'renamed', changes: 1 },
+        { filename: 'test.js', changes: 1 }
+      ]
     });
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -150,32 +149,46 @@ describe('getChangedFilesOfPullRequestRest', () => {
     await getChangedFilesOfPullRequestRest();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: [{ filename: 'test.js', status: 'renamed', changes: 0 }, { filename: 'test.js' }]
+      data: [
+        { filename: 'test.js', status: 'renamed', changes: 0 },
+        { filename: 'test.js', changes: 1 }
+      ]
     });
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
 
-  it('should include changed moved file on excludeMovedFiles', async () => {
+  it('should exclude changed moved file on excludeMovedFiles', async () => {
     actionConfigMock.excludeMovedFiles = true;
 
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfPullRequestRest();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }]
+      data: [
+        { filename: 'test.js', status: 'renamed', changes: 1 },
+        { filename: 'test.js', changes: 1 }
+      ]
     });
 
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
+
+    actionConfigMock.excludeMovedFiles = false;
   });
 
   it('should call debug on callback of paginate', async () => {
+    actionConfigMock.excludeMovedFiles = false;
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfPullRequestRest();
 
-    (octokit.paginate as any).mock.calls[0][2]({ data: [{ filename: 'test.js' }, { filename: 'test.js' }] });
+    (octokit.paginate as any).mock.calls[0][2]({
+      data: [
+        { filename: 'test.js', changes: 1 },
+        { filename: 'test.js', changes: 1 }
+      ]
+    });
 
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith('test.js');
