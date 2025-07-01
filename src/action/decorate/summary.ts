@@ -1,6 +1,5 @@
 import { EOL } from 'os';
 import { format } from 'date-fns';
-import { range } from 'lodash';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
 import { ChangedFile } from '../../github/interfaces';
@@ -250,23 +249,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
       const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
       const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
 
-      if (githubConfig.event.isPullRequest) {
-        if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
-          const reviewComment = {
-            blocking: annotation.blocking?.state,
-            title: title,
-            body: createBody(annotation, displayCount),
-            path: annotation.path,
-            line: annotation.line
-          };
-          logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
-          postable.push(reviewComment);
-        } else {
-          annotation.displayCount = displayCount;
-          logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-          unpostable.push(annotation);
-        }
-      } else if (annotation.diffLines?.includes(annotation.line)) {
+      if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
         const reviewComment = {
           blocking: annotation.blocking?.state,
           title: title,
@@ -333,7 +316,6 @@ function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: Chang
     const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
-      annotation.diffLines = file ? fetchDiffLines(file) : [];
       annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else if (groupedAnnotations[index].gateId === annotation.gateId) {
@@ -341,28 +323,6 @@ function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: Chang
     }
   });
   return groupedAnnotations;
-}
-
-/**
- * Finds all lines that are shown in GitHub diff chunk.
- * @param file file to search the lines changed chunk for.
- * @returns List of all the lines in the diff chunk.
- */
-function fetchDiffLines(file: ChangedFile): number[] {
-  const regex = /\+(\d+),(\d+)+/g;
-  let diffLines: number[] = [];
-
-  if (!file.patch) return [];
-
-  let match = regex.exec(file.patch);
-  while (match !== null) {
-    const startLine = parseInt(match[1]);
-    const amountOfLines = parseInt(match[2]);
-    diffLines = diffLines.concat(range(startLine, startLine + amountOfLines));
-    match = regex.exec(file.patch);
-  }
-
-  return diffLines;
 }
 
 /**

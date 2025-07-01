@@ -32,16 +32,14 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
       analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }))
     };
 
-    const qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
+    projectResult.qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
 
-    projectResult.qualityGate = qualityGate;
-
-    if (!qualityGate.passed) {
+    if (!projectResult.qualityGate.passed) {
       analysisResult.passed = false;
     }
 
     if (actionConfig.postAnnotations) {
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
+      const annotations = await getAnnotations(projectResult.qualityGate.annotationsApiV1Links);
       if (annotations.length > 0) {
         projectResult.reviewComments = createReviewComments(annotations, changedFiles);
       }
