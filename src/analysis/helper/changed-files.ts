@@ -14,7 +14,7 @@ export async function getChangedFiles(): Promise<ChangedFiles> {
     try {
       changedFiles = await getChangedFilesOfPullRequestQL();
     } catch (error: unknown) {
-      logger.warning(error instanceof Error ? error.message : 'Could not retrieve the changed files, trying another way.');
+      logger.notice(error instanceof Error ? error.message : 'Could not retrieve the changed files, trying another way.');
       changedFiles = await getChangedFilesOfPullRequestRest();
     }
   } else {
