@@ -1,10 +1,10 @@
-const config = {
+/** @type {import('ts-jest').JestConfigWithTsJest} **/
+export default {
   coverageReporters: ['lcov', 'cobertura', 'text'],
   verbose: true,
   projects: [
     {
       clearMocks: true,
-
       moduleFileExtensions: ['js', 'ts'],
       testMatch: ['**/integration/**/*.test.ts'],
       transform: {
@@ -22,5 +22,3 @@ const config = {
     }
   ]
 };
-
-export default config;

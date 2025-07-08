@@ -134,3 +134,12 @@ export interface ChangedFile {
   patch?: string | undefined;
   previous_filename?: string | undefined;
 }
+
+export interface RateLimit {
+  rate: {
+    limit: number;
+    used: number;
+    remaining: number;
+    reset: number;
+  };
+}

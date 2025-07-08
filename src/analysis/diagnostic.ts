@@ -1,3 +1,4 @@
+import { getRateLimit } from '../github/diagnostic';
 import { Verdict } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { runTicsAnalyzer } from '../tics/analyzer';
@@ -8,6 +9,9 @@ import { runTicsAnalyzer } from '../tics/analyzer';
  */
 export async function diagnosticAnalysis(): Promise<Verdict> {
   logger.header('Running action in diagnostic mode');
+
+  await getRateLimit();
+
   const analysis = await runTicsAnalyzer('');
 
   const passed = analysis.completed && analysis.statusCode === 0;

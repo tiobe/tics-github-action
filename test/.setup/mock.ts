@@ -117,6 +117,9 @@ jest.mock('../../src/github/octokit', () => {
         },
         actions: {
           listJobsForWorkflowRunAttempt: jest.fn()
+        },
+        rateLimit: {
+          get: jest.fn()
         }
       },
       graphql: jest.fn()
