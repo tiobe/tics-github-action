@@ -1,7 +1,7 @@
 export enum Events {
-  'APPROVE' = 'APPROVE',
-  'COMMENT' = 'COMMENT',
-  'REQUEST_CHANGES' = 'REQUEST_CHANGES'
+  APPROVE = 'APPROVE',
+  COMMENT = 'COMMENT',
+  REQUEST_CHANGES = 'REQUEST_CHANGES'
 }
 
 export enum ChangeType {

@@ -45,7 +45,7 @@ inputs:
     description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
     required: false
   excludeMovedFiles:
-    description: Exclude moved and renamed files from analysis completely. By default these are included if there are modifications in the file.
+    description: Exclude moved files from analysis even if there are modifications in the file.
     required: false
     default: false
   filelist:

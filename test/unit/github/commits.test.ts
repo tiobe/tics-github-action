@@ -34,7 +34,12 @@ describe('getChangedFilesOfCommit', () => {
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: { files: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] }
+      data: {
+        files: [
+          { filename: 'test.js', status: 'renamed', changes: 1 },
+          { filename: 'test.js', changes: 1 }
+        ]
+      }
     });
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -46,32 +51,51 @@ describe('getChangedFilesOfCommit', () => {
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: { files: [{ filename: 'test.js', status: 'renamed', changes: 0 }, { filename: 'test.js' }] }
+      data: {
+        files: [
+          { filename: 'test.js', status: 'renamed', changes: 0 },
+          { filename: 'test.js', changes: 1 }
+        ]
+      }
     });
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
   });
 
-  it('should include changed moved file on excludeMovedFiles', async () => {
+  it('should exclude changed moved file on excludeMovedFiles', async () => {
     actionConfigMock.excludeMovedFiles = true;
 
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
-      data: { files: [{ filename: 'test.js', status: 'renamed', changes: 1 }, { filename: 'test.js' }] }
+      data: {
+        files: [
+          { filename: 'test.js', status: 'renamed', changes: 1 },
+          { filename: 'test.js', changes: 1 }
+        ]
+      }
     });
 
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('test.js');
+
+    actionConfigMock.excludeMovedFiles = false;
   });
 
   it('should call debug on callback of paginate', async () => {
     const spy = jest.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
-    (octokit.paginate as any).mock.calls[0][2]({ data: { files: [{ filename: 'test.js' }, { filename: 'test.js' }] } });
+    (octokit.paginate as any).mock.calls[0][2]({
+      data: {
+        files: [
+          { filename: 'test.js', changes: 1 },
+          { filename: 'test.js', changes: 1 }
+        ]
+      }
+    });
 
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith('test.js');

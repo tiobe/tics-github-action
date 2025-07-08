@@ -160,7 +160,6 @@ export interface Annotation {
   count?: number;
   gateId?: number;
   path?: string;
-  diffLines?: number[];
   ruleHelp?: string;
   synopsis?: string;
   blocking?: {

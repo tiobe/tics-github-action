@@ -122,7 +122,9 @@ jest.mock('../../src/github/octokit', () => {
           get: jest.fn()
         }
       },
-      graphql: jest.fn()
+      graphql: {
+        paginate: jest.fn()
+      }
     }
   };
 });

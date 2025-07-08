@@ -1,3 +1,5 @@
+import { PullRequestChangedFile } from '@octokit/graphql-schema';
+
 type Side = 'LEFT' | 'RIGHT';
 type AuthorAssociation = 'COLLABORATOR' | 'CONTRIBUTOR' | 'FIRST_TIMER' | 'FIRST_TIME_CONTRIBUTOR' | 'MANNEQUIN' | 'MEMBER' | 'NONE' | 'OWNER';
 
@@ -122,15 +124,15 @@ export interface Comment {
 }
 
 export interface ChangedFile {
-  sha: string;
+  sha?: string;
   filename: string;
   status: 'added' | 'changed' | 'copied' | 'removed' | 'modified' | 'renamed' | 'unchanged';
   additions: number;
   deletions: number;
   changes: number;
-  blob_url: string;
-  raw_url: string;
-  contents_url: string;
+  blob_url?: string;
+  raw_url?: string;
+  contents_url?: string;
   patch?: string | undefined;
   previous_filename?: string | undefined;
 }
@@ -141,5 +143,23 @@ export interface RateLimit {
     used: number;
     remaining: number;
     reset: number;
+  };
+}
+
+export interface ChangedFilesQueryResponse {
+  rateLimit: {
+    remaining: number;
+  };
+  repository?: {
+    pullRequest?: {
+      files?: {
+        totalCount: number;
+        nodes?: PullRequestChangedFile[];
+        pageInfo: {
+          hasNextPage: boolean;
+          endCursor?: string;
+        };
+      };
+    };
   };
 }

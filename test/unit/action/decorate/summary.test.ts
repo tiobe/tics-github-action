@@ -437,7 +437,6 @@ describe('createReviewComments', () => {
         count: 1,
         supp: false,
         displayCount: '',
-        diffLines: [],
         instanceName: 'test'
       },
       {
@@ -452,7 +451,6 @@ describe('createReviewComments', () => {
         count: 1,
         supp: false,
         displayCount: '',
-        diffLines: [],
         instanceName: 'test'
       }
     ];
@@ -541,7 +539,6 @@ it('should return one postable and one unpostable review comment', async () => {
       count: 1,
       supp: false,
       displayCount: '',
-      diffLines: [],
       instanceName: 'test'
     },
     {
@@ -556,7 +553,6 @@ it('should return one postable and one unpostable review comment', async () => {
       count: 1,
       supp: false,
       displayCount: '',
-      diffLines: [],
       instanceName: 'test'
     }
   ];

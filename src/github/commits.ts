@@ -5,6 +5,7 @@ import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
 import { octokit } from './octokit';
+import { ChangeType } from './enums';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -21,22 +22,16 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
     logger.header('Retrieving changed files.');
     response = await octokit.paginate(octokit.rest.repos.getCommit, params, response => {
       if (response.data.files) {
-        return response.data.files
-          .filter(item => {
-            // If a file is moved or renamed the status is 'renamed'.
-            if (item.status === 'renamed') {
-              // If a file has been moved without changes or if moved files are excluded, exclude them.
-              if ((actionConfig.excludeMovedFiles && item.changes === 0) || item.changes === 0) {
-                return false;
-              }
-            }
-            return true;
-          })
-          .map(item => {
-            item.filename = normalize(item.filename);
-            logger.debug(item.filename);
-            return item;
-          });
+        return (
+          response.data.files
+            // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
+            .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
+            .map(item => {
+              item.filename = normalize(item.filename);
+              logger.debug(item.filename);
+              return item;
+            })
+        );
       }
       return [];
     });
