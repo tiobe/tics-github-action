@@ -33,6 +33,7 @@ export async function uploadArtifact(): Promise<void> {
 
 function sanitizeArtifactName(name: string): string {
   return name
+    .replace(/github[-_]action/gi, 'ghact')
     .replace(/[^a-zA-Z0-9_.-]/g, '_') // Keep only safe characters
     .replace(/-+/g, '_') // Replace dashes with underscores
     .slice(0, 100); // Ensure max length
