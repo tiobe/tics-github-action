@@ -17,7 +17,7 @@ export async function uploadArtifact(): Promise<void> {
     logger.info(`Logs gotten from ${tmpdir}`);
     const response = await artifactClient.uploadArtifact(
       // Example TICS_tics-github-action_2_qserver_ticstmpdir
-      `${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`,
+      sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`),
       getFilesInFolder(tmpdir),
       tmpdir
     );
@@ -29,6 +29,13 @@ export async function uploadArtifact(): Promise<void> {
     const message = handleOctokitError(error);
     logger.debug('Failed to upload artifact: ' + message);
   }
+}
+
+function sanitizeArtifactName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9_.-]/g, '_') // Keep only safe characters
+    .replace(/-+/g, '_') // Replace dashes with underscores
+    .slice(0, 100); // Ensure max length
 }
 
 export function getTmpDir(): string {
