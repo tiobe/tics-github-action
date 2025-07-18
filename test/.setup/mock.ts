@@ -196,9 +196,9 @@ jest.mock('@actions/exec', () => {
 });
 jest.mock('@actions/artifact', () => {
   return {
-    create: jest.fn(() => {
-      return { uploadArtifact: jest.fn() };
-    })
+    DefaultArtifactClient: jest.fn().mockImplementation(() => ({
+      uploadArtifact: jest.fn()
+    }))
   };
 });
 jest.mock('fs', () => {
