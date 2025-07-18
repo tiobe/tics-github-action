@@ -1,26 +1,38 @@
-import { ArtifactClient, DownloadOptions, DownloadResponse, UploadOptions, UploadResponse } from '@actions/artifact';
+import {
+  ArtifactClient,
+  DeleteArtifactResponse,
+  DownloadArtifactOptions,
+  DownloadArtifactResponse,
+  FindOptions,
+  GetArtifactResponse,
+  ListArtifactsOptions,
+  ListArtifactsResponse,
+  UploadArtifactOptions,
+  UploadArtifactResponse
+} from '@actions/artifact';
 import { Dirent } from 'fs';
 
 export class MockArtifactClient implements ArtifactClient {
-  failedItems: string[];
-  constructor(failedItems: string[]) {
-    this.failedItems = failedItems;
-  }
-
-  async uploadArtifact(name: string, files: string[], rootDirectory: string, options?: UploadOptions | undefined): Promise<UploadResponse> {
-    const uploadResponse = {
-      artifactName: name,
-      artifactItems: files,
+  uploadArtifact(name: string, files: string[], rootDirectory: string, options?: UploadArtifactOptions): Promise<UploadArtifactResponse> {
+    const response: UploadArtifactResponse = {
       size: files.length,
-      failedItems: this.failedItems
+      id: name.length,
+      digest: rootDirectory
     };
-
-    return uploadResponse;
+    return new Promise(resolve => {
+      resolve(response);
+    });
   }
-  async downloadArtifact(name: string, path?: string | undefined, options?: DownloadOptions | undefined): Promise<DownloadResponse> {
+  listArtifacts(options?: ListArtifactsOptions & FindOptions): Promise<ListArtifactsResponse> {
     throw new Error('Method not implemented.');
   }
-  async downloadAllArtifacts(path?: string | undefined): Promise<DownloadResponse[]> {
+  getArtifact(artifactName: string, options?: FindOptions): Promise<GetArtifactResponse> {
+    throw new Error('Method not implemented.');
+  }
+  downloadArtifact(artifactId: number, options?: DownloadArtifactOptions & FindOptions): Promise<DownloadArtifactResponse> {
+    throw new Error('Method not implemented.');
+  }
+  deleteArtifact(artifactName: string, options?: FindOptions): Promise<DeleteArtifactResponse> {
     throw new Error('Method not implemented.');
   }
 }
