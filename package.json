@@ -31,7 +31,7 @@
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
-    "@octokit/plugin-paginate-graphql": "^4.0.1",
+    "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@octokit/plugin-retry": "^6.1.0",
     "@octokit/request-error": "^5.1.1",
     "@tiobe/http-client": "^0.4.0",
