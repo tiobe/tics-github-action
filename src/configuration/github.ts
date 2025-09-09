@@ -87,7 +87,7 @@ export class GithubConfig {
   removeWarningListener(): void {
     process.removeAllListeners('warning');
     process.on('warning', warning => {
-      logger.debug(warning.message.toString());
+      logger.debug(warning.message);
     });
   }
 }

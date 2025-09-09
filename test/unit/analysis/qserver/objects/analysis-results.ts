@@ -57,19 +57,6 @@ export const annotationsMock: ExtendedAnnotation[] = [
 ];
 
 export const ticsReviewComments: TicsReviewComments = {
-  postable: [
-    {
-      blocking: undefined,
-      title: 'Coding Standard: Failed just because',
-      body: 'this is a body',
-      line: 1
-    },
-    {
-      blocking: undefined,
-      title: 'Coding Standard: Failed just because',
-      body: 'this is a body',
-      line: 2
-    }
-  ],
+  postable: annotationsMock,
   unpostable: []
 };

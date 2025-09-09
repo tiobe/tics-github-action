@@ -104,16 +104,16 @@ describe('postAnnotations', () => {
     postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith('body 0', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'title 0',
+      title: 'CS: rule 0',
       startLine: 0
     });
 
     expect(noticeSpy).toHaveBeenCalledTimes(1);
-    expect(noticeSpy).toHaveBeenCalledWith('body 1', {
+    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path1.js',
-      title: 'title 1',
+      title: 'CS: rule 1',
       startLine: 1
     });
   });
@@ -127,26 +127,26 @@ describe('postAnnotations', () => {
     postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
-    expect(warningSpy).toHaveBeenCalledWith('body 0', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'title 0',
+      title: 'CS: rule 0',
       startLine: 0
     });
-    expect(warningSpy).toHaveBeenCalledWith('body 2', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path2.js',
-      title: 'title 2',
+      title: 'CS: rule 2',
       startLine: 2
     });
 
     expect(noticeSpy).toHaveBeenCalledTimes(2);
-    expect(noticeSpy).toHaveBeenCalledWith('body 1', {
+    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path1.js',
-      title: 'title 1',
+      title: 'CS: rule 1',
       startLine: 1
     });
-    expect(noticeSpy).toHaveBeenCalledWith('body 3', {
+    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path3.js',
-      title: 'title 3',
+      title: 'CS: rule 3',
       startLine: 3
     });
   });
@@ -160,9 +160,9 @@ describe('postAnnotations', () => {
     postAnnotations(twoMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith('body 0', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'title 0',
+      title: 'CS: rule 0',
       startLine: 0
     });
 
@@ -178,14 +178,14 @@ describe('postAnnotations', () => {
     postAnnotations(fourMixedAnalysisResults.projectResults);
 
     expect(warningSpy).toHaveBeenCalledTimes(2);
-    expect(warningSpy).toHaveBeenCalledWith('body 0', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'title 0',
+      title: 'CS: rule 0',
       startLine: 0
     });
-    expect(warningSpy).toHaveBeenCalledWith('body 2', {
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path2.js',
-      title: 'title 2',
+      title: 'CS: rule 2',
       startLine: 2
     });
 

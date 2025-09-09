@@ -113,7 +113,7 @@ export interface TicsReviewComment {
 }
 
 export interface TicsReviewComments {
-  postable: TicsReviewComment[];
+  postable: ExtendedAnnotation[];
   unpostable: ExtendedAnnotation[];
 }
 

@@ -6,20 +6,12 @@ import { ChangedFile } from '../../github/interfaces';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
-import {
-  AnalysisResult,
-  Condition,
-  ConditionDetails,
-  ExtendedAnnotation,
-  Gate,
-  TicsReviewComment,
-  TicsReviewComments
-} from '../../helper/interfaces';
+import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, Gate, TicsReviewComments } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 
-const capitalize = (s: string): string => s && String(s[0]).toUpperCase() + String(s).slice(1);
+const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
 
 export async function createSummaryBody(analysisResult: AnalysisResult): Promise<string> {
   logger.header('Creating summary.');
@@ -241,26 +233,17 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
   const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
 
   const unpostable: ExtendedAnnotation[] = [];
-  const postable: TicsReviewComment[] = [];
+  const postable: ExtendedAnnotation[] = [];
 
   groupedAnnotations
     .filter(a => a.blocking?.state !== 'no')
     .forEach(annotation => {
-      const displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
-      const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
+      annotation.displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
 
       if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
-        const reviewComment = {
-          blocking: annotation.blocking?.state,
-          title: title,
-          body: createBody(annotation, displayCount),
-          path: annotation.path,
-          line: annotation.line
-        };
-        logger.debug(`Postable: ${JSON.stringify(reviewComment)}`);
-        postable.push(reviewComment);
+        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
+        postable.push(annotation);
       } else {
-        annotation.displayCount = displayCount;
         logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
         unpostable.push(annotation);
       }
@@ -269,7 +252,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
   return { postable: postable, unpostable: unpostable };
 }
 
-function createBody(annotation: ExtendedAnnotation, displayCount: string) {
+export function createReviewCommentBody(annotation: ExtendedAnnotation) {
   let body = '';
   if (annotation.blocking?.state === 'yes') {
     body += `Blocking${EOL}`;
@@ -285,7 +268,7 @@ function createBody(annotation: ExtendedAnnotation, displayCount: string) {
     secondLine.push(`Category: ${annotation.category}`);
   }
 
-  body += `Line: ${annotation.line.toString()}: ${displayCount}${annotation.msg}`;
+  body += `Line: ${annotation.line.toString()}: ${annotation.displayCount ?? ''} ${annotation.msg}`;
   body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 

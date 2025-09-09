@@ -17,7 +17,6 @@ import {
   analysisResultsNoSoakedPassed,
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
-import { EOL } from 'os';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
@@ -212,19 +211,9 @@ describe('createReviewComments', () => {
       }
     ];
 
-    const expected_postable = [
-      {
-        blocking: undefined,
-        title: 'test: test',
-        path: 'src/test.js',
-        line: 0,
-        body: `Line: 0: test${EOL}Level: 1, Category: test`
-      }
-    ];
-
     const response = createReviewComments(annotations, changedFiles);
 
-    expect(response).toEqual({ postable: expected_postable, unpostable: [] });
+    expect(response).toEqual({ postable: annotations, unpostable: [] });
   });
 
   it('should return one combined postable review comment for the same line', async () => {
@@ -277,11 +266,21 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
-        blocking: 'yes',
-        title: 'test: test',
-        path: 'src/test.js',
+        fullPath: 'c:/src/test.js',
         line: 0,
-        body: `Blocking${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'test',
+        msg: 'test',
+        count: 2,
+        supp: false,
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        },
+        path: 'src/test.js',
+        displayCount: '(2x) '
       }
     ];
 
@@ -341,18 +340,39 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
-        blocking: 'yes',
-        title: 'test: rule-now',
-        path: 'src/test.js',
+        fullPath: 'c:/src/test.js',
         line: 0,
-        body: `Blocking${EOL}Line: 0: message-now${EOL}Level: 1, Category: test`
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'rule-now',
+        msg: 'message-now',
+        count: 1,
+        supp: false,
+        instanceName: 'test',
+        blocking: {
+          state: 'yes'
+        },
+        displayCount: '',
+        path: 'src/test.js'
       },
       {
-        blocking: 'after',
-        title: 'test',
-        path: 'src/test.js',
+        // testing one without a rule
+        fullPath: 'c:/src/test.js',
         line: 0,
-        body: `Blocking after: 2024-02-19${EOL}Line: 0: message-after${EOL}Level: 1, Category: test`
+        level: 1,
+        category: 'test',
+        type: 'test',
+        msg: 'message-after',
+        count: 1,
+        supp: false,
+        instanceName: 'test',
+        blocking: {
+          state: 'after',
+          after: 1708356940000
+        },
+        displayCount: '',
+        path: 'src/test.js'
       }
     ];
 
@@ -416,11 +436,18 @@ describe('createReviewComments', () => {
 
     const expected_postable = [
       {
-        blocking: undefined,
-        title: 'test: test',
-        path: 'src/test.js',
+        fullPath: 'c:/src/test.js',
         line: 0,
-        body: `Line: 0: test${EOL}Level: 1, Category: test`
+        level: 1,
+        category: 'test',
+        type: 'test',
+        rule: 'test',
+        msg: 'test',
+        count: 1,
+        supp: false,
+        instanceName: 'test',
+        displayCount: '',
+        path: 'src/test.js'
       }
     ];
 
@@ -518,11 +545,18 @@ it('should return one postable and one unpostable review comment', async () => {
 
   const expected_postable = [
     {
-      blocking: undefined,
-      title: 'test: test',
-      path: 'src/test.js',
+      fullPath: 'c:/src/test.js',
       line: 0,
-      body: `Line: 0: test${EOL}Level: 1, Category: test`
+      level: 1,
+      category: 'test',
+      type: 'test',
+      rule: 'test',
+      msg: 'test',
+      count: 1,
+      supp: false,
+      instanceName: 'test',
+      displayCount: '',
+      path: 'src/test.js'
     }
   ];
 
