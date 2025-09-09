@@ -14,7 +14,7 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, 'Build dist after push to main') }}
     steps:
       - name: Setup git config
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.TIOBE_TOKEN }}
       - run: |
