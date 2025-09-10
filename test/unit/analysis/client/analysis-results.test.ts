@@ -19,6 +19,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: '',
       passedWithWarning: false,
       missesQualityGate: true,
       projectResults: []
@@ -33,6 +34,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: true,
+      message: '',
       passedWithWarning: true,
       missesQualityGate: false,
       projectResults: [
@@ -54,6 +56,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: 'Project failed quality gate(s)',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [
@@ -76,6 +79,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: '1 out of 2 projects failed quality gate(s)',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [
@@ -103,6 +107,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: '2 out of 2 projects failed quality gate(s)',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [
@@ -134,6 +139,7 @@ describe('getClientAnalysisResults', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: 'Project failed quality gate(s)',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [

@@ -44,6 +44,7 @@ describe('getAnalysisResult', () => {
 
     expect(result).toEqual({
       passed: true,
+      message: '',
       passedWithWarning: true,
       missesQualityGate: false,
       projectResults: [
@@ -66,6 +67,7 @@ describe('getAnalysisResult', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: 'Project failed quality gate',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [
@@ -93,6 +95,7 @@ describe('getAnalysisResult', () => {
 
     expect(result).toEqual({
       passed: false,
+      message: 'Project failed quality gate',
       passedWithWarning: false,
       missesQualityGate: false,
       projectResults: [

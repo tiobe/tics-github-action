@@ -1,13 +1,11 @@
 import { setOutput } from '@actions/core';
-import { ExtendedAnnotation, ProjectResult } from '../helper/interfaces';
+import { ProjectResult } from '../helper/interfaces';
 import { logger } from '../helper/logger';
+import { ActionOutput } from './interfaces';
 
-export function createAndSetOutput(projectResults: ProjectResult[]) {
+export function createAndSetOutput(projectResults: ProjectResult[]): void {
   logger.header('Setting output variable "annotations"');
-  const output: {
-    conditions: string[];
-    annotations: ExtendedAnnotation[];
-  } = {
+  const output: ActionOutput = {
     conditions: [],
     annotations: []
   };
@@ -15,7 +13,9 @@ export function createAndSetOutput(projectResults: ProjectResult[]) {
   projectResults.forEach(p => {
     p.qualityGate?.gates.forEach(g => {
       g.conditions.forEach(c => {
-        output.conditions.push(c.message);
+        if (!output.conditions.includes(c.message)) {
+          output.conditions.push(c.message);
+        }
       });
     });
 

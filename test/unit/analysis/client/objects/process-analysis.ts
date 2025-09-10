@@ -50,6 +50,7 @@ export const analysisWithDoubleUrl = {
 
 export const analysisNoQualityGates: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   missesQualityGate: true,
   projectResults: [],
   passedWithWarning: false
@@ -238,6 +239,7 @@ const doubleFileQualityGatePassed: QualityGate = {
 
 export const analysisResultsSingleQgFailed: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   missesQualityGate: false,
   projectResults: [
     {
@@ -252,6 +254,7 @@ export const analysisResultsSingleQgFailed: AnalysisResult = {
 
 export const analysisResultsDualQgFailed: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   missesQualityGate: false,
   projectResults: [
     {
@@ -272,6 +275,7 @@ export const analysisResultsDualQgFailed: AnalysisResult = {
 
 export const analysisResultsSingleFilePassed: AnalysisResult = {
   passed: true,
+  message: '',
   missesQualityGate: false,
   projectResults: [
     {
@@ -286,6 +290,7 @@ export const analysisResultsSingleFilePassed: AnalysisResult = {
 
 export const analysisResultsDoubleFilePassed: AnalysisResult = {
   passed: true,
+  message: '',
   missesQualityGate: false,
   projectResults: [
     {

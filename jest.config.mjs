@@ -8,7 +8,12 @@ export default {
       moduleFileExtensions: ['js', 'ts'],
       testMatch: ['**/integration/**/*.test.ts'],
       transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            tsconfig: 'tsconfig.test.json'
+          }
+        ]
       }
     },
     {
@@ -17,7 +22,12 @@ export default {
       testMatch: ['**/unit/**/*.test.ts'],
       setupFilesAfterEnv: ['<rootDir>/test/.setup/mock.ts', '<rootDir>/test/.setup/extend_jest.ts'],
       transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            tsconfig: 'tsconfig.test.json'
+          }
+        ]
       }
     }
   ]
