@@ -22,6 +22,7 @@ export interface Analysis {
 
 export interface AnalysisResult {
   passed: boolean;
+  message: string;
   passedWithWarning: boolean;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];

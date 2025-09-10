@@ -23,6 +23,7 @@ export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
 
   return {
     passed: qualityGate.passed,
+    message: qualityGate.passed ? '' : 'Project failed quality gate',
     passedWithWarning: qualityGate.passedWithWarning ?? false,
     missesQualityGate: false,
     projectResults: [

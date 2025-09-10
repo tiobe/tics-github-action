@@ -78,6 +78,7 @@ export const emptyComment: ReviewComment = {
 
 export const analysisResults: AnalysisResult = {
   passed: false,
+  message: 'failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -195,6 +196,7 @@ const fourAnnotations: ExtendedAnnotation[] = [
 
 export const twoMixedAnalysisResults: AnalysisResult = {
   passed: false,
+  message: 'failed',
   missesQualityGate: false,
   projectResults: [
     {
@@ -230,6 +232,7 @@ export const twoMixedAnalysisResults: AnalysisResult = {
 
 export const fourMixedAnalysisResults: AnalysisResult = {
   passed: false,
+  message: 'failed',
   missesQualityGate: false,
   projectResults: [
     {

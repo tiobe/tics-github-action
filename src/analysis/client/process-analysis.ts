@@ -4,6 +4,7 @@ import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../../
 import { githubConfig } from '../../configuration/config';
 import { getPostedComments, deletePreviousComments } from '../../github/comments';
 import { ChangedFile } from '../../github/interfaces';
+import { createAndSetOutput } from '../../github/output';
 import { Analysis } from '../../helper/interfaces';
 import { getClientAnalysisResults } from './analysis-results';
 
@@ -37,24 +38,8 @@ export async function processIncompleteAnalysis(analysis: Analysis): Promise<str
 export async function processCompleteAnalysis(analysis: Analysis, changedFiles: ChangedFile[]): Promise<string> {
   const analysisResult = await getClientAnalysisResults(analysis.explorerUrls, changedFiles);
 
-  if (analysisResult.missesQualityGate) {
-    return 'Some quality gates could not be retrieved.';
-  }
-
-  // Construct message on how many projects failed the quality gate (if at least one fails).
-  let failedMessage = '';
-
-  const failedProjectQualityGateCount = analysisResult.projectResults.filter(p => p.qualityGate && !p.qualityGate.passed).length;
-  if (failedProjectQualityGateCount >= 1) {
-    if (analysis.explorerUrls.length > 1) {
-      failedMessage = `${failedProjectQualityGateCount.toString()} out of ${analysis.explorerUrls.length.toString()} projects`;
-    } else {
-      failedMessage = 'Project';
-    }
-    failedMessage += ` failed quality gate(s)`;
-  }
-
   await decorateAction(analysisResult, analysis);
+  createAndSetOutput(analysisResult.projectResults);
 
-  return failedMessage;
+  return analysisResult.message;
 }
