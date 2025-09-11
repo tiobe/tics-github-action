@@ -252,7 +252,7 @@ export function createReviewComments(annotations: ExtendedAnnotation[], changedF
   return { postable: postable, unpostable: unpostable };
 }
 
-export function createReviewCommentBody(annotation: ExtendedAnnotation) {
+export function createReviewCommentBody(annotation: ExtendedAnnotation): string {
   let body = '';
   if (annotation.blocking?.state === 'yes') {
     body += `Blocking${EOL}`;
