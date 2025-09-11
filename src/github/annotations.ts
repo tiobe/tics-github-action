@@ -1,9 +1,10 @@
 import { ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
-import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
+import { ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
 import { octokit } from './octokit';
+import { createReviewCommentBody } from '../action/decorate/summary';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -38,29 +39,29 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
 export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
-  const postableReviewComments: TicsReviewComment[] = [];
-
   projectResults.forEach(projectResult => {
     if (projectResult.reviewComments) {
-      postableReviewComments.push(...projectResult.reviewComments.postable);
+      projectResult.reviewComments.postable.forEach(annotation => {
+        const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
+        const body = createReviewCommentBody(annotation);
+
+        if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
+          logger.warning(body, {
+            file: annotation.path,
+            startLine: annotation.line,
+            title: title
+          });
+        } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
+          logger.notice(body, {
+            file: annotation.path,
+            startLine: annotation.line,
+            title: title
+          });
+        }
+      });
     }
   });
 
-  postableReviewComments.forEach(reviewComment => {
-    if (reviewComment.blocking === undefined || reviewComment.blocking === 'yes') {
-      logger.warning(reviewComment.body, {
-        file: reviewComment.path,
-        startLine: reviewComment.line,
-        title: reviewComment.title
-      });
-    } else if (reviewComment.blocking === 'after' && actionConfig.showBlockingAfter) {
-      logger.notice(reviewComment.body, {
-        file: reviewComment.path,
-        startLine: reviewComment.line,
-        title: reviewComment.title
-      });
-    }
-  });
   logger.info('Posted all postable annotations (none if there are no violations).');
 }
 

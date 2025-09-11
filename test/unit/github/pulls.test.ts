@@ -6,8 +6,38 @@ import { logger } from '../../../src/helper/logger';
 import { changedFile, fourFilesChangedResponse, renamedChangedFileResponse, renamedUnchangedFileResponse, singleFileResponse } from './objects/pulls';
 import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
+import { GithubEvent } from '../../../src/configuration/github-event';
 
 describe('getChangedFilesOfPullRequestQL', () => {
+  test('Should not run on non-pullrequest', async () => {
+    githubConfigMock.event = GithubEvent.PUSH;
+
+    let err: any;
+    try {
+      await getChangedFilesOfPullRequestQL();
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toEqual('This function can only be run on a pull request.');
+    githubConfigMock.event = GithubEvent.PULL_REQUEST; // reset event
+  });
+
+  test('Should throw error if return value is undefined', async () => {
+    (octokit.graphql.paginate as any).mockReturnValueOnce({ repository: undefined });
+
+    let err: any;
+    try {
+      await getChangedFilesOfPullRequestQL();
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toEqual('Missing data in GraphQL (changed files) response.');
+  });
+
   test('Should return single file on getChangedFilesOfPullRequest', async () => {
     (octokit.graphql.paginate as any).mockReturnValueOnce(singleFileResponse);
 

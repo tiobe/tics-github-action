@@ -186,6 +186,7 @@ jest.mock('@actions/core', () => {
     getInput: jest.fn(),
     getBooleanInput: jest.fn(),
     isDebug: jest.fn(),
+    setOutput: jest.fn(),
     summary: summary
   };
 });

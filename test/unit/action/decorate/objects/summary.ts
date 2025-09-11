@@ -18,6 +18,7 @@ export const analysisPassed = {
 
 export const analysisResultsSoaked: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: [
@@ -153,6 +154,7 @@ export const analysisResultsSoaked: AnalysisResult = {
 
 export const analysisResultsNotSoaked: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: [
@@ -243,6 +245,7 @@ export const analysisResultsNotSoaked: AnalysisResult = {
 
 export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: [
@@ -355,6 +358,7 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
 
 export const analysisResultsNoSoakedPassed: AnalysisResult = {
   passed: true,
+  message: '',
   passedWithWarning: false,
   missesQualityGate: false,
   projectResults: [
@@ -467,6 +471,7 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
 
 export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   passed: true,
+  message: '',
   passedWithWarning: true,
   missesQualityGate: false,
   projectResults: [

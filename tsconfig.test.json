@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // This will override the setting in your main tsconfig.json
+    "isolatedModules": true
+  }
+}

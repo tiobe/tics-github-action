@@ -22,6 +22,7 @@ export interface Analysis {
 
 export interface AnalysisResult {
   passed: boolean;
+  message: string;
   passedWithWarning: boolean;
   missesQualityGate: boolean;
   projectResults: ProjectResult[];
@@ -113,7 +114,7 @@ export interface TicsReviewComment {
 }
 
 export interface TicsReviewComments {
-  postable: TicsReviewComment[];
+  postable: ExtendedAnnotation[];
   unpostable: ExtendedAnnotation[];
 }
 

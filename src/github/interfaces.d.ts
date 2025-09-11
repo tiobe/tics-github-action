@@ -163,3 +163,8 @@ export interface ChangedFilesQueryResponse {
     };
   };
 }
+
+export interface ActionOutput {
+  conditions: string[];
+  annotations: ExtendedAnnotation[];
+}

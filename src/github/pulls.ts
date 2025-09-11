@@ -13,9 +13,10 @@ import { ChangeType } from './enums';
  * @returns List of changed files within the GitHub Pull request.
  */
 export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
-  if (!githubConfig.pullRequestNumber) {
+  if (!githubConfig.event.isPullRequest) {
     throw Error('This function can only be run on a pull request.');
   }
+
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
