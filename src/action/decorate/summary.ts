@@ -17,34 +17,32 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
   setSummaryHeader(getStatus(analysisResult.passed, analysisResult.passedWithWarning));
 
   analysisResult.projectResults.forEach(projectResult => {
-    if (projectResult.qualityGate) {
-      const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
+    const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
 
-      summary.addHeading(projectResult.project, 2);
-      summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
+    summary.addHeading(projectResult.project, 2);
+    summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
 
-      failedOrWarnConditions.forEach(condition => {
-        const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
-        if (condition.details && condition.details.items.length > 0) {
-          summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
-          summary.addBreak();
-          createConditionTables(condition.details).forEach(table => summary.addTable(table));
-          summary.addRaw('</details>', true);
-        } else {
-          summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
-        }
-      });
-      summary.addEOL();
-
-      summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
-
-      const unpostableReviewComments = projectResult.annotations.filter(r => !r.postable);
-      if (unpostableReviewComments.length > 0) {
-        summary.addRaw(createUnpostableAnnotationsDetails(unpostableReviewComments));
+    failedOrWarnConditions.forEach(condition => {
+      const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
+      if (condition.details && condition.details.items.length > 0) {
+        summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+        summary.addBreak();
+        createConditionTables(condition.details).forEach(table => summary.addTable(table));
+        summary.addRaw('</details>', true);
+      } else {
+        summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
       }
+    });
+    summary.addEOL();
 
-      summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
+    summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
+
+    const unpostableAnnotations = projectResult.annotations.filter(r => !r.postable);
+    if (unpostableAnnotations.length > 0) {
+      summary.addRaw(createUnpostableAnnotationsDetails(unpostableAnnotations));
     }
+
+    summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
   });
   await setSummaryFooter();
 
@@ -222,16 +220,16 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
 
 /**
  * Creates a summary of all the review comments that could not be posted
- * @param unpostableReviewComments Review comments that could not be posted.
+ * @param unpostableAnnotations Review comments that could not be posted.
  * @returns Summary of all the review comments that could not be posted.
  */
 // Exported for testing
-export function createUnpostableAnnotationsDetails(unpostableReviewComments: ExtendedAnnotation[]): string {
+export function createUnpostableAnnotationsDetails(unpostableAnnotations: ExtendedAnnotation[]): string {
   const label = 'Quality gate failures that cannot be annotated in <b>Files Changed</b>';
   let body = '';
   let previousPath = '';
 
-  unpostableReviewComments.forEach(reviewComment => {
+  unpostableAnnotations.forEach(reviewComment => {
     const path = reviewComment.path ?? '';
     const displayCount = reviewComment.displayCount ?? '';
     const icon = reviewComment.blocking?.state === 'after' ? ':warning:' : ':x:';

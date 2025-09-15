@@ -19,6 +19,13 @@ describe('createAndSetOutput', () => {
     projectResult = {
       project: 'project',
       explorerUrl: 'http://random/url',
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      },
       analyzedFiles: [],
       annotations: []
     };

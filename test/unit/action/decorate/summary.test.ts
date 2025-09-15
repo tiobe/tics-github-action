@@ -171,7 +171,7 @@ describe('createFilesSummary', () => {
   });
 });
 
-describe('createUnpostableReviewCommentsSummary', () => {
+describe('createUnpostableAnnotationsDetails', () => {
   it('should return summary of zero unpostable review comments on empty input', () => {
     const response = createUnpostableAnnotationsDetails([]);
 

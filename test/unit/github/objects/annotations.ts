@@ -103,7 +103,14 @@ export const analysisResults: AnalysisResult = {
           },
           instanceName: 'CS'
         }
-      ]
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      }
     }
   ],
   passedWithWarning: false
@@ -221,7 +228,14 @@ export const twoMixedAnalysisResults: AnalysisResult = {
           },
           instanceName: 'CS'
         }
-      ]
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      }
     }
   ],
   passedWithWarning: false
@@ -255,7 +269,14 @@ export const fourMixedAnalysisResults: AnalysisResult = {
           instanceName: 'CS',
           postable: false
         }
-      ]
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      }
     }
   ],
   passedWithWarning: false

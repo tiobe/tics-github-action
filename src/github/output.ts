@@ -11,7 +11,7 @@ export function createAndSetOutput(projectResults: ProjectResult[]): void {
   };
 
   projectResults.forEach(p => {
-    p.qualityGate?.gates.forEach(g => {
+    p.qualityGate.gates.forEach(g => {
       g.conditions.forEach(c => {
         if (!output.conditions.includes(c.message)) {
           output.conditions.push(c.message);

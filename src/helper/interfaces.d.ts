@@ -30,7 +30,7 @@ export interface AnalysisResult {
 export interface ProjectResult {
   project: string;
   explorerUrl: string;
-  qualityGate?: QualityGate;
+  qualityGate: QualityGate;
   analyzedFiles: string[];
   annotations: ExtendedAnnotation[];
 }
