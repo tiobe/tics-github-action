@@ -1,6 +1,5 @@
-import { createReviewComments } from '../../action/decorate/summary';
-import { actionConfig, ticsCli, ticsConfig } from '../../configuration/config';
-import { AnalysisResult, TicsReviewComments } from '../../helper/interfaces';
+import { ticsCli, ticsConfig } from '../../configuration/config';
+import { AnalysisResult } from '../../helper/interfaces';
 import { joinUrl } from '../../helper/url';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
 import { getAnnotations } from '../../viewer/annotations';
@@ -11,28 +10,20 @@ export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
   const qualityGate = await getQualityGate(getQualityGateUrl(ticsCli.project, { date }));
   const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(ticsCli.project, { date }));
 
-  let reviewComments: TicsReviewComments | undefined;
-  if (actionConfig.postAnnotations) {
-    const changedFiles = await getChangedFiles();
-
-    const annotations = await getAnnotations(qualityGate.annotationsApiV1Links);
-    if (annotations.length > 0) {
-      reviewComments = createReviewComments(annotations, changedFiles.files);
-    }
-  }
+  const changedFiles = await getChangedFiles();
+  const annotations = await getAnnotations(qualityGate.annotationsApiV1Links, changedFiles.files);
 
   return {
     passed: qualityGate.passed,
     message: qualityGate.passed ? '' : 'Project failed quality gate',
     passedWithWarning: qualityGate.passedWithWarning ?? false,
-    missesQualityGate: false,
     projectResults: [
       {
         project: ticsCli.project,
         explorerUrl: joinUrl(ticsConfig.baseUrl, qualityGate.url),
         analyzedFiles: analyzedFiles,
         qualityGate: qualityGate,
-        reviewComments: reviewComments
+        annotations: annotations
       }
     ]
   };

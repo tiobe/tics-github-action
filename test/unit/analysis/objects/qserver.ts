@@ -36,7 +36,6 @@ export const analysisResultPassed: AnalysisResult = {
   passed: true,
   message: '',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: []
 };
 
@@ -44,6 +43,5 @@ export const analysisResultFailed: AnalysisResult = {
   passed: false,
   message: 'Project failed quality gate',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: []
 };

@@ -2,11 +2,10 @@ import { EOL } from 'os';
 import { format } from 'date-fns';
 import { summary } from '@actions/core';
 import { SummaryTableRow } from '@actions/core/lib/summary';
-import { ChangedFile } from '../../github/interfaces';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
-import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, Gate, TicsReviewComments } from '../../helper/interfaces';
+import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, Gate } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
@@ -39,8 +38,9 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 
       summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
-      if (projectResult.reviewComments && projectResult.reviewComments.unpostable.length > 0) {
-        summary.addRaw(createUnpostableAnnotationsDetails(projectResult.reviewComments.unpostable));
+      const unpostableReviewComments = projectResult.annotations.filter(r => !r.postable);
+      if (unpostableReviewComments.length > 0) {
+        summary.addRaw(createUnpostableAnnotationsDetails(unpostableReviewComments));
       }
 
       summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
@@ -217,114 +217,6 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
         rows.push(dataRow);
       });
     return rows;
-  });
-}
-
-/**
- * Groups the annotations and creates review comments for them.
- * @param annotations Annotations retrieved from the viewer.
- * @param changedFiles List of files changed in the pull request.
- * @returns List of the review comments.
- */
-export function createReviewComments(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): TicsReviewComments {
-  logger.info('Creating review comments from annotations.');
-
-  const sortedAnnotations = sortAnnotations(annotations);
-  const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
-
-  const unpostable: ExtendedAnnotation[] = [];
-  const postable: ExtendedAnnotation[] = [];
-
-  groupedAnnotations
-    .filter(a => a.blocking?.state !== 'no')
-    .forEach(annotation => {
-      annotation.displayCount = annotation.count === 1 ? '' : `(${annotation.count.toString()}x) `;
-
-      if (changedFiles.find(c => annotation.fullPath.includes(c.filename))) {
-        logger.debug(`Postable: ${JSON.stringify(annotation)}`);
-        postable.push(annotation);
-      } else {
-        logger.debug(`Unpostable: ${JSON.stringify(annotation)}`);
-        unpostable.push(annotation);
-      }
-    });
-  logger.info('Created review comments from annotations.');
-  return { postable: postable, unpostable: unpostable };
-}
-
-export function createReviewCommentBody(annotation: ExtendedAnnotation): string {
-  let body = '';
-  if (annotation.blocking?.state === 'yes') {
-    body += `Blocking${EOL}`;
-  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
-  }
-
-  const secondLine: string[] = [];
-  if (annotation.level) {
-    secondLine.push(`Level: ${annotation.level.toString()}`);
-  }
-  if (annotation.category) {
-    secondLine.push(`Category: ${annotation.category}`);
-  }
-
-  body += `Line: ${annotation.line.toString()}: ${annotation.displayCount ?? ''} ${annotation.msg}`;
-  body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
-  body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
-
-  return body;
-}
-
-/**
- * Sorts annotations based on file name and line number.
- * @param annotations annotations returned by TICS analyzer.
- * @returns sorted anotations.
- */
-function sortAnnotations(annotations: ExtendedAnnotation[]): ExtendedAnnotation[] {
-  return annotations.sort((a, b) => {
-    if (a.fullPath === b.fullPath) return a.line - b.line;
-    return a.fullPath > b.fullPath ? 1 : -1;
-  });
-}
-
-/**
- * Groups annotations by file. Excludes annotations for files that have not been changed.
- * @param annotations sorted annotations by file and line.
- * @param changedFiles List of files changed in the pull request.
- * @returns grouped annotations.
- */
-function groupAnnotations(annotations: ExtendedAnnotation[], changedFiles: ChangedFile[]): ExtendedAnnotation[] {
-  const groupedAnnotations: ExtendedAnnotation[] = [];
-  annotations.forEach(annotation => {
-    const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
-    const index = findAnnotationInList(groupedAnnotations, annotation);
-    if (index === -1) {
-      annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
-      groupedAnnotations.push(annotation);
-    } else if (groupedAnnotations[index].gateId === annotation.gateId) {
-      groupedAnnotations[index].count += annotation.count;
-    }
-  });
-  return groupedAnnotations;
-}
-
-/**
- * Finds an annotation in a list and returns the index.
- * @param list List to find the annotation in.
- * @param annotation Annotation to find.
- * @returns The index of the annotation found or -1
- */
-function findAnnotationInList(list: ExtendedAnnotation[], annotation: ExtendedAnnotation) {
-  return list.findIndex(a => {
-    return (
-      a.fullPath === annotation.fullPath &&
-      a.type === annotation.type &&
-      a.line === annotation.line &&
-      a.rule === annotation.rule &&
-      a.level === annotation.level &&
-      a.category === annotation.category &&
-      a.msg === annotation.msg
-    );
   });
 }
 

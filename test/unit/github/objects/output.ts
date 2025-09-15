@@ -1,4 +1,4 @@
-import { ExtendedAnnotation, QualityGate, TicsReviewComments } from '../../../../src/helper/interfaces';
+import { ExtendedAnnotation, QualityGate } from '../../../../src/helper/interfaces';
 
 export const passedQualityGate: QualityGate = {
   passed: true,
@@ -67,7 +67,8 @@ export const annotationsMock: ExtendedAnnotation[] = [
     msg: 'Failed just because',
     supp: false,
     type: 'CS',
-    count: 1
+    count: 1,
+    gateId: 0
   },
   {
     instanceName: 'Coding Standard',
@@ -79,11 +80,9 @@ export const annotationsMock: ExtendedAnnotation[] = [
     msg: 'Failed just because',
     supp: false,
     type: 'CS',
-    count: 2
+    count: 2,
+    gateId: 0
   }
 ];
 
-export const ticsReviewComments: TicsReviewComments = {
-  postable: annotationsMock,
-  unpostable: annotationsMock
-};
+export const allAnnotations: ExtendedAnnotation[] = [...annotationsMock, ...annotationsMock];

@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 import { createAndSetOutput } from '../../../src/github/output';
 import { ActionOutput } from '../../../src/github/interfaces';
 import { ProjectResult } from '../../../src/helper/interfaces';
-import { annotationsMock, failedQualityGate, passedQualityGate, ticsReviewComments } from './objects/output';
+import { annotationsMock, failedQualityGate, passedQualityGate, allAnnotations } from './objects/output';
 
 describe('createAndSetOutput', () => {
   let setOutputSpy: jest.SpiedFunction<typeof core.setOutput>;
@@ -19,7 +19,8 @@ describe('createAndSetOutput', () => {
     projectResult = {
       project: 'project',
       explorerUrl: 'http://random/url',
-      analyzedFiles: []
+      analyzedFiles: [],
+      annotations: []
     };
   });
 
@@ -63,7 +64,7 @@ describe('createAndSetOutput', () => {
   it('output should have conditions and annotations when projectResults has qualityGate with annotations', async () => {
     createAndSetOutput([
       { ...projectResult, qualityGate: passedQualityGate },
-      { ...projectResult, qualityGate: failedQualityGate, reviewComments: ticsReviewComments }
+      { ...projectResult, qualityGate: failedQualityGate, annotations: allAnnotations }
     ]);
 
     expectedOutput.conditions.push(

@@ -2,11 +2,10 @@ import { describe, expect, it, jest } from '@jest/globals';
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as qualityGate from '../../../../src/viewer/qualitygate';
-import * as summary from '../../../../src/action/decorate/summary';
 
 import { getClientAnalysisResults } from '../../../../src/analysis/client/analysis-results';
 import { ticsCliMock, ticsConfigMock, actionConfigMock } from '../../../.setup/mock';
-import { passedQualityGate, failedQualityGate, annotationsMock, ticsReviewComments } from './objects/analysis-results';
+import { passedQualityGate, failedQualityGate, annotationsMock } from './objects/analysis-results';
 
 // Should be executed last due to spying rules
 describe('getClientAnalysisResults', () => {
@@ -21,7 +20,6 @@ describe('getClientAnalysisResults', () => {
       passed: false,
       message: '',
       passedWithWarning: false,
-      missesQualityGate: true,
       projectResults: []
     });
   });
@@ -36,13 +34,13 @@ describe('getClientAnalysisResults', () => {
       passed: true,
       message: '',
       passedWithWarning: true,
-      missesQualityGate: false,
       projectResults: [
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: passedQualityGate
+          qualityGate: passedQualityGate,
+          annotations: []
         }
       ]
     });
@@ -58,13 +56,13 @@ describe('getClientAnalysisResults', () => {
       passed: false,
       message: 'Project failed quality gate(s)',
       passedWithWarning: false,
-      missesQualityGate: false,
       projectResults: [
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: failedQualityGate
+          qualityGate: failedQualityGate,
+          annotations: []
         }
       ]
     });
@@ -81,19 +79,20 @@ describe('getClientAnalysisResults', () => {
       passed: false,
       message: '1 out of 2 projects failed quality gate(s)',
       passedWithWarning: false,
-      missesQualityGate: false,
       projectResults: [
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: failedQualityGate
+          qualityGate: failedQualityGate,
+          annotations: []
         },
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: passedQualityGate
+          qualityGate: passedQualityGate,
+          annotations: []
         }
       ]
     });
@@ -109,19 +108,20 @@ describe('getClientAnalysisResults', () => {
       passed: false,
       message: '2 out of 2 projects failed quality gate(s)',
       passedWithWarning: false,
-      missesQualityGate: false,
       projectResults: [
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: failedQualityGate
+          qualityGate: failedQualityGate,
+          annotations: []
         },
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
-          qualityGate: failedQualityGate
+          qualityGate: failedQualityGate,
+          annotations: []
         }
       ]
     });
@@ -133,7 +133,6 @@ describe('getClientAnalysisResults', () => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFiles').mockResolvedValueOnce(['file']);
     jest.spyOn(qualityGate, 'getQualityGate').mockResolvedValueOnce(failedQualityGate);
     jest.spyOn(annotations, 'getAnnotations').mockResolvedValueOnce(annotationsMock);
-    jest.spyOn(summary, 'createReviewComments').mockReturnValueOnce(ticsReviewComments);
 
     const result = await getClientAnalysisResults(['https://url.com/Project(project)'], []);
 
@@ -141,14 +140,13 @@ describe('getClientAnalysisResults', () => {
       passed: false,
       message: 'Project failed quality gate(s)',
       passedWithWarning: false,
-      missesQualityGate: false,
       projectResults: [
         {
           project: 'project',
           explorerUrl: 'https://url.com/Project(project)',
           analyzedFiles: ['file'],
           qualityGate: failedQualityGate,
-          reviewComments: ticsReviewComments
+          annotations: annotationsMock
         }
       ]
     });

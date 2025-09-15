@@ -79,35 +79,31 @@ export const emptyComment: ReviewComment = {
 export const analysisResults: AnalysisResult = {
   passed: false,
   message: 'failed',
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: [
-          {
-            fullPath: 'HIE://path0.js',
-            path: 'path0.js',
-            line: 0,
-            level: 1,
-            category: 'category 0',
-            rule: 'rule 0',
-            msg: 'message 0',
-            supp: false,
-            type: 'type 0',
-            count: 1,
-            gateId: 1,
-            displayCount: '1x',
-            blocking: {
-              state: 'yes'
-            },
-            instanceName: 'CS'
-          }
-        ],
-        unpostable: []
-      }
+      annotations: [
+        {
+          fullPath: 'HIE://path0.js',
+          path: 'path0.js',
+          line: 0,
+          level: 1,
+          category: 'category 0',
+          rule: 'rule 0',
+          msg: 'message 0',
+          supp: false,
+          type: 'type 0',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS'
+        }
+      ]
     }
   ],
   passedWithWarning: false
@@ -130,7 +126,8 @@ const twoAnnotations: ExtendedAnnotation[] = [
     blocking: {
       state: 'yes'
     },
-    instanceName: 'CS'
+    instanceName: 'CS',
+    postable: true
   },
   {
     fullPath: 'HIE://path1.js',
@@ -149,7 +146,8 @@ const twoAnnotations: ExtendedAnnotation[] = [
       state: 'after',
       after: 1757429236
     },
-    instanceName: 'CS'
+    instanceName: 'CS',
+    postable: true
   }
 ];
 
@@ -171,7 +169,8 @@ const fourAnnotations: ExtendedAnnotation[] = [
     blocking: {
       state: 'yes'
     },
-    instanceName: 'CS'
+    instanceName: 'CS',
+    postable: true
   },
   {
     fullPath: 'HIE://path3.js',
@@ -190,41 +189,39 @@ const fourAnnotations: ExtendedAnnotation[] = [
       state: 'after',
       after: 1757429236
     },
-    instanceName: 'CS'
+    instanceName: 'CS',
+    postable: true
   }
 ];
 
 export const twoMixedAnalysisResults: AnalysisResult = {
   passed: false,
   message: 'failed',
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: twoAnnotations,
-        unpostable: [
-          {
-            fullPath: 'path2.js',
-            line: 2,
-            level: 2,
-            category: 'category 2',
-            rule: 'rule 2',
-            msg: 'message 2',
-            supp: false,
-            type: 'type 2',
-            count: 1,
-            gateId: 1,
-            displayCount: '1x',
-            blocking: {
-              state: 'yes'
-            },
-            instanceName: 'CS'
-          }
-        ]
-      }
+      annotations: [
+        ...twoAnnotations,
+        {
+          fullPath: 'path2.js',
+          line: 2,
+          level: 2,
+          category: 'category 2',
+          rule: 'rule 2',
+          msg: 'message 2',
+          supp: false,
+          type: 'type 2',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS'
+        }
+      ]
     }
   ],
   passedWithWarning: false
@@ -233,34 +230,32 @@ export const twoMixedAnalysisResults: AnalysisResult = {
 export const fourMixedAnalysisResults: AnalysisResult = {
   passed: false,
   message: 'failed',
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: fourAnnotations,
-        unpostable: [
-          {
-            fullPath: 'path2.js',
-            line: 2,
-            level: 2,
-            category: 'category 2',
-            rule: 'rule 2',
-            msg: 'message 2',
-            supp: false,
-            type: 'type 2',
-            count: 1,
-            gateId: 1,
-            displayCount: '1x',
-            blocking: {
-              state: 'yes'
-            },
-            instanceName: 'CS'
-          }
-        ]
-      }
+      annotations: [
+        ...fourAnnotations,
+        {
+          fullPath: 'path2.js',
+          line: 2,
+          level: 2,
+          category: 'category 2',
+          rule: 'rule 2',
+          msg: 'message 2',
+          supp: false,
+          type: 'type 2',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS',
+          postable: false
+        }
+      ]
     }
   ],
   passedWithWarning: false

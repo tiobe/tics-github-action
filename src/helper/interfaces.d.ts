@@ -24,7 +24,6 @@ export interface AnalysisResult {
   passed: boolean;
   message: string;
   passedWithWarning: boolean;
-  missesQualityGate: boolean;
   projectResults: ProjectResult[];
 }
 
@@ -33,7 +32,7 @@ export interface ProjectResult {
   explorerUrl: string;
   qualityGate?: QualityGate;
   analyzedFiles: string[];
-  reviewComments?: TicsReviewComments;
+  annotations: ExtendedAnnotation[];
 }
 
 export interface QualityGate {
@@ -113,11 +112,6 @@ export interface TicsReviewComment {
   blocking: 'yes' | 'no' | 'after' | undefined;
 }
 
-export interface TicsReviewComments {
-  postable: ExtendedAnnotation[];
-  unpostable: ExtendedAnnotation[];
-}
-
 export interface AnalyzedFile {
   formattedValue: string;
   letter?: string;
@@ -159,7 +153,6 @@ export interface Annotation {
   supp: boolean;
   type: string;
   count?: number;
-  gateId?: number;
   path?: string;
   ruleHelp?: string;
   synopsis?: string;
@@ -171,12 +164,17 @@ export interface Annotation {
   functionName?: string;
 }
 
-export interface ExtendedAnnotation extends Annotation {
+export interface FetchedAnnotation extends Annotation {
   msg: string;
   line: number;
   count: number;
-  displayCount?: string;
+  gateId: number;
   instanceName: string;
+}
+
+export interface ExtendedAnnotation extends FetchedAnnotation {
+  displayCount?: string;
+  postable?: boolean;
 }
 
 export interface VersionResponse {

@@ -19,10 +19,7 @@ export function createAndSetOutput(projectResults: ProjectResult[]): void {
       });
     });
 
-    if (p.reviewComments) {
-      output.annotations.push(...p.reviewComments.postable);
-      output.annotations.push(...p.reviewComments.unpostable);
-    }
+    output.annotations.push(...p.annotations);
   });
 
   setOutput('annotations', output);

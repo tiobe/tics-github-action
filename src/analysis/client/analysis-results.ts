@@ -1,5 +1,3 @@
-import { createReviewComments } from '../../action/decorate/summary';
-import { actionConfig } from '../../configuration/config';
 import { ChangedFile } from '../../github/interfaces';
 import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
 import { getItemFromUrl, getProjectFromUrl } from '../../tics/url';
@@ -14,11 +12,9 @@ import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
  * @returns Object containing the results of the analysis.
  */
 export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResult> {
-  const hasExplorerUrl = explorerUrls.length !== 0;
   const analysisResult: AnalysisResult = {
-    passed: hasExplorerUrl,
+    passed: explorerUrls.length !== 0,
     passedWithWarning: false,
-    missesQualityGate: !hasExplorerUrl,
     projectResults: [],
     message: ''
   };
@@ -30,7 +26,8 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
     const projectResult: ProjectResult = {
       project: project,
       explorerUrl: url,
-      analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }))
+      analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken })),
+      annotations: []
     };
 
     projectResult.qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
@@ -39,12 +36,7 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
       analysisResult.passed = false;
     }
 
-    if (actionConfig.postAnnotations) {
-      const annotations = await getAnnotations(projectResult.qualityGate.annotationsApiV1Links);
-      if (annotations.length > 0) {
-        projectResult.reviewComments = createReviewComments(annotations, changedFiles);
-      }
-    }
+    projectResult.annotations = await getAnnotations(projectResult.qualityGate.annotationsApiV1Links, changedFiles);
 
     analysisResult.projectResults.push(projectResult);
   }
@@ -63,7 +55,6 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
  */
 function parseFailedMessage(explorerUrls: string[], projectResults: ProjectResult[]): string {
   let failedMessage = '';
-
   const failedProjectQualityGateCount = projectResults.filter(p => p.qualityGate && !p.qualityGate.passed).length;
   if (failedProjectQualityGateCount >= 1) {
     if (explorerUrls.length > 1) {
@@ -71,7 +62,7 @@ function parseFailedMessage(explorerUrls: string[], projectResults: ProjectResul
     } else {
       failedMessage = 'Project';
     }
-    failedMessage += ` failed quality gate(s)`;
+    failedMessage += ' failed quality gate(s)';
   }
 
   return failedMessage;

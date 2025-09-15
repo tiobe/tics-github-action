@@ -1,10 +1,11 @@
 import { ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
-import { ProjectResult } from '../helper/interfaces';
+import { ExtendedAnnotation, ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
 import { octokit } from './octokit';
-import { createReviewCommentBody } from '../action/decorate/summary';
+import { EOL } from 'os';
+import { format } from 'date-fns';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -40,8 +41,8 @@ export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
   projectResults.forEach(projectResult => {
-    if (projectResult.reviewComments) {
-      projectResult.reviewComments.postable.forEach(annotation => {
+    projectResult.annotations.forEach(annotation => {
+      if (annotation.postable) {
         const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
         const body = createReviewCommentBody(annotation);
 
@@ -58,11 +59,34 @@ export function postAnnotations(projectResults: ProjectResult[]): void {
             title: title
           });
         }
-      });
-    }
+      }
+    });
   });
 
   logger.info('Posted all postable annotations (none if there are no violations).');
+}
+
+function createReviewCommentBody(annotation: ExtendedAnnotation): string {
+  let body = '';
+  if (annotation.blocking?.state === 'yes') {
+    body += `Blocking${EOL}`;
+  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
+  }
+
+  const secondLine: string[] = [];
+  if (annotation.level) {
+    secondLine.push(`Level: ${annotation.level.toString()}`);
+  }
+  if (annotation.category) {
+    secondLine.push(`Category: ${annotation.category}`);
+  }
+
+  body += `Line: ${annotation.line.toString()}: ${annotation.displayCount ?? ''} ${annotation.msg}`;
+  body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
+  body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
+
+  return body;
 }
 
 /**
