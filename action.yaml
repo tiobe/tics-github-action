@@ -94,6 +94,9 @@ inputs:
   displayUrl:
     description: The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)
     required: false
+outputs:
+  annotations:
+    description: All annotations the action has reported in JSON format.
 branding:
   icon: flag
   color: blue

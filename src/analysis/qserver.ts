@@ -2,6 +2,7 @@ import { decorateAction } from '../action/decorate/action';
 import { postToConversation } from '../action/decorate/pull-request';
 import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../action/decorate/summary';
 import { githubConfig } from '../configuration/config';
+import { createAndSetOutput } from '../github/output';
 import { AnalysisResult, Verdict } from '../helper/interfaces';
 import { runTicsAnalyzer } from '../tics/analyzer';
 import { getLastQServerRunDate } from '../viewer/qserver';
@@ -43,7 +44,7 @@ export async function qServerAnalysis(): Promise<Verdict> {
       analysisResult = await getAnalysisResult(newDate);
       if (!analysisResult.passed) {
         verdict.passed = false;
-        verdict.message = 'Project failed quality gate';
+        verdict.message = analysisResult.message;
       }
     } catch (error) {
       verdict.passed = false;
@@ -51,6 +52,10 @@ export async function qServerAnalysis(): Promise<Verdict> {
     }
 
     await decorateAction(analysisResult, analysis);
+
+    if (analysisResult) {
+      createAndSetOutput(analysisResult.projectResults);
+    }
   }
 
   return verdict;

@@ -1,5 +1,5 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
-import { AnalysisResult, TicsReviewComment } from '../../../../src/helper/interfaces';
+import { AnalysisResult, ExtendedAnnotation, TicsReviewComment } from '../../../../src/helper/interfaces';
 
 export const user: User = {
   login: '',
@@ -78,105 +78,163 @@ export const emptyComment: ReviewComment = {
 
 export const analysisResults: AnalysisResult = {
   passed: false,
-  missesQualityGate: false,
+  message: 'failed',
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: [
-          {
-            blocking: undefined,
-            title: '',
-            body: '',
-            line: 0
-          }
-        ],
-        unpostable: []
+      annotations: [
+        {
+          fullPath: 'HIE://path0.js',
+          path: 'path0.js',
+          line: 0,
+          level: 1,
+          category: 'category 0',
+          rule: 'rule 0',
+          msg: 'message 0',
+          supp: false,
+          type: 'type 0',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS'
+        }
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
       }
     }
   ],
   passedWithWarning: false
 };
 
-const twoAnnotations: TicsReviewComment[] = [
+const twoAnnotations: ExtendedAnnotation[] = [
   {
+    fullPath: 'HIE://path0.js',
     path: 'path0.js',
-    blocking: 'yes',
-    title: 'title 0',
-    body: 'body 0',
-    line: 0
+    line: 0,
+    level: 1,
+    category: 'category 0',
+    rule: 'rule 0',
+    msg: 'message 0',
+    supp: false,
+    type: 'type 0',
+    count: 1,
+    gateId: 1,
+    displayCount: '1x',
+    blocking: {
+      state: 'yes'
+    },
+    instanceName: 'CS',
+    postable: true
   },
   {
+    fullPath: 'HIE://path1.js',
     path: 'path1.js',
-    blocking: 'after',
-    title: 'title 1',
-    body: 'body 1',
-    line: 1
+    line: 1,
+    level: 2,
+    category: 'category 1',
+    rule: 'rule 1',
+    msg: 'message 1',
+    supp: false,
+    type: 'type 1',
+    count: 1,
+    gateId: 1,
+    displayCount: '1x',
+    blocking: {
+      state: 'after',
+      after: 1757429236
+    },
+    instanceName: 'CS',
+    postable: true
   }
 ];
 
-const fourAnnotations: TicsReviewComment[] = [
+const fourAnnotations: ExtendedAnnotation[] = [
+  ...twoAnnotations,
   {
-    path: 'path0.js',
-    blocking: 'yes',
-    title: 'title 0',
-    body: 'body 0',
-    line: 0
-  },
-  {
-    path: 'path1.js',
-    blocking: 'after',
-    title: 'title 1',
-    body: 'body 1',
-    line: 1
-  },
-  {
+    fullPath: 'HIE://path2.js',
     path: 'path2.js',
-    blocking: 'yes',
-    title: 'title 2',
-    body: 'body 2',
-    line: 2
+    line: 2,
+    level: 2,
+    category: 'category 2',
+    rule: 'rule 2',
+    msg: 'message 2',
+    supp: false,
+    type: 'type 2',
+    count: 1,
+    gateId: 1,
+    displayCount: '1x',
+    blocking: {
+      state: 'yes'
+    },
+    instanceName: 'CS',
+    postable: true
   },
   {
+    fullPath: 'HIE://path3.js',
     path: 'path3.js',
-    blocking: 'after',
-    title: 'title 3',
-    body: 'body 3',
-    line: 3
+    line: 3,
+    level: 2,
+    category: 'category 3',
+    rule: 'rule 3',
+    msg: 'message 3',
+    supp: false,
+    type: 'type 3',
+    count: 1,
+    gateId: 1,
+    displayCount: '1x',
+    blocking: {
+      state: 'after',
+      after: 1757429236
+    },
+    instanceName: 'CS',
+    postable: true
   }
 ];
 
 export const twoMixedAnalysisResults: AnalysisResult = {
   passed: false,
-  missesQualityGate: false,
+  message: 'failed',
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: twoAnnotations,
-        unpostable: [
-          {
-            fullPath: 'path2.js',
-            line: 2,
-            level: 2,
-            category: 'category 2',
-            rule: 'rule 2',
-            msg: 'message 2',
-            supp: false,
-            type: 'type 2',
-            count: 1,
-            gateId: 1,
-            displayCount: '1x',
-            blocking: {
-              state: 'yes'
-            },
-            instanceName: 'CS'
-          }
-        ]
+      annotations: [
+        ...twoAnnotations,
+        {
+          fullPath: 'path2.js',
+          line: 2,
+          level: 2,
+          category: 'category 2',
+          rule: 'rule 2',
+          msg: 'message 2',
+          supp: false,
+          type: 'type 2',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS'
+        }
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
       }
     }
   ],
@@ -185,33 +243,39 @@ export const twoMixedAnalysisResults: AnalysisResult = {
 
 export const fourMixedAnalysisResults: AnalysisResult = {
   passed: false,
-  missesQualityGate: false,
+  message: 'failed',
   projectResults: [
     {
       project: '',
       explorerUrl: '',
       analyzedFiles: [],
-      reviewComments: {
-        postable: fourAnnotations,
-        unpostable: [
-          {
-            fullPath: 'path2.js',
-            line: 2,
-            level: 2,
-            category: 'category 2',
-            rule: 'rule 2',
-            msg: 'message 2',
-            supp: false,
-            type: 'type 2',
-            count: 1,
-            gateId: 1,
-            displayCount: '1x',
-            blocking: {
-              state: 'yes'
-            },
-            instanceName: 'CS'
-          }
-        ]
+      annotations: [
+        ...fourAnnotations,
+        {
+          fullPath: 'path2.js',
+          line: 2,
+          level: 2,
+          category: 'category 2',
+          rule: 'rule 2',
+          msg: 'message 2',
+          supp: false,
+          type: 'type 2',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'yes'
+          },
+          instanceName: 'CS',
+          postable: false
+        }
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
       }
     }
   ],

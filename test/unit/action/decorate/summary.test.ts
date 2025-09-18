@@ -1,11 +1,9 @@
 import { summary } from '@actions/core';
-import { ChangedFile } from '../../../../src/github/interfaces';
 import { ExtendedAnnotation } from '../../../../src/helper/interfaces';
 import {
   createErrorSummaryBody,
   createFilesSummary,
   createNothingAnalyzedSummaryBody,
-  createReviewComments,
   createSummaryBody,
   createUnpostableAnnotationsDetails
 } from '../../../../src/action/decorate/summary';
@@ -17,9 +15,7 @@ import {
   analysisResultsNoSoakedPassed,
   analysisResultsPartlySoakedFailed
 } from './objects/summary';
-import { EOL } from 'os';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
-import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
@@ -175,394 +171,7 @@ describe('createFilesSummary', () => {
   });
 });
 
-describe('createReviewComments', () => {
-  it('should return no review comments on empty input', async () => {
-    const response = createReviewComments([], []);
-
-    expect(response).toEqual({ postable: [], unpostable: [] });
-  });
-
-  it('should return one postable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        sha: 'sha',
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        blob_url: 'url',
-        raw_url: 'url',
-        contents_url: 'url',
-        patch: '@@ -0,1 +0,1 @@'
-      }
-    ];
-    const annotations = [
-      {
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test'
-      }
-    ];
-
-    const expected_postable = [
-      {
-        blocking: undefined,
-        title: 'test: test',
-        path: 'src/test.js',
-        line: 0,
-        body: `Line: 0: test${EOL}Level: 1, Category: test`
-      }
-    ];
-
-    const response = createReviewComments(annotations, changedFiles);
-
-    expect(response).toEqual({ postable: expected_postable, unpostable: [] });
-  });
-
-  it('should return one combined postable review comment for the same line', async () => {
-    githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
-    const annotations: ExtendedAnnotation[] = [
-      {
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test',
-        blocking: {
-          state: 'yes'
-        }
-      },
-      {
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test',
-        blocking: {
-          state: 'yes'
-        }
-      }
-    ];
-
-    const expected_postable = [
-      {
-        blocking: 'yes',
-        title: 'test: test',
-        path: 'src/test.js',
-        line: 0,
-        body: `Blocking${EOL}Line: 0: (2x) test${EOL}Level: 1, Category: test`
-      }
-    ];
-
-    const response = createReviewComments(annotations, changedFiles);
-
-    expect(response).toEqual({ postable: expected_postable, unpostable: [] });
-  });
-
-  it('should return one blocking now and a blocking after review comment for the same line', async () => {
-    githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
-    const annotations: ExtendedAnnotation[] = [
-      {
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'rule-now',
-        msg: 'message-now',
-        count: 1,
-        supp: false,
-        instanceName: 'test',
-        blocking: {
-          state: 'yes'
-        }
-      },
-      {
-        // testing one without a rule
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        msg: 'message-after',
-        count: 1,
-        supp: false,
-        instanceName: 'test',
-        blocking: {
-          state: 'after',
-          after: 1708356940000
-        }
-      }
-    ];
-
-    const expected_postable = [
-      {
-        blocking: 'yes',
-        title: 'test: rule-now',
-        path: 'src/test.js',
-        line: 0,
-        body: `Blocking${EOL}Line: 0: message-now${EOL}Level: 1, Category: test`
-      },
-      {
-        blocking: 'after',
-        title: 'test',
-        path: 'src/test.js',
-        line: 0,
-        body: `Blocking after: 2024-02-19${EOL}Line: 0: message-after${EOL}Level: 1, Category: test`
-      }
-    ];
-
-    const response = createReviewComments(annotations, changedFiles);
-
-    expect(response).toEqual({ postable: expected_postable, unpostable: [] });
-  });
-
-  it('should return one postable and one unpostable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
-    const annotations = [
-      {
-        fullPath: 'c:/src/test.js',
-        line: 0,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test'
-      },
-      {
-        fullPath: 'HIE://project/branch/src/jest.js',
-        line: 2,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test'
-      },
-      {
-        fullPath: 'HIE://project/branch/src/zest.js',
-        line: 2,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        instanceName: 'test'
-      }
-    ];
-
-    const expected_postable = [
-      {
-        blocking: undefined,
-        title: 'test: test',
-        path: 'src/test.js',
-        line: 0,
-        body: `Line: 0: test${EOL}Level: 1, Category: test`
-      }
-    ];
-
-    const expected_unpostable = [
-      {
-        path: 'src/jest.js',
-        fullPath: 'HIE://project/branch/src/jest.js',
-        line: 2,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        displayCount: '',
-        instanceName: 'test'
-      },
-      {
-        path: 'src/zest.js',
-        fullPath: 'HIE://project/branch/src/zest.js',
-        line: 2,
-        level: 1,
-        category: 'test',
-        type: 'test',
-        rule: 'test',
-        msg: 'test',
-        count: 1,
-        supp: false,
-        displayCount: '',
-        instanceName: 'test'
-      }
-    ];
-
-    const response = createReviewComments(annotations, changedFiles);
-
-    expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
-  });
-});
-
-it('should return one postable and one unpostable review comment', async () => {
-  githubConfigMock.event = GithubEvent.PUSH;
-  const changedFiles: ChangedFile[] = [
-    {
-      filename: 'src/test.js',
-      status: 'modified',
-      additions: 1,
-      deletions: 1,
-      changes: 2,
-      patch: '@@ -0,1 +0,1 @@',
-      sha: '',
-      blob_url: '',
-      raw_url: '',
-      contents_url: ''
-    }
-  ];
-  const annotations = [
-    {
-      fullPath: 'c:/src/test.js',
-      line: 0,
-      level: 1,
-      category: 'test',
-      type: 'test',
-      rule: 'test',
-      msg: 'test',
-      count: 1,
-      supp: false,
-      instanceName: 'test'
-    },
-    {
-      fullPath: 'HIE://project/branch/src/jest.js',
-      line: 2,
-      level: 1,
-      category: 'test',
-      type: 'test',
-      rule: 'test',
-      msg: 'test',
-      count: 1,
-      supp: false,
-      instanceName: 'test'
-    },
-    {
-      fullPath: 'HIE://project/branch/src/zest.js',
-      line: 2,
-      level: 1,
-      category: 'test',
-      type: 'test',
-      rule: 'test',
-      msg: 'test',
-      count: 1,
-      supp: false,
-      instanceName: 'test'
-    }
-  ];
-
-  const expected_postable = [
-    {
-      blocking: undefined,
-      title: 'test: test',
-      path: 'src/test.js',
-      line: 0,
-      body: `Line: 0: test${EOL}Level: 1, Category: test`
-    }
-  ];
-
-  const expected_unpostable = [
-    {
-      path: 'src/jest.js',
-      fullPath: 'HIE://project/branch/src/jest.js',
-      line: 2,
-      level: 1,
-      category: 'test',
-      type: 'test',
-      rule: 'test',
-      msg: 'test',
-      count: 1,
-      supp: false,
-      displayCount: '',
-      instanceName: 'test'
-    },
-    {
-      path: 'src/zest.js',
-      fullPath: 'HIE://project/branch/src/zest.js',
-      line: 2,
-      level: 1,
-      category: 'test',
-      type: 'test',
-      rule: 'test',
-      msg: 'test',
-      count: 1,
-      supp: false,
-      displayCount: '',
-      instanceName: 'test'
-    }
-  ];
-
-  const response = createReviewComments(annotations, changedFiles);
-
-  expect(response).toEqual({ postable: expected_postable, unpostable: expected_unpostable });
-});
-
-describe('createUnpostableReviewCommentsSummary', () => {
+describe('createUnpostableAnnotationsDetails', () => {
   it('should return summary of zero unpostable review comments on empty input', () => {
     const response = createUnpostableAnnotationsDetails([]);
 
@@ -585,7 +194,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       }
     ];
 
@@ -598,7 +208,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   });
 
   it('should return summary of two unpostable review comment for one file', () => {
-    const unpostable = [
+    const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
@@ -611,7 +221,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       },
       {
         fullPath: '/home/src/hello.js',
@@ -625,7 +236,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       }
     ];
 
@@ -639,7 +251,7 @@ describe('createUnpostableReviewCommentsSummary', () => {
   });
 
   it('should return summary of two unpostable review comments for one file', () => {
-    const unpostable = [
+    const unpostable: ExtendedAnnotation[] = [
       {
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
@@ -652,7 +264,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       },
       {
         fullPath: '/home/src/hello.js',
@@ -666,7 +279,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       }
     ];
 
@@ -693,7 +307,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         msg: 'test',
         supp: false,
         count: 0,
-        instanceName: 'test'
+        instanceName: 'test',
+        gateId: 0
       },
       {
         fullPath: '/home/src/test.js',
@@ -709,7 +324,8 @@ describe('createUnpostableReviewCommentsSummary', () => {
         blocking: {
           state: 'after',
           after: 1723795324000
-        }
+        },
+        gateId: 0
       }
     ];
 

@@ -1,5 +1,3 @@
-import { createReviewComments } from '../../action/decorate/summary';
-import { actionConfig } from '../../configuration/config';
 import { ChangedFile } from '../../github/interfaces';
 import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
 import { getItemFromUrl, getProjectFromUrl } from '../../tics/url';
@@ -14,42 +12,48 @@ import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
  * @returns Object containing the results of the analysis.
  */
 export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResult> {
-  const hasExplorerUrl = explorerUrls.length !== 0;
-  const analysisResult: AnalysisResult = {
-    passed: hasExplorerUrl,
-    passedWithWarning: false,
-    missesQualityGate: !hasExplorerUrl,
-    projectResults: []
+  const projectResults: ProjectResult[] = await Promise.all(
+    explorerUrls.map(async url => {
+      const cdtoken = getItemFromUrl(url, 'ClientData');
+      const project = getProjectFromUrl(url);
+
+      const analysedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }));
+      const qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
+      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links, changedFiles);
+
+      return {
+        project: project,
+        explorerUrl: url,
+        qualityGate: qualityGate,
+        analyzedFiles: analysedFiles,
+        annotations: annotations
+      };
+    })
+  );
+
+  const passed = projectResults.length !== 0 && projectResults.every(p => p.qualityGate.passed);
+  return {
+    passed: passed,
+    passedWithWarning: passed && projectResults.filter(p => p.qualityGate.passed && p.qualityGate.passedWithWarning).length > 0,
+    projectResults: projectResults,
+    message: parseFailedMessage(explorerUrls, projectResults)
   };
+}
 
-  for (const url of explorerUrls) {
-    const cdtoken = getItemFromUrl(url, 'ClientData');
-    const project = getProjectFromUrl(url);
-
-    const projectResult: ProjectResult = {
-      project: project,
-      explorerUrl: url,
-      analyzedFiles: await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }))
-    };
-
-    projectResult.qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
-
-    if (!projectResult.qualityGate.passed) {
-      analysisResult.passed = false;
+/**
+ * Construct message on how many projects failed the quality gate (if at least one fails).
+ */
+function parseFailedMessage(explorerUrls: string[], projectResults: ProjectResult[]): string {
+  let failedMessage = '';
+  const failedProjectQualityGateCount = projectResults.filter(p => !p.qualityGate.passed).length;
+  if (failedProjectQualityGateCount >= 1) {
+    if (explorerUrls.length > 1) {
+      failedMessage = `${failedProjectQualityGateCount.toString()} out of ${explorerUrls.length.toString()} projects`;
+    } else {
+      failedMessage = 'Project';
     }
-
-    if (actionConfig.postAnnotations) {
-      const annotations = await getAnnotations(projectResult.qualityGate.annotationsApiV1Links);
-      if (annotations.length > 0) {
-        projectResult.reviewComments = createReviewComments(annotations, changedFiles);
-      }
-    }
-
-    analysisResult.projectResults.push(projectResult);
+    failedMessage += ' failed quality gate(s)';
   }
 
-  analysisResult.passedWithWarning =
-    analysisResult.passed && analysisResult.projectResults.filter(p => p.qualityGate?.passed && p.qualityGate.passedWithWarning).length > 0;
-
-  return analysisResult;
+  return failedMessage;
 }

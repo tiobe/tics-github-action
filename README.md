@@ -205,6 +205,23 @@ jobs:
           installTics: true
 ```
 
+### Output
+
+It is possible to retrieve all Quality Gate conditions and reported annotations in JSON format. To do this add an id to the step:
+
+```yaml
+      - name: TICS GitHub Action
+        id: tics-github-action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: diagnostic
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
+This can then be used in following steps with `{{ steps.tics-github-action.outputs.annotations }}`.
+
 ### Action triggers and events
 
 The most common use case to trigger the diagnostic workflow is typically on `workflow_dispatch`. This way one can manually execute this.

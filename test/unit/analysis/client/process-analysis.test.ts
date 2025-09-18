@@ -3,6 +3,7 @@ import * as analysisResults from '../../../../src/analysis/client/analysis-resul
 import * as comments from '../../../../src/github/comments';
 import * as decorate from '../../../../src/action/decorate/action';
 import * as pullRequest from '../../../../src/action/decorate/pull-request';
+import * as output from '../../../../src/github/output';
 
 import { githubConfigMock } from '../../../.setup/mock';
 import { processIncompleteAnalysis, processCompleteAnalysis } from '../../../../src/analysis/client/process-analysis';
@@ -108,54 +109,67 @@ describe('processIncompleteAnalysis', () => {
   });
 });
 
+//TODO: this should be done
 describe('processCompleteAnalysis', () => {
-  it('should return failed message if there are missing quality gates', async () => {
-    jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisNoQualityGates);
+  let decorateSpy: jest.SpiedFunction<typeof decorate.decorateAction>;
+  let createAndSetOutputSpy: jest.SpiedFunction<typeof output.createAndSetOutput>;
+  let getClientAnalysisResultsSpy: jest.SpiedFunction<typeof analysisResults.getClientAnalysisResults>;
+
+  beforeEach(() => {
+    decorateSpy = jest.spyOn(decorate, 'decorateAction').mockResolvedValue();
+    createAndSetOutputSpy = jest.spyOn(output, 'createAndSetOutput').mockReturnValue();
+    getClientAnalysisResultsSpy = jest.spyOn(analysisResults, 'getClientAnalysisResults');
+
     jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
+  });
+
+  it('should return failed message if there are missing quality gates', async () => {
+    getClientAnalysisResultsSpy.mockResolvedValueOnce(analysisNoQualityGates);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
-    expect(message).toBe('Some quality gates could not be retrieved.');
+    expect(message).toBe('Project failed qualitygate');
+    expect(decorateSpy).toHaveBeenCalledWith(analysisNoQualityGates, analysisPassedNoUrl);
+    expect(createAndSetOutputSpy).toHaveBeenCalledWith(analysisNoQualityGates.projectResults);
   });
 
   it('should return failed message if there is a single quality gates failing with no Explorer Url', async () => {
-    jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleQgFailed);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
+    getClientAnalysisResultsSpy.mockResolvedValueOnce(analysisResultsSingleQgFailed);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
-    expect(message).toBe('Project failed quality gate(s)');
+    expect(message).toBe('Project failed qualitygate');
+    expect(decorateSpy).toHaveBeenCalledWith(analysisResultsSingleQgFailed, analysisPassedNoUrl);
+    expect(createAndSetOutputSpy).toHaveBeenCalledWith(analysisResultsSingleQgFailed.projectResults);
   });
 
   it('should return failed message if there a single quality gates failing with Explorer Urls', async () => {
-    jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleQgFailed);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
+    getClientAnalysisResultsSpy.mockResolvedValueOnce(analysisResultsSingleQgFailed);
 
     const message = await processCompleteAnalysis(analysisWithUrl, []);
 
-    expect(message).toBe('Project failed quality gate(s)');
+    expect(message).toBe('Project failed qualitygate');
+    expect(decorateSpy).toHaveBeenCalledWith(analysisResultsSingleQgFailed, analysisWithUrl);
+    expect(createAndSetOutputSpy).toHaveBeenCalledWith(analysisResultsSingleQgFailed.projectResults);
   });
 
   it('should return failed message if there are two quality gates failing with Explorer Urls', async () => {
-    jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsDualQgFailed);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
+    getClientAnalysisResultsSpy.mockResolvedValueOnce(analysisResultsDualQgFailed);
 
     const message = await processCompleteAnalysis(analysisWithDoubleUrl, []);
 
-    expect(message).toBe('2 out of 2 projects failed quality gate(s)');
+    expect(message).toBe('Project failed qualitygate');
+    expect(decorateSpy).toHaveBeenCalledWith(analysisResultsDualQgFailed, analysisWithDoubleUrl);
+    expect(createAndSetOutputSpy).toHaveBeenCalledWith(analysisResultsDualQgFailed.projectResults);
   });
 
   it('should return no message if analysis passed and quality gate passed', async () => {
-    jest.spyOn(analysisResults, 'getClientAnalysisResults').mockResolvedValueOnce(analysisResultsSingleFilePassed);
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
-    jest.spyOn(decorate, 'decorateAction').mockResolvedValueOnce(undefined);
+    getClientAnalysisResultsSpy.mockResolvedValueOnce(analysisResultsSingleFilePassed);
 
     const message = await processCompleteAnalysis(analysisPassedNoUrl, []);
 
     expect(message).toBe('');
+    expect(decorateSpy).toHaveBeenCalledWith(analysisResultsSingleFilePassed, analysisPassedNoUrl);
+    expect(createAndSetOutputSpy).toHaveBeenCalledWith(analysisResultsSingleFilePassed.projectResults);
   });
 });

@@ -1,9 +1,11 @@
 import { ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
-import { ProjectResult, TicsReviewComment } from '../helper/interfaces';
+import { ExtendedAnnotation, ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
 import { octokit } from './octokit';
+import { EOL } from 'os';
+import { format } from 'date-fns';
 
 /**
  * Gets a list of all reviews posted on the pull request.
@@ -38,30 +40,53 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
 export function postAnnotations(projectResults: ProjectResult[]): void {
   logger.header('Posting annotations.');
 
-  const postableReviewComments: TicsReviewComment[] = [];
-
   projectResults.forEach(projectResult => {
-    if (projectResult.reviewComments) {
-      postableReviewComments.push(...projectResult.reviewComments.postable);
-    }
+    projectResult.annotations.forEach(annotation => {
+      if (annotation.postable) {
+        const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
+        const body = createReviewCommentBody(annotation);
+
+        if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
+          logger.warning(body, {
+            file: annotation.path,
+            startLine: annotation.line,
+            title: title
+          });
+        } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
+          logger.notice(body, {
+            file: annotation.path,
+            startLine: annotation.line,
+            title: title
+          });
+        }
+      }
+    });
   });
 
-  postableReviewComments.forEach(reviewComment => {
-    if (reviewComment.blocking === undefined || reviewComment.blocking === 'yes') {
-      logger.warning(reviewComment.body, {
-        file: reviewComment.path,
-        startLine: reviewComment.line,
-        title: reviewComment.title
-      });
-    } else if (reviewComment.blocking === 'after' && actionConfig.showBlockingAfter) {
-      logger.notice(reviewComment.body, {
-        file: reviewComment.path,
-        startLine: reviewComment.line,
-        title: reviewComment.title
-      });
-    }
-  });
   logger.info('Posted all postable annotations (none if there are no violations).');
+}
+
+function createReviewCommentBody(annotation: ExtendedAnnotation): string {
+  let body = '';
+  if (annotation.blocking?.state === 'yes') {
+    body += `Blocking${EOL}`;
+  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
+  }
+
+  const secondLine: string[] = [];
+  if (annotation.level) {
+    secondLine.push(`Level: ${annotation.level.toString()}`);
+  }
+  if (annotation.category) {
+    secondLine.push(`Category: ${annotation.category}`);
+  }
+
+  body += `Line: ${annotation.line.toString()}: ${annotation.displayCount ?? ''} ${annotation.msg}`;
+  body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
+  body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
+
+  return body;
 }
 
 /**

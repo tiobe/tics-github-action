@@ -18,8 +18,8 @@ export const analysisPassed = {
 
 export const analysisResultsSoaked: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
@@ -146,15 +146,16 @@ export const analysisResultsSoaked: AnalysisResult = {
           }
         ],
         annotationsApiV1Links: []
-      }
+      },
+      annotations: []
     }
   ]
 };
 
 export const analysisResultsNotSoaked: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
@@ -236,15 +237,16 @@ export const analysisResultsNotSoaked: AnalysisResult = {
           }
         ],
         annotationsApiV1Links: []
-      }
+      },
+      annotations: []
     }
   ]
 };
 
 export const analysisResultsPartlySoakedFailed: AnalysisResult = {
   passed: false,
+  message: 'Project failed qualitygate',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
@@ -348,15 +350,16 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
           }
         ],
         annotationsApiV1Links: []
-      }
+      },
+      annotations: []
     }
   ]
 };
 
 export const analysisResultsNoSoakedPassed: AnalysisResult = {
   passed: true,
+  message: '',
   passedWithWarning: false,
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
@@ -460,15 +463,16 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
           }
         ],
         annotationsApiV1Links: []
-      }
+      },
+      annotations: []
     }
   ]
 };
 
 export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   passed: true,
+  message: '',
   passedWithWarning: true,
-  missesQualityGate: false,
   projectResults: [
     {
       project: '',
@@ -551,7 +555,8 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
           }
         ],
         annotationsApiV1Links: []
-      }
+      },
+      annotations: []
     }
   ]
 };
