@@ -106,14 +106,14 @@ describe('postAnnotations', () => {
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'CS: rule 0',
+      title: 'message 0',
       startLine: 0
     });
 
     expect(noticeSpy).toHaveBeenCalledTimes(1);
     expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path1.js',
-      title: 'CS: rule 1',
+      title: 'message 1',
       startLine: 1
     });
   });
@@ -129,24 +129,24 @@ describe('postAnnotations', () => {
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'CS: rule 0',
+      title: 'message 0',
       startLine: 0
     });
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path2.js',
-      title: 'CS: rule 2',
+      title: 'message 2',
       startLine: 2
     });
 
     expect(noticeSpy).toHaveBeenCalledTimes(2);
     expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path1.js',
-      title: 'CS: rule 1',
+      title: 'message 1',
       startLine: 1
     });
     expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
       file: 'path3.js',
-      title: 'CS: rule 3',
+      title: 'message 3',
       startLine: 3
     });
   });
@@ -162,7 +162,7 @@ describe('postAnnotations', () => {
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'CS: rule 0',
+      title: 'message 0',
       startLine: 0
     });
 
@@ -180,12 +180,12 @@ describe('postAnnotations', () => {
     expect(warningSpy).toHaveBeenCalledTimes(2);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path0.js',
-      title: 'CS: rule 0',
+      title: 'message 0',
       startLine: 0
     });
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
       file: 'path2.js',
-      title: 'CS: rule 2',
+      title: 'message 2',
       startLine: 2
     });
 

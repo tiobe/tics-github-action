@@ -121,9 +121,6 @@ const twoAnnotations: ExtendedAnnotation[] = [
     fullPath: 'HIE://path0.js',
     path: 'path0.js',
     line: 0,
-    level: 1,
-    category: 'category 0',
-    rule: 'rule 0',
     msg: 'message 0',
     supp: false,
     type: 'type 0',
@@ -133,6 +130,7 @@ const twoAnnotations: ExtendedAnnotation[] = [
     blocking: {
       state: 'yes'
     },
+    ruleset: 'Coding Standard 0',
     instanceName: 'CS',
     postable: true
   },
@@ -197,7 +195,9 @@ const fourAnnotations: ExtendedAnnotation[] = [
       after: 1757429236
     },
     instanceName: 'CS',
-    postable: true
+    postable: true,
+    synopsis: 'synopsis 3',
+    ruleHelp: 'https://ruleset/rule+3'
   }
 ];
 

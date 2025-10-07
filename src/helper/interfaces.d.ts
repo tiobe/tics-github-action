@@ -156,6 +156,7 @@ export interface Annotation {
   path?: string;
   ruleHelp?: string;
   synopsis?: string;
+  ruleset?: string;
   blocking?: {
     state: 'yes' | 'no' | 'after';
     after?: number;
@@ -165,7 +166,6 @@ export interface Annotation {
 }
 
 export interface FetchedAnnotation extends Annotation {
-  msg: string;
   line: number;
   count: number;
   gateId: number;
