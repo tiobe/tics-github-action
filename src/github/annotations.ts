@@ -43,7 +43,7 @@ export function postAnnotations(projectResults: ProjectResult[]): void {
   projectResults.forEach(projectResult => {
     projectResult.annotations.forEach(annotation => {
       if (annotation.postable) {
-        const title = annotation.instanceName + (annotation.rule ? `: ${annotation.rule}` : '');
+        const title = annotation.msg;
         const body = createReviewCommentBody(annotation);
 
         if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
@@ -69,9 +69,9 @@ export function postAnnotations(projectResults: ProjectResult[]): void {
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {
   let body = '';
   if (annotation.blocking?.state === 'yes') {
-    body += `Blocking${EOL}`;
+    body += `Blocking`;
   } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}${EOL}`;
+    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
   }
 
   const secondLine: string[] = [];
@@ -82,8 +82,10 @@ function createReviewCommentBody(annotation: ExtendedAnnotation): string {
     secondLine.push(`Category: ${annotation.category}`);
   }
 
-  body += `Line: ${annotation.line.toString()}: ${annotation.displayCount ?? ''} ${annotation.msg}`;
+  const ruleset = annotation.ruleset ? `${annotation.ruleset}:` : 'Rule:';
   body += secondLine.length > 0 ? `${EOL}${secondLine.join(', ')}` : '';
+  body += `${EOL}Line: ${annotation.line.toString()}${annotation.rule ? `, ${ruleset} ${annotation.rule}` : ''}`;
+  body += annotation.synopsis ? `${EOL}${annotation.synopsis}` : '';
   body += annotation.ruleHelp ? `${EOL}Rule-help: ${annotation.ruleHelp}` : '';
 
   return body;

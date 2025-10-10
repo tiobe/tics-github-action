@@ -28,7 +28,7 @@ export async function fetchAnnotations(apiLinks: AnnotationApiLink[]): Promise<F
     const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
 
     const fields = annotationsUrl.searchParams.get('fields');
-    const requiredFields = 'default,ruleHelp,synopsis';
+    const requiredFields = 'default,ruleHelp,synopsis,ruleset';
     if (fields !== null) {
       annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
     } else {
