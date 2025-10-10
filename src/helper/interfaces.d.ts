@@ -41,7 +41,7 @@ export interface QualityGate {
   message: string;
   url: string;
   gates: Gate[];
-  annotationsApiV1Links: AnnotationApiLink[];
+  annotationsApiV1Links?: AnnotationApiLink[];
 }
 
 export interface Gate {
@@ -168,7 +168,7 @@ export interface Annotation {
 export interface FetchedAnnotation extends Annotation {
   line: number;
   count: number;
-  gateId: number;
+  gateId?: number;
   instanceName: string;
 }
 

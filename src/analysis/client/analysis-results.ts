@@ -3,6 +3,7 @@ import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
 import { getItemFromUrl, getProjectFromUrl } from '../../tics/url';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
 import { getAnnotations } from '../../viewer/annotations';
+import { TicsRunIdentifier } from '../../viewer/interfaces';
 import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
 
 /**
@@ -14,15 +15,18 @@ import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
 export async function getClientAnalysisResults(explorerUrls: string[], changedFiles: ChangedFile[]): Promise<AnalysisResult> {
   const projectResults: ProjectResult[] = await Promise.all(
     explorerUrls.map(async url => {
-      const cdtoken = getItemFromUrl(url, 'ClientData');
-      const project = getProjectFromUrl(url);
+      const identifier: TicsRunIdentifier = {
+        project: getProjectFromUrl(url),
+        cdtoken: getItemFromUrl(url, 'ClientData')
+      };
 
-      const analysedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(project, { cdtoken }));
-      const qualityGate = await getQualityGate(getQualityGateUrl(project, { cdtoken }));
-      const annotations = await getAnnotations(qualityGate.annotationsApiV1Links, changedFiles);
+      const analysedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(identifier));
+      const qualityGate = await getQualityGate(await getQualityGateUrl(identifier));
+
+      const annotations = await getAnnotations(qualityGate, changedFiles, identifier);
 
       return {
-        project: project,
+        project: identifier.project,
         explorerUrl: url,
         qualityGate: qualityGate,
         analyzedFiles: analysedFiles,

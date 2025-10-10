@@ -50,7 +50,7 @@ describe('getAnalyzedFilesUrl', () => {
   it('should return url containing date if given', async () => {
     ticsCliMock.branchname = 'branch';
 
-    const url = getAnalyzedFilesUrl('project', { date: 1714577689 });
+    const url = getAnalyzedFilesUrl({ project: 'project', date: 1714577689 });
 
     expect(url).toBe(
       'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CBranch%28branch%29%2CDate%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
@@ -60,7 +60,7 @@ describe('getAnalyzedFilesUrl', () => {
   it('should return url containing cdtoken if given', async () => {
     ticsCliMock.branchname = '';
 
-    const url = getAnalyzedFilesUrl('project', { cdtoken: '1714577689' });
+    const url = getAnalyzedFilesUrl({ project: 'project', cdtoken: '1714577689' });
 
     expect(url).toBe(
       'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CClientData%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
@@ -68,7 +68,7 @@ describe('getAnalyzedFilesUrl', () => {
   });
 
   it('should return url containing both if both are given', async () => {
-    const url = getAnalyzedFilesUrl('project', { date: 1714577689, cdtoken: '1714577689' });
+    const url = getAnalyzedFilesUrl({ project: 'project', date: 1714577689, cdtoken: '1714577689' });
 
     expect(url).toBe(
       'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CDate%281714577689%29%2CClientData%281714577689%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'
@@ -76,7 +76,7 @@ describe('getAnalyzedFilesUrl', () => {
   });
 
   it('should return url containing none if none are given', async () => {
-    const url = getAnalyzedFilesUrl('project', {});
+    const url = getAnalyzedFilesUrl({ project: 'project' });
 
     expect(url).toBe(
       'http://viewer.url/api/public/v1/Measure?metrics=filePath&filters=Project%28project%29%2CCodeType%28Set%28production%2Ctest%2Cexternal%2Cgenerated%29%29%2CWindow%28-1%29%2CFile%28%29'

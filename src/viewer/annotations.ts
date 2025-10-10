@@ -1,70 +1,111 @@
-import { ticsConfig } from '../configuration/config';
+import { satisfies } from 'semver';
+import { actionConfig, ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
-import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation } from '../helper/interfaces';
+import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
 import { httpClient } from './http-client';
+import { TicsRunIdentifier } from './interfaces';
 
 /**
  * Gets the annotations from the TICS viewer.
- * @param apiLinks annotationsApiLinks url.
- * @returns TICS annotations.
+ * @param qualityGate qualityGate containing annotation links
+ * @param changedFiles the changed files used to group the annotations
+ * @param identifier identifier (project + date or cdtoken) of the run
+ * @returns TICS annotations
  */
-export async function getAnnotations(apiLinks: AnnotationApiLink[], changedFiles: ChangedFile[]): Promise<ExtendedAnnotation[]> {
-  const annotations = await fetchAnnotations(apiLinks);
+export async function getAnnotations(
+  qualityGate: QualityGate,
+  changedFiles: ChangedFile[],
+  identifier: TicsRunIdentifier
+): Promise<ExtendedAnnotation[]> {
+  const annotations = await fetchAllAnnotations(qualityGate, identifier);
   return groupAndExtendAnnotations(annotations, changedFiles);
 }
 
-export async function fetchAnnotations(apiLinks: AnnotationApiLink[]): Promise<FetchedAnnotation[]> {
+export async function fetchAllAnnotations(qualityGate: QualityGate, identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
   logger.header('Retrieving annotations.');
-  const annotations: FetchedAnnotation[] = [];
 
-  if (apiLinks.length === 0) {
-    logger.info('No annotations to retrieve. Skipping this step.');
-    return [];
-  }
-
-  for (const [index, link] of apiLinks.entries()) {
-    const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
-
-    const fields = annotationsUrl.searchParams.get('fields');
-    const requiredFields = 'default,ruleHelp,synopsis,ruleset';
-    if (fields !== null) {
-      annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
-    } else {
-      annotationsUrl.searchParams.append('fields', requiredFields);
-    }
-
-    logger.debug(`From: ${annotationsUrl.href}`);
-
-    try {
-      const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
-
-      for (const annotation of response.data.data) {
-        const fetched: FetchedAnnotation = {
-          ...annotation,
-          gateId: index,
-          line: annotation.line ?? 1,
-          count: annotation.count ?? 1,
-          instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
-        };
-
-        // In case complexity is given, the annotation does not have a message (should be fixed in newer Viewers #34866).
-        // Present in Viewers <= 2024.2.0
-        if (annotation.complexity && !annotation.msg) {
-          fetched.msg = `Function ${annotation.functionName ?? ''} has a complexity of ${annotation.complexity.toString()}`;
-        }
-
-        annotations.push(fetched);
-      }
-    } catch (error: unknown) {
-      const message = getRetryErrorMessage(error);
-      throw Error(`An error occured when trying to retrieve annotations: ${message}`);
-    }
+  let annotations: FetchedAnnotation[];
+  if (satisfies(await ticsConfig.getViewerVersion(), '>=2025.1.8')) {
+    annotations = await fetchAnnotationsByRun(identifier);
+  } else {
+    annotations = await fetchAnnotationsWithApiLinks(qualityGate.annotationsApiV1Links ?? []);
   }
 
   logger.info('Retrieved all annotations.');
   return annotations;
+}
+
+async function fetchAnnotationsWithApiLinks(apiLinks: AnnotationApiLink[]): Promise<FetchedAnnotation[]> {
+  if (apiLinks.length === 0) {
+    logger.info('No annotations to retrieve.');
+    return [];
+  }
+
+  const annotations: FetchedAnnotation[] = [];
+  for (const [index, link] of apiLinks.entries()) {
+    const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
+    annotations.push(...(await fetchAnnotations(annotationsUrl, index)));
+  }
+  return annotations;
+}
+
+async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
+  const annotationsUrl = new URL(`${ticsConfig.baseUrl}/api/public/v1/Annotations?metric=QualityGate()`);
+
+  let filters = `Project(${identifier.project})`;
+  if (identifier.cdtoken) {
+    filters += `,ClientData(${identifier.cdtoken})`;
+  } else if (identifier.date) {
+    filters += `,Date(${identifier.date.toString()})`;
+  }
+
+  if (actionConfig.showBlockingAfter) {
+    filters += ',AnnotationSeverity(Set(blocking,after))';
+  } else {
+    filters += ',AnnotationSeverity(blocking)';
+  }
+  annotationsUrl.searchParams.set('filters', filters);
+
+  return fetchAnnotations(annotationsUrl);
+}
+
+async function fetchAnnotations(annotationsUrl: URL, gateId?: number): Promise<FetchedAnnotation[]> {
+  const fields = annotationsUrl.searchParams.get('fields');
+  const requiredFields = 'default,ruleHelp,synopsis,ruleset,blocking';
+  if (fields !== null) {
+    annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
+  } else {
+    annotationsUrl.searchParams.append('fields', requiredFields);
+  }
+
+  logger.debug(`From: ${annotationsUrl.href}`);
+
+  try {
+    const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
+
+    return response.data.data.map(annotation => {
+      const fetched: FetchedAnnotation = {
+        ...annotation,
+        gateId: gateId,
+        line: annotation.line ?? 1,
+        count: annotation.count ?? 1,
+        instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
+      };
+
+      // In case complexity is given, the annotation does not have a message (should be fixed in newer Viewers #34866).
+      // Present in Viewers <= 2024.2.0
+      if (annotation.complexity && !annotation.msg) {
+        fetched.msg = `Function ${annotation.functionName ?? ''} has a complexity of ${annotation.complexity.toString()}`;
+      }
+
+      return fetched;
+    });
+  } catch (error: unknown) {
+    const message = getRetryErrorMessage(error);
+    throw Error(`An error occured when trying to retrieve annotations: ${message}`);
+  }
 }
 
 /**

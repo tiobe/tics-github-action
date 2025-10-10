@@ -1,5 +1,4 @@
-import { coerce, satisfies } from 'semver';
-import { getViewerVersion } from './viewer/version';
+import { satisfies } from 'semver';
 import { Mode } from './configuration/tics';
 import { existsSync } from 'fs';
 import { logger } from './helper/logger';
@@ -56,12 +55,10 @@ export async function main(): Promise<void> {
  * If any of these checks fail it returns a message.
  */
 async function meetsPrerequisites(): Promise<void> {
-  const viewerVersion = await getViewerVersion();
-  const cleanViewerVersion = coerce(viewerVersion.version);
+  const viewerVersion = await ticsConfig.getViewerVersion();
 
-  if (!cleanViewerVersion || !satisfies(cleanViewerVersion, '>=2022.4.0')) {
-    const version = cleanViewerVersion?.toString() ?? 'unknown';
-    throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${version}.`);
+  if (satisfies(viewerVersion, '>=2022.4.0')) {
+    throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${viewerVersion.toString()}.`);
   } else if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     /* No need for checked out repository. */
   } else if (ticsConfig.mode === Mode.CLIENT && !githubConfig.event.isPullRequest && ticsConfig.filelist === '') {
