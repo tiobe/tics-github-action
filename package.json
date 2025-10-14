@@ -53,7 +53,7 @@
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.5.5",
     "@types/semver": "^7.5.8",
-    "@vercel/ncc": "^0.38.3",
+    "@vercel/ncc": "^0.38.4",
     "async-listen": "^3.0.1",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
