@@ -17,7 +17,7 @@ process.env.GITHUB_ACTION = '_tics-github-action';
 process.env.GITHUB_JOB = 'tics_client';
 process.env.GITHUB_WORKFLOW = 'tics client';
 process.env.INPUT_MODE = 'client';
-process.env.INPUT_PROJECTNAME = 'tics-github-action';
+process.env.INPUT_PROJECT = 'tics-github-action';
 process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';

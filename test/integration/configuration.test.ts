@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_MODE = 'client';
-process.env.INPUT_PROJECTNAME = 'tics-github-action';
+process.env.INPUT_PROJECT = 'tics-github-action';
 process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';
