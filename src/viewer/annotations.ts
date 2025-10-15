@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import { actionConfig, ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
 import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate } from '../helper/interfaces';
@@ -6,6 +5,7 @@ import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
 import { httpClient } from './http-client';
 import { TicsRunIdentifier } from './interfaces';
+import { ViewerFeature, viewerVersion } from './version';
 
 /**
  * Gets the annotations from the TICS viewer.
@@ -27,7 +27,7 @@ export async function fetchAllAnnotations(qualityGate: QualityGate, identifier: 
   logger.header('Retrieving annotations.');
 
   let annotations: FetchedAnnotation[];
-  if (satisfies(await ticsConfig.getViewerVersion(), '>=2025.1.8')) {
+  if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
     annotations = await fetchAnnotationsByRun(identifier);
   } else {
     annotations = await fetchAnnotationsWithApiLinks(qualityGate.annotationsApiV1Links ?? []);

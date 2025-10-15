@@ -4,8 +4,6 @@ import { isOneOf } from '../helper/utils';
 import { logger } from '../helper/logger';
 import { getBaseUrl } from '@tiobe/install-tics';
 import { setVariable, unsetVariable } from '../helper/environment';
-import { coerce, SemVer } from 'semver';
-import { getViewerVersion } from '../viewer/version';
 
 export enum Mode {
   CLIENT = 'client',
@@ -21,8 +19,6 @@ export enum TrustStrategy {
 }
 
 export class TicsConfiguration {
-  private viewerVersion?: SemVer;
-
   readonly filelist: string;
   readonly githubToken: string;
   readonly hostnameVerification: boolean;
@@ -58,23 +54,6 @@ export class TicsConfiguration {
     this.displayUrl = this.validateAndGetDisplayUrl(getInput('displayUrl'));
 
     this.setVariables();
-  }
-
-  async getViewerVersion(): Promise<SemVer> {
-    if (this.viewerVersion !== undefined) {
-      return this.viewerVersion;
-    }
-
-    const viewerVersion = await getViewerVersion();
-    const cleanVersion = coerce(viewerVersion.version);
-
-    if (cleanVersion !== null) {
-      this.viewerVersion = cleanVersion;
-    } else {
-      throw Error(`Could not compute version received by the viewer, got: ${viewerVersion.version}.`);
-    }
-
-    return cleanVersion;
   }
 
   /**

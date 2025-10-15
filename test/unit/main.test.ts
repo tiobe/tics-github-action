@@ -22,29 +22,15 @@ afterEach(() => {
 
 describe('meetsPrerequisites', () => {
   let existsSpy: jest.SpiedFunction<typeof fs.existsSync>;
-  let viewerVersionSpy: jest.SpiedFunction<typeof version.getViewerVersion>;
+  let viewerVersionSpy: jest.SpiedFunction<typeof version.viewerVersion.viewerSupports>;
 
   beforeEach(() => {
-    viewerVersionSpy = jest.spyOn(version, 'getViewerVersion');
+    viewerVersionSpy = jest.spyOn(version.viewerVersion, 'viewerSupports');
     existsSpy = jest.spyOn(fs, 'existsSync');
   });
 
-  it('should throw error if viewer version is not parsable', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: 'test' });
-
-    let error: any;
-    try {
-      await main();
-    } catch (err) {
-      error = err;
-    }
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version unknown.'));
-  });
-
   it('should throw error if viewer version is too low', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: '2022.0.0' });
+    viewerVersionSpy.mockResolvedValue(false);
 
     let error: any;
     try {
@@ -54,41 +40,11 @@ describe('meetsPrerequisites', () => {
     }
 
     expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
-  });
-
-  it('should throw error if viewer version is too low with prefix character', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: 'r2022.0.0' });
-
-    let error: any;
-    try {
-      await main();
-    } catch (err) {
-      error = err;
-    }
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4. Found version 2022.0.0.'));
-  });
-
-  it('should not throw version error if viewer version sufficient with prefix character', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: 'r2022.4.0' });
-
-    let error: any;
-    try {
-      await main();
-    } catch (err) {
-      error = err;
-    }
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toEqual(
-      expect.stringContaining('If the the action is run outside a pull request it should be run with a filelist.')
-    );
+    expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4.0.'));
   });
 
   it('should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
+    viewerVersionSpy.mockResolvedValue(true);
     githubConfigMock.event = GithubEvent.WORKFLOW_RUN;
     ticsConfigMock.filelist = '';
 
@@ -106,7 +62,7 @@ describe('meetsPrerequisites', () => {
   });
 
   it('should throw no error on mode QServer when it is not a pull request and no filelist is given', async () => {
-    viewerVersionSpy.mockResolvedValue({ version: '2022.4.0' });
+    viewerVersionSpy.mockResolvedValue(true);
     existsSpy.mockReturnValue(true);
     jest.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
       passed: true,
@@ -162,7 +118,7 @@ describe('verdict', () => {
     spySummaryWrite = jest.spyOn(coreSummary, 'write');
 
     // meets prerequisites
-    jest.spyOn(version, 'getViewerVersion').mockResolvedValue({ version: '2022.4.0' });
+    jest.spyOn(version.viewerVersion, 'viewerSupports').mockResolvedValue(true);
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });

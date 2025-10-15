@@ -2,6 +2,7 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getQualityGate, getQualityGateUrl } from '../../../src/viewer/qualitygate';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
+import { viewerVersion } from '../../../src/viewer/version';
 
 describe('getQualityGate', () => {
   it('should return quality gates from viewer', async () => {
@@ -27,14 +28,23 @@ describe('getQualityGate', () => {
 });
 
 describe('getQualityGateUrl', () => {
+  let supportNewAnnotations = false;
+
+  beforeAll(() => {
+    jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async () => {
+      return supportNewAnnotations;
+    });
+  });
+
   it('should return url containing date if given', async () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
     ticsCliMock.branchname = 'branch';
 
-    const url = getQualityGateUrl('project', { date: 1714577689 });
+    supportNewAnnotations = false;
+    const url = await getQualityGateUrl({ project: 'project', date: 1714577689 });
 
     expect(url).toBe(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&branch=branch&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&branch=branch&fields=details%2CblockingAfter&includeFields=annotationsApiV1Links&date=1714577689'
     );
   });
 
@@ -42,30 +52,31 @@ describe('getQualityGateUrl', () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
     ticsCliMock.branchname = '';
 
-    const url = getQualityGateUrl('project', { cdtoken: '1714577689' });
+    supportNewAnnotations = false;
+    const url = await getQualityGateUrl({ project: 'project', cdtoken: '1714577689' });
 
     expect(url).toBe(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&cdt=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CblockingAfter&includeFields=annotationsApiV1Links&cdt=1714577689'
     );
   });
 
   it('should return url containing both if both are given', async () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
 
-    const url = getQualityGateUrl('project', { date: 1714577689, cdtoken: '1714577689' });
+    supportNewAnnotations = false;
+    const url = await getQualityGateUrl({ project: 'project', date: 1714577689, cdtoken: '1714577689' });
 
     expect(url).toBe(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter&date=1714577689&cdt=1714577689'
+      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CblockingAfter&includeFields=annotationsApiV1Links&date=1714577689&cdt=1714577689'
     );
   });
 
   it('should return url containing none if none are given', async () => {
     ticsConfigMock.baseUrl = 'http://viewer.url';
 
-    const url = getQualityGateUrl('project', {});
+    supportNewAnnotations = true;
+    const url = await getQualityGateUrl({ project: 'project' });
 
-    expect(url).toBe(
-      'http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CannotationsApiV1Links&includeFields=blockingAfter'
-    );
+    expect(url).toBe('http://viewer.url/api/public/v1/QualityGateStatus?project=project&fields=details%2CblockingAfter&includeFields=absValue');
   });
 });

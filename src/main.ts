@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import { Mode } from './configuration/tics';
 import { existsSync } from 'fs';
 import { logger } from './helper/logger';
@@ -10,6 +9,7 @@ import { uploadArtifact } from './github/artifacts';
 import { diagnosticAnalysis } from './analysis/diagnostic';
 import { qServerAnalysis } from './analysis/qserver';
 import { clientAnalysis } from './analysis/client';
+import { ViewerFeature, viewerVersion } from './viewer/version';
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : 'TICS failed with unknown reason';
@@ -55,10 +55,8 @@ export async function main(): Promise<void> {
  * If any of these checks fail it returns a message.
  */
 async function meetsPrerequisites(): Promise<void> {
-  const viewerVersion = await ticsConfig.getViewerVersion();
-
-  if (satisfies(viewerVersion, '>=2022.4.0')) {
-    throw Error(`Minimum required TICS Viewer version is 2022.4. Found version ${viewerVersion.toString()}.`);
+  if (!(await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION))) {
+    throw Error(`Minimum required TICS Viewer version is ${ViewerFeature.GITHUB_ACTION}.`);
   } else if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     /* No need for checked out repository. */
   } else if (ticsConfig.mode === Mode.CLIENT && !githubConfig.event.isPullRequest && ticsConfig.filelist === '') {

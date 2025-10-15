@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import { ticsCli, ticsConfig } from '../configuration/config';
 import { QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
@@ -6,6 +5,7 @@ import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
 import { TicsRunIdentifier } from './interfaces';
+import { ViewerFeature, viewerVersion } from './version';
 
 /**
  * Retrieves the TICS quality gate from the TICS viewer.
@@ -42,9 +42,9 @@ export async function getQualityGateUrl(identifier: TicsRunIdentifier): Promise<
     qualityGateUrl.searchParams.append('branch', ticsCli.branchname);
   }
 
-  qualityGateUrl.searchParams.append('fields', 'details');
-  if (satisfies(await ticsConfig.getViewerVersion(), '>=2025.1.8')) {
-    qualityGateUrl.searchParams.append('includeFields', 'blockingAfter,absValue');
+  qualityGateUrl.searchParams.append('fields', 'details,blockingAfter');
+  if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+    qualityGateUrl.searchParams.append('includeFields', 'absValue');
   } else {
     qualityGateUrl.searchParams.append('includeFields', 'annotationsApiV1Links');
   }

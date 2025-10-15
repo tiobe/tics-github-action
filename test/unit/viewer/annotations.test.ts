@@ -6,7 +6,7 @@ import { FetchedAnnotation, QualityGate } from '../../../src/helper/interfaces';
 import { GithubEvent } from '../../../src/configuration/github-event';
 import { fetchAllAnnotations, groupAndExtendAnnotations } from '../../../src/viewer/annotations';
 import { TicsRunIdentifier } from '../../../src/viewer/interfaces';
-import { SemVer } from 'semver';
+import { ViewerFeature, viewerVersion } from '../../../src/viewer/version';
 
 describe('fetchAllAnnotations', () => {
   let httpClientSpy: jest.SpiedFunction<typeof httpClient.get>;
@@ -35,9 +35,9 @@ describe('fetchAllAnnotations', () => {
 
   describe('viewers with versions < 2025.1.8', () => {
     beforeAll(() => {
-      ticsConfigMock.getViewerVersion = () => {
-        return new SemVer('2025.1.7');
-      };
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
+        return !(feature === ViewerFeature.NEW_ANNOTATIONS);
+      });
     });
 
     it('should return annotations from viewer', async () => {
@@ -122,9 +122,9 @@ describe('fetchAllAnnotations', () => {
 
   describe('viewers with versions >= 2025.1.8', () => {
     beforeAll(() => {
-      ticsConfigMock.getViewerVersion = () => {
-        return new SemVer('2025.1.8');
-      };
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
+        return feature === ViewerFeature.NEW_ANNOTATIONS;
+      });
     });
 
     it('should return annotations from viewer', async () => {

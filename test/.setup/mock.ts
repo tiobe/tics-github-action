@@ -1,8 +1,6 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
 import { GithubEvent } from '../../src/configuration/github-event';
-import { getViewerVersion } from '../../src/viewer/version';
-import { SemVer } from 'semver';
 
 export const githubConfigMock: {
   apiUrl: string;
@@ -48,9 +46,6 @@ export const ticsConfigMock = {
   installTics: false,
   mode: 'client',
   viewerUrl: '',
-  getViewerVersion(): SemVer {
-    throw Error('Function should be overridden in test');
-  },
   trustStrategy: 'strict',
   baseUrl: '',
   displayUrl: ''
