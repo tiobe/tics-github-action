@@ -7,8 +7,8 @@ import { ticsConfig } from '../configuration/config';
 import { coerce, satisfies, SemVer } from 'semver';
 
 export enum ViewerFeature {
-  GITHUB_ACTION = '2022.4.0',
-  NEW_ANNOTATIONS = '2025.1.8'
+  GITHUB_ACTION = '>=2022.4.0',
+  NEW_ANNOTATIONS = '>=2025.1.8'
 }
 
 class ViewerVersion {
@@ -21,7 +21,7 @@ class ViewerVersion {
   async viewerSupports(feature: ViewerFeature): Promise<boolean> {
     if (this.viewerVersion !== undefined) {
       logger.debug(`Getting version from cache: ${this.viewerVersion.version}`);
-      return satisfies(this.viewerVersion, `>=${feature}`);
+      return satisfies(this.viewerVersion, feature);
     }
 
     const viewerVersion = await this.fetchViewerVersion();
@@ -34,7 +34,7 @@ class ViewerVersion {
       throw Error(`Could not compute version received by the viewer, got: ${viewerVersion.version}.`);
     }
 
-    return satisfies(cleanVersion, `>=${feature}`);
+    return satisfies(cleanVersion, feature);
   }
 
   private async fetchViewerVersion(): Promise<VersionResponse> {

@@ -57,6 +57,7 @@ export interface Condition {
   skipped?: boolean;
   error: boolean;
   message: string;
+  metricGroup?: string;
   details?: ConditionDetails;
   annotationsApiV1Links?: AnnotationApiLink[];
 }
@@ -64,6 +65,11 @@ export interface Condition {
 export interface ConditionDetails {
   itemTypes: string[];
   dataKeys: {
+    absValue?: {
+      title: string;
+      order: number;
+      itemType: string;
+    };
     actualValue: {
       title: string;
       order: number;
@@ -85,6 +91,12 @@ export interface ConditionItem {
   name: string;
   link: string;
   data: {
+    absValue?: {
+      formattedValue: string;
+      value: number;
+      classes: string[];
+      link: string;
+    };
     actualValue: {
       formattedValue: string;
       value: number;

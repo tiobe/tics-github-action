@@ -13,7 +13,9 @@ import {
   analysisResultsNotSoaked,
   analysisResultsPartlySoakedPassed,
   analysisResultsNoSoakedPassed,
-  analysisResultsPartlySoakedFailed
+  analysisResultsPartlySoakedFailed,
+  analysisResultsSoakedMetricGroup,
+  analysisResultsNotSoakedMetricGroup
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 
@@ -22,71 +24,120 @@ describe('createSummaryBody', () => {
     ticsConfigMock.displayUrl = 'http://viewer.url/';
   });
 
-  it('should contain blocking after if there are soaked violations', async () => {
-    const string = await createSummaryBody(analysisResultsSoaked);
+  describe('No metric grouping', () => {
+    it('should contain blocking after if there are soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsSoaked);
 
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
-    expect(string).toContain('<tr><th>Function</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>+25</td><td>0</td></tr>');
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>+39</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td>');
+      expect(string).toContain('>0</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td>');
+      expect(string).toContain('>0</a></td></tr></table>');
+      expect(string).toContain('<tr><th>Function</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>+25</a></td>');
+      expect(string).toContain('>0</a></td></tr>');
 
-    summary.clear();
+      summary.clear();
+    });
+
+    it('should not contain blocking after if there are no soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsNotSoaked);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('>+39</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should contain blocking after if there are partly violations', async () => {
+      const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
+
+      expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
+      expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
+      expect(string).toContain(':warning: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>0</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+1</a></td>');
+      expect(string).toContain('>0</td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should contain blocking after for one of the two conditions', async () => {
+      const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('>+1</a></td></tr></table>');
+      expect(string).toContain(':warning: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>0</a></td>');
+      expect(string).toContain('>+3</a></td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should pass with no conditions that passed with warnings', async () => {
+      const string = await createSummaryBody(analysisResultsNoSoakedPassed);
+
+      expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
+      expect(string).toContain('<h3>All conditions passed</h3>');
+
+      summary.clear();
+    });
   });
 
-  it('should not contain blocking after if there are no soaked violations', async () => {
-    const string = await createSummaryBody(analysisResultsNotSoaked);
+  describe('With metric grouping', () => {
+    it('should contain blocking after if there are soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsSoakedMetricGroup);
 
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
-    expect(string).toContain('</td><td>+39</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+30</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+24</td></tr></table>');
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Coding Standard: :x: Failed </h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th>File</th><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContainTimes('>40</a></td>', 4);
+      expect(string).toContain('>+39</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td>');
+      expect(string).toContain('>0</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td>');
+      expect(string).toContain('>0</a></td></tr></table>');
+      expect(string).toContain(
+        '<tr><th>Function</th><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>'
+      );
+      expect(string).toContain('>+25</a></td>');
+      expect(string).toContain('>0</a></td></tr>');
 
-    summary.clear();
-  });
+      summary.clear();
+    });
 
-  it('Should contain blocking after if there are partly violations', async () => {
-    const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
+    it('should not contain blocking after if there are no soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsNotSoakedMetricGroup);
 
-    expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
-    expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
-    expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+1</td><td>0</td></tr></table>');
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Coding Standards: :x: Failed </h3>');
+      expect(string).toContain('<h3>Compiler Warnings: :heavy_check_mark: Passed </h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContainTimes('<tr><th>File</th><th>:x: Blocking now</th></tr>', 2);
+      expect(string).toContain('>+39</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td></tr></table>');
 
-    summary.clear();
-  });
-
-  it('Should contain blocking after for one of the two conditions', async () => {
-    const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
-
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
-    expect(string).toContain('</td><td>+1</td></tr></table>');
-    expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>0</td><td>+3</td></tr></table>');
-
-    summary.clear();
-  });
-
-  it('Should pass with no conditions that passed with warnings', async () => {
-    const string = await createSummaryBody(analysisResultsNoSoakedPassed);
-
-    expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
-    expect(string).toContain('<h3>All conditions passed</h3>');
-
-    summary.clear();
+      summary.clear();
+    });
   });
 });
 

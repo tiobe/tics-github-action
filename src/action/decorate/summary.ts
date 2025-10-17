@@ -5,10 +5,11 @@ import { SummaryTableRow } from '@actions/core/lib/summary';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
-import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, Gate } from '../../helper/interfaces';
+import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, ProjectResult } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
+import { GroupedConditions } from './interface';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
 
@@ -16,25 +17,31 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
   logger.header('Creating summary.');
   setSummaryHeader(getStatus(analysisResult.passed, analysisResult.passedWithWarning));
 
-  analysisResult.projectResults.forEach(projectResult => {
-    const failedOrWarnConditions = extractFailedOrWarningConditions(projectResult.qualityGate.gates);
-
+  for (const projectResult of analysisResult.projectResults) {
+    const groupedConditions = groupConditions(projectResult);
     summary.addHeading(projectResult.project, 2);
-    summary.addHeading(getConditionHeading(failedOrWarnConditions), 3);
 
-    failedOrWarnConditions.forEach(condition => {
-      const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
-      if (condition.details && condition.details.items.length > 0) {
-        summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
-        summary.addBreak();
-        createConditionTables(condition.details).forEach(table => summary.addTable(table));
-        summary.addRaw('</details>', true);
+    for (const group of groupedConditions) {
+      if (group.metricGroup) {
+        summary.addHeading(`${group.metricGroup}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), true)}`, 3);
       } else {
-        summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+        summary.addHeading(getConditionHeading(group.conditions), 3);
       }
-    });
-    summary.addEOL();
 
+      for (const condition of group.conditions) {
+        const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
+        if (condition.details && condition.details.items.length > 0) {
+          summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+          summary.addBreak();
+          createConditionTables(condition.details).forEach(table => summary.addTable(table));
+          summary.addRaw('</details>', true);
+        } else {
+          summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+        }
+      }
+    }
+
+    summary.addEOL();
     summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
     const unpostableAnnotations = projectResult.annotations.filter(r => !r.postable);
@@ -42,13 +49,34 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
       summary.addRaw(createUnpostableAnnotationsDetails(unpostableAnnotations));
     }
 
+    summary.addRaw('<h2></h2>');
     summary.addRaw(createFilesSummary(projectResult.analyzedFiles));
-  });
+  }
   await setSummaryFooter();
 
   logger.info('Created summary.');
 
   return summary.stringify();
+}
+
+function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
+  const conditions = projectResult.qualityGate.gates.flatMap(g => g.conditions);
+
+  const grouped: GroupedConditions[] = [];
+  for (const condition of conditions) {
+    const entry = grouped.findIndex(c => c.metricGroup === condition.metricGroup);
+    if (entry != -1) {
+      grouped[entry].conditions.push(condition);
+    } else {
+      grouped.push({
+        metricGroup: condition.metricGroup,
+        passed: condition.passed,
+        passedWithWarning: condition.passedWithWarning,
+        conditions: [condition]
+      });
+    }
+  }
+  return grouped;
 }
 
 /**
@@ -113,9 +141,9 @@ async function setSummaryFooter() {
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 
-function getConditionHeading(failedOrWarnConditions: Condition[]): string {
-  const countFailedConditions = failedOrWarnConditions.filter(c => !c.passed).length;
-  const countWarnConditions = failedOrWarnConditions.filter(c => c.passed && c.passedWithWarning).length;
+function getConditionHeading(conditions: Condition[]): string {
+  const countFailedConditions = conditions.filter(c => !c.passed).length;
+  const countWarnConditions = conditions.filter(c => c.passed && c.passedWithWarning).length;
   const header = [];
   if (countFailedConditions > 0) {
     header.push(`${countFailedConditions.toString()} Condition(s) failed`);
@@ -124,7 +152,7 @@ function getConditionHeading(failedOrWarnConditions: Condition[]): string {
     header.push(`${countWarnConditions.toString()} Condition(s) passed with warning`);
   }
 
-  if (failedOrWarnConditions.length === 0) {
+  if (conditions.filter(c => !c.passed || c.passedWithWarning).length === 0) {
     header.push('All conditions passed');
   }
 
@@ -139,21 +167,6 @@ function getStatus(passed: boolean, passedWithWarning?: boolean) {
   } else {
     return Status.PASSED;
   }
-}
-
-/**
- * Extract conditions that have failed or have passed with warning(s)
- * @param gates Gates of a quality gate
- * @returns Extracted conditions
- */
-function extractFailedOrWarningConditions(gates: Gate[]): Condition[] {
-  let failedOrWarnConditions: Condition[] = [];
-
-  gates.forEach(gate => {
-    failedOrWarnConditions = failedOrWarnConditions.concat(gate.conditions.filter(c => !c.passed || c.passedWithWarning));
-  });
-
-  return failedOrWarnConditions.sort((a, b) => Number(a.passed) - Number(b.passed));
 }
 
 /**
@@ -184,15 +197,21 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
       {
         data: capitalize(itemType),
         header: true
-      },
-      {
-        data: details.dataKeys.actualValue.title,
-        header: true
       }
     ];
+    if (details.dataKeys.absValue) {
+      titleRow.push({
+        data: `:beetle: ${details.dataKeys.absValue.title}`,
+        header: true
+      });
+    }
+    titleRow.push({
+      data: `:x: ${details.dataKeys.actualValue.title}`,
+      header: true
+    });
     if (details.dataKeys.blockingAfter) {
       titleRow.push({
-        data: details.dataKeys.blockingAfter.title,
+        data: `:warning: ${details.dataKeys.blockingAfter.title}`,
         header: true
       });
     }
@@ -201,13 +220,18 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
     details.items
       .filter(item => item.itemType === itemType)
       .forEach(item => {
-        const dataRow: SummaryTableRow = [
-          `${EOL}${EOL}[${item.name}](${joinUrl(ticsConfig.displayUrl, item.link)})${EOL}${EOL}`,
-          item.data.actualValue.formattedValue
-        ];
+        const dataRow: SummaryTableRow = [`${EOL}${EOL}<a href="${joinUrl(ticsConfig.displayUrl, item.link)}">${item.name}</a>${EOL}${EOL}`];
+
+        if (item.data.absValue) {
+          dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.absValue.link)}">${item.data.absValue.formattedValue}</a>`);
+        } else if (details.dataKeys.absValue) {
+          dataRow.push('0');
+        }
+
+        dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.actualValue.link)}">${item.data.actualValue.formattedValue}</a>`);
 
         if (item.data.blockingAfter) {
-          dataRow.push(item.data.blockingAfter.formattedValue);
+          dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.blockingAfter.link)}">${item.data.blockingAfter.formattedValue}</a>`);
         } else if (details.dataKeys.blockingAfter) {
           dataRow.push('0');
         }

@@ -1,4 +1,4 @@
-import { actionConfig, ticsConfig } from '../configuration/config';
+import { ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
 import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
@@ -54,17 +54,11 @@ async function fetchAnnotationsWithApiLinks(apiLinks: AnnotationApiLink[]): Prom
 async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
   const annotationsUrl = new URL(`${ticsConfig.baseUrl}/api/public/v1/Annotations?metric=QualityGate()`);
 
-  let filters = `Project(${identifier.project})`;
+  let filters = `Project(${identifier.project}),AnnotationSeverity(Set(blocking,after))`;
   if (identifier.cdtoken) {
     filters += `,ClientData(${identifier.cdtoken})`;
   } else if (identifier.date) {
     filters += `,Date(${identifier.date.toString()})`;
-  }
-
-  if (actionConfig.showBlockingAfter) {
-    filters += ',AnnotationSeverity(Set(blocking,after))';
-  } else {
-    filters += ',AnnotationSeverity(blocking)';
   }
   annotationsUrl.searchParams.set('filters', filters);
 
