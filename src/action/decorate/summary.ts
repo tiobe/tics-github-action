@@ -142,21 +142,7 @@ async function setSummaryFooter() {
 }
 
 function getConditionHeading(conditions: Condition[]): string {
-  const countFailedConditions = conditions.filter(c => !c.passed).length;
-  const countWarnConditions = conditions.filter(c => c.passed && c.passedWithWarning).length;
-  const header = [];
-  if (countFailedConditions > 0) {
-    header.push(`${countFailedConditions.toString()} Condition(s) failed`);
-  }
-  if (countWarnConditions > 0) {
-    header.push(`${countWarnConditions.toString()} Condition(s) passed with warning`);
-  }
-
-  if (conditions.filter(c => !c.passed || c.passedWithWarning).length === 0) {
-    header.push('All conditions passed');
-  }
-
-  return header.join(', ');
+  return `${conditions.filter(c => c.passed).length.toString()} out of ${conditions.length.toString()} conditions passed.`;
 }
 
 function getStatus(passed: boolean, passedWithWarning?: boolean) {
