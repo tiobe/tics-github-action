@@ -19,8 +19,13 @@ export async function getAnnotations(
   changedFiles: ChangedFile[],
   identifier: TicsRunIdentifier
 ): Promise<ExtendedAnnotation[]> {
-  const annotations = await fetchAllAnnotations(qualityGate, identifier);
-  return groupAndExtendAnnotations(annotations, changedFiles);
+  try {
+    const annotations = await fetchAllAnnotations(qualityGate, identifier);
+    return groupAndExtendAnnotations(annotations, changedFiles);
+  } catch (error) {
+    logger.warning(error instanceof Error ? error.message : 'Something went wrong fetching the annotations: reason unknown');
+    return [];
+  }
 }
 
 export async function fetchAllAnnotations(qualityGate: QualityGate, identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
