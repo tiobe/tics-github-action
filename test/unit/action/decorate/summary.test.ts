@@ -29,7 +29,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsSoaked);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContain('>+39</a></td>');
@@ -49,7 +49,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsNotSoaked);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>1 Condition(s) failed</h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>+39</a></td></tr><tr><td>');
@@ -63,7 +63,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
 
       expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
-      expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
+      expect(string).toContain('<h3>Conditions: 0 Failed, 1 Passed</h3>');
       expect(string).toContain(':warning: No new Coding Standard Violations');
       expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContain('>0</a></td>');
@@ -78,7 +78,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 1 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>+1</a></td></tr></table>');
@@ -94,7 +94,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsNoSoakedPassed);
 
       expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
-      expect(string).toContain('<h3>All conditions passed</h3>');
+      expect(string).toContain('<h3>Conditions: 0 Failed, 2 Passed</h3>');
 
       summary.clear();
     });
@@ -106,9 +106,10 @@ describe('createSummaryBody', () => {
 
       expect(string).toContain('<h3>:x: Failed </h3>');
       expect(string).toContain('<h3>Coding Standard: :x: Failed </h3>');
+      expect(string).toContain('<h3>Compiler Warnings: :warning: Passed with warnings </h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContain('<tr><th>File</th><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
-      expect(string).toContainTimes('>40</a></td>', 4);
+      expect(string).toContainTimes('>40</a></td>', 5);
       expect(string).toContain('>+39</a></td>');
       expect(string).toContain('>+3</a></td></tr><tr><td>');
       expect(string).toContain('>+30</a></td>');

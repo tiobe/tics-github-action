@@ -36,7 +36,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
           createConditionTables(condition.details).forEach(table => summary.addTable(table));
           summary.addRaw('</details>', true);
         } else {
-          summary.addRaw(`${EOL}&nbsp;&nbsp; ${statusMarkdown}${condition.message}`, true);
+          summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
         }
       }
     }
@@ -145,7 +145,7 @@ function getConditionHeading(conditions: Condition[]): string {
   const countPassedConditions = conditions.filter(c => c.passed).length;
   const countFailedConditions = conditions.filter(c => !c.passed).length;
 
-  return `Conditions: ${countFailedConditions.toString()} Failed, ${countPassedConditions.toString()} Passed.`;
+  return `Conditions: ${countFailedConditions.toString()} Failed, ${countPassedConditions.toString()} Passed`;
 }
 
 function getStatus(passed: boolean, passedWithWarning?: boolean) {

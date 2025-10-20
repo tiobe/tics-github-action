@@ -307,6 +307,63 @@ export const analysisResultsSoakedMetricGroup: AnalysisResult = {
                     }
                   ]
                 }
+              },
+              {
+                passed: true,
+                passedWithWarning: true,
+                metricGroup: 'Compiler Warnings',
+                error: false,
+                message:
+                  'No new Compiler Warnings Violations for levels 1, 2, 3 with respect to first analysis; failed for 145 files. There will be blocking issues in 138 files after the grace period ends.',
+                details: {
+                  itemTypes: ['file', 'function'],
+                  dataKeys: {
+                    absValue: {
+                      title: 'Total',
+                      order: 1,
+                      itemType: 'file'
+                    },
+                    actualValue: {
+                      title: 'Blocking now',
+                      order: 2,
+                      itemType: 'file'
+                    },
+                    blockingAfter: {
+                      title: 'Blocking after 2018-03-23',
+                      order: 3,
+                      itemType: 'file'
+                    }
+                  },
+                  itemCount: 146,
+                  itemLimit: 100,
+                  items: [
+                    {
+                      itemType: 'file',
+                      name: 'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
+                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
+                      data: {
+                        absValue: {
+                          formattedValue: '40',
+                          value: 40.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        },
+                        actualValue: {
+                          formattedValue: '+39',
+                          value: 39.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        },
+                        blockingAfter: {
+                          formattedValue: '+3',
+                          value: 3.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(deferred)\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             ]
           }
