@@ -142,7 +142,10 @@ async function setSummaryFooter() {
 }
 
 function getConditionHeading(conditions: Condition[]): string {
-  return `${conditions.filter(c => c.passed).length.toString()} out of ${conditions.length.toString()} conditions passed.`;
+  const countPassedConditions = conditions.filter(c => c.passed).length;
+  const countFailedConditions = conditions.filter(c => !c.passed).length;
+
+  return `Conditions: ${countFailedConditions.toString()} Failed, ${countPassedConditions.toString()} Passed.`;
 }
 
 function getStatus(passed: boolean, passedWithWarning?: boolean) {
