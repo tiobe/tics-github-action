@@ -1,5 +1,5 @@
 import { ticsCli, ticsConfig } from '../configuration/config';
-import { RunDateResponse } from '../helper/interfaces';
+import { RunDateResponse } from './interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';

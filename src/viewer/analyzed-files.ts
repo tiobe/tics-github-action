@@ -1,10 +1,9 @@
 import { ticsCli, ticsConfig } from '../configuration/config';
-import { AnalyzedFiles, AnalyzedFile } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
-import { TicsRunIdentifier } from './interfaces';
+import { TicsRunIdentifier, AnalyzedFiles, AnalyzedFile } from './interfaces';
 
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
@@ -33,7 +32,7 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
 
 /**
  * Builds the analyzed files api call.
- * @param identifier The identifier (project + either date or cdt) to get the analysed files url for.
+ * @param identifier The identifier (project + either date or cdt) to get the analyzed files url for.
  * @returns The url to get the quality gate analysis.
  */
 export function getAnalyzedFilesUrl(identifier: TicsRunIdentifier): string {

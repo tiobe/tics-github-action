@@ -1,5 +1,5 @@
 import { summary } from '@actions/core';
-import { ExtendedAnnotation } from '../../../../src/helper/interfaces';
+import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 import {
   createErrorSummaryBody,
   createFilesSummary,
@@ -69,7 +69,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>0</a></td>');
       expect(string).toContain('>+3</a></td></tr><tr><td>');
       expect(string).toContain('>+1</a></td>');
-      expect(string).toContain('>0</td></tr></table>');
+      expect(string).toContain('>-</td></tr></table>');
 
       summary.clear();
     });

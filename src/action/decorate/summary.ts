@@ -5,11 +5,12 @@ import { SummaryTableRow } from '@actions/core/lib/summary';
 import { Status } from '../../helper/enums';
 import { logger } from '../../helper/logger';
 import { joinUrl } from '../../helper/url';
-import { AnalysisResult, Condition, ConditionDetails, ExtendedAnnotation, ProjectResult } from '../../helper/interfaces';
+import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
 import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 import { GroupedConditions } from './interface';
+import { Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
 
@@ -214,7 +215,7 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
         if (item.data.absValue) {
           dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.absValue.link)}">${item.data.absValue.formattedValue}</a>`);
         } else if (details.dataKeys.absValue) {
-          dataRow.push('0');
+          dataRow.push('-');
         }
 
         dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.actualValue.link)}">${item.data.actualValue.formattedValue}</a>`);
@@ -222,7 +223,7 @@ function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
         if (item.data.blockingAfter) {
           dataRow.push(`<a href="${joinUrl(ticsConfig.displayUrl, item.data.blockingAfter.link)}">${item.data.blockingAfter.formattedValue}</a>`);
         } else if (details.dataKeys.blockingAfter) {
-          dataRow.push('0');
+          dataRow.push('-');
         }
 
         rows.push(dataRow);

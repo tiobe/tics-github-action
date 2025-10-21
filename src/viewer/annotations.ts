@@ -1,10 +1,9 @@
 import { ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
-import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
 import { httpClient } from './http-client';
-import { TicsRunIdentifier } from './interfaces';
+import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces';
 import { ViewerFeature, viewerVersion } from './version';
 
 /**

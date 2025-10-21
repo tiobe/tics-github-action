@@ -20,7 +20,7 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
         cdtoken: getItemFromUrl(url, 'ClientData')
       };
 
-      const analysedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(identifier));
+      const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(identifier));
       const qualityGate = await getQualityGate(await getQualityGateUrl(identifier));
 
       const annotations = await getAnnotations(qualityGate, changedFiles, identifier);
@@ -29,7 +29,7 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
         project: identifier.project,
         explorerUrl: url,
         qualityGate: qualityGate,
-        analyzedFiles: analysedFiles,
+        analyzedFiles: analyzedFiles,
         annotations: annotations
       };
     })

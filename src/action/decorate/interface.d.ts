@@ -1,4 +1,4 @@
-import { Condition } from '../../helper/interfaces';
+import { Condition } from '../../viewer/interfaces';
 
 export interface GroupedConditions {
   metricGroup?: string;

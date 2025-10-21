@@ -1,5 +1,5 @@
 import { getRetryErrorMessage, getRetryMessage } from '../helper/response';
-import { VersionResponse } from '../helper/interfaces';
+import { VersionResponse } from './interfaces';
 import { logger } from '../helper/logger';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
