@@ -62,25 +62,25 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
   const grouped: GroupedConditions[] = [];
   for (const condition of conditions) {
     const entry = grouped.findIndex(c => c.metricGroup === condition.metricGroup);
-    const blockingIssues = condition.details?.items.flatMap(c => c.data.actualValue.value).reduce((partial, current) => partial + current, 0) ?? 0;
+    const blockingIssues = condition.details?.items.map(c => c.data.actualValue.value).reduce((partial, current) => partial + current, 0) ?? 0;
     const deferredIssues =
       condition.details?.items
-        .flatMap(c => c.data.blockingAfter?.value)
+        .map(c => c.data.blockingAfter?.value)
         .filter(c => c !== undefined)
         .reduce((partial, current) => partial + current, 0) ?? 0;
 
     if (entry != -1) {
       grouped[entry].conditions.push(condition);
-      grouped[entry].amountOfBlockingIssues += blockingIssues;
-      grouped[entry].amountOfDeferredIssues += deferredIssues;
+      grouped[entry].blockingIssueCount += blockingIssues;
+      grouped[entry].deferredIssueCount += deferredIssues;
     } else {
       grouped.push({
         metricGroup: condition.metricGroup,
         passed: condition.passed,
         passedWithWarning: condition.passedWithWarning,
         conditions: [condition],
-        amountOfBlockingIssues: blockingIssues,
-        amountOfDeferredIssues: deferredIssues
+        blockingIssueCount: blockingIssues,
+        deferredIssueCount: deferredIssues
       });
     }
   }
@@ -153,10 +153,10 @@ function getConditionHeading(group: GroupedConditions): string {
   if (!group.metricGroup) {
     return getNoMetricGroupHeading(group.conditions);
   }
-  if (group.amountOfBlockingIssues > 0) {
-    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.amountOfBlockingIssues.toString()} Blocking ${getSingularOrPlural('Issue', group.amountOfBlockingIssues)}`;
-  } else if (group.amountOfDeferredIssues > 0) {
-    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.amountOfDeferredIssues.toString()} Blocking After ${getSingularOrPlural('Issue', group.amountOfDeferredIssues)}`;
+  if (group.blockingIssueCount > 0) {
+    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.blockingIssueCount.toString()} Blocking ${getSingularOrPlural('Issue', group.blockingIssueCount)}`;
+  } else if (group.deferredIssueCount > 0) {
+    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.deferredIssueCount.toString()} Blocking After ${getSingularOrPlural('Issue', group.deferredIssueCount)}`;
   }
   return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), true)}`;
 }
