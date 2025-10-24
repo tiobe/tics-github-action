@@ -31,14 +31,15 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>:x: Failed </h3>');
       expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContainTimes('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>', 2);
       expect(string).toContain('>+39</a></td>');
       expect(string).toContain('>+3</a></td></tr><tr><td>');
       expect(string).toContain('>+30</a></td>');
       expect(string).toContain('>0</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td>');
       expect(string).toContain('>0</a></td></tr></table>');
-      expect(string).toContain('<tr><th>Function</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">Function</th><th colspan="2">Issues</th></tr>');
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
@@ -51,7 +52,8 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>:x: Failed </h3>');
       expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>+39</a></td></tr><tr><td>');
       expect(string).toContain('>+30</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td></tr></table>');
@@ -65,7 +67,8 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
       expect(string).toContain('<h3>Conditions: 0 Failed, 1 Passed</h3>');
       expect(string).toContain(':warning: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContain('>0</a></td>');
       expect(string).toContain('>+3</a></td></tr><tr><td>');
       expect(string).toContain('>+1</a></td>');
@@ -80,10 +83,11 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>:x: Failed </h3>');
       expect(string).toContain('<h3>Conditions: 1 Failed, 1 Passed</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>+1</a></td></tr></table>');
       expect(string).toContain(':warning: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContain('>0</a></td>');
       expect(string).toContain('>+3</a></td></tr></table>');
 
@@ -108,7 +112,8 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>Coding Standard: :x: 117 Blocking Issues</h3>');
       expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking After Issues</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
-      expect(string).toContain('<tr><th>File</th><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="3">Issues</th></tr>', 2);
+      expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContainTimes('>40</a></td>', 5);
       expect(string).toContain('>+39</a></td>');
       expect(string).toContain('>+3</a></td></tr><tr><td>');
@@ -116,9 +121,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>0</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td>');
       expect(string).toContain('>0</a></td></tr></table>');
-      expect(string).toContain(
-        '<tr><th>Function</th><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>'
-      );
+      expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
@@ -132,7 +135,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>Coding Standards: :x: 93 Blocking Issues</h3>');
       expect(string).toContain('<h3>Compiler Warnings: :heavy_check_mark: Passed </h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
-      expect(string).toContainTimes('<tr><th>File</th><th>:x: Blocking now</th></tr>', 2);
+      expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>', 2);
       expect(string).toContain('>+39</a></td></tr><tr><td>');
       expect(string).toContain('>+30</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td></tr></table>');

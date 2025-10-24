@@ -205,13 +205,21 @@ export function createFilesSummary(fileList: string[]): string {
  */
 function createConditionTables(details: ConditionDetails): SummaryTableRow[][] {
   return details.itemTypes.map(itemType => {
-    const rows: SummaryTableRow[] = [];
-    const titleRow: SummaryTableRow = [
-      {
-        data: capitalize(itemType),
-        header: true
-      }
+    const rows: SummaryTableRow[] = [
+      [
+        {
+          data: capitalize(itemType),
+          header: true,
+          rowspan: '2'
+        },
+        {
+          data: 'Issues',
+          header: true,
+          colspan: String(1 + (details.dataKeys.absValue ? 1 : 0) + (details.dataKeys.blockingAfter ? 1 : 0))
+        }
+      ]
     ];
+    const titleRow: SummaryTableRow = [];
     if (details.dataKeys.absValue) {
       titleRow.push({
         data: `:beetle: ${details.dataKeys.absValue.title}`,
