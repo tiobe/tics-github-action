@@ -23,11 +23,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     summary.addHeading(projectResult.project, 2);
 
     for (const group of groupedConditions) {
-      if (group.metricGroup) {
-        summary.addHeading(`${group.metricGroup}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), true)}`, 3);
-      } else {
-        summary.addHeading(getConditionHeading(group.conditions), 3);
-      }
+      summary.addHeading(getConditionHeading(group), 3);
 
       for (const condition of group.conditions) {
         const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
@@ -66,14 +62,25 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
   const grouped: GroupedConditions[] = [];
   for (const condition of conditions) {
     const entry = grouped.findIndex(c => c.metricGroup === condition.metricGroup);
+    const blockingIssues = condition.details?.items.flatMap(c => c.data.actualValue.value).reduce((partial, current) => partial + current, 0) ?? 0;
+    const deferredIssues =
+      condition.details?.items
+        .flatMap(c => c.data.blockingAfter?.value)
+        .filter(c => c !== undefined)
+        .reduce((partial, current) => partial + current, 0) ?? 0;
+
     if (entry != -1) {
       grouped[entry].conditions.push(condition);
+      grouped[entry].amountOfBlockingIssues += blockingIssues;
+      grouped[entry].amountOfDeferredIssues += deferredIssues;
     } else {
       grouped.push({
         metricGroup: condition.metricGroup,
         passed: condition.passed,
         passedWithWarning: condition.passedWithWarning,
-        conditions: [condition]
+        conditions: [condition],
+        amountOfBlockingIssues: blockingIssues,
+        amountOfDeferredIssues: deferredIssues
       });
     }
   }
@@ -142,7 +149,23 @@ async function setSummaryFooter() {
   summary.addRaw(generateComment(githubConfig.getCommentIdentifier()));
 }
 
-function getConditionHeading(conditions: Condition[]): string {
+function getConditionHeading(group: GroupedConditions): string {
+  if (!group.metricGroup) {
+    return getNoMetricGroupHeading(group.conditions);
+  }
+  if (group.amountOfBlockingIssues > 0) {
+    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.amountOfBlockingIssues.toString()} Blocking ${getSingularOrPlural('Issue', group.amountOfBlockingIssues)}`;
+  } else if (group.amountOfDeferredIssues > 0) {
+    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.amountOfDeferredIssues.toString()} Blocking After ${getSingularOrPlural('Issue', group.amountOfDeferredIssues)}`;
+  }
+  return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), true)}`;
+}
+
+function getSingularOrPlural(string: string, howMany: number): string {
+  return `${string}${howMany === 1 ? '' : 's'}`;
+}
+
+function getNoMetricGroupHeading(conditions: Condition[]): string {
   const countPassedConditions = conditions.filter(c => c.passed).length;
   const countFailedConditions = conditions.filter(c => !c.passed).length;
 

@@ -5,4 +5,6 @@ export interface GroupedConditions {
   passed: boolean;
   passedWithWarning?: boolean;
   conditions: Condition[];
+  amountOfBlockingIssues: number;
+  amountOfDeferredIssues: number;
 }
