@@ -110,7 +110,7 @@ describe('createSummaryBody', () => {
 
       expect(string).toContain('<h3>:x: Failed </h3>');
       expect(string).toContain('<h3>Coding Standard: :x: 117 Blocking Issues</h3>');
-      expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking After Issues</h3>');
+      expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking-after Issues</h3>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="3">Issues</th></tr>', 2);
       expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');

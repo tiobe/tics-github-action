@@ -156,7 +156,7 @@ function getConditionHeading(group: GroupedConditions): string {
   if (group.blockingIssueCount > 0) {
     return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.blockingIssueCount.toString()} Blocking ${getSingularOrPlural('Issue', group.blockingIssueCount)}`;
   } else if (group.deferredIssueCount > 0) {
-    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.deferredIssueCount.toString()} Blocking After ${getSingularOrPlural('Issue', group.deferredIssueCount)}`;
+    return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), false)}${group.deferredIssueCount.toString()} Blocking-after ${getSingularOrPlural('Issue', group.deferredIssueCount)}`;
   }
   return `${group.metricGroup ?? ''}: ${generateStatusMarkdown(getStatus(group.passed, group.passedWithWarning), true)}`;
 }
