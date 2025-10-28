@@ -18,6 +18,7 @@ import {
   analysisResultsNotSoakedMetricGroup
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
+import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
@@ -25,6 +26,15 @@ describe('createSummaryBody', () => {
   });
 
   describe('No metric grouping', () => {
+    beforeEach(() => {
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+        if (feature === ViewerFeature.NEW_ANNOTATIONS) {
+          return false;
+        }
+        return true;
+      });
+    });
+
     it('should contain blocking after if there are soaked violations', async () => {
       const string = await createSummaryBody(analysisResultsSoaked);
 
@@ -105,6 +115,15 @@ describe('createSummaryBody', () => {
   });
 
   describe('With metric grouping', () => {
+    beforeEach(() => {
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+        if (feature === ViewerFeature.NEW_ANNOTATIONS) {
+          return true;
+        }
+        return false;
+      });
+    });
+
     it('should contain blocking after if there are soaked violations', async () => {
       const string = await createSummaryBody(analysisResultsSoakedMetricGroup);
 
@@ -125,6 +144,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
+      console.log(string);
       summary.clear();
     });
 

@@ -11,6 +11,7 @@ import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 import { GroupedConditions } from './interface';
 import { Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
+import { ViewerFeature, viewerVersion } from '../../viewer/version';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
 
@@ -23,18 +24,10 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     summary.addHeading(projectResult.project, 2);
 
     for (const group of groupedConditions) {
-      summary.addHeading(getConditionHeading(group), 3);
-
-      for (const condition of group.conditions) {
-        const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
-        if (condition.details && condition.details.items.length > 0) {
-          summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
-          summary.addBreak();
-          createConditionTables(condition.details).forEach(table => summary.addTable(table));
-          summary.addRaw('</details>', true);
-        } else {
-          summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
-        }
+      if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+        newConditionsView(group);
+      } else {
+        oldConditionsView(group);
       }
     }
 
@@ -54,6 +47,37 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
   logger.info('Created summary.');
 
   return summary.stringify();
+}
+
+function newConditionsView(group: GroupedConditions): void {
+  summary.addRaw(`<details><summary><h3>${getConditionHeading(group)}</h3></summary>`, true);
+
+  for (const condition of group.conditions) {
+    const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
+    if (condition.details && condition.details.items.length > 0) {
+      summary.addRaw(`${statusMarkdown}${condition.message}`, true);
+      createConditionTables(condition.details).forEach(table => summary.addTable(table));
+    } else {
+      summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
+    }
+  }
+  summary.addRaw('</details>', true);
+}
+
+function oldConditionsView(group: GroupedConditions): void {
+  summary.addHeading(getConditionHeading(group), 3);
+
+  for (const condition of group.conditions) {
+    const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
+    if (condition.details && condition.details.items.length > 0) {
+      summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+      summary.addBreak();
+      createConditionTables(condition.details).forEach(table => summary.addTable(table));
+      summary.addRaw('</details>', true);
+    } else {
+      summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
+    }
+  }
 }
 
 function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
