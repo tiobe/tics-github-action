@@ -9,6 +9,7 @@ export interface TicsRunIdentifier {
 
 // Action defined interfaces
 export interface FetchedAnnotation extends Annotation {
+  path: string;
   line: number;
   count: number;
   gateId?: number;
@@ -17,7 +18,7 @@ export interface FetchedAnnotation extends Annotation {
 
 export interface ExtendedAnnotation extends FetchedAnnotation {
   displayCount?: string;
-  postable?: boolean;
+  postable: boolean;
 }
 
 // Viewer defined interfaces

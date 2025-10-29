@@ -64,6 +64,7 @@ async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<Fet
   } else if (identifier.date) {
     filters += `,Date(${identifier.date.toString()})`;
   }
+  filters += ',Window(-1)';
   annotationsUrl.searchParams.set('filters', filters);
 
   return fetchAnnotations(annotationsUrl);
@@ -89,6 +90,7 @@ async function fetchAnnotations(annotationsUrl: URL, gateId?: number): Promise<F
         gateId: gateId,
         line: annotation.line ?? 1,
         count: annotation.count ?? 1,
+        path: annotation.path ?? annotation.fullPath.split('/').slice(4).join('/'),
         instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
       };
 
@@ -114,20 +116,19 @@ async function fetchAnnotations(annotationsUrl: URL, gateId?: number): Promise<F
  */
 export function groupAndExtendAnnotations(annotations: FetchedAnnotation[], changedFiles: ChangedFile[]): ExtendedAnnotation[] {
   const sortedAnnotations = sortAnnotations(annotations);
-  const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
+  const groupedAnnotations = groupAnnotations(sortedAnnotations);
 
-  return groupedAnnotations
-    .filter(a => a.blocking?.state !== 'no')
-    .map(a => {
-      const annotation: ExtendedAnnotation = {
-        ...a,
-        displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
-        postable: changedFiles.find(c => a.fullPath.includes(c.filename)) !== undefined
-      };
+  const changedSet = new Set<string>(changedFiles.map(c => c.filename)); // optimization
+  return groupedAnnotations.map(a => {
+    const annotation: ExtendedAnnotation = {
+      ...a,
+      displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
+      postable: changedSet.has(a.path)
+    };
 
-      logger.debug(`Annotation: ${JSON.stringify(annotation)}`);
-      return annotation;
-    });
+    logger.debug(`Annotation: ${JSON.stringify(annotation)}`);
+    return annotation;
+  });
 }
 
 /**
@@ -148,13 +149,11 @@ function sortAnnotations(annotations: FetchedAnnotation[]): FetchedAnnotation[] 
  * @param changedFiles List of files changed in the pull request.
  * @returns grouped annotations.
  */
-function groupAnnotations(annotations: FetchedAnnotation[], changedFiles: ChangedFile[]): FetchedAnnotation[] {
+function groupAnnotations(annotations: FetchedAnnotation[]): FetchedAnnotation[] {
   const groupedAnnotations: FetchedAnnotation[] = [];
   annotations.forEach(annotation => {
-    const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
-      annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else if (groupedAnnotations[index].gateId === annotation.gateId) {
       groupedAnnotations[index].count += annotation.count;

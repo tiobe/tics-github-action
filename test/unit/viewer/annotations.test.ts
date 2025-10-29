@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { httpClient } from '../../../src/viewer/http-client';
 import { actionConfigMock, githubConfigMock, ticsConfigMock } from '../../.setup/mock';
 import { ChangedFile } from '../../../src/github/interfaces';
-import { FetchedAnnotation, QualityGate } from '../../../src/helper/interfaces';
+import { FetchedAnnotation, QualityGate } from '../../../src/viewer/interfaces';
 import { GithubEvent } from '../../../src/configuration/github-event';
 import { fetchAllAnnotations, groupAndExtendAnnotations } from '../../../src/viewer/annotations';
 import { TicsRunIdentifier } from '../../../src/viewer/interfaces';
@@ -41,10 +41,10 @@ describe('fetchAllAnnotations', () => {
     });
 
     it('should return annotations from viewer', async () => {
-      httpClientSpy.mockResolvedValueOnce({ data: { data: [{ type: 'CS' }] }, retryCount: 0, status: 200 });
+      httpClientSpy.mockResolvedValueOnce({ data: { data: [{ type: 'CS', fullPath: 'HIE://project/branch/file.js' }] }, retryCount: 0, status: 200 });
       httpClientSpy.mockResolvedValueOnce({
         data: {
-          data: [{ type: 'CS', line: 10, count: 2 }],
+          data: [{ type: 'CS', line: 10, count: 2, fullPath: 'HIE://project/branch/file.js' }],
           annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } }
         },
         retryCount: 0,
@@ -57,8 +57,16 @@ describe('fetchAllAnnotations', () => {
       );
 
       expect(response).toEqual([
-        { type: 'CS', gateId: 0, line: 1, count: 1, instanceName: 'CS' },
-        { type: 'CS', gateId: 1, line: 10, count: 2, instanceName: 'Coding Standard Violations' }
+        { type: 'CS', fullPath: 'HIE://project/branch/file.js', path: 'file.js', gateId: 0, line: 1, count: 1, instanceName: 'CS' },
+        {
+          type: 'CS',
+          fullPath: 'HIE://project/branch/file.js',
+          path: 'file.js',
+          gateId: 1,
+          line: 10,
+          count: 2,
+          instanceName: 'Coding Standard Violations'
+        }
       ]);
     });
 
@@ -66,8 +74,8 @@ describe('fetchAllAnnotations', () => {
       httpClientSpy.mockResolvedValueOnce({
         data: {
           data: [
-            { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main' },
-            { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing' }
+            { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main', fullPath: 'HIE://project/branch/file.js' },
+            { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing', fullPath: 'HIE://project/branch/file.js' }
           ]
         },
         retryCount: 0,
@@ -78,6 +86,7 @@ describe('fetchAllAnnotations', () => {
 
       expect(response).toEqual([
         {
+          fullPath: 'HIE://project/branch/file.js',
           type: 'COMPLEXITY',
           complexity: 3,
           functionName: 'main',
@@ -85,9 +94,11 @@ describe('fetchAllAnnotations', () => {
           line: 10,
           count: 1,
           instanceName: 'COMPLEXITY',
-          msg: 'Function main has a complexity of 3'
+          msg: 'Function main has a complexity of 3',
+          path: 'file.js'
         },
         {
+          fullPath: 'HIE://project/branch/file.js',
           type: 'COMPLEXITY',
           complexity: 2,
           functionName: 'test',
@@ -95,7 +106,8 @@ describe('fetchAllAnnotations', () => {
           line: 2,
           count: 1,
           instanceName: 'COMPLEXITY',
-          msg: 'testing'
+          msg: 'testing',
+          path: 'file.js'
         }
       ]);
     });
@@ -129,7 +141,13 @@ describe('fetchAllAnnotations', () => {
 
     it('should return annotations from viewer', async () => {
       httpClientSpy.mockResolvedValueOnce({
-        data: { data: [{ type: 'CS' }, { type: 'CS', line: 10, count: 2 }], annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } } },
+        data: {
+          data: [
+            { type: 'CS', fullPath: 'HIE://project/branch/file.js' },
+            { type: 'CS', line: 10, count: 2, fullPath: 'HIE://project/branch/file.js' }
+          ],
+          annotationTypes: { CS: { instanceName: 'Coding Standard Violations' } }
+        },
         retryCount: 0,
         status: 200
       });
@@ -138,11 +156,11 @@ describe('fetchAllAnnotations', () => {
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
-        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CClientData%28test%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
+        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CClientData%28test%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
       );
       expect(response).toEqual([
-        { type: 'CS', line: 1, count: 1, instanceName: 'Coding Standard Violations' },
-        { type: 'CS', line: 10, count: 2, instanceName: 'Coding Standard Violations' }
+        { type: 'CS', line: 1, count: 1, instanceName: 'Coding Standard Violations', fullPath: 'HIE://project/branch/file.js', path: 'file.js' },
+        { type: 'CS', line: 10, count: 2, instanceName: 'Coding Standard Violations', fullPath: 'HIE://project/branch/file.js', path: 'file.js' }
       ]);
     });
 
@@ -150,8 +168,8 @@ describe('fetchAllAnnotations', () => {
       httpClientSpy.mockResolvedValueOnce({
         data: {
           data: [
-            { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main' },
-            { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing' }
+            { type: 'COMPLEXITY', line: 10, complexity: 3, functionName: 'main', fullPath: 'HIE://project/branch/file.js' },
+            { type: 'COMPLEXITY', line: 2, complexity: 2, functionName: 'test', msg: 'testing', fullPath: 'HIE://project/branch/file.js' }
           ]
         },
         retryCount: 0,
@@ -163,7 +181,7 @@ describe('fetchAllAnnotations', () => {
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
-        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CDate%2815984835158%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
+        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CDate%2815984835158%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
       );
       expect(response).toEqual([
         {
@@ -173,7 +191,9 @@ describe('fetchAllAnnotations', () => {
           line: 10,
           count: 1,
           instanceName: 'COMPLEXITY',
-          msg: 'Function main has a complexity of 3'
+          msg: 'Function main has a complexity of 3',
+          fullPath: 'HIE://project/branch/file.js',
+          path: 'file.js'
         },
         {
           type: 'COMPLEXITY',
@@ -182,7 +202,9 @@ describe('fetchAllAnnotations', () => {
           line: 2,
           count: 1,
           instanceName: 'COMPLEXITY',
-          msg: 'testing'
+          msg: 'testing',
+          fullPath: 'HIE://project/branch/file.js',
+          path: 'file.js'
         }
       ]);
     });
@@ -226,7 +248,8 @@ describe('groupAndExtendAnnotations', () => {
     ];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -262,7 +285,8 @@ describe('groupAndExtendAnnotations', () => {
     ];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -278,7 +302,8 @@ describe('groupAndExtendAnnotations', () => {
         gateId: 0
       },
       {
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -319,7 +344,8 @@ describe('groupAndExtendAnnotations', () => {
     ];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -336,7 +362,8 @@ describe('groupAndExtendAnnotations', () => {
       },
       {
         // testing one without a rule
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -379,7 +406,8 @@ describe('groupAndExtendAnnotations', () => {
     ];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
-        fullPath: 'c:/src/test.js',
+        fullPath: 'HIE://project/branch/src/test.js',
+        path: 'src/test.js',
         line: 0,
         level: 1,
         category: 'test',
@@ -393,6 +421,7 @@ describe('groupAndExtendAnnotations', () => {
       },
       {
         fullPath: 'HIE://project/branch/src/jest.js',
+        path: 'src/jest.js',
         line: 2,
         level: 1,
         category: 'test',
@@ -406,6 +435,7 @@ describe('groupAndExtendAnnotations', () => {
       },
       {
         fullPath: 'HIE://project/branch/src/zest.js',
+        path: 'src/zest.js',
         line: 2,
         level: 1,
         category: 'test',
@@ -421,8 +451,8 @@ describe('groupAndExtendAnnotations', () => {
 
     const expected = [
       { ...fetchedAnnotations[1], postable: false, path: 'src/jest.js', displayCount: '' },
-      { ...fetchedAnnotations[2], postable: false, path: 'src/zest.js', displayCount: '' },
-      { ...fetchedAnnotations[0], postable: true, path: 'src/test.js', displayCount: '' }
+      { ...fetchedAnnotations[0], postable: true, path: 'src/test.js', displayCount: '' },
+      { ...fetchedAnnotations[2], postable: false, path: 'src/zest.js', displayCount: '' }
     ];
 
     const response = groupAndExtendAnnotations(fetchedAnnotations, changedFiles);
