@@ -52,17 +52,6 @@ export interface Condition extends AbstractCondition {
   annotationsApiV1Links?: AnnotationApiLink[];
 }
 
-export interface Condition {
-  passed: boolean;
-  passedWithWarning?: boolean;
-  skipped?: boolean;
-  error: boolean;
-  message: string;
-  metricGroup?: string;
-  details?: ConditionDetails;
-  annotationsApiV1Links?: AnnotationApiLink[];
-}
-
 export interface ConditionDetails {
   itemTypes: string[];
   dataKeys: {
