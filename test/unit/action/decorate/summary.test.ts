@@ -5,7 +5,8 @@ import {
   createFilesSummary,
   createNothingAnalyzedSummaryBody,
   createSummaryBody,
-  createUnpostableAnnotationsDetails
+  createUnpostableAnnotationsDetails,
+  groupConditions
 } from '../../../../src/action/decorate/summary';
 import '../../../.setup/extend_jest';
 import {
@@ -15,7 +16,9 @@ import {
   analysisResultsNoSoakedPassed,
   analysisResultsPartlySoakedFailed,
   analysisResultsSoakedMetricGroup,
-  analysisResultsNotSoakedMetricGroup
+  analysisResultsNotSoakedMetricGroup,
+  metricGroupProjectResult,
+  metricGroupProjectResultWithMultipleGates
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
@@ -165,6 +168,38 @@ describe('createSummaryBody', () => {
   });
 });
 
+describe('groupConditions', () => {
+  it('should return failing metric before passing metric', () => {
+    const conditions = groupConditions(analysisResultsNotSoakedMetricGroup.projectResults[0]);
+
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Coding Standards', passed: false });
+    expect(conditions.at(1)).toMatchObject({ metricGroup: 'Compiler Warnings', passed: true });
+  });
+
+  it('should return sorted conditions failing -> passing (single gate)', () => {
+    const conditions = groupConditions(metricGroupProjectResult);
+
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Coding Standards', passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(0)?.conditions.at(2)).toMatchObject({ passed: true, passedWithWarning: false });
+  });
+
+  it('should return sorted conditions failing -> passing (multiple gate)', () => {
+    const conditions = groupConditions(metricGroupProjectResultWithMultipleGates);
+
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Fanout', passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(1)).toMatchObject({ metricGroup: 'Compiler Warnings', passed: false, passedWithWarning: false });
+    expect(conditions.at(1)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(1)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: false });
+    expect(conditions.at(2)).toMatchObject({ metricGroup: 'Coding Standards', passed: true, passedWithWarning: true });
+    expect(conditions.at(2)?.conditions.at(0)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(2)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: false });
+  });
+});
+
 describe('createErrorSummary', () => {
   it('Should return summary of two errors', async () => {
     githubConfigMock.debugger = false;
@@ -270,7 +305,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -297,7 +333,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/hello.js',
@@ -312,7 +349,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -340,7 +378,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/hello.js',
@@ -355,7 +394,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -383,7 +423,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/test.js',
@@ -400,7 +441,8 @@ describe('createUnpostableAnnotationsDetails', () => {
           state: 'after',
           after: 1723795324000
         },
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 

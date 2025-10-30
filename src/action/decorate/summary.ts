@@ -80,18 +80,18 @@ function oldConditionsView(group: GroupedConditions): void {
   }
 }
 
-function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
+export function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
   const conditions = projectResult.qualityGate.gates.flatMap(g => g.conditions);
 
   const groupedMap = new Map<string | undefined, GroupedConditions>();
   for (const condition of conditions) {
     const group = groupedMap.get(condition.metricGroup);
-    const blockingIssues = condition.details?.items.map(c => c.data.actualValue.value).reduce((partial, current) => partial + current, 0) ?? 0;
+    const blockingIssues = condition.details?.items.map(c => c.data.actualValue.value).reduce(sum, 0) ?? 0;
     const deferredIssues =
       condition.details?.items
         .map(c => c.data.blockingAfter?.value)
         .filter(c => c !== undefined)
-        .reduce((partial, current) => partial + current, 0) ?? 0;
+        .reduce(sum, 0) ?? 0;
 
     if (group) {
       group.conditions.push(condition);
@@ -100,22 +100,31 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
     } else {
       groupedMap.set(condition.metricGroup, {
         metricGroup: condition.metricGroup,
-        passed: condition.passed,
-        passedWithWarning: condition.passedWithWarning,
+        passed: false, // just a placeholder
+        passedWithWarning: false, // just a placeholder
         conditions: [condition],
         blockingIssueCount: blockingIssues,
         deferredIssueCount: deferredIssues
       });
     }
   }
-
   const grouped = Array.from(groupedMap.values());
+
   // sort conditions
   for (const group of grouped) {
-    group.conditions.sort((a, b) => sortConditions(a, b));
+    group.conditions.sort(sortConditions);
+    // update passed based on most severe condition
+    if (conditions.length > 0) {
+      group.passed = group.conditions[0].passed;
+      group.passedWithWarning = group.conditions[0].passedWithWarning;
+    }
   }
   // sort groups
-  return grouped.sort((a, b) => sortConditions(a, b));
+  return grouped.sort(sortConditions);
+}
+
+function sum(partial: number, current: number): number {
+  return partial + current;
 }
 
 /**
