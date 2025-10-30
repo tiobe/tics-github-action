@@ -10,7 +10,7 @@ import { generateComment, generateExpandableAreaMarkdown, generateItalic, genera
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 import { GroupedConditions } from './interface';
-import { Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
+import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
 import { ViewerFeature, viewerVersion } from '../../viewer/version';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
@@ -108,7 +108,23 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
       });
     }
   }
-  return grouped;
+
+  // sort conditions
+  for (const group of grouped) {
+    group.conditions.sort((a, b) => sortConditions(a) - sortConditions(b));
+  }
+
+  // sort groups
+  return grouped.sort((a, b) => sortConditions(a) - sortConditions(b));
+}
+
+/**
+ * Sort condition(group)s: failed, passed with warnings, passed
+ */
+function sortConditions(item: AbstractCondition): 0 | 1 | 2 {
+  if (!item.passed) return 0;
+  if (item.passedWithWarning) return 1;
+  return 2;
 }
 
 /**

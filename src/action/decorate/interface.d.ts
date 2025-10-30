@@ -1,6 +1,6 @@
-import { Condition } from '../../viewer/interfaces';
+import { AbstractCondition, Condition } from '../../viewer/interfaces';
 
-export interface GroupedConditions {
+export interface GroupedConditions extends AbstractCondition {
   metricGroup?: string;
   passed: boolean;
   passedWithWarning?: boolean;

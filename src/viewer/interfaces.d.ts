@@ -38,6 +38,20 @@ export interface Gate {
   conditions: Condition[];
 }
 
+export interface AbstractCondition {
+  metricGroup?: string;
+  passed: boolean;
+  passedWithWarning?: boolean;
+}
+
+export interface Condition extends AbstractCondition {
+  skipped?: boolean;
+  error: boolean;
+  message: string;
+  details?: ConditionDetails;
+  annotationsApiV1Links?: AnnotationApiLink[];
+}
+
 export interface Condition {
   passed: boolean;
   passedWithWarning?: boolean;
