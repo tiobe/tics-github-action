@@ -83,9 +83,9 @@ function oldConditionsView(group: GroupedConditions): void {
 function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
   const conditions = projectResult.qualityGate.gates.flatMap(g => g.conditions);
 
-  const grouped: GroupedConditions[] = [];
+  const groupedMap = new Map<string | undefined, GroupedConditions>();
   for (const condition of conditions) {
-    const entry = grouped.findIndex(c => c.metricGroup === condition.metricGroup);
+    const group = groupedMap.get(condition.metricGroup);
     const blockingIssues = condition.details?.items.map(c => c.data.actualValue.value).reduce((partial, current) => partial + current, 0) ?? 0;
     const deferredIssues =
       condition.details?.items
@@ -93,12 +93,12 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
         .filter(c => c !== undefined)
         .reduce((partial, current) => partial + current, 0) ?? 0;
 
-    if (entry != -1) {
-      grouped[entry].conditions.push(condition);
-      grouped[entry].blockingIssueCount += blockingIssues;
-      grouped[entry].deferredIssueCount += deferredIssues;
+    if (group) {
+      group.conditions.push(condition);
+      group.blockingIssueCount += blockingIssues;
+      group.deferredIssueCount += deferredIssues;
     } else {
-      grouped.push({
+      groupedMap.set(condition.metricGroup, {
         metricGroup: condition.metricGroup,
         passed: condition.passed,
         passedWithWarning: condition.passedWithWarning,
@@ -109,22 +109,26 @@ function groupConditions(projectResult: ProjectResult): GroupedConditions[] {
     }
   }
 
+  const grouped = Array.from(groupedMap.values());
   // sort conditions
   for (const group of grouped) {
-    group.conditions.sort((a, b) => sortConditions(a) - sortConditions(b));
+    group.conditions.sort((a, b) => sortConditions(a, b));
   }
-
   // sort groups
-  return grouped.sort((a, b) => sortConditions(a) - sortConditions(b));
+  return grouped.sort((a, b) => sortConditions(a, b));
 }
 
 /**
  * Sort condition(group)s: failed, passed with warnings, passed
  */
-function sortConditions(item: AbstractCondition): 0 | 1 | 2 {
-  if (!item.passed) return 0;
-  if (item.passedWithWarning) return 1;
-  return 2;
+function sortConditions(a: AbstractCondition, b: AbstractCondition): number {
+  const rank = (item: AbstractCondition) => {
+    if (!item.passed) return 0;
+    if (item.passedWithWarning) return 1;
+    return 2;
+  };
+
+  return rank(a) - rank(b);
 }
 
 /**
