@@ -1,4 +1,4 @@
-import { ReviewComment } from './interfaces';
+import { AnnotationLevel, GithubAnnotation, ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
 import { ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
@@ -38,31 +38,49 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function postAnnotations(projectResults: ProjectResult[]): void {
+export async function postAnnotations(projectResults: ProjectResult[]): Promise<void> {
   logger.header('Posting annotations.');
 
-  projectResults.forEach(projectResult => {
-    projectResult.annotations.forEach(annotation => {
-      if (annotation.postable) {
-        const title = annotation.msg;
-        const body = createReviewCommentBody(annotation);
-
-        if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
-          logger.warning(body, {
-            file: annotation.path,
-            startLine: annotation.line,
-            title: title
-          });
-        } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
-          logger.notice(body, {
-            file: annotation.path,
-            startLine: annotation.line,
-            title: title
-          });
-        }
+  const annotations: GithubAnnotation[] = projectResults
+    .flatMap(projectResult => projectResult.annotations)
+    .filter(annotation => annotation.postable)
+    .map(annotation => {
+      const title = annotation.msg;
+      const body = createReviewCommentBody(annotation);
+      let level: AnnotationLevel = 'warning';
+      if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
+        level = 'warning';
+      } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
+        level = 'notice';
       }
+      return {
+        title: title,
+        message: body,
+        annotation_level: level,
+        path: annotation.path,
+        start_line: annotation.line,
+        end_line: annotation.line
+      };
     });
-  });
+
+  for (let i = 0; i < annotations.length; i += 50) {
+    const params = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      check_run_id: githubConfig.runId,
+      output: {
+        summary: 'posting annotations...',
+        annotations: annotations.slice(i, i + 50)
+      }
+    };
+
+    try {
+      await octokit.rest.checks.update(params);
+    } catch (error) {
+      const message = handleOctokitError(error);
+      logger.notice(`Could not post (some) annotations: ${message}`);
+    }
+  }
 
   logger.info('Posted all postable annotations (none if there are no violations).');
 }
