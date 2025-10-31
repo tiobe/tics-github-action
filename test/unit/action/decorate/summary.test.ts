@@ -1,11 +1,12 @@
 import { summary } from '@actions/core';
-import { ExtendedAnnotation } from '../../../../src/helper/interfaces';
+import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 import {
   createErrorSummaryBody,
   createFilesSummary,
   createNothingAnalyzedSummaryBody,
   createSummaryBody,
-  createUnpostableAnnotationsDetails
+  createUnpostableAnnotationsDetails,
+  groupConditions
 } from '../../../../src/action/decorate/summary';
 import '../../../.setup/extend_jest';
 import {
@@ -13,80 +14,189 @@ import {
   analysisResultsNotSoaked,
   analysisResultsPartlySoakedPassed,
   analysisResultsNoSoakedPassed,
-  analysisResultsPartlySoakedFailed
+  analysisResultsPartlySoakedFailed,
+  analysisResultsSoakedMetricGroup,
+  analysisResultsNotSoakedMetricGroup,
+  metricGroupProjectResult,
+  metricGroupProjectResultWithMultipleGates
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
+import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
     ticsConfigMock.displayUrl = 'http://viewer.url/';
   });
 
-  it('should contain blocking after if there are soaked violations', async () => {
-    const string = await createSummaryBody(analysisResultsSoaked);
+  describe('No metric grouping', () => {
+    beforeEach(() => {
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+        if (feature === ViewerFeature.NEW_ANNOTATIONS) {
+          return false;
+        }
+        return true;
+      });
+    });
 
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>+39</td><td>+3</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+30</td><td>0</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+24</td><td>0</td></tr></table>');
-    expect(string).toContain('<tr><th>Function</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>+25</td><td>0</td></tr>');
+    it('should contain blocking after if there are soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsSoaked);
 
-    summary.clear();
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContainTimes('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>', 2);
+      expect(string).toContain('>+39</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td>');
+      expect(string).toContain('>0</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td>');
+      expect(string).toContain('>0</a></td></tr></table>');
+      expect(string).toContain('<tr><th rowspan="2">Function</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContain('>+25</a></td>');
+      expect(string).toContain('>0</a></td></tr>');
+
+      summary.clear();
+    });
+
+    it('should not contain blocking after if there are no soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsNotSoaked);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 0 Passed</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('>+39</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should contain blocking after if there are partly violations', async () => {
+      const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
+
+      expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
+      expect(string).toContain('<h3>Conditions: 0 Failed, 1 Passed</h3>');
+      expect(string).toContain(':warning: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>0</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+1</a></td>');
+      expect(string).toContain('>-</td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should contain blocking after for one of the two conditions', async () => {
+      const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Conditions: 1 Failed, 1 Passed</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('>+1</a></td></tr></table>');
+      expect(string).toContain(':warning: No new Coding Standard Violations');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="2">Issues</th></tr>');
+      expect(string).toContain('<tr><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>0</a></td>');
+      expect(string).toContain('>+3</a></td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('Should pass with no conditions that passed with warnings', async () => {
+      const string = await createSummaryBody(analysisResultsNoSoakedPassed);
+
+      expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
+      expect(string).toContain('<h3>Conditions: 0 Failed, 2 Passed</h3>');
+
+      summary.clear();
+    });
   });
 
-  it('should not contain blocking after if there are no soaked violations', async () => {
-    const string = await createSummaryBody(analysisResultsNotSoaked);
+  describe('With metric grouping', () => {
+    beforeEach(() => {
+      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+        if (feature === ViewerFeature.NEW_ANNOTATIONS) {
+          return true;
+        }
+        return false;
+      });
+    });
 
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
-    expect(string).toContain('</td><td>+39</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+30</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+24</td></tr></table>');
+    it('should contain blocking after if there are soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsSoakedMetricGroup);
 
-    summary.clear();
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Coding Standard: :x: 117 Blocking Issues</h3>');
+      expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking-after Issues</h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="3">Issues</th></tr>', 2);
+      expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContainTimes('>40</a></td>', 5);
+      expect(string).toContain('>+39</a></td>');
+      expect(string).toContain('>+3</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td>');
+      expect(string).toContain('>0</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td>');
+      expect(string).toContain('>0</a></td></tr></table>');
+      expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
+      expect(string).toContain('>+25</a></td>');
+      expect(string).toContain('>0</a></td></tr>');
+
+      console.log(string);
+      summary.clear();
+    });
+
+    it('should not contain blocking after if there are no soaked violations', async () => {
+      const string = await createSummaryBody(analysisResultsNotSoakedMetricGroup);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Coding Standards: :x: 93 Blocking Issues</h3>');
+      expect(string).toContain('<h3>Compiler Warnings: :heavy_check_mark: Passed </h3>');
+      expect(string).toContain(':x: No new Coding Standard Violations');
+      expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>', 2);
+      expect(string).toContain('>+39</a></td></tr><tr><td>');
+      expect(string).toContain('>+30</a></td></tr><tr><td>');
+      expect(string).toContain('>+24</a></td></tr></table>');
+
+      summary.clear();
+    });
+  });
+});
+
+describe('groupConditions', () => {
+  it('should return failing metric before passing metric', () => {
+    const conditions = groupConditions(analysisResultsNotSoakedMetricGroup.projectResults[0]);
+
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Coding Standards', passed: false });
+    expect(conditions.at(1)).toMatchObject({ metricGroup: 'Compiler Warnings', passed: true });
   });
 
-  it('Should contain blocking after if there are partly violations', async () => {
-    const string = await createSummaryBody(analysisResultsPartlySoakedPassed);
+  it('should return sorted conditions failing -> passing (single gate)', () => {
+    const conditions = groupConditions(metricGroupProjectResult);
 
-    expect(string).toContain('<h3>:warning: Passed with warnings </h3>');
-    expect(string).toContain('<h3>1 Condition(s) passed with warning</h3>');
-    expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>0</td><td>+3</td></tr><tr><td>');
-    expect(string).toContain('</td><td>+1</td><td>0</td></tr></table>');
-
-    summary.clear();
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Coding Standards', passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(0)?.conditions.at(2)).toMatchObject({ passed: true, passedWithWarning: false });
   });
 
-  it('Should contain blocking after for one of the two conditions', async () => {
-    const string = await createSummaryBody(analysisResultsPartlySoakedFailed);
+  it('should return sorted conditions failing -> passing (multiple gate)', () => {
+    const conditions = groupConditions(metricGroupProjectResultWithMultipleGates);
 
-    expect(string).toContain('<h3>:x: Failed </h3>');
-    expect(string).toContain('<h3>1 Condition(s) failed, 1 Condition(s) passed with warning</h3>');
-    expect(string).toContain(':x: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th></tr>');
-    expect(string).toContain('</td><td>+1</td></tr></table>');
-    expect(string).toContain(':warning: No new Coding Standard Violations');
-    expect(string).toContain('<tr><th>File</th><th>Blocking now</th><th>Blocking after 2018-03-23</th></tr>');
-    expect(string).toContain('</td><td>0</td><td>+3</td></tr></table>');
-
-    summary.clear();
-  });
-
-  it('Should pass with no conditions that passed with warnings', async () => {
-    const string = await createSummaryBody(analysisResultsNoSoakedPassed);
-
-    expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
-    expect(string).toContain('<h3>All conditions passed</h3>');
-
-    summary.clear();
+    expect(conditions.at(0)).toMatchObject({ metricGroup: 'Fanout', passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(0)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(1)).toMatchObject({ metricGroup: 'Compiler Warnings', passed: false, passedWithWarning: false });
+    expect(conditions.at(1)?.conditions.at(0)).toMatchObject({ passed: false, passedWithWarning: false });
+    expect(conditions.at(1)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: false });
+    expect(conditions.at(2)).toMatchObject({ metricGroup: 'Coding Standards', passed: true, passedWithWarning: true });
+    expect(conditions.at(2)?.conditions.at(0)).toMatchObject({ passed: true, passedWithWarning: true });
+    expect(conditions.at(2)?.conditions.at(1)).toMatchObject({ passed: true, passedWithWarning: false });
   });
 });
 
@@ -195,7 +305,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -222,7 +333,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/hello.js',
@@ -237,7 +349,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -265,7 +378,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/hello.js',
@@ -280,7 +394,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 
@@ -308,7 +423,8 @@ describe('createUnpostableAnnotationsDetails', () => {
         supp: false,
         count: 0,
         instanceName: 'test',
-        gateId: 0
+        gateId: 0,
+        postable: false
       },
       {
         fullPath: '/home/src/test.js',
@@ -325,7 +441,8 @@ describe('createUnpostableAnnotationsDetails', () => {
           state: 'after',
           after: 1723795324000
         },
-        gateId: 0
+        gateId: 0,
+        postable: false
       }
     ];
 

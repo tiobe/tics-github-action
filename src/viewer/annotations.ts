@@ -1,70 +1,111 @@
 import { ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
-import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
 import { httpClient } from './http-client';
+import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces';
+import { ViewerFeature, viewerVersion } from './version';
 
 /**
  * Gets the annotations from the TICS viewer.
- * @param apiLinks annotationsApiLinks url.
- * @returns TICS annotations.
+ * @param qualityGate qualityGate containing annotation links
+ * @param changedFiles the changed files used to group the annotations
+ * @param identifier identifier (project + date or cdtoken) of the run
+ * @returns TICS annotations
  */
-export async function getAnnotations(apiLinks: AnnotationApiLink[], changedFiles: ChangedFile[]): Promise<ExtendedAnnotation[]> {
-  const annotations = await fetchAnnotations(apiLinks);
-  return groupAndExtendAnnotations(annotations, changedFiles);
-}
-
-export async function fetchAnnotations(apiLinks: AnnotationApiLink[]): Promise<FetchedAnnotation[]> {
-  logger.header('Retrieving annotations.');
-  const annotations: FetchedAnnotation[] = [];
-
-  if (apiLinks.length === 0) {
-    logger.info('No annotations to retrieve. Skipping this step.');
+export async function getAnnotations(
+  qualityGate: QualityGate,
+  changedFiles: ChangedFile[],
+  identifier: TicsRunIdentifier
+): Promise<ExtendedAnnotation[]> {
+  try {
+    const annotations = await fetchAllAnnotations(qualityGate, identifier);
+    return groupAndExtendAnnotations(annotations, changedFiles);
+  } catch (error) {
+    logger.warning(error instanceof Error ? error.message : 'Something went wrong fetching the annotations: reason unknown');
     return [];
   }
+}
 
-  for (const [index, link] of apiLinks.entries()) {
-    const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
+export async function fetchAllAnnotations(qualityGate: QualityGate, identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
+  logger.header('Retrieving annotations.');
 
-    const fields = annotationsUrl.searchParams.get('fields');
-    const requiredFields = 'default,ruleHelp,synopsis,ruleset';
-    if (fields !== null) {
-      annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
-    } else {
-      annotationsUrl.searchParams.append('fields', requiredFields);
-    }
-
-    logger.debug(`From: ${annotationsUrl.href}`);
-
-    try {
-      const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
-
-      for (const annotation of response.data.data) {
-        const fetched: FetchedAnnotation = {
-          ...annotation,
-          gateId: index,
-          line: annotation.line ?? 1,
-          count: annotation.count ?? 1,
-          instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
-        };
-
-        // In case complexity is given, the annotation does not have a message (should be fixed in newer Viewers #34866).
-        // Present in Viewers <= 2024.2.0
-        if (annotation.complexity && !annotation.msg) {
-          fetched.msg = `Function ${annotation.functionName ?? ''} has a complexity of ${annotation.complexity.toString()}`;
-        }
-
-        annotations.push(fetched);
-      }
-    } catch (error: unknown) {
-      const message = getRetryErrorMessage(error);
-      throw Error(`An error occured when trying to retrieve annotations: ${message}`);
-    }
+  let annotations: FetchedAnnotation[];
+  if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+    annotations = await fetchAnnotationsByRun(identifier);
+  } else {
+    annotations = await fetchAnnotationsWithApiLinks(qualityGate.annotationsApiV1Links ?? []);
   }
 
   logger.info('Retrieved all annotations.');
   return annotations;
+}
+
+async function fetchAnnotationsWithApiLinks(apiLinks: AnnotationApiLink[]): Promise<FetchedAnnotation[]> {
+  if (apiLinks.length === 0) {
+    logger.info('No annotations to retrieve.');
+    return [];
+  }
+
+  const annotations: FetchedAnnotation[] = [];
+  for (const [index, link] of apiLinks.entries()) {
+    const annotationsUrl = new URL(`${ticsConfig.baseUrl}/${link.url}`);
+    annotations.push(...(await fetchAnnotations(annotationsUrl, index)));
+  }
+  return annotations;
+}
+
+async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
+  const annotationsUrl = new URL(`${ticsConfig.baseUrl}/api/public/v1/Annotations?metric=QualityGate()`);
+
+  let filters = `Project(${identifier.project}),AnnotationSeverity(Set(blocking,after))`;
+  if (identifier.cdtoken) {
+    filters += `,ClientData(${identifier.cdtoken})`;
+  } else if (identifier.date) {
+    filters += `,Date(${identifier.date.toString()})`;
+  }
+  filters += ',Window(-1)';
+  annotationsUrl.searchParams.set('filters', filters);
+
+  return fetchAnnotations(annotationsUrl);
+}
+
+async function fetchAnnotations(annotationsUrl: URL, gateId?: number): Promise<FetchedAnnotation[]> {
+  const fields = annotationsUrl.searchParams.get('fields');
+  const requiredFields = 'default,ruleHelp,synopsis,ruleset,blocking';
+  if (fields !== null) {
+    annotationsUrl.searchParams.set('fields', fields + ',' + requiredFields);
+  } else {
+    annotationsUrl.searchParams.append('fields', requiredFields);
+  }
+
+  logger.debug(`From: ${annotationsUrl.href}`);
+
+  try {
+    const response = await httpClient.get<AnnotationResponse>(annotationsUrl.href);
+
+    return response.data.data.map(annotation => {
+      const fetched: FetchedAnnotation = {
+        ...annotation,
+        gateId: gateId,
+        line: annotation.line ?? 1,
+        count: annotation.count ?? 1,
+        path: annotation.path ?? annotation.fullPath.split('/').slice(4).join('/'),
+        instanceName: response.data.annotationTypes ? response.data.annotationTypes[annotation.type].instanceName : annotation.type
+      };
+
+      // In case complexity is given, the annotation does not have a message (should be fixed in newer Viewers #34866).
+      // Present in Viewers <= 2024.2.0
+      if (annotation.complexity && !annotation.msg) {
+        fetched.msg = `Function ${annotation.functionName ?? ''} has a complexity of ${annotation.complexity.toString()}`;
+      }
+
+      return fetched;
+    });
+  } catch (error: unknown) {
+    const message = getRetryErrorMessage(error);
+    throw Error(`An error occured when trying to retrieve annotations: ${message}`);
+  }
 }
 
 /**
@@ -75,20 +116,19 @@ export async function fetchAnnotations(apiLinks: AnnotationApiLink[]): Promise<F
  */
 export function groupAndExtendAnnotations(annotations: FetchedAnnotation[], changedFiles: ChangedFile[]): ExtendedAnnotation[] {
   const sortedAnnotations = sortAnnotations(annotations);
-  const groupedAnnotations = groupAnnotations(sortedAnnotations, changedFiles);
+  const groupedAnnotations = groupAnnotations(sortedAnnotations);
 
-  return groupedAnnotations
-    .filter(a => a.blocking?.state !== 'no')
-    .map(a => {
-      const annotation: ExtendedAnnotation = {
-        ...a,
-        displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
-        postable: changedFiles.find(c => a.fullPath.includes(c.filename)) !== undefined
-      };
+  const changedSet = new Set<string>(changedFiles.map(c => c.filename)); // optimization
+  return groupedAnnotations.map(a => {
+    const annotation: ExtendedAnnotation = {
+      ...a,
+      displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
+      postable: changedSet.has(a.path)
+    };
 
-      logger.debug(`Annotation: ${JSON.stringify(annotation)}`);
-      return annotation;
-    });
+    logger.debug(`Annotation: ${JSON.stringify(annotation)}`);
+    return annotation;
+  });
 }
 
 /**
@@ -109,13 +149,11 @@ function sortAnnotations(annotations: FetchedAnnotation[]): FetchedAnnotation[] 
  * @param changedFiles List of files changed in the pull request.
  * @returns grouped annotations.
  */
-function groupAnnotations(annotations: FetchedAnnotation[], changedFiles: ChangedFile[]): FetchedAnnotation[] {
+function groupAnnotations(annotations: FetchedAnnotation[]): FetchedAnnotation[] {
   const groupedAnnotations: FetchedAnnotation[] = [];
   annotations.forEach(annotation => {
-    const file = changedFiles.find(c => annotation.fullPath.includes(c.filename));
     const index = findAnnotationInList(groupedAnnotations, annotation);
     if (index === -1) {
-      annotation.path = file ? file.filename : annotation.fullPath.split('/').slice(4).join('/');
       groupedAnnotations.push(annotation);
     } else if (groupedAnnotations[index].gateId === annotation.gateId) {
       groupedAnnotations[index].count += annotation.count;

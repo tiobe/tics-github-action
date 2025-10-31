@@ -1,9 +1,9 @@
 import { ticsCli, ticsConfig } from '../configuration/config';
-import { AnalyzedFiles, AnalyzedFile } from '../helper/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
+import { TicsRunIdentifier, AnalyzedFiles, AnalyzedFile } from './interfaces';
 
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.
@@ -32,26 +32,24 @@ export async function getAnalyzedFiles(url: string): Promise<string[]> {
 
 /**
  * Builds the analyzed files api call.
- * @param identifier The identifier (either date or cdt) to get the qualitygate for.
- * @param date (only on qserver) the date of the last QServer run.
- * @param cdtoken (only on client) the cdtoken of the last Client run.
+ * @param identifier The identifier (project + either date or cdt) to get the analyzed files url for.
  * @returns The url to get the quality gate analysis.
  */
-export function getAnalyzedFilesUrl(project: string, { date, cdtoken }: { date?: number; cdtoken?: string }): string {
+export function getAnalyzedFilesUrl(identifier: TicsRunIdentifier): string {
   const getAnalyzedFilesUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/Measure?metrics=filePath'));
 
-  const filters = [`Project(${project})`];
+  const filters = [`Project(${identifier.project})`];
 
   if (ticsCli.branchname) {
     filters.push(`Branch(${ticsCli.branchname})`);
   }
 
-  if (date) {
-    filters.push(`Date(${date.toString()})`);
+  if (identifier.date) {
+    filters.push(`Date(${identifier.date.toString()})`);
   }
 
-  if (cdtoken) {
-    filters.push(`ClientData(${cdtoken})`);
+  if (identifier.cdtoken) {
+    filters.push(`ClientData(${identifier.cdtoken})`);
   }
 
   filters.push(`CodeType(Set(production,test,external,generated)),Window(-1),File()`);

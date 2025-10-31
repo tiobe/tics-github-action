@@ -1,8 +1,9 @@
 import { ReviewComment } from './interfaces';
 import { logger } from '../helper/logger';
-import { ExtendedAnnotation, ProjectResult } from '../helper/interfaces';
+import { ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, actionConfig } from '../configuration/config';
+import { ExtendedAnnotation } from '../viewer/interfaces';
 import { octokit } from './octokit';
 import { EOL } from 'os';
 import { format } from 'date-fns';

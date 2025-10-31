@@ -1,9 +1,11 @@
 import { ticsCli, ticsConfig } from '../configuration/config';
-import { QualityGate } from '../helper/interfaces';
+import { QualityGate } from './interfaces';
 import { logger } from '../helper/logger';
 import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
+import { TicsRunIdentifier } from './interfaces';
+import { ViewerFeature, viewerVersion } from './version';
 
 /**
  * Retrieves the TICS quality gate from the TICS viewer.
@@ -28,29 +30,31 @@ export async function getQualityGate(url: string): Promise<QualityGate> {
 
 /**
  * Builds the quality gate api call.
- * @param identifier The identifier (either date or cdt) to get the qualitygate for.
- * @param date (only on qserver) the date of the last QServer run.
- * @param cdtoken (only on client) the cdtoken of the last Client run.
+ * @param identifier The identifier (project + either date or cdt) to get the qualitygate url for.
  * @returns The url to get the quality gate analysis.
  */
-export function getQualityGateUrl(project: string, { date, cdtoken }: { date?: number; cdtoken?: string }): string {
+export async function getQualityGateUrl(identifier: TicsRunIdentifier): Promise<string> {
   const qualityGateUrl = new URL(joinUrl(ticsConfig.baseUrl, '/api/public/v1/QualityGateStatus'));
 
-  qualityGateUrl.searchParams.append('project', project);
+  qualityGateUrl.searchParams.append('project', identifier.project);
 
   if (ticsCli.branchname) {
     qualityGateUrl.searchParams.append('branch', ticsCli.branchname);
   }
 
-  qualityGateUrl.searchParams.append('fields', 'details,annotationsApiV1Links');
-  qualityGateUrl.searchParams.append('includeFields', 'blockingAfter');
-
-  if (date) {
-    qualityGateUrl.searchParams.append('date', date.toString());
+  qualityGateUrl.searchParams.append('fields', 'details,blockingAfter');
+  if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+    qualityGateUrl.searchParams.append('includeFields', 'absValue');
+  } else {
+    qualityGateUrl.searchParams.append('includeFields', 'annotationsApiV1Links');
   }
 
-  if (cdtoken) {
-    qualityGateUrl.searchParams.append('cdt', cdtoken);
+  if (identifier.date) {
+    qualityGateUrl.searchParams.append('date', identifier.date.toString());
+  }
+
+  if (identifier.cdtoken) {
+    qualityGateUrl.searchParams.append('cdt', identifier.cdtoken);
   }
 
   return qualityGateUrl.href;

@@ -27,7 +27,7 @@ describe('getAnalysisResult', () => {
 
   beforeEach(() => {
     jest.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
-    jest.spyOn(qualityGate, 'getQualityGateUrl').mockReturnValue('QualityGate?filter=Project(project)');
+    jest.spyOn(qualityGate, 'getQualityGateUrl').mockResolvedValue('QualityGate?filter=Project(project)');
 
     spyGetChangedFiles = jest.spyOn(changedFiles, 'getChangedFiles');
     spyAnalyzedFiles = jest.spyOn(analyzedFiles, 'getAnalyzedFiles');
@@ -40,6 +40,7 @@ describe('getAnalysisResult', () => {
     spyGetChangedFiles.mockResolvedValue({ files: [], path: '' });
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(passedQualityGate);
+    spyGetAnnotations.mockResolvedValue([]);
 
     const result = await getAnalysisResult(12345000);
 

@@ -16,7 +16,7 @@ describe('getItemFromUrl', () => {
   });
 });
 
-describe('getProjectName', () => {
+describe('getProjectFromUrl', () => {
   it('should return project name from url if project auto', async () => {
     ticsCliMock.project = 'auto';
 
