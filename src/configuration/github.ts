@@ -24,8 +24,8 @@ export class GithubConfig {
     this.apiUrl = context.apiUrl;
     this.owner = context.repo.owner;
     this.reponame = context.repo.repo;
-    this.commitSha = context.sha;
     this.event = this.getGithubEvent();
+    this.commitSha = this.getCommitSha();
     this.job = context.job.replace(/[\s|_]+/g, '-');
     this.action = context.action.replace('__tiobe_', '');
     this.workflow = context.workflow.replace(/[\s|_]+/g, '-');
@@ -77,6 +77,20 @@ export class GithubConfig {
         return GithubEvent.WORKFLOW_RUN;
       default:
         return GithubEvent.PUSH;
+    }
+  }
+
+  private getCommitSha() {
+    // Should run after getGithubEvent
+    if (this.event.isPullRequest) {
+      const pr = context.payload.pull_request as {
+        head: { sha: string };
+        base: { ref: string };
+        number: number;
+      };
+      return pr.head.sha;
+    } else {
+      return context.sha;
     }
   }
 
