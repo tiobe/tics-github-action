@@ -76,6 +76,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
 
     try {
       if (i === 0) {
+        logger.debug('Creating check run with: ' + JSON.stringify(params));
         await octokit.rest.checks.create({
           ...params,
           head_sha: githubConfig.commitSha,
@@ -85,8 +86,10 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
         });
       } else {
         if (i + 50 >= annotations.length) {
+          logger.debug('Updating check run with: ' + JSON.stringify(params));
           await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId, conclusion: 'success' });
         } else {
+          logger.debug('Updating check run with: ' + JSON.stringify(params));
           await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
         }
       }
