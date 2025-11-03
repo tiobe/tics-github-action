@@ -131,13 +131,18 @@ function shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
 }
 
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {
-  let body = '';
-  if (annotation.blocking?.state === 'yes') {
-    body += `Blocking`;
-  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
-  } else {
-    body += `Non-Blocking`;
+  let body: string;
+  switch (annotation.blocking?.state) {
+    case 'no':
+      body = 'Non-Blocking';
+      break;
+    case 'after':
+      body = `Blocking after ${annotation.blocking.after ? `: ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+      break;
+    case 'yes':
+    default:
+      body = 'Blocking';
+      break;
   }
 
   const secondLine: string[] = [];
