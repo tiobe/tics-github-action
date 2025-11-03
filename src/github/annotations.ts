@@ -80,11 +80,12 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
           ...params,
           head_sha: githubConfig.commitSha,
           name: 'TICS annotations',
-          status: i + 50 >= annotations.length ? 'completed' : 'in_progress'
+          conclusion: i + 50 >= annotations.length ? 'success' : undefined,
+          status: i + 50 >= annotations.length ? undefined : 'in_progress'
         });
       } else {
         if (i + 50 >= annotations.length) {
-          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId, status: 'completed' });
+          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId, conclusion: 'success' });
         } else {
           await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
         }
