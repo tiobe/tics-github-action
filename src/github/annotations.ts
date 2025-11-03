@@ -67,15 +67,19 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
-      check_run_id: githubConfig.runId,
       output: {
+        title: 'TICS annotations',
         summary: 'posting annotations...',
         annotations: annotations.slice(i, i + 50)
       }
     };
 
     try {
-      await octokit.rest.checks.update(params);
+      if (i === 0) {
+        await octokit.rest.checks.create({ ...params, head_sha: githubConfig.commitSha, name: 'TICS annotations' });
+      } else {
+        await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
+      }
     } catch (error) {
       const message = handleOctokitError(error);
       logger.notice(`Could not post (some) annotations: ${message}`);
