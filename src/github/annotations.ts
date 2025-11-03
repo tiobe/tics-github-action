@@ -67,6 +67,11 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
       };
     });
 
+  if (annotations.length === 0) {
+    logger.info('No annotations to post.');
+    return;
+  }
+
   let checkRunId = 0;
   for (let i = 0; i < annotations.length; i += 50) {
     const params = {
@@ -105,7 +110,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
     }
   }
 
-  logger.info('Posted all postable annotations (none if there are no violations).');
+  logger.info('Posted all postable annotations');
 }
 
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {

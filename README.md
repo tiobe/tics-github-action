@@ -164,11 +164,12 @@ The following options allow to instrument TICSQServer more specifically:
 
 Below are some special parameters that can be used to control how the GitHub Action posts its results:
 
-| Input                 | Description                                                                                                                                                                                                                                                                                                 | Default |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `postAnnotations`     | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                        | `true`  |
-| `postToConversation`  | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                                              | `true`  |
-| `pullRequestApproval` | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS GitHub Action 2.0.0 and 2.5.0). | `false` |
+| Input                           | Description                                                                                                                                                                                                                                                                                                 | Default |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `postAnnotations`               | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                        | `true`  |
+| `includeNonBlockingAnnotations` | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`.                                                                                                                                          | `false` |
+| `postToConversation`            | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                                              | `true`  |
+| `pullRequestApproval`           | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS GitHub Action 2.0.0 and 2.5.0). | `false` |
 
 ### Infrastructural and Security related parameters
 
@@ -210,14 +211,14 @@ jobs:
 It is possible to retrieve all Quality Gate conditions and reported annotations in JSON format. To do this add an id to the step:
 
 ```yaml
-      - name: TICS GitHub Action
-        id: tics-github-action
-        uses: tiobe/tics-github-action@v3
-        with:
-          mode: diagnostic
-          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-          installTics: true
+- name: TICS GitHub Action
+  id: tics-github-action
+  uses: tiobe/tics-github-action@v3
+  with:
+    mode: diagnostic
+    viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+    ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+    installTics: true
 ```
 
 This can then be used in following steps with `{{ steps.tics-github-action.outputs.annotations }}`.

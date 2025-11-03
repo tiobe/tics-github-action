@@ -67,6 +67,10 @@ inputs:
     description: Show the TICS violations in the changed files window. Options are `true` or `false` (default is `true`).
     required: false
     default: true
+  includeNonBlockingAnnotations:
+    description: Include non-blocking TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false` (default is `false`).
+    required: false
+    default: false
   postToConversation:
     description: Post the summary to the conversation page of the pull request. Options are `true` (default) or `false`.
     required: false
