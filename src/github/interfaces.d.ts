@@ -1,4 +1,5 @@
 import { PullRequestChangedFile } from '@octokit/graphql-schema';
+import { Endpoints } from '@octokit/types';
 import { ExtendedAnnotation } from '../viewer/interfaces';
 
 type Side = 'LEFT' | 'RIGHT';
@@ -182,3 +183,6 @@ export interface GithubAnnotation {
   title?: string;
   raw_details?: string;
 }
+
+export type CreateCheckRunParams = Endpoints['POST /repos/{owner}/{repo}/check-runs']['parameters'];
+export type UpdateCheckRunParams = Endpoints['PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}']['parameters'];
