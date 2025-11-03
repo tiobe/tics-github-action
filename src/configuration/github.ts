@@ -86,9 +86,9 @@ export class GithubConfig {
   private getHeadSha(): string | undefined {
     // Should run after getGithubEvent
     if (this.event.isPullRequest) {
-      const pr = context.payload.pull_request as { head?: { sha?: string } };
-      logger.debug(`Found pull_request.head.sha: ${pr.head?.sha ?? 'undefined'}`);
-      return pr.head?.sha;
+      const pr = context.payload.pull_request as { head?: { sha?: string } } | undefined;
+      logger.debug(`Found pull_request.head.sha: ${pr?.head?.sha ?? 'undefined'}`);
+      return pr?.head?.sha;
     } else {
       return context.sha;
     }

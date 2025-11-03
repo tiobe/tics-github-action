@@ -6,7 +6,8 @@ export const githubConfigMock: {
   apiUrl: string;
   owner: string;
   reponame: string;
-  commitSha: string;
+  sha: string;
+  headSha: string;
   event: GithubEvent;
   job: string;
   action: string;
@@ -22,7 +23,8 @@ export const githubConfigMock: {
   apiUrl: 'github.com/api/v1/',
   owner: 'tester',
   reponame: 'test',
-  commitSha: 'sha-128',
+  sha: 'sha-128',
+  headSha: 'head-sha-256',
   event: GithubEvent.PUSH,
   job: 'TICS',
   action: 'tics-github-action',

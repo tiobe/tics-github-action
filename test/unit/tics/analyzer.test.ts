@@ -42,7 +42,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github -help"`, [], {
+    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github -help"`, [], {
       listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
       silent: true
     });
@@ -60,7 +60,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(spy).toHaveBeenCalledWith(
-      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE"`,
+      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE"`,
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -103,7 +103,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
+      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -371,8 +371,8 @@ describe('test callback functions', () => {
 
   it('should return single error if already exists in errorlist', async () => {
     await jest.isolateModulesAsync(async () => {
-      const analyzer = require("../../../src/tics/analyzer");
-      const exec = require("@actions/exec");
+      const analyzer = require('../../../src/tics/analyzer');
+      const exec = require('@actions/exec');
       (exec.exec as any).mockResolvedValue(0);
       ticsConfigMock.installTics = false;
 
@@ -387,8 +387,8 @@ describe('test callback functions', () => {
 
   it('should return two errors in errorlist', async () => {
     await jest.isolateModulesAsync(async () => {
-      const analyzer = require("../../../src/tics/analyzer");
-      const exec = require("@actions/exec");
+      const analyzer = require('../../../src/tics/analyzer');
+      const exec = require('@actions/exec');
       (exec.exec as any).mockResolvedValue(0);
 
       const response = await analyzer.runTicsAnalyzer('/path/to');
@@ -402,16 +402,16 @@ describe('test callback functions', () => {
 
   it('should return warnings in warningList', async () => {
     await jest.isolateModulesAsync(async () => {
-      const analyzer = require("../../../src/tics/analyzer");
-      const exec = require("@actions/exec");
+      const analyzer = require('../../../src/tics/analyzer');
+      const exec = require('@actions/exec');
       (exec.exec as any).mockResolvedValue(0);
-      
+
       const response = await analyzer.runTicsAnalyzer('/path/to');
       (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 5057] Warning');
       (exec.exec as any).mock.calls[0][2].listeners.stdline(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
       (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 666] Warning');
       (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 777] Warning');
-  
+
       expect(response.warningList).toHaveLength(4);
       expect(response.warningList).toEqual([
         '[WARNING 5057] Warning',
@@ -424,8 +424,8 @@ describe('test callback functions', () => {
 
   it('should add ExplorerUrl in response', async () => {
     await jest.isolateModulesAsync(async () => {
-      const analyzer = require("../../../src/tics/analyzer");
-      const exec = require("@actions/exec");
+      const analyzer = require('../../../src/tics/analyzer');
+      const exec = require('@actions/exec');
       (exec.exec as any).mockResolvedValue(0);
       ticsConfigMock.displayUrl = 'http://viewer.com';
 
@@ -439,22 +439,22 @@ describe('test callback functions', () => {
 
   it('should add all ExplorerUrls in response', async () => {
     await jest.isolateModulesAsync(async () => {
-      const analyzer = require("../../../src/tics/analyzer");
-      const exec = require("@actions/exec");
+      const analyzer = require('../../../src/tics/analyzer');
+      const exec = require('@actions/exec');
       (exec.exec as any).mockResolvedValue(0);
 
       ticsConfigMock.displayUrl = 'http://viewer.com';
-  
+
       await analyzer.runTicsAnalyzer('/another/path');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline("http://base.com/Explorer.html#axes=ClientData0");
-      (exec.exec as any).mock.calls[0][2].listeners.stdline("http://base.com/Explorer.html#axes=ClientData1");
-      (exec.exec as any).mock.calls[0][2].listeners.stdline("http://base.com/Explorer.html#axes=ClientData2");
-      
+      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData0');
+      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData1');
+      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData2');
+
       const response = await analyzer.runTicsAnalyzer('/another/path');
       expect(response.explorerUrls).toEqual([
-        "http://viewer.com/Explorer.html#axes=ClientData0",
-        "http://viewer.com/Explorer.html#axes=ClientData1",
-        "http://viewer.com/Explorer.html#axes=ClientData2",
+        'http://viewer.com/Explorer.html#axes=ClientData0',
+        'http://viewer.com/Explorer.html#axes=ClientData1',
+        'http://viewer.com/Explorer.html#axes=ClientData2'
       ]);
     });
   });
