@@ -75,10 +75,14 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
     };
 
     try {
-      if (i === 0) {
-        await octokit.rest.checks.create({ ...params, head_sha: githubConfig.commitSha, name: 'TICS annotations' });
+      if (i === 0 && i + 50 < annotations.length) {
+        await octokit.rest.checks.create({ ...params, head_sha: githubConfig.commitSha, name: 'TICS annotations', status: 'in_progress' });
       } else {
-        await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
+        if (i + 50 >= annotations.length) {
+          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId, status: 'completed' });
+        } else {
+          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
+        }
       }
     } catch (error) {
       const message = handleOctokitError(error);
