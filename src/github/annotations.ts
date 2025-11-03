@@ -34,6 +34,21 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
   return response;
 }
 
+interface CheckRunParams {
+  owner: string;
+  repo: string;
+  head_sha?: string;
+  name?: string;
+  status?: 'in_progress' | 'queued' | 'completed';
+  conclusion?: 'failure' | 'success' | 'action_required' | 'cancelled' | 'neutral' | 'skipped' | 'stale' | 'timed_out';
+  check_run_id?: number;
+  output: {
+    title: string;
+    summary: string;
+    annotations: GithubAnnotation[];
+  };
+}
+
 /**
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
@@ -63,8 +78,9 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
       };
     });
 
+  let checkRunId = 0;
   for (let i = 0; i < annotations.length; i += 50) {
-    const params = {
+    const params: CheckRunParams = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       output: {
@@ -76,21 +92,31 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
 
     try {
       if (i === 0) {
-        logger.debug('Creating check run with: ' + JSON.stringify(params));
-        await octokit.rest.checks.create({
+        logger.debug(
+          'Creating check run with: ' +
+            JSON.stringify({
+              ...params,
+              head_sha: githubConfig.commitSha,
+              name: 'TICS annotations',
+              conclusion: i + 50 >= annotations.length ? 'success' : undefined,
+              status: i + 50 >= annotations.length ? undefined : 'in_progress'
+            })
+        );
+        const response = await octokit.rest.checks.create({
           ...params,
           head_sha: githubConfig.commitSha,
           name: 'TICS annotations',
           conclusion: i + 50 >= annotations.length ? 'success' : undefined,
           status: i + 50 >= annotations.length ? undefined : 'in_progress'
         });
+        checkRunId = response.data.id;
       } else {
         if (i + 50 >= annotations.length) {
-          logger.debug('Updating check run with: ' + JSON.stringify(params));
-          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId, conclusion: 'success' });
+          logger.debug('Updating check run with: ' + JSON.stringify({ ...params, check_run_id: checkRunId, conclusion: 'success' }));
+          await octokit.rest.checks.update({ ...params, check_run_id: checkRunId, conclusion: 'success' });
         } else {
-          logger.debug('Updating check run with: ' + JSON.stringify(params));
-          await octokit.rest.checks.update({ ...params, check_run_id: githubConfig.runId });
+          logger.debug('Updating check run with: ' + JSON.stringify({ ...params, check_run_id: checkRunId }));
+          await octokit.rest.checks.update({ ...params, check_run_id: checkRunId });
         }
       }
     } catch (error) {
