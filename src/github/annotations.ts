@@ -47,16 +47,23 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
 
   const annotations: GithubAnnotation[] = projectResults
     .flatMap(projectResult => projectResult.annotations)
-    .filter(annotation => annotation.postable)
+    .filter(shouldPostAnnotation)
     .map(annotation => {
       const title = annotation.msg;
       const body = createReviewCommentBody(annotation);
-      let level: AnnotationLevel = 'warning';
-      if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
-        level = 'warning';
-      } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
-        level = 'notice';
+
+      let level: AnnotationLevel;
+      switch (annotation.blocking?.state) {
+        case 'no':
+        case 'after':
+          level = 'notice';
+          break;
+        case 'yes':
+        default:
+          level = 'warning';
+          break;
       }
+
       return {
         title: title,
         message: body,
@@ -113,12 +120,24 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
   logger.info('Posted all postable annotations');
 }
 
+function shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
+  return (
+    annotation.postable &&
+    (annotation.blocking?.state === undefined ||
+      annotation.blocking.state === 'yes' ||
+      (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) ||
+      (annotation.blocking.state === 'no' && actionConfig.includeNonBlockingAnnotations))
+  );
+}
+
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {
   let body = '';
   if (annotation.blocking?.state === 'yes') {
     body += `Blocking`;
   } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
     body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
+  } else {
+    body += `Non-Blocking`;
   }
 
   const secondLine: string[] = [];
