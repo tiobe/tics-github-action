@@ -46,9 +46,6 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
             findInStdOutOrErr(filtered);
           }
         }
-      },
-      env: {
-        TICS: ticsConfig.viewerUrl
       }
     });
     completed = true;
