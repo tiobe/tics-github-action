@@ -55,6 +55,10 @@ interface CheckRunParams {
  */
 export async function postAnnotations(projectResults: ProjectResult[]): Promise<void> {
   logger.header('Posting annotations.');
+  if (!githubConfig.commitSha) {
+    logger.warning('Commit of underlying commit not found, cannot post annotations');
+    return;
+  }
 
   const annotations: GithubAnnotation[] = projectResults
     .flatMap(projectResult => projectResult.annotations)
@@ -85,7 +89,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
       repo: githubConfig.reponame,
       output: {
         title: 'TICS annotations',
-        summary: 'posting annotations...',
+        summary: '',
         annotations: annotations.slice(i, i + 50)
       }
     };

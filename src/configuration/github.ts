@@ -7,7 +7,9 @@ export class GithubConfig {
   readonly apiUrl: string;
   readonly owner: string;
   readonly reponame: string;
-  readonly commitSha: string;
+  readonly sha: string;
+  // Sha of the underlying commit that triggered the flow
+  readonly commitSha: string | undefined;
   readonly event: GithubEvent;
   readonly job: string;
   readonly action: string;
@@ -24,6 +26,7 @@ export class GithubConfig {
     this.apiUrl = context.apiUrl;
     this.owner = context.repo.owner;
     this.reponame = context.repo.repo;
+    this.sha = context.sha;
     this.event = this.getGithubEvent();
     this.commitSha = this.getCommitSha();
     this.job = context.job.replace(/[\s|_]+/g, '-');
@@ -80,15 +83,13 @@ export class GithubConfig {
     }
   }
 
-  private getCommitSha() {
+  private getCommitSha(): string | undefined {
     // Should run after getGithubEvent
     if (this.event.isPullRequest) {
       const pr = context.payload.pull_request as {
-        head: { sha: string };
-        base: { ref: string };
-        number: number;
+        head?: { sha?: string };
       };
-      return pr.head.sha;
+      return pr.head?.sha;
     } else {
       return context.sha;
     }
