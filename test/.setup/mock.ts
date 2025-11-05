@@ -62,6 +62,7 @@ export const actionConfigMock = {
   secretsFilter: ['random'],
   excludeMovedFiles: false,
   postAnnotations: false,
+  includeNonBlockingAnnotations: false,
   postToConversation: false,
   pullRequestApproval: false,
   showBlockingAfter: false
@@ -122,6 +123,10 @@ jest.mock('../../src/github/octokit', () => {
         },
         rateLimit: {
           get: jest.fn()
+        },
+        checks: {
+          create: jest.fn(),
+          update: jest.fn()
         }
       },
       graphql: {

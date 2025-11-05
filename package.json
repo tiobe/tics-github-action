@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "package": "npm run build && ncc build --license licenses.txt",
     "test": "jest",
-    "test:coverage": "jest --coverage --collectCoverageFrom='src/**'"
+    "test:coverage": "jest --coverage --collectCoverageFrom=\"src/**\""
   },
   "repository": {
     "type": "git",

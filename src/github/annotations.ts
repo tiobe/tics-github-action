@@ -45,34 +45,10 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
     return;
   }
 
-  const annotations: GithubAnnotation[] = projectResults
+  const annotations = projectResults
     .flatMap(projectResult => projectResult.annotations)
     .filter(shouldPostAnnotation)
-    .map(annotation => {
-      const title = annotation.msg;
-      const body = createReviewCommentBody(annotation);
-
-      let level: AnnotationLevel;
-      switch (annotation.blocking?.state) {
-        case 'no':
-        case 'after':
-          level = 'notice';
-          break;
-        case 'yes':
-        default:
-          level = 'warning';
-          break;
-      }
-
-      return {
-        title: title,
-        message: body,
-        annotation_level: level,
-        path: annotation.path,
-        start_line: annotation.line,
-        end_line: annotation.line
-      };
-    });
+    .map(createGithubAnnotation);
 
   if (annotations.length === 0) {
     logger.info('No annotations to post.');
@@ -130,6 +106,32 @@ function shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
   );
 }
 
+function createGithubAnnotation(annotation: ExtendedAnnotation): GithubAnnotation {
+  const title = annotation.msg;
+  const body = createReviewCommentBody(annotation);
+
+  let level: AnnotationLevel;
+  switch (annotation.blocking?.state) {
+    case 'no':
+    case 'after':
+      level = 'notice';
+      break;
+    case 'yes':
+    default:
+      level = 'warning';
+      break;
+  }
+
+  return {
+    title: title,
+    message: body,
+    annotation_level: level,
+    path: annotation.path,
+    start_line: annotation.line,
+    end_line: annotation.line
+  };
+}
+
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {
   let body: string;
   switch (annotation.blocking?.state) {
@@ -137,7 +139,7 @@ function createReviewCommentBody(annotation: ExtendedAnnotation): string {
       body = 'Non-Blocking';
       break;
     case 'after':
-      body = `Blocking after ${annotation.blocking.after ? `: ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+      body = `Blocking after${annotation.blocking.after ? `: ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
       break;
     case 'yes':
     default:
