@@ -156,7 +156,7 @@ describe('fetchAllAnnotations', () => {
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
-        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CClientData%28test%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
+        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28blocking%29%2CClientData%28test%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
       );
       expect(response).toEqual([
         { type: 'CS', line: 1, count: 1, instanceName: 'Coding Standard Violations', fullPath: 'HIE://project/branch/file.js', path: 'file.js' },

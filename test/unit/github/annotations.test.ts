@@ -264,9 +264,9 @@ describe('postAnnotations', () => {
     expect(updateCheckSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post only two annotations when showBlockingAfter and includeNonBlockingAnnotations are false', async () => {
+  it('should post only two annotations when showBlockingAfter and showNonBlocking are false', async () => {
     actionConfigMock.showBlockingAfter = false;
-    actionConfigMock.includeNonBlockingAnnotations = false;
+    actionConfigMock.showNonBlocking = false;
 
     await postAnnotations(fiveMixedAnalysisResults.projectResults);
 
@@ -305,9 +305,9 @@ describe('postAnnotations', () => {
     expect(updateCheckSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post three annotations when showBlockingAfter is false and includeNonBlockingAnnotations is true', async () => {
+  it('should post three annotations when showBlockingAfter is false and showNonBlocking is true', async () => {
     actionConfigMock.showBlockingAfter = false;
-    actionConfigMock.includeNonBlockingAnnotations = true;
+    actionConfigMock.showNonBlocking = true;
 
     await postAnnotations(fiveMixedAnalysisResults.projectResults);
 

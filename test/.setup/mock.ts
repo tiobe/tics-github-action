@@ -62,10 +62,10 @@ export const actionConfigMock = {
   secretsFilter: ['random'],
   excludeMovedFiles: false,
   postAnnotations: false,
-  includeNonBlockingAnnotations: false,
   postToConversation: false,
   pullRequestApproval: false,
-  showBlockingAfter: false
+  showBlockingAfter: false,
+  showNonBlocking: false
 };
 
 export const ticsCliMock = {

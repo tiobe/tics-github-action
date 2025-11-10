@@ -7,22 +7,22 @@ import { logger } from '../helper/logger';
 export class ActionConfiguration {
   readonly excludeMovedFiles: boolean;
   readonly postAnnotations: boolean;
-  readonly includeNonBlockingAnnotations: boolean;
   readonly postToConversation: boolean;
   readonly pullRequestApproval: boolean;
   readonly retryConfig: RetryConfig;
   readonly secretsFilter: string[];
   readonly showBlockingAfter: boolean;
+  readonly showNonBlocking: boolean;
 
   constructor() {
     this.excludeMovedFiles = getBooleanInput('excludeMovedFiles');
     this.postAnnotations = getBooleanInput('postAnnotations');
-    this.includeNonBlockingAnnotations = getBooleanInput('includeNonBlockingAnnotations');
     this.postToConversation = getBooleanInput('postToConversation');
     this.pullRequestApproval = getBooleanInput('pullRequestApproval');
     this.retryConfig = this.validateAndGetRetryConfig(getInput('retryCodes'));
     this.secretsFilter = this.getSecretsFilter(getInput('secretsFilter'));
     this.showBlockingAfter = getBooleanInput('showBlockingAfter');
+    this.showNonBlocking = getBooleanInput('showNonBlocking');
   }
 
   /**

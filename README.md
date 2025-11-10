@@ -93,6 +93,7 @@ The following options allow to instrument TICS Client more specifically:
 | `codetype`          | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`.                                                                                                                                                                                                        | `PRODUCTION` |
 | `excludeMovedFiles` | Exclude moved files from analysis even if there are modifications in the file.                                                                                                                                                                                                                                                                                     | `false`      |
 | `showBlockingAfter` | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                                                                     | `true`       |
+| `showNonBlocking`   | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`.                                                                                                                                                                                                 | `false`      |
 | `tmpdir`            | Location to store debug information.                                                                                                                                                                                                                                                                                                                               | -            |
 
 ## QServer
@@ -148,15 +149,16 @@ The following inputs are recommended or required for this action:
 
 The following options allow to instrument TICSQServer more specifically:
 
-| Input               | Description                                                                                                                                                       | Default |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `calc`              | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.       | `ALL`   |
-| `recalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.     | -       |
-| `nocalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.   | -       |
-| `norecalc`          | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated. | -       |
-| `branchname`        | Name of the branch in TICS.                                                                                                                                       | -       |
-| `showBlockingAfter` | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                    | `true`  |
-| `tmpdir`            | Location to store debug information.                                                                                                                              | -       |
+| Input               | Description                                                                                                                                                        | Default |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `calc`              | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.        | `ALL`   |
+| `recalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.      | -       |
+| `nocalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.    | -       |
+| `norecalc`          | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.  | -       |
+| `branchname`        | Name of the branch in TICS.                                                                                                                                        | -       |
+| `showBlockingAfter` | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                     | `true`  |
+| `showNonBlocking`   | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`. | `false` |
+| `tmpdir`            | Location to store debug information.                                                                                                                               | -       |
 
 ## Other features
 
@@ -164,12 +166,11 @@ The following options allow to instrument TICSQServer more specifically:
 
 Below are some special parameters that can be used to control how the GitHub Action posts its results:
 
-| Input                           | Description                                                                                                                                                                                                                                                                                                 | Default |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `postAnnotations`               | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                        | `true`  |
-| `includeNonBlockingAnnotations` | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`.                                                                                                                                          | `false` |
-| `postToConversation`            | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                                              | `true`  |
-| `pullRequestApproval`           | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS GitHub Action 2.0.0 and 2.5.0). | `false` |
+| Input                 | Description                                                                                                                                                                                                                                                                                                 | Default |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `postAnnotations`     | Show the TICS violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                        | `true`  |
+| `postToConversation`  | Post the summary to the conversation page of the pull request.                                                                                                                                                                                                                                              | `true`  |
+| `pullRequestApproval` | Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between TICS GitHub Action 2.0.0 and 2.5.0). | `false` |
 
 ### Infrastructural and Security related parameters
 

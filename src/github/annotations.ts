@@ -102,7 +102,7 @@ function shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
     (annotation.blocking?.state === undefined ||
       annotation.blocking.state === 'yes' ||
       (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) ||
-      (annotation.blocking.state === 'no' && actionConfig.includeNonBlockingAnnotations))
+      (annotation.blocking.state === 'no' && actionConfig.showNonBlocking))
   );
 }
 
