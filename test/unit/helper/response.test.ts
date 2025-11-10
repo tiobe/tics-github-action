@@ -50,13 +50,13 @@ describe('getRetryErrorMessage', () => {
   });
 
   it('should return Error on RequestError of @tiobe/http-client with retry.', () => {
-    const message = getRetryErrorMessage(new TicsError('Error message here', 2));
+    const message = getRetryErrorMessage(new TicsError('Error message here', 400, 2));
 
     expect(message).toBe('Error message here (retried 2 times)');
   });
 
   it('should return Error on RequestError of @tiobe/http-client without retry.', () => {
-    const message = getRetryErrorMessage(new TicsError('Error message here', 0));
+    const message = getRetryErrorMessage(new TicsError('Error message here', 400, 0));
 
     expect(message).toBe('Error message here');
   });

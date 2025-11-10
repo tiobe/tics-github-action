@@ -147,7 +147,6 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
-      console.log(string);
       summary.clear();
     });
 
