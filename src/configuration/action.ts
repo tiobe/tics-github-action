@@ -16,7 +16,7 @@ export class ShowAnnotationSeverity {
     readonly blockingStates: string[]
   ) {}
 
-  static parse(input: string) {
+  static parse(input: string): ShowAnnotationSeverity {
     const severity = input.toLowerCase();
     switch (severity) {
       case this.BLOCKING.param:
@@ -37,7 +37,7 @@ export class ShowAnnotationSeverity {
     }
   }
 
-  shouldPostAnnotation(annotation: ExtendedAnnotation) {
+  shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
     return annotation.postable && (annotation.blocking?.state === undefined || this.blockingStates.includes(annotation.blocking.state));
   }
 }
