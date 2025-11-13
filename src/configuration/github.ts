@@ -7,6 +7,7 @@ export class GithubConfig {
   readonly apiUrl: string;
   readonly owner: string;
   readonly reponame: string;
+  // Sha of the (merge) commit
   readonly sha: string;
   // Sha of the (underlying) commit that triggered the flow
   readonly headSha: string | undefined;

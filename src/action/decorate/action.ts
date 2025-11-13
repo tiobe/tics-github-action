@@ -10,10 +10,6 @@ import { Analysis, AnalysisResult } from '../../helper/interfaces';
  * @param analysisResult
  */
 export async function decorateAction(analysisResult: AnalysisResult | undefined, analysis: Analysis): Promise<void> {
-  if (analysisResult && actionConfig.postAnnotations) {
-    await postAnnotations(analysisResult.projectResults);
-  }
-
   let summaryBody;
   if (analysisResult) {
     summaryBody = await createSummaryBody(analysisResult);
@@ -23,5 +19,9 @@ export async function decorateAction(analysisResult: AnalysisResult | undefined,
 
   if (githubConfig.event.isPullRequest) {
     await decoratePullRequest(analysisResult?.passed ?? false, summaryBody);
+  }
+
+  if (analysisResult && actionConfig.postAnnotations) {
+    await postAnnotations(analysisResult.projectResults);
   }
 }

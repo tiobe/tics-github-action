@@ -212,14 +212,14 @@ jobs:
 It is possible to retrieve all Quality Gate conditions and reported annotations in JSON format. To do this add an id to the step:
 
 ```yaml
-- name: TICS GitHub Action
-  id: tics-github-action
-  uses: tiobe/tics-github-action@v3
-  with:
-    mode: diagnostic
-    viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-    ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-    installTics: true
+      - name: TICS GitHub Action
+        id: tics-github-action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: diagnostic
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
 ```
 
 This can then be used in following steps with `{{ steps.tics-github-action.outputs.annotations }}`.

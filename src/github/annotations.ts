@@ -45,6 +45,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
     return;
   }
 
+  const batchSize = 50;
   const annotations = projectResults
     .flatMap(projectResult => projectResult.annotations)
     .filter(shouldPostAnnotation)
@@ -56,14 +57,14 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
   }
 
   let checkRunId = 0;
-  for (let i = 0; i < annotations.length; i += 50) {
+  for (let i = 0; i < annotations.length; i += batchSize) {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       output: {
         title: 'TICS annotations',
         summary: '',
-        annotations: annotations.slice(i, i + 50)
+        annotations: annotations.slice(i, i + batchSize)
       }
     };
 
@@ -73,15 +74,15 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
           ...params,
           head_sha: githubConfig.headSha,
           name: 'TICS annotations',
-          conclusion: i + 50 >= annotations.length ? 'success' : undefined,
-          status: i + 50 >= annotations.length ? undefined : 'in_progress'
+          conclusion: i + batchSize >= annotations.length ? 'success' : undefined,
+          status: i + batchSize >= annotations.length ? undefined : 'in_progress'
         };
         logger.debug('Creating check run with: ' + JSON.stringify(pars));
         const response = await octokit.rest.checks.create(pars);
         checkRunId = response.data.id;
       } else {
         const pars: UpdateCheckRunParams = { ...params, check_run_id: checkRunId };
-        if (i + 50 >= annotations.length) {
+        if (i + batchSize >= annotations.length) {
           pars.conclusion = 'success';
         }
         logger.debug('Updating check run with: ' + JSON.stringify(pars));
