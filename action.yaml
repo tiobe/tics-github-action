@@ -82,13 +82,13 @@ inputs:
     description: Comma-seperated list of extra secrets to mask in the console output.
     required: false
   showBlockingAfter:
-    description: Show the blocking after TICS violations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false` (default is `true`).
+    description: (deprecated) !Will not be used if `showAnnotationSeverity` is set! Show the blocking after TICS violations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false` (default is `true`).
     required: false
     default: true
-  showNonBlocking:
-    description: Show non-blocking TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false` (default is `false`).
+    deprecationMessage: This input parameter is deprecated in favor of `showAnnotationSeverity`.
+  showAnnotationSeverity:
+    description: Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue` (default is `blocking-after`).
     required: false
-    default: false
   ticsAuthToken:
     description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
     required: false

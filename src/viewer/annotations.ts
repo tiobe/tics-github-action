@@ -58,12 +58,7 @@ async function fetchAnnotationsWithApiLinks(apiLinks: AnnotationApiLink[]): Prom
 async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
   const annotationsUrl = new URL(`${ticsConfig.baseUrl}/api/public/v1/Annotations?metric=QualityGate()`);
 
-  let filters = `Project(${identifier.project})`;
-
-  const annotationSeverity = getAnnotationSeverity();
-  if (annotationSeverity) {
-    filters += `,${annotationSeverity}`;
-  }
+  let filters = `Project(${identifier.project}),${actionConfig.showAnnotationSeverity.getAnnotationSeverityFilter()}`;
   if (identifier.cdtoken) {
     filters += `,ClientData(${identifier.cdtoken})`;
   } else if (identifier.date) {
@@ -73,18 +68,6 @@ async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<Fet
   annotationsUrl.searchParams.set('filters', filters);
 
   return fetchAnnotations(annotationsUrl);
-}
-
-function getAnnotationSeverity(): string | undefined {
-  if (actionConfig.showNonBlocking) {
-    return undefined;
-  }
-
-  if (actionConfig.showBlockingAfter) {
-    return 'AnnotationSeverity(Set(blocking,after))';
-  }
-
-  return 'AnnotationSeverity(blocking)';
 }
 
 async function fetchAnnotations(annotationsUrl: URL, gateId?: number): Promise<FetchedAnnotation[]> {

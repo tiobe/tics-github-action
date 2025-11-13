@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
 import { GithubEvent } from '../../src/configuration/github-event';
+import { ShowAnnotationSeverity } from '../../src/configuration/action';
 
 export const githubConfigMock: {
   apiUrl: string;
@@ -64,8 +65,7 @@ export const actionConfigMock = {
   postAnnotations: false,
   postToConversation: false,
   pullRequestApproval: false,
-  showBlockingAfter: false,
-  showNonBlocking: false
+  showAnnotationSeverity: ShowAnnotationSeverity.AFTER
 };
 
 export const ticsCliMock = {

@@ -48,7 +48,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
   const batchSize = 50;
   const annotations = projectResults
     .flatMap(projectResult => projectResult.annotations)
-    .filter(shouldPostAnnotation)
+    .filter(annotation => actionConfig.showAnnotationSeverity.shouldPostAnnotation(annotation))
     .map(createGithubAnnotation);
 
   if (annotations.length === 0) {
@@ -97,16 +97,6 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
   logger.info('Posted all postable annotations');
 }
 
-function shouldPostAnnotation(annotation: ExtendedAnnotation): boolean {
-  return (
-    annotation.postable &&
-    (annotation.blocking?.state === undefined ||
-      annotation.blocking.state === 'yes' ||
-      (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) ||
-      (annotation.blocking.state === 'no' && actionConfig.showNonBlocking))
-  );
-}
-
 function createGithubAnnotation(annotation: ExtendedAnnotation): GithubAnnotation {
   const title = annotation.msg;
   const body = createReviewCommentBody(annotation);
@@ -140,7 +130,7 @@ function createReviewCommentBody(annotation: ExtendedAnnotation): string {
       body = 'Non-Blocking';
       break;
     case 'after':
-      body = `Blocking after${annotation.blocking.after ? `: ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+      body = `Blocking after${annotation.blocking.after ? ` ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
       break;
     case 'yes':
     default:

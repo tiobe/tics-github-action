@@ -13,6 +13,7 @@ import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 import { EOL } from 'os';
 import { SpiedFunction } from 'jest-mock';
+import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('getPostedReviewComments', () => {
   it('should throw error when a pullRequestNumber is not present', async () => {
@@ -138,8 +139,8 @@ describe('postAnnotations', () => {
     expect(infoSpy).toHaveBeenCalledWith('No annotations to post.');
   });
 
-  it('should post two annotations when showBlockingAfter is true', async () => {
-    actionConfigMock.showBlockingAfter = true;
+  it('should post two annotations when showAnnotationSeverity is AFTER', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
 
     await postAnnotations(twoMixedAnalysisResults.projectResults);
 
@@ -161,7 +162,7 @@ describe('postAnnotations', () => {
           {
             annotation_level: 'notice',
             end_line: 1,
-            message: `Blocking after: 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
             path: 'path1.js',
             start_line: 1,
             title: 'message 1'
@@ -177,8 +178,8 @@ describe('postAnnotations', () => {
     expect(updateCheckSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post four annotations when showBlockingAfter is true', async () => {
-    actionConfigMock.showBlockingAfter = true;
+  it('should post four annotations when showAnnotationSeverity is AFTER', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
 
     await postAnnotations(fourMixedAnalysisResults.projectResults);
 
@@ -200,7 +201,7 @@ describe('postAnnotations', () => {
           {
             annotation_level: 'notice',
             end_line: 1,
-            message: `Blocking after: 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
             path: 'path1.js',
             start_line: 1,
             title: 'message 1'
@@ -232,8 +233,8 @@ describe('postAnnotations', () => {
     expect(updateCheckSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post only a blocking annotation when showBlockingAfter is false', async () => {
-    actionConfigMock.showBlockingAfter = false;
+  it('should post only one blocking annotation when showAnnotationSeverity is BLOCKING', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.BLOCKING;
 
     await postAnnotations(twoMixedAnalysisResults.projectResults);
 
@@ -264,9 +265,8 @@ describe('postAnnotations', () => {
     expect(updateCheckSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('should post only two annotations when showBlockingAfter and showNonBlocking are false', async () => {
-    actionConfigMock.showBlockingAfter = false;
-    actionConfigMock.showNonBlocking = false;
+  it('should post five annotations when showAnnotationSeverity is ISSUE', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.ISSUE;
 
     await postAnnotations(fiveMixedAnalysisResults.projectResults);
 
@@ -286,45 +286,12 @@ describe('postAnnotations', () => {
             title: 'message 0'
           },
           {
-            annotation_level: 'warning',
-            end_line: 2,
-            message: `Blocking${EOL}Level: 2, Category: category 2${EOL}Line: 2, Rule: rule 2`,
-            path: 'path2.js',
-            start_line: 2,
-            title: 'message 2'
-          }
-        ],
-        summary: '',
-        title: 'TICS annotations'
-      },
-      owner: 'tester',
-      repo: 'test',
-      status: undefined
-    });
-
-    expect(updateCheckSpy).toHaveBeenCalledTimes(0);
-  });
-
-  it('should post three annotations when showBlockingAfter is false and showNonBlocking is true', async () => {
-    actionConfigMock.showBlockingAfter = false;
-    actionConfigMock.showNonBlocking = true;
-
-    await postAnnotations(fiveMixedAnalysisResults.projectResults);
-
-    expect(createCheckSpy).toHaveBeenCalledTimes(1);
-    expect(createCheckSpy).toHaveBeenCalledWith({
-      conclusion: 'success',
-      head_sha: 'head-sha-256',
-      name: 'TICS annotations',
-      output: {
-        annotations: [
-          {
-            annotation_level: 'warning',
-            end_line: 0,
-            message: `Blocking${EOL}Line: 0`,
-            path: 'path0.js',
-            start_line: 0,
-            title: 'message 0'
+            annotation_level: 'notice',
+            end_line: 1,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            path: 'path1.js',
+            start_line: 1,
+            title: 'message 1'
           },
           {
             annotation_level: 'warning',
@@ -333,6 +300,14 @@ describe('postAnnotations', () => {
             path: 'path2.js',
             start_line: 2,
             title: 'message 2'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 3,
+            message: `Blocking after${EOL}Level: 2, Category: category 3${EOL}Line: 3, Rule: rule 3${EOL}synopsis 3${EOL}Rule-help: https://ruleset/rule+3`,
+            path: 'path3.js',
+            start_line: 3,
+            title: 'message 3'
           },
           {
             annotation_level: 'notice',

@@ -340,7 +340,7 @@ export function createUnpostableAnnotationsDetails(unpostableAnnotations: Extend
         break;
       case 'after':
         icon = ':warning:';
-        blocking = `Blocking after${reviewComment.blocking.after ? `: ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+        blocking = `Blocking after${reviewComment.blocking.after ? ` ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}` : ''}`;
         break;
       case 'yes':
       default:

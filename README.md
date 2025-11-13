@@ -81,20 +81,25 @@ The following inputs are recommended or required for this action:
 
 The following options allow to instrument TICS Client more specifically:
 
-| Input               | Description                                                                                                                                                                                                                                                                                                                                                        | Default      |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
-| `calc`              | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                                                                          | `GATE`       |
-| `recalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                                                                   | -            |
-| `nocalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.                                                                                                                                                                                                    | -            |
-| `norecalc`          | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.                                                                                                                                                                                                  | -            |
-| `filelist`          | Path to a file containing [a list of files](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/clientusecases.html%23client-file-list) (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request. | -            |
-| `cdtoken`           | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                                                                                                     | -            |
-| `branchname`        | Name of the branch in TICS.                                                                                                                                                                                                                                                                                                                                        | -            |
-| `codetype`          | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`.                                                                                                                                                                                                        | `PRODUCTION` |
-| `excludeMovedFiles` | Exclude moved files from analysis even if there are modifications in the file.                                                                                                                                                                                                                                                                                     | `false`      |
-| `showBlockingAfter` | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                                                                                                                                                                                                                     | `true`       |
-| `showNonBlocking`   | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`.                                                                                                                                                                                                 | `false`      |
-| `tmpdir`            | Location to store debug information.                                                                                                                                                                                                                                                                                                                               | -            |
+| Input                    | Description                                                                                                                                                                                                                                                                                                                                                        | Default          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| `calc`                   | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated. The `GATE` metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                                                                          | `GATE`           |
+| `recalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated. The `GATE` GATE metric is supported for TICS Viewer versions higher than 2022.2.x.                                                                                                                   | -                |
+| `nocalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.                                                                                                                                                                                                    | -                |
+| `norecalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.                                                                                                                                                                                                  | -                |
+| `filelist`               | Path to a file containing [a list of files](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/clientusecases.html%23client-file-list) (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request. | -                |
+| `cdtoken`                | A custom client-data token for the purpose of the Client Viewer functionality. This provides a static URL that is updated with every analysis.                                                                                                                                                                                                                     | -                |
+| `branchname`             | Name of the branch in TICS.                                                                                                                                                                                                                                                                                                                                        | -                |
+| `codetype`               | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`.                                                                                                                                                                                                        | `PRODUCTION`     |
+| `excludeMovedFiles`      | Exclude moved files from analysis even if there are modifications in the file.                                                                                                                                                                                                                                                                                     | `false`          |
+| `showAnnotationSeverity` | Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue`.                                                                                                                                                                           | `blocking-after` |
+| `tmpdir`                 | Location to store debug information.                                                                                                                                                                                                                                                                                                                               | -                |
+
+#### Deprecated parameters
+
+| Input               | Description                                                                                                                                          | Default | Replacement              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
+| `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
 ## QServer
 
@@ -149,16 +154,21 @@ The following inputs are recommended or required for this action:
 
 The following options allow to instrument TICSQServer more specifically:
 
-| Input               | Description                                                                                                                                                        | Default |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| `calc`              | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.        | `ALL`   |
-| `recalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.      | -       |
-| `nocalc`            | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.    | -       |
-| `norecalc`          | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.  | -       |
-| `branchname`        | Name of the branch in TICS.                                                                                                                                        | -       |
-| `showBlockingAfter` | Show the blocking after violations in the changed files window. Options are `true` or `false`.                                                                     | `true`  |
-| `showNonBlocking`   | Include existing TICS violations when posting annotations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false`. | `false` |
-| `tmpdir`            | Location to store debug information.                                                                                                                               | -       |
+| Input                    | Description                                                                                                                                                                              | Default          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `calc`                   | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.                              | `ALL`            |
+| `recalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.                            | -                |
+| `nocalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.                          | -                |
+| `norecalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.                        | -                |
+| `branchname`             | Name of the branch in TICS.                                                                                                                                                              | -                |
+| `showAnnotationSeverity` | Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue`. | `blocking-after` |
+| `tmpdir`                 | Location to store debug information.                                                                                                                                                     | -                |
+
+#### Deprecated parameters
+
+| Input               | Description                                                                                                                                          | Default | Replacement              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
+| `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
 ## Other features
 
@@ -212,14 +222,14 @@ jobs:
 It is possible to retrieve all Quality Gate conditions and reported annotations in JSON format. To do this add an id to the step:
 
 ```yaml
-      - name: TICS GitHub Action
-        id: tics-github-action
-        uses: tiobe/tics-github-action@v3
-        with:
-          mode: diagnostic
-          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-          installTics: true
+- name: TICS GitHub Action
+  id: tics-github-action
+  uses: tiobe/tics-github-action@v3
+  with:
+    mode: diagnostic
+    viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+    ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+    installTics: true
 ```
 
 This can then be used in following steps with `{{ steps.tics-github-action.outputs.annotations }}`.

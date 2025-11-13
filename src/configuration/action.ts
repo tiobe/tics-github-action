@@ -3,6 +3,44 @@ import { getBooleanInput, getInput } from '@actions/core';
 
 import { RetryConfig } from './interfaces';
 import { logger } from '../helper/logger';
+import { ExtendedAnnotation } from '../viewer/interfaces';
+
+export class ShowAnnotationSeverity {
+  static readonly BLOCKING = new ShowAnnotationSeverity('blocking', ['blocking'], ['yes']);
+  static readonly AFTER = new ShowAnnotationSeverity('blocking-after', ['blocking', 'after'], ['yes', 'after']);
+  static readonly ISSUE = new ShowAnnotationSeverity('issue', ['blocking', 'after', 'issue'], ['yes', 'after', 'no']);
+
+  private constructor(
+    readonly param: string,
+    readonly severities: string[],
+    readonly blockingStates: string[]
+  ) {}
+
+  static parse(input: string) {
+    const severity = input.toLowerCase();
+    switch (severity) {
+      case this.BLOCKING.param:
+        return this.BLOCKING;
+      case this.AFTER.param:
+        return this.AFTER;
+      case this.ISSUE.param:
+        return this.ISSUE;
+    }
+    throw Error(`Parameter 'showAnnotationSeverity' should be one of 'blocking', 'blocking-after' or 'issue'. Input given is '${input}'`);
+  }
+
+  getAnnotationSeverityFilter(): string {
+    if (this.severities.length > 1) {
+      return `AnnotationSeverity(Set(${this.severities.join(',')}))`;
+    } else {
+      return `AnnotationSeverity(${this.severities[0]})`;
+    }
+  }
+
+  shouldPostAnnotation(annotation: ExtendedAnnotation) {
+    return annotation.postable && (annotation.blocking?.state === undefined || this.blockingStates.includes(annotation.blocking.state));
+  }
+}
 
 export class ActionConfiguration {
   readonly excludeMovedFiles: boolean;
@@ -11,8 +49,7 @@ export class ActionConfiguration {
   readonly pullRequestApproval: boolean;
   readonly retryConfig: RetryConfig;
   readonly secretsFilter: string[];
-  readonly showBlockingAfter: boolean;
-  readonly showNonBlocking: boolean;
+  readonly showAnnotationSeverity: ShowAnnotationSeverity;
 
   constructor() {
     this.excludeMovedFiles = getBooleanInput('excludeMovedFiles');
@@ -21,8 +58,7 @@ export class ActionConfiguration {
     this.pullRequestApproval = getBooleanInput('pullRequestApproval');
     this.retryConfig = this.validateAndGetRetryConfig(getInput('retryCodes'));
     this.secretsFilter = this.getSecretsFilter(getInput('secretsFilter'));
-    this.showBlockingAfter = getBooleanInput('showBlockingAfter');
-    this.showNonBlocking = getBooleanInput('showNonBlocking');
+    this.showAnnotationSeverity = this.getAnnotationSeverity(getInput('showAnnotationSeverity'), getBooleanInput('showBlockingAfter'));
   }
 
   /**
@@ -71,5 +107,18 @@ export class ActionConfiguration {
     logger.setSecretsFilter(combinedFilters);
 
     return combinedFilters;
+  }
+
+  private getAnnotationSeverity(input: string, blockingAfter: boolean): ShowAnnotationSeverity {
+    // `showAnnotationSeverity` takes precedent over `blockingAfter`, which is deprecated.
+    if (input !== '') {
+      return ShowAnnotationSeverity.parse(input);
+    } else {
+      // if `showAnnotationSeverity` is not set use the value of `blockingAfter` to set a level.
+      if (!blockingAfter) {
+        return ShowAnnotationSeverity.BLOCKING;
+      }
+      return ShowAnnotationSeverity.AFTER;
+    }
   }
 }

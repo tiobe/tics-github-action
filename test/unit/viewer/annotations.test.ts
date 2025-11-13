@@ -7,6 +7,7 @@ import { GithubEvent } from '../../../src/configuration/github-event';
 import { fetchAllAnnotations, groupAndExtendAnnotations } from '../../../src/viewer/annotations';
 import { TicsRunIdentifier } from '../../../src/viewer/interfaces';
 import { ViewerFeature, viewerVersion } from '../../../src/viewer/version';
+import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('fetchAllAnnotations', () => {
   let httpClientSpy: jest.SpiedFunction<typeof httpClient.get>;
@@ -153,6 +154,7 @@ describe('fetchAllAnnotations', () => {
       });
 
       identifier.cdtoken = 'test';
+      actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.BLOCKING;
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
@@ -177,7 +179,7 @@ describe('fetchAllAnnotations', () => {
       });
 
       identifier.date = 15984835158;
-      actionConfigMock.showBlockingAfter = true;
+      actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
