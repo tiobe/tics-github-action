@@ -1,4 +1,4 @@
-import { ReviewComment } from './interfaces';
+import { AnnotationLevel, CreateCheckRunParams, GithubAnnotation, ReviewComment, UpdateCheckRunParams } from './interfaces';
 import { logger } from '../helper/logger';
 import { ProjectResult } from '../helper/interfaces';
 import { handleOctokitError } from '../helper/response';
@@ -38,41 +38,104 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
  * Deletes the review comments of previous runs.
  * @param postedReviewComments Previously posted review comments.
  */
-export function postAnnotations(projectResults: ProjectResult[]): void {
+export async function postAnnotations(projectResults: ProjectResult[]): Promise<void> {
   logger.header('Posting annotations.');
+  if (!githubConfig.headSha) {
+    logger.warning('Commit of underlying commit not found, cannot post annotations');
+    return;
+  }
 
-  projectResults.forEach(projectResult => {
-    projectResult.annotations.forEach(annotation => {
-      if (annotation.postable) {
-        const title = annotation.msg;
-        const body = createReviewCommentBody(annotation);
+  const batchSize = 50;
+  const annotations = projectResults
+    .flatMap(projectResult => projectResult.annotations)
+    .filter(annotation => actionConfig.showAnnotationSeverity.shouldPostAnnotation(annotation))
+    .map(createGithubAnnotation);
 
-        if (annotation.blocking?.state === undefined || annotation.blocking.state === 'yes') {
-          logger.warning(body, {
-            file: annotation.path,
-            startLine: annotation.line,
-            title: title
-          });
-        } else if (annotation.blocking.state === 'after' && actionConfig.showBlockingAfter) {
-          logger.notice(body, {
-            file: annotation.path,
-            startLine: annotation.line,
-            title: title
-          });
-        }
+  if (annotations.length === 0) {
+    logger.info('No annotations to post.');
+    return;
+  }
+
+  let checkRunId = 0;
+  for (let i = 0; i < annotations.length; i += batchSize) {
+    const params = {
+      owner: githubConfig.owner,
+      repo: githubConfig.reponame,
+      output: {
+        title: 'TICS annotations',
+        summary: '',
+        annotations: annotations.slice(i, i + batchSize)
       }
-    });
-  });
+    };
 
-  logger.info('Posted all postable annotations (none if there are no violations).');
+    try {
+      if (i === 0) {
+        const pars: CreateCheckRunParams = {
+          ...params,
+          head_sha: githubConfig.headSha,
+          name: 'TICS annotations',
+          conclusion: i + batchSize >= annotations.length ? 'success' : undefined,
+          status: i + batchSize >= annotations.length ? undefined : 'in_progress'
+        };
+        logger.debug('Creating check run with: ' + JSON.stringify(pars));
+        const response = await octokit.rest.checks.create(pars);
+        checkRunId = response.data.id;
+      } else {
+        const pars: UpdateCheckRunParams = { ...params, check_run_id: checkRunId };
+        if (i + batchSize >= annotations.length) {
+          pars.conclusion = 'success';
+        }
+        logger.debug('Updating check run with: ' + JSON.stringify(pars));
+        await octokit.rest.checks.update(pars);
+      }
+    } catch (error) {
+      const message = handleOctokitError(error);
+      logger.notice(`Could not post (some) annotations: ${message}`);
+    }
+  }
+
+  logger.info('Posted all postable annotations');
+}
+
+function createGithubAnnotation(annotation: ExtendedAnnotation): GithubAnnotation {
+  const title = annotation.msg;
+  const body = createReviewCommentBody(annotation);
+
+  let level: AnnotationLevel;
+  switch (annotation.blocking?.state) {
+    case 'no':
+    case 'after':
+      level = 'notice';
+      break;
+    case 'yes':
+    default:
+      level = 'warning';
+      break;
+  }
+
+  return {
+    title: title,
+    message: body,
+    annotation_level: level,
+    path: annotation.path,
+    start_line: annotation.line,
+    end_line: annotation.line
+  };
 }
 
 function createReviewCommentBody(annotation: ExtendedAnnotation): string {
-  let body = '';
-  if (annotation.blocking?.state === 'yes') {
-    body += `Blocking`;
-  } else if (annotation.blocking?.state === 'after' && annotation.blocking.after) {
-    body += `Blocking after: ${format(annotation.blocking.after, 'yyyy-MM-dd')}`;
+  let body: string;
+  switch (annotation.blocking?.state) {
+    case 'no':
+      body = 'Non-Blocking';
+      break;
+    case 'after':
+      body = `Blocking after${annotation.blocking.after ? ` ${format(annotation.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+      break;
+    case 'yes':
+    default:
+      body = 'Blocking';
+      break;
   }
 
   const secondLine: string[] = [];

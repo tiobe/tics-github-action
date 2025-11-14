@@ -1,4 +1,4 @@
-import { ticsConfig } from '../configuration/config';
+import { actionConfig, ticsConfig } from '../configuration/config';
 import { ChangedFile } from '../github/interfaces';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
@@ -58,7 +58,7 @@ async function fetchAnnotationsWithApiLinks(apiLinks: AnnotationApiLink[]): Prom
 async function fetchAnnotationsByRun(identifier: TicsRunIdentifier): Promise<FetchedAnnotation[]> {
   const annotationsUrl = new URL(`${ticsConfig.baseUrl}/api/public/v1/Annotations?metric=QualityGate()`);
 
-  let filters = `Project(${identifier.project}),AnnotationSeverity(Set(blocking,after))`;
+  let filters = `Project(${identifier.project}),${actionConfig.showAnnotationSeverity.getAnnotationSeverityFilter()}`;
   if (identifier.cdtoken) {
     filters += `,ClientData(${identifier.cdtoken})`;
   } else if (identifier.date) {

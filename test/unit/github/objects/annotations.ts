@@ -1,5 +1,6 @@
 import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
-import { AnalysisResult, ExtendedAnnotation, TicsReviewComment } from '../../../../src/helper/interfaces';
+import { AnalysisResult, ProjectResult } from '../../../../src/helper/interfaces';
+import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 
 export const user: User = {
   login: '',
@@ -101,7 +102,8 @@ export const analysisResults: AnalysisResult = {
           blocking: {
             state: 'yes'
           },
-          instanceName: 'CS'
+          instanceName: 'CS',
+          postable: false
         }
       ],
       qualityGate: {
@@ -191,8 +193,7 @@ const fourAnnotations: ExtendedAnnotation[] = [
     gateId: 1,
     displayCount: '1x',
     blocking: {
-      state: 'after',
-      after: 1757429236
+      state: 'after'
     },
     instanceName: 'CS',
     postable: true,
@@ -224,9 +225,11 @@ export const twoMixedAnalysisResults: AnalysisResult = {
           gateId: 1,
           displayCount: '1x',
           blocking: {
-            state: 'yes'
+            state: 'no'
           },
-          instanceName: 'CS'
+          instanceName: 'CS',
+          postable: true,
+          path: ''
         }
       ],
       qualityGate: {
@@ -267,7 +270,8 @@ export const fourMixedAnalysisResults: AnalysisResult = {
             state: 'yes'
           },
           instanceName: 'CS',
-          postable: false
+          postable: false,
+          path: ''
         }
       ],
       qualityGate: {
@@ -280,4 +284,85 @@ export const fourMixedAnalysisResults: AnalysisResult = {
     }
   ],
   passedWithWarning: false
+};
+
+export const fiveMixedAnalysisResults: AnalysisResult = {
+  passed: false,
+  message: 'failed',
+  projectResults: [
+    {
+      project: '',
+      explorerUrl: '',
+      analyzedFiles: [],
+      annotations: [
+        ...fourAnnotations,
+        {
+          fullPath: 'HIE://project/branch/path2.js',
+          line: 2,
+          level: 2,
+          category: 'category 2',
+          rule: 'rule 2',
+          msg: 'message 2',
+          supp: false,
+          type: 'type 2',
+          count: 1,
+          gateId: 1,
+          displayCount: '1x',
+          blocking: {
+            state: 'no'
+          },
+          instanceName: 'CS',
+          postable: true,
+          path: 'path2.js'
+        }
+      ],
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      }
+    }
+  ],
+  passedWithWarning: false
+};
+
+export const twohundredAnnotations = () => {
+  const projectResults: ProjectResult[] = [
+    {
+      project: '',
+      explorerUrl: '',
+      qualityGate: {
+        passed: false,
+        message: '',
+        url: '',
+        gates: [],
+        annotationsApiV1Links: []
+      },
+      analyzedFiles: [],
+      annotations: []
+    }
+  ];
+
+  for (let i = 0; i < 200; i++) {
+    projectResults[0].annotations.push({
+      fullPath: `HIE://path${0}.js`,
+      path: `path${i}.js`,
+      line: i,
+      msg: `message ${i}`,
+      supp: false,
+      type: `type ${i}`,
+      count: 1,
+      gateId: 1,
+      displayCount: '1x',
+      blocking: {
+        state: 'yes'
+      },
+      ruleset: `Coding Standard ${i}`,
+      instanceName: 'CS',
+      postable: true
+    });
+  }
+  return projectResults;
 };

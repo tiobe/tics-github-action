@@ -22,6 +22,6 @@ export async function decorateAction(analysisResult: AnalysisResult | undefined,
   }
 
   if (analysisResult && actionConfig.postAnnotations) {
-    postAnnotations(analysisResult.projectResults);
+    await postAnnotations(analysisResult.projectResults);
   }
 }

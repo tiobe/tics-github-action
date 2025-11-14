@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import * as core from '@actions/core';
-import { ActionConfiguration } from '../../../src/configuration/action';
+import { ActionConfiguration, ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('action Configuration', () => {
   let values: Record<string, string>;
@@ -12,7 +12,7 @@ describe('action Configuration', () => {
     pullRequestApproval: false,
     retryConfig: { delay: 5, maxRetries: 10, codes: [419, 500, 501, 502, 503, 504] },
     secretsFilter: ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization'],
-    showBlockingAfter: false
+    showAnnotationSeverity: ShowAnnotationSeverity.BLOCKING // because getBooleanInput returns false by default
   };
 
   beforeEach(() => {
@@ -69,7 +69,7 @@ describe('action Configuration', () => {
       pullRequestApproval: true,
       retryConfig: { delay: 5, maxRetries: 10, codes: [401] },
       secretsFilter: ['TICSAUTHTOKEN', 'GITHUB_TOKEN', 'Authentication token', 'Authorization', 'additional', 'secrets'],
-      showBlockingAfter: true
+      showAnnotationSeverity: ShowAnnotationSeverity.AFTER
     });
   });
 
@@ -159,6 +159,50 @@ describe('action Configuration', () => {
 
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toContain("'500;502'");
+    });
+  });
+
+  describe('showAnnotationSeverity', () => {
+    it('should prefer showAnnotationSeverity over showBlockingAfter', () => {
+      values = { showBlockingAfter: 'false', showAnnotationSeverity: 'issue' };
+      const config1 = new ActionConfiguration();
+      expect(config1).toMatchObject({ ...expectDefault, showAnnotationSeverity: ShowAnnotationSeverity.ISSUE });
+
+      values = { showBlockingAfter: 'false', showAnnotationSeverity: 'blocking-after' };
+      const config2 = new ActionConfiguration();
+      expect(config2).toMatchObject({ ...expectDefault, showAnnotationSeverity: ShowAnnotationSeverity.AFTER });
+
+      values = { showBlockingAfter: 'false', showAnnotationSeverity: 'blocking' };
+      const config3 = new ActionConfiguration();
+      expect(config3).toMatchObject({ ...expectDefault, showAnnotationSeverity: ShowAnnotationSeverity.BLOCKING });
+    });
+
+    it('should use showBlockingAfter if showAnnotationSeverity is not set', () => {
+      values = { showBlockingAfter: 'false' };
+      const config1 = new ActionConfiguration();
+      expect(config1).toMatchObject({ ...expectDefault });
+
+      values = { showBlockingAfter: 'true' };
+      const config2 = new ActionConfiguration();
+      expect(config2).toMatchObject({ ...expectDefault, showAnnotationSeverity: ShowAnnotationSeverity.AFTER });
+    });
+
+    it('should throw Error when showAnnotationSeverity is incorrect', () => {
+      values = {
+        showAnnotationSeverity: 'bladiebla'
+      };
+
+      let error: any;
+      try {
+        new ActionConfiguration();
+      } catch (err) {
+        error = err;
+      }
+
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toEqual(
+        "Parameter 'showAnnotationSeverity' should be one of 'blocking', 'blocking-after' or 'issue'. Input given is 'bladiebla'"
+      );
     });
   });
 });

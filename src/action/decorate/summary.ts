@@ -330,11 +330,24 @@ export function createUnpostableAnnotationsDetails(unpostableAnnotations: Extend
   unpostableAnnotations.forEach(reviewComment => {
     const path = reviewComment.path;
     const displayCount = reviewComment.displayCount ?? '';
-    const icon = reviewComment.blocking?.state === 'after' ? ':warning:' : ':x:';
-    const blocking =
-      reviewComment.blocking?.state === 'after' && reviewComment.blocking.after
-        ? `Blocking after ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}`
-        : 'Blocking';
+
+    let icon = '';
+    let blocking = '';
+    switch (reviewComment.blocking?.state) {
+      case 'no':
+        icon = ':beetle:';
+        blocking = 'Non-Blocking';
+        break;
+      case 'after':
+        icon = ':warning:';
+        blocking = `Blocking after${reviewComment.blocking.after ? ` ${format(reviewComment.blocking.after, 'yyyy-MM-dd')}` : ''}`;
+        break;
+      case 'yes':
+      default:
+        icon = ':x:';
+        blocking = 'Blocking';
+        break;
+    }
 
     if (previousPath === '') {
       body += `<table><tr><th colspan='4'>${path}</th></tr>`;

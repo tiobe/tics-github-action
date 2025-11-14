@@ -41,7 +41,7 @@ describe('gitHub Configuration', () => {
       apiUrl: 'api.github.com',
       owner: 'tiobe',
       reponame: 'tics-github-action',
-      commitSha: 'sha-128',
+      sha: 'sha-128',
       event: { name: 'pull_request', isPullRequest: true },
       id: `123_1_TICS_tics-github-action`,
       pullRequestNumber: 1

@@ -7,6 +7,7 @@ process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=defau
 process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
 process.env.INPUT_INSTALLTICS = 'false';
 process.env.INPUT_POSTANNOTATIONS = 'false';
+process.env.INPUT_SHOWNONBLOCKING = 'false';
 process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
