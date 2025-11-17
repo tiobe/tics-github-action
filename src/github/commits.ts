@@ -15,7 +15,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
-    ref: githubConfig.commitSha
+    ref: githubConfig.sha
   };
   let response: ChangedFile[] = [];
   try {

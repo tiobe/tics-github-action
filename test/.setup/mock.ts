@@ -1,12 +1,14 @@
 import { jest } from '@jest/globals';
 import { summary } from './summary_mock';
 import { GithubEvent } from '../../src/configuration/github-event';
+import { ShowAnnotationSeverity } from '../../src/configuration/action';
 
 export const githubConfigMock: {
   apiUrl: string;
   owner: string;
   reponame: string;
-  commitSha: string;
+  sha: string;
+  headSha: string;
   event: GithubEvent;
   job: string;
   action: string;
@@ -22,7 +24,8 @@ export const githubConfigMock: {
   apiUrl: 'github.com/api/v1/',
   owner: 'tester',
   reponame: 'test',
-  commitSha: 'sha-128',
+  sha: 'sha-128',
+  headSha: 'head-sha-256',
   event: GithubEvent.PUSH,
   job: 'TICS',
   action: 'tics-github-action',
@@ -62,7 +65,7 @@ export const actionConfigMock = {
   postAnnotations: false,
   postToConversation: false,
   pullRequestApproval: false,
-  showBlockingAfter: false
+  showAnnotationSeverity: ShowAnnotationSeverity.AFTER
 };
 
 export const ticsCliMock = {
@@ -120,6 +123,10 @@ jest.mock('../../src/github/octokit', () => {
         },
         rateLimit: {
           get: jest.fn()
+        },
+        checks: {
+          create: jest.fn(),
+          update: jest.fn()
         }
       },
       graphql: {

@@ -1,9 +1,19 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
-import { emptyComment, fourMixedAnalysisResults, twoMixedAnalysisResults, warningComment } from './objects/annotations';
+import {
+  emptyComment,
+  fiveMixedAnalysisResults,
+  fourMixedAnalysisResults,
+  twohundredAnnotations,
+  twoMixedAnalysisResults,
+  warningComment
+} from './objects/annotations';
 import { logger } from '../../../src/helper/logger';
 import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
+import { EOL } from 'os';
+import { SpiedFunction } from 'jest-mock';
+import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('getPostedReviewComments', () => {
   it('should throw error when a pullRequestNumber is not present', async () => {
@@ -95,100 +105,245 @@ describe('deletePreviousReviewComments', () => {
 });
 
 describe('postAnnotations', () => {
-  it('should post two annotations when showBlockingAfter is true', () => {
-    const warningSpy = jest.spyOn(logger, 'warning');
-    const noticeSpy = jest.spyOn(logger, 'notice');
+  let createCheckSpy: jest.SpiedFunction<typeof octokit.rest.checks.create>;
+  let updateCheckSpy: jest.SpiedFunction<typeof octokit.rest.checks.update>;
+  let warningSpy: jest.SpiedFunction<typeof logger.warning>;
+  let infoSpy: jest.SpiedFunction<typeof logger.info>;
 
-    actionConfigMock.showBlockingAfter = true;
-
-    postAnnotations(twoMixedAnalysisResults.projectResults);
-
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path0.js',
-      title: 'message 0',
-      startLine: 0
-    });
-
-    expect(noticeSpy).toHaveBeenCalledTimes(1);
-    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
-      file: 'path1.js',
-      title: 'message 1',
-      startLine: 1
-    });
+  beforeEach(() => {
+    createCheckSpy = jest.spyOn(octokit.rest.checks, 'create');
+    updateCheckSpy = jest.spyOn(octokit.rest.checks, 'update');
+    warningSpy = jest.spyOn(logger, 'warning');
+    infoSpy = jest.spyOn(logger, 'info');
   });
 
-  it('should post four annotations when showBlockingAfter is true', () => {
-    const warningSpy = jest.spyOn(logger, 'warning');
-    const noticeSpy = jest.spyOn(logger, 'notice');
-
-    actionConfigMock.showBlockingAfter = true;
-
-    postAnnotations(fourMixedAnalysisResults.projectResults);
-
-    expect(warningSpy).toHaveBeenCalledTimes(2);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path0.js',
-      title: 'message 0',
-      startLine: 0
-    });
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path2.js',
-      title: 'message 2',
-      startLine: 2
-    });
-
-    expect(noticeSpy).toHaveBeenCalledTimes(2);
-    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
-      file: 'path1.js',
-      title: 'message 1',
-      startLine: 1
-    });
-    expect(noticeSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking after'), {
-      file: 'path3.js',
-      title: 'message 3',
-      startLine: 3
-    });
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
-  it('should post only a blocking annotation when showBlockingAfter is false', () => {
-    const warningSpy = jest.spyOn(logger, 'warning');
-    const noticeSpy = jest.spyOn(logger, 'notice');
+  it('should return if no head_sha is present', async () => {
+    const headSha = githubConfigMock.headSha;
+    githubConfigMock.headSha = '';
 
-    actionConfigMock.showBlockingAfter = false;
+    await postAnnotations(twoMixedAnalysisResults.projectResults);
 
-    postAnnotations(twoMixedAnalysisResults.projectResults);
-
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path0.js',
-      title: 'message 0',
-      startLine: 0
-    });
-
-    expect(noticeSpy).toHaveBeenCalledTimes(0);
+    expect(warningSpy).toHaveBeenCalledWith('Commit of underlying commit not found, cannot post annotations');
+    githubConfigMock.headSha = headSha;
   });
 
-  it('should post only two blocking annotations when showBlockingAfter is false', () => {
-    const warningSpy = jest.spyOn(logger, 'warning');
-    const noticeSpy = jest.spyOn(logger, 'notice');
+  it('should return if no annotations are present', async () => {
+    const test = structuredClone(twoMixedAnalysisResults.projectResults);
+    test[0].annotations = [];
+    await postAnnotations(test);
 
-    actionConfigMock.showBlockingAfter = false;
+    expect(infoSpy).toHaveBeenCalledWith('No annotations to post.');
+  });
 
-    postAnnotations(fourMixedAnalysisResults.projectResults);
+  it('should post two annotations when showAnnotationSeverity is AFTER', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
 
-    expect(warningSpy).toHaveBeenCalledTimes(2);
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path0.js',
-      title: 'message 0',
-      startLine: 0
+    await postAnnotations(twoMixedAnalysisResults.projectResults);
+
+    expect(createCheckSpy).toHaveBeenCalledTimes(1);
+    expect(createCheckSpy).toHaveBeenCalledWith({
+      conclusion: 'success',
+      head_sha: 'head-sha-256',
+      name: 'TICS annotations',
+      output: {
+        annotations: [
+          {
+            annotation_level: 'warning',
+            end_line: 0,
+            message: `Blocking${EOL}Line: 0`,
+            path: 'path0.js',
+            start_line: 0,
+            title: 'message 0'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 1,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            path: 'path1.js',
+            start_line: 1,
+            title: 'message 1'
+          }
+        ],
+        summary: '',
+        title: 'TICS annotations'
+      },
+      owner: 'tester',
+      repo: 'test',
+      status: undefined
     });
-    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('Blocking'), {
-      file: 'path2.js',
-      title: 'message 2',
-      startLine: 2
+    expect(updateCheckSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should post four annotations when showAnnotationSeverity is AFTER', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
+
+    await postAnnotations(fourMixedAnalysisResults.projectResults);
+
+    expect(createCheckSpy).toHaveBeenCalledTimes(1);
+    expect(createCheckSpy).toHaveBeenCalledWith({
+      conclusion: 'success',
+      head_sha: 'head-sha-256',
+      name: 'TICS annotations',
+      output: {
+        annotations: [
+          {
+            annotation_level: 'warning',
+            end_line: 0,
+            message: `Blocking${EOL}Line: 0`,
+            path: 'path0.js',
+            start_line: 0,
+            title: 'message 0'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 1,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            path: 'path1.js',
+            start_line: 1,
+            title: 'message 1'
+          },
+          {
+            annotation_level: 'warning',
+            end_line: 2,
+            message: `Blocking${EOL}Level: 2, Category: category 2${EOL}Line: 2, Rule: rule 2`,
+            path: 'path2.js',
+            start_line: 2,
+            title: 'message 2'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 3,
+            message: `Blocking after${EOL}Level: 2, Category: category 3${EOL}Line: 3, Rule: rule 3${EOL}synopsis 3${EOL}Rule-help: https://ruleset/rule+3`,
+            path: 'path3.js',
+            start_line: 3,
+            title: 'message 3'
+          }
+        ],
+        summary: '',
+        title: 'TICS annotations'
+      },
+      owner: 'tester',
+      repo: 'test',
+      status: undefined
+    });
+    expect(updateCheckSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should post only one blocking annotation when showAnnotationSeverity is BLOCKING', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.BLOCKING;
+
+    await postAnnotations(twoMixedAnalysisResults.projectResults);
+
+    expect(createCheckSpy).toHaveBeenCalledTimes(1);
+    expect(createCheckSpy).toHaveBeenCalledWith({
+      conclusion: 'success',
+      head_sha: 'head-sha-256',
+      name: 'TICS annotations',
+      output: {
+        annotations: [
+          {
+            annotation_level: 'warning',
+            end_line: 0,
+            message: `Blocking${EOL}Line: 0`,
+            path: 'path0.js',
+            start_line: 0,
+            title: 'message 0'
+          }
+        ],
+        summary: '',
+        title: 'TICS annotations'
+      },
+      owner: 'tester',
+      repo: 'test',
+      status: undefined
     });
 
-    expect(noticeSpy).toHaveBeenCalledTimes(0);
+    expect(updateCheckSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should post five annotations when showAnnotationSeverity is ISSUE', async () => {
+    actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.ISSUE;
+
+    await postAnnotations(fiveMixedAnalysisResults.projectResults);
+
+    expect(createCheckSpy).toHaveBeenCalledTimes(1);
+    expect(createCheckSpy).toHaveBeenCalledWith({
+      conclusion: 'success',
+      head_sha: 'head-sha-256',
+      name: 'TICS annotations',
+      output: {
+        annotations: [
+          {
+            annotation_level: 'warning',
+            end_line: 0,
+            message: `Blocking${EOL}Line: 0`,
+            path: 'path0.js',
+            start_line: 0,
+            title: 'message 0'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 1,
+            message: `Blocking after 1970-01-21${EOL}Level: 2, Category: category 1${EOL}Line: 1, Rule: rule 1`,
+            path: 'path1.js',
+            start_line: 1,
+            title: 'message 1'
+          },
+          {
+            annotation_level: 'warning',
+            end_line: 2,
+            message: `Blocking${EOL}Level: 2, Category: category 2${EOL}Line: 2, Rule: rule 2`,
+            path: 'path2.js',
+            start_line: 2,
+            title: 'message 2'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 3,
+            message: `Blocking after${EOL}Level: 2, Category: category 3${EOL}Line: 3, Rule: rule 3${EOL}synopsis 3${EOL}Rule-help: https://ruleset/rule+3`,
+            path: 'path3.js',
+            start_line: 3,
+            title: 'message 3'
+          },
+          {
+            annotation_level: 'notice',
+            end_line: 2,
+            message: `Non-Blocking${EOL}Level: 2, Category: category 2${EOL}Line: 2, Rule: rule 2`,
+            path: 'path2.js',
+            start_line: 2,
+            title: 'message 2'
+          }
+        ],
+        summary: '',
+        title: 'TICS annotations'
+      },
+      owner: 'tester',
+      repo: 'test',
+      status: undefined
+    });
+
+    expect(updateCheckSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should post 200 annotations if all are postable', async () => {
+    (createCheckSpy as SpiedFunction<any>).mockResolvedValue({ data: { id: 1234 } });
+
+    await postAnnotations(twohundredAnnotations());
+
+    expect(createCheckSpy).toHaveBeenCalledTimes(1);
+    expect(updateCheckSpy).toHaveBeenCalledTimes(3);
+    expect(updateCheckSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        check_run_id: 1234,
+        conclusion: 'success',
+        output: expect.objectContaining({
+          annotations: expect.arrayContaining(new Array(50).fill(expect.any(Object)))
+        })
+      })
+    );
   });
 });

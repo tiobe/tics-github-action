@@ -7,6 +7,7 @@ import { GithubEvent } from '../../../src/configuration/github-event';
 import { fetchAllAnnotations, groupAndExtendAnnotations } from '../../../src/viewer/annotations';
 import { TicsRunIdentifier } from '../../../src/viewer/interfaces';
 import { ViewerFeature, viewerVersion } from '../../../src/viewer/version';
+import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('fetchAllAnnotations', () => {
   let httpClientSpy: jest.SpiedFunction<typeof httpClient.get>;
@@ -153,10 +154,11 @@ describe('fetchAllAnnotations', () => {
       });
 
       identifier.cdtoken = 'test';
+      actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.BLOCKING;
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(
-        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28Set%28blocking%2Cafter%29%29%2CClientData%28test%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
+        'http://base.url/api/public/v1/Annotations?metric=QualityGate%28%29&filters=Project%28project%29%2CAnnotationSeverity%28blocking%29%2CClientData%28test%29%2CWindow%28-1%29&fields=default%2CruleHelp%2Csynopsis%2Cruleset%2Cblocking'
       );
       expect(response).toEqual([
         { type: 'CS', line: 1, count: 1, instanceName: 'Coding Standard Violations', fullPath: 'HIE://project/branch/file.js', path: 'file.js' },
@@ -177,7 +179,7 @@ describe('fetchAllAnnotations', () => {
       });
 
       identifier.date = 15984835158;
-      actionConfigMock.showBlockingAfter = true;
+      actionConfigMock.showAnnotationSeverity = ShowAnnotationSeverity.AFTER;
       const response = await fetchAllAnnotations(qualityGate, identifier);
 
       expect(httpClientSpy).toHaveBeenCalledWith(

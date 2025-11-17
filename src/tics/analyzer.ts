@@ -81,7 +81,7 @@ async function buildRunCommand(fileListPath: string): Promise<string> {
       installCommand += ' &&';
     }
   } else if (platform() === 'linux') {
-    installCommand = `TICS='${ticsConfig.viewerUrl}';`;
+    installCommand = `TICS='${ticsConfig.viewerUrl}'`;
   } else {
     installCommand = `$env:TICS='${ticsConfig.viewerUrl}'`;
   }

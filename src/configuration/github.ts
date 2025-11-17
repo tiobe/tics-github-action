@@ -7,7 +7,10 @@ export class GithubConfig {
   readonly apiUrl: string;
   readonly owner: string;
   readonly reponame: string;
-  readonly commitSha: string;
+  // Sha of the (merge) commit
+  readonly sha: string;
+  // Sha of the (underlying) commit that triggered the flow
+  readonly headSha: string | undefined;
   readonly event: GithubEvent;
   readonly job: string;
   readonly action: string;
@@ -24,8 +27,9 @@ export class GithubConfig {
     this.apiUrl = context.apiUrl;
     this.owner = context.repo.owner;
     this.reponame = context.repo.repo;
-    this.commitSha = context.sha;
+    this.sha = context.sha;
     this.event = this.getGithubEvent();
+    this.headSha = this.getHeadSha();
     this.job = context.job.replace(/[\s|_]+/g, '-');
     this.action = context.action.replace('__tiobe_', '');
     this.workflow = context.workflow.replace(/[\s|_]+/g, '-');
@@ -77,6 +81,17 @@ export class GithubConfig {
         return GithubEvent.WORKFLOW_RUN;
       default:
         return GithubEvent.PUSH;
+    }
+  }
+
+  private getHeadSha(): string | undefined {
+    // Should run after getGithubEvent
+    if (this.event.isPullRequest) {
+      const pr = context.payload.pull_request as { head?: { sha?: string } } | undefined;
+      logger.debug(`Found pull_request.head.sha: ${pr?.head?.sha ?? 'undefined'}`);
+      return pr?.head?.sha;
+    } else {
+      return context.sha;
     }
   }
 

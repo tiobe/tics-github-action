@@ -1,4 +1,6 @@
 import { PullRequestChangedFile } from '@octokit/graphql-schema';
+import { Endpoints } from '@octokit/types';
+import { ExtendedAnnotation } from '../viewer/interfaces';
 
 type Side = 'LEFT' | 'RIGHT';
 type AuthorAssociation = 'COLLABORATOR' | 'CONTRIBUTOR' | 'FIRST_TIMER' | 'FIRST_TIME_CONTRIBUTOR' | 'MANNEQUIN' | 'MEMBER' | 'NONE' | 'OWNER';
@@ -168,3 +170,19 @@ export interface ActionOutput {
   conditions: string[];
   annotations: ExtendedAnnotation[];
 }
+
+export type AnnotationLevel = 'notice' | 'warning' | 'failure';
+export interface GithubAnnotation {
+  path: string;
+  start_line: number;
+  end_line: number;
+  start_column?: number;
+  end_column?: number;
+  annotation_level: AnnotationLevel;
+  message: string;
+  title?: string;
+  raw_details?: string;
+}
+
+export type CreateCheckRunParams = Endpoints['POST /repos/{owner}/{repo}/check-runs']['parameters'];
+export type UpdateCheckRunParams = Endpoints['PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}']['parameters'];
