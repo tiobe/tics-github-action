@@ -38,7 +38,7 @@
     "@tiobe/install-tics": "^0.6.0",
     "canonical-path": "^1.0.0",
     "date-fns": "^4.1.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "node-fetch": "^2.7.0",
     "proxy-agent": "^6.5.0",
     "semver": "^7.6.3"
