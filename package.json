@@ -4,6 +4,9 @@
   "description": "The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
   "main": "lib/main.js",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "tsc",
     "type-check": "tsc -noEmit",
