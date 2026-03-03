@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 process.env.INPUT_GITHUBTOKEN = 'token';
 process.env.INPUT_MODE = 'client';
@@ -14,14 +14,14 @@ process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
 
 beforeEach(() => {
-  jest.resetModules();
+  vi.resetModules();
 
-  jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
+  vi.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 });
 
 describe('pullRequestNumber', () => {
   it('should return pullRequestNumber from GitHub context', async () => {
-    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
+    vi.doMock('@actions/github', (): any => {
       return {
         context: {
           action: '_tics-github-action',
@@ -38,17 +38,16 @@ describe('pullRequestNumber', () => {
             repo: 'repo'
           }
         },
-        getOctokit: jest.fn()
+        getOctokit: vi.fn()
       };
     });
 
-    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
-
-    expect(pullRequestNumber).toBe(1);
+    const { githubConfig } = await import('../../src/configuration/config');
+    expect(githubConfig.pullRequestNumber).toBe(1);
   });
 
   it('should return pullRequestNumber from environment variable if no GitHub context', async () => {
-    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
+    vi.doMock('@actions/github', (): any => {
       return {
         context: {
           action: '_tics-github-action',
@@ -65,19 +64,18 @@ describe('pullRequestNumber', () => {
             repo: 'repo'
           }
         },
-        getOctokit: jest.fn()
+        getOctokit: vi.fn()
       };
     });
 
     process.env.PULL_REQUEST_NUMBER = '2';
 
-    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
-
-    expect(pullRequestNumber).toBe(2);
+    const { githubConfig } = await import('../../src/configuration/config');
+    expect(githubConfig.pullRequestNumber).toBe(2);
   });
 
   it('should set undefined as pullRequestNumber when no value was found', async () => {
-    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => {
+    vi.doMock('@actions/github', (): any => {
       return {
         context: {
           action: '_tics-github-action',
@@ -94,43 +92,42 @@ describe('pullRequestNumber', () => {
             repo: 'repo'
           }
         },
-        getOctokit: jest.fn()
+        getOctokit: vi.fn()
       };
     });
 
     process.env.PULL_REQUEST_NUMBER = '';
 
-    const pullRequestNumber = require('../../src/configuration/config').githubConfig.pullRequestNumber;
-
-    expect(pullRequestNumber).toBeUndefined();
+    const { githubConfig } = await import('../../src/configuration/config');
+    expect(githubConfig.pullRequestNumber).toBeUndefined();
   });
 });
 
 describe('urls', () => {
-  it('should return base url from viewerUrl', () => {
-    const baseUrl = require('../../src/configuration/config').ticsConfig.baseUrl;
+  it('should return base url from viewerUrl', async () => {
+    const baseUrl = (await import('../../src/configuration/config')).ticsConfig.baseUrl;
 
     expect(baseUrl).toBe('http://localhost/tiobeweb/TICS');
   });
 
-  it('should return viewer url as base url from viewerUrl if displayUrl is not set.', () => {
-    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
+  it('should return viewer url as base url from viewerUrl if displayUrl is not set.', async () => {
+    const displayUrl = (await import('../../src/configuration/config')).ticsConfig.displayUrl;
 
     expect(displayUrl).toBe('http://localhost/tiobeweb/TICS');
   });
 
-  it('should return viewer url if displayUrl is set without trailing slash', () => {
+  it('should return viewer url if displayUrl is set without trailing slash', async () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost';
 
-    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
+    const displayUrl = (await import('../../src/configuration/config')).ticsConfig.displayUrl;
 
     expect(displayUrl).toBe('http://localhost/');
   });
 
-  it('should return viewer url if displayUrl is set with trailing slash', () => {
+  it('should return viewer url if displayUrl is set with trailing slash', async () => {
     process.env.INPUT_DISPLAYURL = 'http://localhost/';
 
-    const displayUrl = require('../../src/configuration/config').ticsConfig.displayUrl;
+    const displayUrl = (await import('../../src/configuration/config')).ticsConfig.displayUrl;
 
     expect(displayUrl).toBe('http://localhost/');
   });

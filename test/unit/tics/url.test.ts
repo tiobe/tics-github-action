@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { getItemFromUrl, getProjectFromUrl } from '../../../src/tics/url';
 import { ticsCliMock } from '../../.setup/mock';
 

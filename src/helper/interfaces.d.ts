@@ -1,5 +1,5 @@
-import { ChangedFile } from '../github/interfaces';
-import { ExtendedAnnotation, QualityGate } from '../viewer/interfaces';
+import { ChangedFile } from '../github/interfaces.js';
+import { ExtendedAnnotation, QualityGate } from '../viewer/interfaces.js';
 
 export interface ChangedFiles {
   files: ChangedFile[];

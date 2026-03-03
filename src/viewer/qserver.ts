@@ -1,9 +1,9 @@
-import { ticsCli, ticsConfig } from '../configuration/config';
-import { RunDateResponse } from './interfaces';
-import { logger } from '../helper/logger';
-import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
+import { ticsCli, ticsConfig } from '../configuration/config.js';
+import { RunDateResponse } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { getRetryMessage, getRetryErrorMessage } from '../helper/response.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
 
 /**
  * Gets the date of the last QServer run the viewer knows of.

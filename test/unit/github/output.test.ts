@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as core from '@actions/core';
 import { createAndSetOutput } from '../../../src/github/output';
 import { ActionOutput } from '../../../src/github/interfaces';
@@ -6,12 +6,12 @@ import { ProjectResult } from '../../../src/helper/interfaces';
 import { annotationsMock, failedQualityGate, passedQualityGate, allAnnotations } from './objects/output';
 
 describe('createAndSetOutput', () => {
-  let setOutputSpy: jest.SpiedFunction<typeof core.setOutput>;
+  let setOutputSpy: Mock<typeof core.setOutput>;
   let expectedOutput: ActionOutput;
   let projectResult: ProjectResult;
 
   beforeEach(() => {
-    setOutputSpy = jest.spyOn(core, 'setOutput');
+    setOutputSpy = vi.spyOn(core, 'setOutput');
     expectedOutput = {
       conditions: [],
       annotations: []

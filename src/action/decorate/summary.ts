@@ -1,17 +1,16 @@
 import { EOL } from 'os';
 import { format } from 'date-fns';
 import { summary } from '@actions/core';
-import { SummaryTableRow } from '@actions/core/lib/summary';
-import { Status } from '../../helper/enums';
-import { logger } from '../../helper/logger';
-import { joinUrl } from '../../helper/url';
-import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
-import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown';
-import { githubConfig, ticsConfig } from '../../configuration/config';
-import { getCurrentStepPath } from '../../github/runs';
-import { GroupedConditions } from './interface';
-import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
-import { ViewerFeature, viewerVersion } from '../../viewer/version';
+import { Status } from '../../helper/enums.js';
+import { logger } from '../../helper/logger.js';
+import { joinUrl } from '../../helper/url.js';
+import { AnalysisResult, ProjectResult } from '../../helper/interfaces.js';
+import { generateComment, generateExpandableAreaMarkdown, generateItalic, generateStatusMarkdown } from './markdown.js';
+import { githubConfig, ticsConfig } from '../../configuration/config.js';
+import { getCurrentStepPath } from '../../github/runs.js';
+import { GroupedConditions, SummaryTableRow } from './interface.js';
+import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces.js';
+import { ViewerFeature, viewerVersion } from '../../viewer/version.js';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
 

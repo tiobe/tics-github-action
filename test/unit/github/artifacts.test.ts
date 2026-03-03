@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as artifact from '@actions/artifact';
 import * as fs from 'fs';
 import { getTmpDir, uploadArtifact } from '../../../src/github/artifacts';
@@ -30,13 +30,19 @@ describe('tempdir test', () => {
 
 describe('artifacts test', () => {
   const mockArtifactClient = new MockArtifactClient();
+  let uploadSpy: Mock;
+
+  beforeEach(() => {
+    vi.spyOn(artifact, 'DefaultArtifactClient').mockImplementation(function () {
+      return mockArtifactClient;
+    });
+    uploadSpy = vi.spyOn(mockArtifactClient, 'uploadArtifact');
+  });
 
   it('should upload logfile to tmpdir', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log')]);
-    jest.spyOn(artifact, 'DefaultArtifactClient').mockReturnValue(mockArtifactClient);
-    const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact');
+    vi.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log')]);
 
     await uploadArtifact();
 
@@ -53,10 +59,8 @@ describe('artifacts test', () => {
     const direntOne = [new MockDirent(false, 'tics', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics')];
     const direntTwo = [new MockDirent(true, 'file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics/file.log')];
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntOne);
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntTwo);
-    jest.spyOn(artifact, 'DefaultArtifactClient').mockReturnValue(mockArtifactClient);
-    const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact');
+    vi.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntOne);
+    vi.spyOn(fs, 'readdirSync').mockReturnValueOnce(direntTwo);
 
     await uploadArtifact();
 
@@ -70,10 +74,9 @@ describe('artifacts test', () => {
   it('should call debug logger on upload throwing an error', async () => {
     ticsCliMock.tmpdir = '/tmp';
 
-    jest.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_tics-github-action/ticstmpdir/file.log')]);
-    jest.spyOn(artifact, 'DefaultArtifactClient').mockReturnValue(mockArtifactClient);
-    const uploadSpy = jest.spyOn(mockArtifactClient, 'uploadArtifact').mockRejectedValue(Error('connection issues'));
-    const loggerSpy = jest.spyOn(logger, 'debug');
+    vi.spyOn(fs, 'readdirSync').mockReturnValueOnce([new MockDirent(true, 'file.log', '/tmp/123_TICS_tics-github-action/ticstmpdir/file.log')]);
+    uploadSpy.mockRejectedValue(Error('connection issues'));
+    const loggerSpy = vi.spyOn(logger, 'debug');
 
     await uploadArtifact();
 

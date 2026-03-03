@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { Status } from '../../../../src/helper/enums';
 import { generateExpandableAreaMarkdown, generateStatusMarkdown } from '../../../../src/action/decorate/markdown';
 

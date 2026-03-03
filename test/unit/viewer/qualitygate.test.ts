@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getQualityGate, getQualityGateUrl } from '../../../src/viewer/qualitygate';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
@@ -6,7 +6,7 @@ import { viewerVersion } from '../../../src/viewer/version';
 
 describe('getQualityGate', () => {
   it('should return quality gates from viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { data: 'data' }, retryCount: 0, status: 200 });
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { data: 'data' }, retryCount: 0, status: 200 });
 
     const response = await getQualityGate('url');
 
@@ -14,7 +14,7 @@ describe('getQualityGate', () => {
   });
 
   it('should throw error on faulty get in getQualityGate', async () => {
-    jest.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
+    vi.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
 
     let error: any;
     try {
@@ -31,7 +31,7 @@ describe('getQualityGateUrl', () => {
   let supportNewAnnotations = false;
 
   beforeAll(() => {
-    jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async () => {
+    vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async () => {
       return supportNewAnnotations;
     });
   });

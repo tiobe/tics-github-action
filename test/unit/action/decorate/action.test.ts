@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as summary from '../../../../src/action/decorate/summary';
 import * as pullRequest from '../../../../src/action/decorate/pull-request';
 import * as annotations from '../../../../src/github/annotations';
@@ -9,20 +9,20 @@ import { analysisPassed, analysisResultsSoaked } from './objects/summary';
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('decorateAction', () => {
-  let spyCreateSummaryBody: jest.SpiedFunction<typeof summary.createSummaryBody>;
-  let spyCreateErrorSummaryBody: jest.SpiedFunction<typeof summary.createErrorSummaryBody>;
-  let spyDecoratePullRequest: jest.SpiedFunction<typeof pullRequest.decoratePullRequest>;
-  let spyPostAnnotations: jest.SpiedFunction<typeof annotations.postAnnotations>;
+  let spyCreateSummaryBody: Mock<typeof summary.createSummaryBody>;
+  let spyCreateErrorSummaryBody: Mock<typeof summary.createErrorSummaryBody>;
+  let spyDecoratePullRequest: Mock<typeof pullRequest.decoratePullRequest>;
+  let spyPostAnnotations: Mock<typeof annotations.postAnnotations>;
 
   beforeEach(() => {
-    spyCreateSummaryBody = jest.spyOn(summary, 'createSummaryBody').mockResolvedValue('body');
-    spyCreateErrorSummaryBody = jest.spyOn(summary, 'createErrorSummaryBody').mockResolvedValue('body');
-    spyDecoratePullRequest = jest.spyOn(pullRequest, 'decoratePullRequest').mockImplementation((): any => {});
-    spyPostAnnotations = jest.spyOn(annotations, 'postAnnotations').mockImplementation((): any => {});
+    spyCreateSummaryBody = vi.spyOn(summary, 'createSummaryBody').mockResolvedValue('body');
+    spyCreateErrorSummaryBody = vi.spyOn(summary, 'createErrorSummaryBody').mockResolvedValue('body');
+    spyDecoratePullRequest = vi.spyOn(pullRequest, 'decoratePullRequest').mockImplementation((): any => {});
+    spyPostAnnotations = vi.spyOn(annotations, 'postAnnotations').mockImplementation((): any => {});
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should call createSummaryBody if analysisResult is present', async () => {

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import * as commits from '../../../../src/github/commits';
 import * as pulls from '../../../../src/github/pulls';
 
@@ -8,20 +8,20 @@ import { singleChangedFiles } from './objects/changed-files';
 import { Mode } from '../../../../src/configuration/tics';
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
-let spyPullFiles: jest.SpiedFunction<any>;
-let spyCommitFiles: jest.SpiedFunction<any>;
-let spyFilesToFile: jest.SpiedFunction<typeof pulls.changedFilesToFile>;
+let spyPullFiles: Mock<any>;
+let spyCommitFiles: Mock<any>;
+let spyFilesToFile: Mock<typeof pulls.changedFilesToFile>;
 
 beforeEach(() => {
   ticsConfigMock.mode = Mode.CLIENT;
 
-  spyCommitFiles = jest.spyOn(commits, 'getChangedFilesOfCommit');
-  spyPullFiles = jest.spyOn(pulls, 'getChangedFilesOfPullRequestRest');
-  spyFilesToFile = jest.spyOn(pulls, 'changedFilesToFile');
+  spyCommitFiles = vi.spyOn(commits, 'getChangedFilesOfCommit');
+  spyPullFiles = vi.spyOn(pulls, 'getChangedFilesOfPullRequestRest');
+  spyFilesToFile = vi.spyOn(pulls, 'changedFilesToFile');
 });
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('pull Request', () => {

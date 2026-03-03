@@ -1,9 +1,9 @@
-import { ticsCli, ticsConfig } from '../configuration/config';
-import { logger } from '../helper/logger';
-import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
-import { TicsRunIdentifier, AnalyzedFiles, AnalyzedFile } from './interfaces';
+import { ticsCli, ticsConfig } from '../configuration/config.js';
+import { logger } from '../helper/logger.js';
+import { getRetryMessage, getRetryErrorMessage } from '../helper/response.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
+import { TicsRunIdentifier, AnalyzedFiles, AnalyzedFile } from './interfaces.js';
 
 /**
  * Retrieves the files TICS analyzed from the TICS viewer.

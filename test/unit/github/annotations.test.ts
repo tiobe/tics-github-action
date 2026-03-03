@@ -1,5 +1,10 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { EOL } from 'os';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 import { deletePreviousReviewComments, getPostedReviewComments, postAnnotations } from '../../../src/github/annotations';
+import { octokit } from '../../../src/github/octokit';
+import { logger } from '../../../src/helper/logger';
+import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 import {
   emptyComment,
   fiveMixedAnalysisResults,
@@ -8,14 +13,19 @@ import {
   twoMixedAnalysisResults,
   warningComment
 } from './objects/annotations';
-import { logger } from '../../../src/helper/logger';
-import { octokit } from '../../../src/github/octokit';
-import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
-import { EOL } from 'os';
-import { SpiedFunction } from 'jest-mock';
-import { ShowAnnotationSeverity } from '../../../src/configuration/action';
+
+afterEach(() => {
+  vi.resetModules();
+  vi.resetAllMocks();
+});
 
 describe('getPostedReviewComments', () => {
+  let paginateSpy: Mock;
+
+  beforeEach(() => {
+    paginateSpy = vi.spyOn(octokit, 'paginate');
+  });
+
   it('should throw error when a pullRequestNumber is not present', async () => {
     githubConfigMock.pullRequestNumber = undefined;
 
@@ -31,7 +41,7 @@ describe('getPostedReviewComments', () => {
 
   it('should return single file on getPostedReviewComments', async () => {
     githubConfigMock.pullRequestNumber = 1;
-    (octokit.paginate as any).mockReturnValueOnce([{ id: 1 }]);
+    paginateSpy.mockReturnValueOnce([{ id: 1 }]);
 
     const response = await getPostedReviewComments();
 
@@ -39,8 +49,8 @@ describe('getPostedReviewComments', () => {
   });
 
   it('should be called with specific parameters on getPostedReviewComments', async () => {
-    (octokit.paginate as any).mockReturnValueOnce();
-    const spy = jest.spyOn(octokit, 'paginate');
+    paginateSpy.mockReturnValueOnce([]);
+    const spy = vi.spyOn(octokit, 'paginate');
 
     await getPostedReviewComments();
 
@@ -48,7 +58,7 @@ describe('getPostedReviewComments', () => {
   });
 
   it('should return three files on getPostedReviewComments', async () => {
-    (octokit.paginate as any).mockReturnValueOnce([{}, {}, {}]);
+    paginateSpy.mockReturnValueOnce([{}, {}, {}]);
 
     const response = await getPostedReviewComments();
 
@@ -56,9 +66,9 @@ describe('getPostedReviewComments', () => {
   });
 
   it('should post a notice when getPostedReviewComments fails', async () => {
-    const spy = jest.spyOn(logger, 'notice');
+    const spy = vi.spyOn(logger, 'notice');
 
-    (octokit.paginate as any).mockImplementationOnce(() => {
+    paginateSpy.mockImplementationOnce(() => {
       throw new Error();
     });
     await getPostedReviewComments();
@@ -69,7 +79,7 @@ describe('getPostedReviewComments', () => {
 
 describe('deletePreviousReviewComments', () => {
   it('should call deleteReviewComment once on deletePreviousReviewComments', async () => {
-    const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
+    const spy = vi.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([warningComment, emptyComment]);
 
@@ -77,7 +87,7 @@ describe('deletePreviousReviewComments', () => {
   });
 
   it('should call deleteReviewComment twice on deletePreviousReviewComments', async () => {
-    const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
+    const spy = vi.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([warningComment, warningComment]);
 
@@ -85,7 +95,7 @@ describe('deletePreviousReviewComments', () => {
   });
 
   it('should not call deleteReviewComment on deletePreviousReviewComments', async () => {
-    const spy = jest.spyOn(octokit.rest.pulls, 'deleteReviewComment');
+    const spy = vi.spyOn(octokit.rest.pulls, 'deleteReviewComment');
 
     await deletePreviousReviewComments([emptyComment, emptyComment]);
 
@@ -93,7 +103,7 @@ describe('deletePreviousReviewComments', () => {
   });
 
   it('should post a notice when deletePreviousReviewComments fails', async () => {
-    const spy = jest.spyOn(logger, 'notice');
+    const spy = vi.spyOn(logger, 'notice');
 
     (octokit.rest.pulls.deleteReviewComment as any).mockImplementationOnce(() => {
       throw new Error();
@@ -105,20 +115,16 @@ describe('deletePreviousReviewComments', () => {
 });
 
 describe('postAnnotations', () => {
-  let createCheckSpy: jest.SpiedFunction<typeof octokit.rest.checks.create>;
-  let updateCheckSpy: jest.SpiedFunction<typeof octokit.rest.checks.update>;
-  let warningSpy: jest.SpiedFunction<typeof logger.warning>;
-  let infoSpy: jest.SpiedFunction<typeof logger.info>;
+  let createCheckSpy: Mock<typeof octokit.rest.checks.create>;
+  let updateCheckSpy: Mock<typeof octokit.rest.checks.update>;
+  let warningSpy: Mock<typeof logger.warning>;
+  let infoSpy: Mock<typeof logger.info>;
 
   beforeEach(() => {
-    createCheckSpy = jest.spyOn(octokit.rest.checks, 'create');
-    updateCheckSpy = jest.spyOn(octokit.rest.checks, 'update');
-    warningSpy = jest.spyOn(logger, 'warning');
-    infoSpy = jest.spyOn(logger, 'info');
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
+    createCheckSpy = vi.spyOn(octokit.rest.checks, 'create');
+    updateCheckSpy = vi.spyOn(octokit.rest.checks, 'update');
+    warningSpy = vi.spyOn(logger, 'warning');
+    infoSpy = vi.spyOn(logger, 'info');
   });
 
   it('should return if no head_sha is present', async () => {
@@ -330,7 +336,7 @@ describe('postAnnotations', () => {
   });
 
   it('should post 200 annotations if all are postable', async () => {
-    (createCheckSpy as SpiedFunction<any>).mockResolvedValue({ data: { id: 1234 } });
+    (createCheckSpy as Mock<any>).mockResolvedValue({ data: { id: 1234 } });
 
     await postAnnotations(twohundredAnnotations());
 

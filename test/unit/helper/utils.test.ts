@@ -1,4 +1,4 @@
-import { describe, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { isOneOf } from '../../../src/helper/utils';
 
 describe('isOneOf', () => {

@@ -1,15 +1,15 @@
-import { Mode } from './configuration/tics';
+import { Mode } from './configuration/tics.js';
 import { existsSync } from 'fs';
-import { logger } from './helper/logger';
-import { githubConfig, ticsCli, ticsConfig } from './configuration/config';
-import { postCliSummary } from './action/cli/summary';
+import { logger } from './helper/logger.js';
+import { githubConfig, ticsCli, ticsConfig } from './configuration/config.js';
+import { postCliSummary } from './action/cli/summary.js';
 import { summary } from '@actions/core';
-import { Verdict } from './helper/interfaces';
-import { uploadArtifact } from './github/artifacts';
-import { diagnosticAnalysis } from './analysis/diagnostic';
-import { qServerAnalysis } from './analysis/qserver';
-import { clientAnalysis } from './analysis/client';
-import { ViewerFeature, viewerVersion } from './viewer/version';
+import { Verdict } from './helper/interfaces.js';
+import { uploadArtifact } from './github/artifacts.js';
+import { diagnosticAnalysis } from './analysis/diagnostic.js';
+import { qServerAnalysis } from './analysis/qserver.js';
+import { clientAnalysis } from './analysis/client.js';
+import { ViewerFeature, viewerVersion } from './viewer/version.js';
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : 'TICS failed with unknown reason';

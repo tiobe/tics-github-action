@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as annotations from '../../../../src/github/annotations';
 import * as comments from '../../../../src/github/comments';
 import * as review from '../../../../src/github/review';
@@ -8,16 +8,16 @@ import { Events } from '../../../../src/github/enums';
 import { decoratePullRequest, postToConversation } from '../../../../src/action/decorate/pull-request';
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('postToConversation', () => {
-  let spyPostReview: jest.SpiedFunction<typeof review.postReview>;
-  let spyPostComment: jest.SpiedFunction<typeof comments.postComment>;
+  let spyPostReview: Mock<typeof review.postReview>;
+  let spyPostComment: Mock<typeof comments.postComment>;
 
   beforeEach(() => {
-    spyPostReview = jest.spyOn(review, 'postReview');
-    spyPostComment = jest.spyOn(comments, 'postComment');
+    spyPostReview = vi.spyOn(review, 'postReview');
+    spyPostComment = vi.spyOn(comments, 'postComment');
   });
 
   it('should not call anything if postToConversation is false', async () => {
@@ -85,22 +85,22 @@ describe('postToConversation', () => {
 import * as pull_request from '../../../../src/action/decorate/pull-request';
 
 describe('decoratePullRequest', () => {
-  let spyDeletePreviousReviewComments: jest.SpiedFunction<typeof annotations.deletePreviousReviewComments>;
-  let spyGetPreviousReviewComments: jest.SpiedFunction<any>;
-  let spyDeletePreviousComments: jest.SpiedFunction<typeof comments.deletePreviousComments>;
-  let spyGetPreviousComments: jest.SpiedFunction<any>;
-  let spyPostToConversation: jest.SpiedFunction<typeof pull_request.postToConversation>;
+  let spyDeletePreviousReviewComments: Mock<typeof annotations.deletePreviousReviewComments>;
+  let spyGetPostedReviewComments: Mock;
+  let spyDeletePreviousComments: Mock<typeof comments.deletePreviousComments>;
+  let spyGetPreviousComments: Mock;
+  let spyPostToConversation: Mock<typeof pull_request.postToConversation>;
 
   beforeEach(() => {
-    spyDeletePreviousReviewComments = jest.spyOn(annotations, 'deletePreviousReviewComments');
-    spyGetPreviousReviewComments = jest.spyOn(annotations, 'getPostedReviewComments');
-    spyDeletePreviousComments = jest.spyOn(comments, 'deletePreviousComments');
-    spyGetPreviousComments = jest.spyOn(comments, 'getPostedComments');
-    spyPostToConversation = jest.spyOn(pull_request, 'postToConversation');
+    spyDeletePreviousReviewComments = vi.spyOn(annotations, 'deletePreviousReviewComments');
+    spyGetPostedReviewComments = vi.spyOn(annotations, 'getPostedReviewComments');
+    spyDeletePreviousComments = vi.spyOn(comments, 'deletePreviousComments');
+    spyGetPreviousComments = vi.spyOn(comments, 'getPostedComments');
+    spyPostToConversation = vi.spyOn(pull_request, 'postToConversation');
   });
 
   it('should not remove (review) comments if there are none', async () => {
-    spyGetPreviousReviewComments.mockResolvedValue([]);
+    spyGetPostedReviewComments.mockResolvedValue([]);
     spyGetPreviousComments.mockResolvedValue([]);
 
     await decoratePullRequest(false, 'body');
@@ -111,13 +111,13 @@ describe('decoratePullRequest', () => {
   });
 
   it('should remove (review) comments if there are some', async () => {
-    spyGetPreviousReviewComments.mockResolvedValue([{ id: 1 }]);
-    spyGetPreviousComments.mockResolvedValue([{ id: 2 }]);
+    spyGetPostedReviewComments.mockResolvedValue([{ id: 1, body: 'body' }]);
+    spyGetPreviousComments.mockResolvedValue([{ id: 2, body: 'body' }]);
 
     await decoratePullRequest(true, 'body');
 
-    expect(spyDeletePreviousReviewComments).toHaveBeenCalledWith([{ id: 1 }]);
-    expect(spyDeletePreviousComments).toHaveBeenCalledWith([{ id: 2 }]);
+    expect(spyDeletePreviousReviewComments).toHaveBeenCalledWith([{ id: 1, body: 'body' }]);
+    expect(spyDeletePreviousComments).toHaveBeenCalledWith([{ id: 2, body: 'body' }]);
     expect(spyPostToConversation).toHaveBeenCalledWith(true, 'body', Events.APPROVE);
   });
 });

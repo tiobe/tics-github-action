@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getChangedFilesOfCommit } from '../../../src/github/commits';
 import { changedFile } from './objects/pulls';
 import { logger } from '../../../src/helper/logger';
@@ -6,6 +6,11 @@ import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock } from '../../.setup/mock';
 
 describe('getChangedFilesOfCommit', () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+    vi.resetModules();
+  });
+
   it('should return single file on getChangedFilesOfCommit', async () => {
     const changedFiles = [changedFile];
 
@@ -17,7 +22,7 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   it('should return empty array on undefined files', async () => {
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
@@ -30,7 +35,7 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   it('should include changed moved file', async () => {
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
@@ -47,7 +52,7 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   it('should exclude unchanged moved file', async () => {
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
@@ -66,7 +71,7 @@ describe('getChangedFilesOfCommit', () => {
   it('should exclude changed moved file on excludeMovedFiles', async () => {
     actionConfigMock.excludeMovedFiles = true;
 
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
@@ -85,7 +90,7 @@ describe('getChangedFilesOfCommit', () => {
   });
 
   it('should call debug on callback of paginate', async () => {
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
     await getChangedFilesOfCommit();
 
     (octokit.paginate as any).mock.calls[0][2]({
@@ -103,7 +108,7 @@ describe('getChangedFilesOfCommit', () => {
 
   it('should be called with specific parameters on getChangedFilesOfCommit', async () => {
     (octokit.paginate as any).mockResolvedValue([]);
-    const spy = jest.spyOn(octokit, 'paginate');
+    const spy = vi.spyOn(octokit, 'paginate');
 
     await getChangedFilesOfCommit();
 
@@ -115,7 +120,7 @@ describe('getChangedFilesOfCommit', () => {
 
     const response = await getChangedFilesOfCommit();
 
-    expect(response as any[]).toHaveLength(3);
+    expect(response).toHaveLength(3);
   });
 
   it('should call error on thrown error on paginate', async () => {

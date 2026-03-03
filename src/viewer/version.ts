@@ -1,9 +1,9 @@
-import { getRetryErrorMessage, getRetryMessage } from '../helper/response';
-import { VersionResponse } from './interfaces';
-import { logger } from '../helper/logger';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
-import { ticsConfig } from '../configuration/config';
+import { getRetryErrorMessage, getRetryMessage } from '../helper/response.js';
+import { VersionResponse } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
+import { ticsConfig } from '../configuration/config.js';
 import { coerce, satisfies, SemVer } from 'semver';
 
 export enum ViewerFeature {

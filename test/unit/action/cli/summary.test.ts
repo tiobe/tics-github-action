@@ -1,13 +1,17 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { logger } from '../../../../src/helper/logger';
 import { postCliSummary } from '../../../../src/action/cli/summary';
 import { Verdict } from '../../../../src/helper/interfaces';
 import { githubConfigMock } from '../../../.setup/mock';
 
 describe('cliSummary', () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('should post errors and warnings on logLevel debug, cliSummary.', async () => {
-    const error = jest.spyOn(logger, 'error');
-    const warning = jest.spyOn(logger, 'warning');
+    const error = vi.spyOn(logger, 'error');
+    const warning = vi.spyOn(logger, 'warning');
 
     githubConfigMock.debugger = true;
 
@@ -24,8 +28,8 @@ describe('cliSummary', () => {
   });
 
   it('should post errors and no warnings on logLevel default, cliSummary.', async () => {
-    const error = jest.spyOn(logger, 'error');
-    const warning = jest.spyOn(logger, 'warning');
+    const error = vi.spyOn(logger, 'error');
+    const warning = vi.spyOn(logger, 'warning');
 
     githubConfigMock.debugger = false;
 

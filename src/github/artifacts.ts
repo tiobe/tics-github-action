@@ -4,9 +4,9 @@ import { readdirSync } from 'fs';
 import { DefaultArtifactClient } from '@actions/artifact';
 import { join } from 'canonical-path';
 
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config.js';
 
 export async function uploadArtifact(): Promise<void> {
   const artifactClient = new DefaultArtifactClient();

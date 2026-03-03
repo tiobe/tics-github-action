@@ -1,17 +1,20 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as exec from '@actions/exec';
 import * as os from 'os';
 import { getTicsCommand, runTicsAnalyzer } from '../../../src/tics/analyzer';
 import { Mode, TrustStrategy } from '../../../src/configuration/tics';
 import { httpClient } from '../../../src/viewer/http-client';
 import { githubConfigMock, ticsCliMock, ticsConfigMock } from '../../.setup/mock';
+import { InstallTics } from '@tiobe/install-tics';
 
 // test for multiple different types of configurations
 describe('test multiple types of configuration', () => {
   const originalTrustStrategy = process.env.TICSTRUSTSTRATEGY;
+  let execSpy: Mock<typeof exec.exec>;
+  let platformSpy: Mock<typeof os.platform>;
 
   beforeAll(() => {
-    jest.spyOn(process.stdout, 'write').mockImplementation((): boolean => true);
+    vi.spyOn(process.stdout, 'write').mockImplementation((): boolean => true);
 
     ticsConfigMock.viewerUrl = 'http://base.com/tiobeweb/TICS/api/cfg?name=default';
   });
@@ -20,11 +23,19 @@ describe('test multiple types of configuration', () => {
     // set defaults
     ticsCliMock.calc = 'GATE';
     ticsCliMock.project = 'project';
+
+    execSpy = vi.spyOn(exec, 'exec');
+    execSpy.mockResolvedValue(0);
+
+    platformSpy = vi.spyOn(os, 'platform');
+    vi.spyOn(InstallTics.prototype, 'getInstallCommand').mockResolvedValue('<install command here>');
   });
 
   afterEach(() => {
     delete process.env.TICSTRUSTSTRATEGY;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
+    vi.resetAllMocks();
+    vi.resetModules();
   });
 
   afterAll(() => {
@@ -32,9 +43,7 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with diagnostic TICS command for Linux', async () => {
-    const spy = jest.spyOn(exec, 'exec');
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(os, 'platform').mockReturnValue('linux');
+    platformSpy.mockReturnValue('linux');
 
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
 
@@ -42,16 +51,14 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github -help"`, [], {
+    expect(execSpy).toHaveBeenCalledWith(`/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github -help"`, [], {
       listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
       silent: true
     });
   });
 
   it('should call exec with minimal TICS command for Linux', async () => {
-    const spy = jest.spyOn(exec, 'exec');
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(os, 'platform').mockReturnValue('linux');
+    platformSpy.mockReturnValue('linux');
 
     ticsConfigMock.mode = Mode.CLIENT;
 
@@ -59,7 +66,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
+    expect(execSpy).toHaveBeenCalledWith(
       `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE"`,
       [],
       {
@@ -70,15 +77,13 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with minimal TICS command for Windows', async () => {
-    const spy = jest.spyOn(exec, 'exec');
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(os, 'platform').mockReturnValue('win32');
+    platformSpy.mockReturnValue('win32');
 
     const response = await runTicsAnalyzer('/path/to');
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
+    expect(execSpy).toHaveBeenCalledWith(
       `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE}"`,
       [],
       {
@@ -89,9 +94,7 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with run TICS command for Linux', async () => {
-    const spy = jest.spyOn(exec, 'exec');
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(os, 'platform').mockReturnValue('linux');
+    platformSpy.mockReturnValue('linux');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -102,7 +105,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
+    expect(execSpy).toHaveBeenCalledWith(
       "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
       [],
       {
@@ -113,9 +116,7 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with run TICS command for Windows', async () => {
-    const spy = jest.spyOn(exec, 'exec');
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(os, 'platform').mockReturnValue('win32');
+    platformSpy.mockReturnValue('win32');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -126,7 +127,7 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
+    expect(execSpy).toHaveBeenCalledWith(
       "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
       [],
       {
@@ -137,10 +138,8 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with full TICS command for Linux, trustStrategy self-signed', async () => {
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
-    const spy = jest.spyOn(exec, 'exec');
-    jest.spyOn(os, 'platform').mockReturnValue('linux');
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
+    platformSpy.mockReturnValue('linux');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -154,8 +153,8 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
-      "/bin/bash -c \"source <(curl --silent --insecure 'http://base.com/tiobeweb/TICS/install-url') && TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
+    expect(execSpy).toHaveBeenCalledWith(
+      "/bin/bash -c \"<install command here> && TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -165,10 +164,8 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with full TICS command for Windows, no trustStrategy set', async () => {
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
-    const spy = jest.spyOn(exec, 'exec');
-    jest.spyOn(os, 'platform').mockReturnValue('win32');
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
+    platformSpy.mockReturnValue('win32');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -181,8 +178,8 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
-      "powershell \"[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;  iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
+    expect(execSpy).toHaveBeenCalledWith(
+      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -192,10 +189,8 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with full TICS command for Windows, trustStrategy set to all', async () => {
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
-    const spy = jest.spyOn(exec, 'exec');
-    jest.spyOn(os, 'platform').mockReturnValue('win32');
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
+    platformSpy.mockReturnValue('win32');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -215,8 +210,8 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
-      "powershell \"[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
+    expect(execSpy).toHaveBeenCalledWith(
+      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -226,10 +221,8 @@ describe('test multiple types of configuration', () => {
   });
 
   it('should call exec with full TICS command for Windows and filelist .', async () => {
-    (exec.exec as any).mockResolvedValueOnce(0);
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
-    const spy = jest.spyOn(exec, 'exec');
-    jest.spyOn(os, 'platform').mockReturnValue('win32');
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
+    platformSpy.mockReturnValue('win32');
 
     ticsCliMock.calc = 'CS';
     ticsCliMock.cdtoken = 'token';
@@ -250,8 +243,8 @@ describe('test multiple types of configuration', () => {
 
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
-    expect(spy).toHaveBeenCalledWith(
-      "powershell \"[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; iex ((New-Object System.Net.WebClient).DownloadString('http://base.com/tiobeweb/TICS/install-url')); if ($?) {TICS -ide github . -viewer -project 'project' -branchname main -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
+    expect(execSpy).toHaveBeenCalledWith(
+      "powershell \"<install command here>; if ($?) {TICS -ide github . -viewer -project 'project' -branchname main -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -362,101 +355,89 @@ describe('getTicsCommand', () => {
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
   afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  beforeEach(() => {
-    (exec.exec as any).mockResolvedValue(0);
+    vi.resetAllMocks();
+    vi.resetModules();
   });
 
   it('should return single error if already exists in errorlist', async () => {
-    await jest.isolateModulesAsync(async () => {
-      const analyzer = require('../../../src/tics/analyzer');
-      const exec = require('@actions/exec');
-      (exec.exec as any).mockResolvedValue(0);
-      ticsConfigMock.installTics = false;
+    const analyzer = await import('../../../src/tics/analyzer');
+    const exec = await import('@actions/exec');
+    (exec.exec as any).mockResolvedValue(0);
+    ticsConfigMock.installTics = false;
 
-      const response = await analyzer.runTicsAnalyzer('/path/to');
-      (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
-      (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
+    const response = await analyzer.runTicsAnalyzer('/path/to');
+    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
+    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
 
-      expect(response.errorList).toHaveLength(1);
-      expect(response.errorList).toEqual(['[ERROR 666] Error']);
-    });
+    expect(response.errorList).toHaveLength(1);
+    expect(response.errorList).toEqual(['[ERROR 666] Error']);
   });
 
   it('should return two errors in errorlist', async () => {
-    await jest.isolateModulesAsync(async () => {
-      const analyzer = require('../../../src/tics/analyzer');
-      const exec = require('@actions/exec');
-      (exec.exec as any).mockResolvedValue(0);
+    const analyzer = await import('../../../src/tics/analyzer');
+    const exec = await import('@actions/exec');
+    (exec.exec as any).mockResolvedValue(0);
 
-      const response = await analyzer.runTicsAnalyzer('/path/to');
-      (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
-      (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 777] Different error');
+    const response = await analyzer.runTicsAnalyzer('/path/to');
+    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
+    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 777] Different error');
 
-      expect(response.errorList).toHaveLength(2);
-      expect(response.errorList).toEqual(['[ERROR 666] Error', '[ERROR 777] Different error']);
-    });
+    expect(response.errorList).toHaveLength(2);
+    expect(response.errorList).toEqual(['[ERROR 666] Error', '[ERROR 777] Different error']);
   });
 
   it('should return warnings in warningList', async () => {
-    await jest.isolateModulesAsync(async () => {
-      const analyzer = require('../../../src/tics/analyzer');
-      const exec = require('@actions/exec');
-      (exec.exec as any).mockResolvedValue(0);
+    const analyzer = await import('../../../src/tics/analyzer');
+    const exec = await import('@actions/exec');
+    (exec.exec as any).mockResolvedValue(0);
 
-      const response = await analyzer.runTicsAnalyzer('/path/to');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 5057] Warning');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 666] Warning');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 777] Warning');
+    const response = await analyzer.runTicsAnalyzer('/path/to');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 5057] Warning');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 666] Warning');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 777] Warning');
 
-      expect(response.warningList).toHaveLength(4);
-      expect(response.warningList).toEqual([
-        '[WARNING 5057] Warning',
-        `[WARNING 5057] No files to analyze with option '-changed': all checkable files seem to be unchanged.`,
-        '[WARNING 666] Warning',
-        '[WARNING 777] Warning'
-      ]);
-    });
+    expect(response.warningList).toHaveLength(4);
+    expect(response.warningList).toEqual([
+      '[WARNING 5057] Warning',
+      `[WARNING 5057] No files to analyze with option '-changed': all checkable files seem to be unchanged.`,
+      '[WARNING 666] Warning',
+      '[WARNING 777] Warning'
+    ]);
   });
 
   it('should add ExplorerUrl in response', async () => {
-    await jest.isolateModulesAsync(async () => {
-      const analyzer = require('../../../src/tics/analyzer');
-      const exec = require('@actions/exec');
-      (exec.exec as any).mockResolvedValue(0);
-      ticsConfigMock.displayUrl = 'http://viewer.com';
+    const analyzer = await import('../../../src/tics/analyzer');
+    const exec = await import('@actions/exec');
+    (exec.exec as any).mockResolvedValue(0);
+    ticsConfigMock.displayUrl = 'http://viewer.com';
 
-      await analyzer.runTicsAnalyzer('/path/to');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData');
-      const response = await analyzer.runTicsAnalyzer('/path/to');
+    await analyzer.runTicsAnalyzer('/path/to');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData');
+    const response = await analyzer.runTicsAnalyzer('/path/to');
 
-      expect(response.explorerUrls[0]).toBe('http://viewer.com/Explorer.html#axes=ClientData');
-    });
+    expect(response.explorerUrls[0]).toBe('http://viewer.com/Explorer.html#axes=ClientData');
   });
 
   it('should add all ExplorerUrls in response', async () => {
-    await jest.isolateModulesAsync(async () => {
-      const analyzer = require('../../../src/tics/analyzer');
-      const exec = require('@actions/exec');
-      (exec.exec as any).mockResolvedValue(0);
+    const analyzer = await import('../../../src/tics/analyzer');
+    const exec = await import('@actions/exec');
+    const execMock = exec.exec as any;
+    execMock.mockResolvedValue(0);
 
-      ticsConfigMock.displayUrl = 'http://viewer.com';
+    ticsConfigMock.displayUrl = 'http://viewer.com';
 
-      await analyzer.runTicsAnalyzer('/another/path');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData0');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData1');
-      (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData2');
+    await analyzer.runTicsAnalyzer('/another/path');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData0');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData1');
+    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData2');
 
-      const response = await analyzer.runTicsAnalyzer('/another/path');
-      expect(response.explorerUrls).toEqual([
-        'http://viewer.com/Explorer.html#axes=ClientData0',
-        'http://viewer.com/Explorer.html#axes=ClientData1',
-        'http://viewer.com/Explorer.html#axes=ClientData2'
-      ]);
-    });
+    const response = await analyzer.runTicsAnalyzer('/another/path');
+    expect(response.explorerUrls).toEqual([
+      'http://viewer.com/Explorer.html#axes=ClientData0',
+      'http://viewer.com/Explorer.html#axes=ClientData1',
+      'http://viewer.com/Explorer.html#axes=ClientData2'
+    ]);
   });
 });
 
@@ -465,7 +446,7 @@ describe('throwing errors', () => {
     (exec.exec as any).mockImplementationOnce(() => {
       throw new Error();
     });
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
 
     const response = await runTicsAnalyzer('');
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as processResults from '../../../src/analysis/client/process-analysis';
 import * as changedFiles from '../../../src/analysis/helper/changed-files';
 import * as analyzer from '../../../src/tics/analyzer';
@@ -10,25 +10,25 @@ import { Mode } from '../../../src/configuration/tics';
 import { logger } from '../../../src/helper/logger';
 
 describe('setFailed checks (TICS Client)', () => {
-  let spyInfo: jest.SpiedFunction<typeof logger.info>;
+  let spyInfo: Mock<typeof logger.info>;
 
-  let spyChangedFiles: jest.SpiedFunction<typeof changedFiles.getChangedFiles>;
-  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
-  let spyIncomplete: jest.SpiedFunction<typeof processResults.processIncompleteAnalysis>;
-  let spyComplete: jest.SpiedFunction<typeof processResults.processCompleteAnalysis>;
+  let spyChangedFiles: Mock<typeof changedFiles.getChangedFiles>;
+  let spyAnalyzer: Mock<typeof analyzer.runTicsAnalyzer>;
+  let spyIncomplete: Mock<typeof processResults.processIncompleteAnalysis>;
+  let spyComplete: Mock<typeof processResults.processCompleteAnalysis>;
 
   beforeEach(() => {
     ticsConfigMock.mode = Mode.CLIENT;
-    spyInfo = jest.spyOn(logger, 'info');
+    spyInfo = vi.spyOn(logger, 'info');
 
-    spyChangedFiles = jest.spyOn(changedFiles, 'getChangedFiles');
-    spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
-    spyIncomplete = jest.spyOn(processResults, 'processIncompleteAnalysis');
-    spyComplete = jest.spyOn(processResults, 'processCompleteAnalysis');
+    spyChangedFiles = vi.spyOn(changedFiles, 'getChangedFiles');
+    spyAnalyzer = vi.spyOn(analyzer, 'runTicsAnalyzer');
+    spyIncomplete = vi.spyOn(processResults, 'processIncompleteAnalysis');
+    spyComplete = vi.spyOn(processResults, 'processCompleteAnalysis');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return passing verdict if no files have been changed', async () => {

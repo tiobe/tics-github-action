@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as analysisResults from '../../../../src/analysis/client/analysis-results';
 import * as comments from '../../../../src/github/comments';
 import * as decorate from '../../../../src/action/decorate/action';
@@ -22,18 +22,18 @@ import {
 import { GithubEvent } from '../../../../src/configuration/github-event';
 
 describe('processIncompleteAnalysis', () => {
-  let spyGetPostedComments: jest.SpiedFunction<any>;
-  let spyDeletePreviousComments: jest.SpiedFunction<typeof comments.deletePreviousComments>;
-  let spyPostToConversation: jest.SpiedFunction<typeof pullRequest.postToConversation>;
+  let spyGetPostedComments: Mock<any>;
+  let spyDeletePreviousComments: Mock<typeof comments.deletePreviousComments>;
+  let spyPostToConversation: Mock<typeof pullRequest.postToConversation>;
 
   beforeEach(() => {
-    spyGetPostedComments = jest.spyOn(comments, 'getPostedComments');
-    spyDeletePreviousComments = jest.spyOn(comments, 'deletePreviousComments');
-    spyPostToConversation = jest.spyOn(pullRequest, 'postToConversation');
+    spyGetPostedComments = vi.spyOn(comments, 'getPostedComments');
+    spyDeletePreviousComments = vi.spyOn(comments, 'deletePreviousComments');
+    spyPostToConversation = vi.spyOn(pullRequest, 'postToConversation');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('non pull request', () => {
@@ -111,16 +111,16 @@ describe('processIncompleteAnalysis', () => {
 
 //TODO: this should be done
 describe('processCompleteAnalysis', () => {
-  let decorateSpy: jest.SpiedFunction<typeof decorate.decorateAction>;
-  let createAndSetOutputSpy: jest.SpiedFunction<typeof output.createAndSetOutput>;
-  let getClientAnalysisResultsSpy: jest.SpiedFunction<typeof analysisResults.getClientAnalysisResults>;
+  let decorateSpy: Mock<typeof decorate.decorateAction>;
+  let createAndSetOutputSpy: Mock<typeof output.createAndSetOutput>;
+  let getClientAnalysisResultsSpy: Mock<typeof analysisResults.getClientAnalysisResults>;
 
   beforeEach(() => {
-    decorateSpy = jest.spyOn(decorate, 'decorateAction').mockResolvedValue();
-    createAndSetOutputSpy = jest.spyOn(output, 'createAndSetOutput').mockReturnValue();
-    getClientAnalysisResultsSpy = jest.spyOn(analysisResults, 'getClientAnalysisResults');
+    decorateSpy = vi.spyOn(decorate, 'decorateAction').mockResolvedValue();
+    createAndSetOutputSpy = vi.spyOn(output, 'createAndSetOutput').mockReturnValue();
+    getClientAnalysisResultsSpy = vi.spyOn(analysisResults, 'getClientAnalysisResults');
 
-    jest.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
+    vi.spyOn(comments, 'getPostedComments').mockResolvedValue([]);
   });
 
   it('should return failed message if there are missing quality gates', async () => {

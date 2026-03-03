@@ -1,11 +1,11 @@
-import { ticsCli, ticsConfig } from '../configuration/config';
-import { QualityGate } from './interfaces';
-import { logger } from '../helper/logger';
-import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
-import { TicsRunIdentifier } from './interfaces';
-import { ViewerFeature, viewerVersion } from './version';
+import { ticsCli, ticsConfig } from '../configuration/config.js';
+import { QualityGate } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { getRetryMessage, getRetryErrorMessage } from '../helper/response.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
+import { TicsRunIdentifier } from './interfaces.js';
+import { ViewerFeature, viewerVersion } from './version.js';
 
 /**
  * Retrieves the TICS quality gate from the TICS viewer.

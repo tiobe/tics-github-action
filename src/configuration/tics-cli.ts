@@ -1,8 +1,8 @@
 import { getInput } from '@actions/core';
 
-import { CliOption } from './interfaces';
-import { Mode } from './tics';
-import { logger } from '../helper/logger';
+import { CliOption } from './interfaces.js';
+import { Mode } from './tics.js';
+import { logger } from '../helper/logger.js';
 
 export class TicsCli {
   readonly project: string;

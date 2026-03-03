@@ -1,30 +1,30 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import * as core from '@actions/core';
 import { logger } from '../../../src/helper/logger';
 
-let infoSpy: jest.SpiedFunction<typeof core.info>;
-let debugSpy: jest.SpiedFunction<typeof core.debug>;
-let noticeSpy: jest.SpiedFunction<typeof core.notice>;
-let errorSpy: jest.SpiedFunction<typeof core.error>;
-let warningSpy: jest.SpiedFunction<typeof core.warning>;
-let setFailedSpy: jest.SpiedFunction<typeof core.setFailed>;
+let infoSpy: Mock<typeof core.info>;
+let debugSpy: Mock<typeof core.debug>;
+let noticeSpy: Mock<typeof core.notice>;
+let errorSpy: Mock<typeof core.error>;
+let warningSpy: Mock<typeof core.warning>;
+let setFailedSpy: Mock<typeof core.setFailed>;
 
 beforeEach(() => {
-  infoSpy = jest.spyOn(core, 'info');
-  debugSpy = jest.spyOn(core, 'debug');
-  noticeSpy = jest.spyOn(core, 'notice');
-  errorSpy = jest.spyOn(core, 'error');
-  warningSpy = jest.spyOn(core, 'warning');
-  setFailedSpy = jest.spyOn(core, 'setFailed');
+  infoSpy = vi.spyOn(core, 'info');
+  debugSpy = vi.spyOn(core, 'debug');
+  noticeSpy = vi.spyOn(core, 'notice');
+  errorSpy = vi.spyOn(core, 'error');
+  warningSpy = vi.spyOn(core, 'warning');
+  setFailedSpy = vi.spyOn(core, 'setFailed');
 });
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('info', () => {
   it('Should call core.info on info', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.info('string');
 
@@ -35,12 +35,12 @@ describe('info', () => {
   });
 
   it('Should call core.info on header', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.info('error');
     logger.header('string');
 
-    expect(infoSpy).toHaveBeenCalledTimes(2); // once for header, once for newline
+    expect(infoSpy).toHaveBeenCalledTimes(3); // once for header, once for info, once for newline
     expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('string'));
     expect(addNewline).toHaveBeenCalledTimes(1);
     expect(addNewline).toHaveBeenCalledWith('header');
@@ -50,7 +50,7 @@ describe('info', () => {
 
 describe('debug', () => {
   it('Should call core.debug on debug', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.setSecretsFilter(['token']);
     logger.debug('string token secret');
@@ -64,7 +64,7 @@ describe('debug', () => {
 
 describe('notice', () => {
   it('Should call core.notice on notice', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.notice('string');
 
@@ -77,7 +77,7 @@ describe('notice', () => {
 
 describe('warning', () => {
   it('Should call core.warning on warning', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.warning('string');
 
@@ -90,7 +90,7 @@ describe('warning', () => {
 
 describe('error', () => {
   it('Should call core.error on error', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.error('error');
 
@@ -104,7 +104,7 @@ describe('error', () => {
 
 describe('setFailed', () => {
   it('Should call core.setFailed on setFailed', () => {
-    const addNewline = jest.spyOn(logger, 'addNewline');
+    const addNewline = vi.spyOn(logger, 'addNewline');
 
     logger.setFailed('error');
 

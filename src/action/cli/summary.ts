@@ -1,6 +1,6 @@
-import { githubConfig } from '../../configuration/config';
-import { Verdict } from '../../helper/interfaces';
-import { logger } from '../../helper/logger';
+import { githubConfig } from '../../configuration/config.js';
+import { Verdict } from '../../helper/interfaces.js';
+import { logger } from '../../helper/logger.js';
 
 /**
  * Creates a cli summary of all errors and bugs based on the logLevel.

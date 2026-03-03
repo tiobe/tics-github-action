@@ -1,10 +1,10 @@
-import { actionConfig, ticsConfig } from '../configuration/config';
-import { ChangedFile } from '../github/interfaces';
-import { logger } from '../helper/logger';
-import { getRetryErrorMessage } from '../helper/response';
-import { httpClient } from './http-client';
-import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces';
-import { ViewerFeature, viewerVersion } from './version';
+import { actionConfig, ticsConfig } from '../configuration/config.js';
+import { ChangedFile } from '../github/interfaces.js';
+import { logger } from '../helper/logger.js';
+import { getRetryErrorMessage } from '../helper/response.js';
+import { httpClient } from './http-client.js';
+import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces.js';
+import { ViewerFeature, viewerVersion } from './version.js';
 
 /**
  * Gets the annotations from the TICS viewer.

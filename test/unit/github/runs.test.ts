@@ -1,11 +1,12 @@
 import { getCurrentStepPath } from '../../../src/github/runs';
 import { octokit } from '../../../src/github/octokit';
+import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 describe('postReview', () => {
-  let listJobsSpy: jest.SpyInstance;
+  let listJobsSpy: Mock;
 
   beforeEach(() => {
-    listJobsSpy = jest.spyOn(octokit.rest.actions, 'listJobsForWorkflowRunAttempt');
+    listJobsSpy = vi.spyOn(octokit.rest.actions, 'listJobsForWorkflowRunAttempt');
   });
 
   test('Should return name when only one step is in progress', async () => {

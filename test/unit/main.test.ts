@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import * as fs from 'fs';
 
 import { summary as coreSummary } from '@actions/core';
@@ -17,16 +17,16 @@ import { Mode } from '../../src/configuration/tics';
 import { GithubEvent } from '../../src/configuration/github-event';
 
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('meetsPrerequisites', () => {
-  let existsSpy: jest.SpiedFunction<typeof fs.existsSync>;
-  let viewerVersionSpy: jest.SpiedFunction<typeof version.viewerVersion.viewerSupports>;
+  let existsSpy: Mock<typeof fs.existsSync>;
+  let viewerVersionSpy: Mock<typeof version.viewerVersion.viewerSupports>;
 
   beforeEach(() => {
-    viewerVersionSpy = jest.spyOn(version.viewerVersion, 'viewerSupports');
-    existsSpy = jest.spyOn(fs, 'existsSync');
+    viewerVersionSpy = vi.spyOn(version.viewerVersion, 'viewerSupports');
+    existsSpy = vi.spyOn(fs, 'existsSync');
   });
 
   it('should throw error if viewer version is too low', async () => {
@@ -64,7 +64,7 @@ describe('meetsPrerequisites', () => {
   it('should throw no error on mode QServer when it is not a pull request and no filelist is given', async () => {
     viewerVersionSpy.mockResolvedValue(true);
     existsSpy.mockReturnValue(true);
-    jest.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
+    vi.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
       passed: true,
       message: '',
       errorList: [],
@@ -98,28 +98,28 @@ describe('meetsPrerequisites', () => {
 });
 
 describe('verdict', () => {
-  let spyClient: jest.SpiedFunction<typeof client.clientAnalysis>;
-  let spyDiagnostic: jest.SpiedFunction<typeof diagnostic.diagnosticAnalysis>;
-  let spyQServer: jest.SpiedFunction<typeof qserver.qServerAnalysis>;
+  let spyClient: Mock<typeof client.clientAnalysis>;
+  let spyDiagnostic: Mock<typeof diagnostic.diagnosticAnalysis>;
+  let spyQServer: Mock<typeof qserver.qServerAnalysis>;
 
-  let spyUpload: jest.SpiedFunction<typeof artifacts.uploadArtifact>;
-  let spySetFailed: jest.SpiedFunction<typeof logger.setFailed>;
-  let spyPostCli: jest.SpiedFunction<typeof summary.postCliSummary>;
-  let spySummaryWrite: jest.SpiedFunction<typeof coreSummary.write>;
+  let spyUpload: Mock<typeof artifacts.uploadArtifact>;
+  let spySetFailed: Mock<typeof logger.setFailed>;
+  let spyPostCli: Mock<typeof summary.postCliSummary>;
+  let spySummaryWrite: Mock<typeof coreSummary.write>;
 
   beforeEach(() => {
-    spyClient = jest.spyOn(client, 'clientAnalysis');
-    spyDiagnostic = jest.spyOn(diagnostic, 'diagnosticAnalysis');
-    spyQServer = jest.spyOn(qserver, 'qServerAnalysis');
+    spyClient = vi.spyOn(client, 'clientAnalysis');
+    spyDiagnostic = vi.spyOn(diagnostic, 'diagnosticAnalysis');
+    spyQServer = vi.spyOn(qserver, 'qServerAnalysis');
 
-    spyUpload = jest.spyOn(artifacts, 'uploadArtifact');
-    spySetFailed = jest.spyOn(logger, 'setFailed');
-    spyPostCli = jest.spyOn(summary, 'postCliSummary').mockImplementation(() => {});
-    spySummaryWrite = jest.spyOn(coreSummary, 'write');
+    spyUpload = vi.spyOn(artifacts, 'uploadArtifact');
+    spySetFailed = vi.spyOn(logger, 'setFailed');
+    spyPostCli = vi.spyOn(summary, 'postCliSummary').mockImplementation(() => {});
+    spySummaryWrite = vi.spyOn(coreSummary, 'write');
 
     // meets prerequisites
-    jest.spyOn(version.viewerVersion, 'viewerSupports').mockResolvedValue(true);
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(version.viewerVersion, 'viewerSupports').mockResolvedValue(true);
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
   });
 

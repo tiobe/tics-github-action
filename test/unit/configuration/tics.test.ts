@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as core from '@actions/core';
 import { Mode, TicsConfiguration, TrustStrategy } from '../../../src/configuration/tics';
 
@@ -21,8 +21,8 @@ describe('tICS Configuration', () => {
 
   beforeEach(() => {
     process.env = {};
-    jest.resetModules();
-    jest.spyOn(core, 'getInput').mockImplementation((name): string => {
+    vi.resetModules();
+    vi.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {
         if (value === name) {
           return values[value];
@@ -32,7 +32,7 @@ describe('tICS Configuration', () => {
       return '';
     });
 
-    jest.spyOn(core, 'getBooleanInput').mockImplementation((name): boolean => {
+    vi.spyOn(core, 'getBooleanInput').mockImplementation((name): boolean => {
       for (const value in values) {
         if (value === name) {
           return values[value] === 'true';
@@ -44,7 +44,7 @@ describe('tICS Configuration', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     process.env = { ...environment };
   });
 

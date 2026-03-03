@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getLastQServerRunDate } from '../../../src/viewer/qserver';
 import { ticsConfigMock } from '../../.setup/mock';
@@ -6,7 +6,7 @@ import { ticsConfigMock } from '../../.setup/mock';
 describe('getQualityGate', () => {
   it('should return quality gates from viewer', async () => {
     ticsConfigMock.baseUrl = 'http://base.url';
-    (jest.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [{ value: 1000000 }] } });
+    (vi.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [{ value: 1000000 }] } });
 
     const response = await getLastQServerRunDate();
 
@@ -14,7 +14,7 @@ describe('getQualityGate', () => {
   });
 
   it('should throw error on empty get in getQualityGate', async () => {
-    (jest.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [] } });
+    (vi.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [] } });
 
     let error: any;
     try {
@@ -27,7 +27,7 @@ describe('getQualityGate', () => {
   });
 
   it('should throw error on faulty get in getQualityGate', async () => {
-    jest.spyOn(httpClient, 'get').mockRejectedValue(Error());
+    vi.spyOn(httpClient, 'get').mockRejectedValue(Error());
 
     let error: any;
     try {

@@ -1,5 +1,5 @@
-import { ticsCli } from '../configuration/config';
-import { logger } from '../helper/logger';
+import { ticsCli } from '../configuration/config.js';
+import { logger } from '../helper/logger.js';
 
 /**
  * Gets query value form a url

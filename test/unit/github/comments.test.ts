@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { logger } from '../../../src/helper/logger';
 import { deletePreviousComments, getPostedComments, postComment } from '../../../src/github/comments';
 import { Comment } from '../../../src/github/interfaces';
@@ -7,10 +7,10 @@ import { githubConfig } from '../../../src/configuration/config';
 import { githubConfigMock } from '../../.setup/mock';
 
 describe('getPostedReviewComments', () => {
-  const octokitSpy = jest.spyOn(octokit, 'paginate');
+  const octokitSpy = vi.spyOn(octokit, 'paginate');
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should throw error when a pullRequestNumber is not present', async () => {
@@ -40,7 +40,7 @@ describe('getPostedReviewComments', () => {
 
   it('should be called with specific parameters on getPostedReviewComments', async () => {
     octokitSpy.mockResolvedValue([]);
-    const spy = jest.spyOn(octokit, 'paginate');
+    const spy = vi.spyOn(octokit, 'paginate');
 
     await getPostedComments();
 
@@ -56,7 +56,7 @@ describe('getPostedReviewComments', () => {
   });
 
   it('should post a notice on when octokit throws', async () => {
-    const spy = jest.spyOn(logger, 'notice');
+    const spy = vi.spyOn(logger, 'notice');
     octokitSpy.mockImplementationOnce(() => {
       throw new Error();
     });
@@ -67,14 +67,14 @@ describe('getPostedReviewComments', () => {
 });
 
 describe('postComment', () => {
-  let postCommentSpy: jest.SpiedFunction<typeof octokit.rest.issues.createComment>;
+  let postCommentSpy: Mock<typeof octokit.rest.issues.createComment>;
 
   beforeEach(() => {
-    postCommentSpy = jest.spyOn(octokit.rest.issues, 'createComment');
+    postCommentSpy = vi.spyOn(octokit.rest.issues, 'createComment');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should throw error when a pullRequestNumber is not present', async () => {
@@ -113,7 +113,7 @@ describe('postComment', () => {
 
   it('should post a notice when createComment throws', async () => {
     postCommentSpy.mockRejectedValue(Error());
-    const noticeSpy = jest.spyOn(logger, 'notice');
+    const noticeSpy = vi.spyOn(logger, 'notice');
 
     await postComment('Comment body...');
 
@@ -125,11 +125,11 @@ describe('deletePreviousComments', () => {
   let deleteCommentSpy: any;
 
   beforeEach(() => {
-    deleteCommentSpy = jest.spyOn(octokit.rest.issues, 'deleteComment');
+    deleteCommentSpy = vi.spyOn(octokit.rest.issues, 'deleteComment');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should call deleteComment once', async () => {
@@ -187,7 +187,7 @@ describe('deletePreviousComments', () => {
   });
 
   it('Should not call deleteComment if identifier is of the wrong format', async () => {
-    const debugSpy = jest.spyOn(logger, 'debug');
+    const debugSpy = vi.spyOn(logger, 'debug');
 
     await deletePreviousComments([commentWithIdentifierWrongFormat]);
 
@@ -198,7 +198,7 @@ describe('deletePreviousComments', () => {
 
   it('Should post a notice when deleteComment throws', async () => {
     deleteCommentSpy.mockRejectedValue(Error());
-    const noticeSpy = jest.spyOn(logger, 'notice');
+    const noticeSpy = vi.spyOn(logger, 'notice');
 
     await deletePreviousComments([commentWithBody]);
 

@@ -1,8 +1,8 @@
-import { Comment } from './interfaces';
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig } from '../configuration/config';
-import { octokit } from './octokit';
+import { Comment } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig } from '../configuration/config.js';
+import { octokit } from './octokit.js';
 
 /**
  * Gets a list of all comments on the pull request.
@@ -19,9 +19,11 @@ export async function getPostedComments(): Promise<Comment[]> {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
-      issue_number: githubConfig.pullRequestNumber
+      issue_number: githubConfig.pullRequestNumber,
+      per_page: githubConfig.paginatePerPage
     };
-    response = await octokit.paginate(octokit.rest.issues.listComments, params);
+    const resp = await octokit.paginate(octokit.rest.issues.listComments, params);
+    response = resp;
     logger.info('Retrieved posted comments.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);

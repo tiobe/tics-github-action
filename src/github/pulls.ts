@@ -1,12 +1,12 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 
-import { ChangedFile, ChangedFilesQueryResponse } from './interfaces';
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/config';
-import { octokit } from './octokit';
-import { ChangeType } from './enums';
+import { ChangedFile, ChangedFilesQueryResponse } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig, actionConfig } from '../configuration/config.js';
+import { octokit } from './octokit.js';
+import { ChangeType } from './enums.js';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -91,12 +91,12 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
-    pull_number: githubConfig.pullRequestNumber
+    pull_number: githubConfig.pullRequestNumber,
+    per_page: githubConfig.paginatePerPage
   };
-  let response: ChangedFile[] = [];
   try {
     logger.header('Retrieving changed files.');
-    response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
+    const response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
       return (
         response.data
           // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
@@ -109,11 +109,11 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
       );
     });
     logger.info('Retrieved changed files from pull request.');
+    return response;
   } catch (error: unknown) {
     const message = handleOctokitError(error);
     throw Error(`Could not retrieve the changed files: ${message}`);
   }
-  return response;
 }
 
 /**

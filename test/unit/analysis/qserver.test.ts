@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as analyzer from '../../../src/tics/analyzer';
 import * as action from '../../../src/action/decorate/action';
 import * as pull_request from '../../../src/action/decorate/pull-request';
@@ -20,25 +20,26 @@ import { Mode } from '../../../src/configuration/tics';
 import { GithubEvent } from '../../../src/configuration/github-event';
 
 describe('setFailed checks (QServer)', () => {
-  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
-  let spyPostToConversation: jest.SpiedFunction<typeof pull_request.postToConversation>;
-  let spyGetAnalysisResult: jest.SpiedFunction<typeof qserver.getAnalysisResult>;
-  let spyGetLastQServerRunDate: jest.SpiedFunction<typeof viewer.getLastQServerRunDate>;
+  let spyAnalyzer: Mock<typeof analyzer.runTicsAnalyzer>;
+  let spyPostToConversation: Mock<typeof pull_request.postToConversation>;
+  let spyGetAnalysisResult: Mock<typeof qserver.getAnalysisResult>;
+  let spyGetLastQServerRunDate: Mock<typeof viewer.getLastQServerRunDate>;
 
   beforeEach(() => {
     ticsConfigMock.mode = Mode.QSERVER;
 
-    spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
-    spyPostToConversation = jest.spyOn(pull_request, 'postToConversation');
-    spyGetAnalysisResult = jest.spyOn(qserver, 'getAnalysisResult');
-    spyGetLastQServerRunDate = jest.spyOn(viewer, 'getLastQServerRunDate');
+    spyAnalyzer = vi.spyOn(analyzer, 'runTicsAnalyzer');
+    spyPostToConversation = vi.spyOn(pull_request, 'postToConversation');
+    spyGetAnalysisResult = vi.spyOn(qserver, 'getAnalysisResult');
+    spyGetLastQServerRunDate = vi.spyOn(viewer, 'getLastQServerRunDate');
 
-    jest.spyOn(action, 'decorateAction');
-    jest.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockResolvedValue('body');
+    vi.spyOn(action, 'decorateAction');
+    vi.spyOn(pull_request, 'decoratePullRequest').mockResolvedValue();
+    vi.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockResolvedValue('body');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return failing verdict if the analysis has not been completed', async () => {

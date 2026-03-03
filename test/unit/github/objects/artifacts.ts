@@ -37,15 +37,15 @@ export class MockArtifactClient implements ArtifactClient {
   }
 }
 
-export class MockDirent implements Dirent {
+export class MockDirent implements Dirent<NonSharedBuffer> {
   file: boolean;
-  name: string;
+  name: NonSharedBuffer;
   path: string;
   parentPath: string;
 
   constructor(file: boolean, name: string, path: string) {
     this.file = file;
-    this.name = name;
+    this.name = Buffer.from(name);
     this.path = path;
     this.parentPath = path;
   }

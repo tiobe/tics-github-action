@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import * as core from '@actions/core';
 import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
@@ -6,12 +6,12 @@ import { GithubEvent } from '../../../src/configuration/github-event';
 
 describe('gitHub Configuration', () => {
   let githubConfig: GithubConfig;
-  let debugSpy: jest.SpiedFunction<typeof core.isDebug>;
+  let debugSpy: Mock<typeof core.isDebug>;
 
   beforeEach(() => {
-    debugSpy = jest.spyOn(core, 'isDebug');
+    debugSpy = vi.spyOn(core, 'isDebug');
 
-    jest.mock<typeof import('@actions/github')>('@actions/github', (): any => ({
+    vi.mock('@actions/github', (): any => ({
       get context() {
         return contextMock;
       }
@@ -19,7 +19,7 @@ describe('gitHub Configuration', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('Should set variables taken from context', () => {

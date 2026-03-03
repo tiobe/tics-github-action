@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as changed_files from '../../../../src/analysis/helper/changed-files';
@@ -10,30 +10,30 @@ import { ticsCliMock, ticsConfigMock, actionConfigMock } from '../../../.setup/m
 import { passedQualityGate, failedQualityGate, annotationsMock } from './objects/analysis-results';
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 // Should be executed last due to spying rules
 describe('getAnalysisResult', () => {
-  let spyGetChangedFiles: jest.SpiedFunction<typeof changedFiles.getChangedFiles>;
-  let spyAnalyzedFiles: jest.SpiedFunction<typeof analyzedFiles.getAnalyzedFiles>;
-  let spyQualityGate: jest.SpiedFunction<typeof qualityGate.getQualityGate>;
-  let spyGetAnnotations: jest.SpiedFunction<typeof annotations.getAnnotations>;
-  let spyCreateChangedFiles: jest.SpiedFunction<any>;
+  let spyGetChangedFiles: Mock<typeof changedFiles.getChangedFiles>;
+  let spyAnalyzedFiles: Mock<typeof analyzedFiles.getAnalyzedFiles>;
+  let spyQualityGate: Mock<typeof qualityGate.getQualityGate>;
+  let spyGetAnnotations: Mock<typeof annotations.getAnnotations>;
+  let spyCreateChangedFiles: Mock<any>;
 
   // For multiproject run with project auto
   ticsCliMock.project = 'project';
   ticsConfigMock.baseUrl = 'http://base.url';
 
   beforeEach(() => {
-    jest.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
-    jest.spyOn(qualityGate, 'getQualityGateUrl').mockResolvedValue('QualityGate?filter=Project(project)');
+    vi.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
+    vi.spyOn(qualityGate, 'getQualityGateUrl').mockResolvedValue('QualityGate?filter=Project(project)');
 
-    spyGetChangedFiles = jest.spyOn(changedFiles, 'getChangedFiles');
-    spyAnalyzedFiles = jest.spyOn(analyzedFiles, 'getAnalyzedFiles');
-    spyQualityGate = jest.spyOn(qualityGate, 'getQualityGate');
-    spyGetAnnotations = jest.spyOn(annotations, 'getAnnotations');
-    spyCreateChangedFiles = jest.spyOn(changed_files, 'getChangedFiles');
+    spyGetChangedFiles = vi.spyOn(changedFiles, 'getChangedFiles');
+    spyAnalyzedFiles = vi.spyOn(analyzedFiles, 'getAnalyzedFiles');
+    spyQualityGate = vi.spyOn(qualityGate, 'getQualityGate');
+    spyGetAnnotations = vi.spyOn(annotations, 'getAnnotations');
+    spyCreateChangedFiles = vi.spyOn(changed_files, 'getChangedFiles');
   });
 
   it('should return on one passed quality gate with warnings', async () => {

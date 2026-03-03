@@ -1,7 +1,7 @@
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { octokit } from './octokit';
-import { RateLimit } from './interfaces';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { octokit } from './octokit.js';
+import { RateLimit } from './interfaces.js';
 
 /**
  * Sends a request to retrieve the rate limits.

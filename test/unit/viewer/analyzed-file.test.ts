@@ -1,14 +1,18 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { logger } from '../../../src/helper/logger';
 import { httpClient } from '../../../src/viewer/http-client';
 import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../../src/viewer/analyzed-files';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 
 describe('getAnalyzedFiles', () => {
-  it('should return one analyzed file from viewer', async () => {
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { data: [{ formattedValue: 'file.js' }] }, status: 200, retryCount: 0 });
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
 
-    const spy = jest.spyOn(logger, 'debug');
+  it('should return one analyzed file from viewer', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { data: [{ formattedValue: 'file.js' }] }, status: 200, retryCount: 0 });
+
+    const spy = vi.spyOn(logger, 'debug');
 
     const response = await getAnalyzedFiles('url');
 
@@ -17,11 +21,13 @@ describe('getAnalyzedFiles', () => {
   });
 
   it('should return two analyzed files from viewer', async () => {
-    jest
-      .spyOn(httpClient, 'get')
-      .mockResolvedValueOnce({ data: { data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] }, status: 200, retryCount: 0 });
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({
+      data: { data: [{ formattedValue: 'file.js' }, { formattedValue: 'files.js' }] },
+      status: 200,
+      retryCount: 0
+    });
 
-    const spy = jest.spyOn(logger, 'debug');
+    const spy = vi.spyOn(logger, 'debug');
 
     const response = await getAnalyzedFiles('url');
 
@@ -30,7 +36,7 @@ describe('getAnalyzedFiles', () => {
   });
 
   it('should throw error on faulty get in getAnalyzedFiles', async () => {
-    jest.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
+    vi.spyOn(httpClient, 'get').mockRejectedValueOnce(new Error());
 
     let error: any;
     try {

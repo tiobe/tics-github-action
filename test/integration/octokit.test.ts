@@ -1,52 +1,53 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as http from 'http';
 import { createProxy } from 'proxy';
-
-// Default values are set when the module is imported, so we need to set proxy first.
-// Running these tests with https_proxy
-const proxyUrl = 'http://0.0.0.0:8081';
-const originalhttpsProxyUrl = process.env['https_proxy'];
-const originalhttpProxyUrl = process.env['https_proxy'];
-process.env['https_proxy'] = proxyUrl;
-process.env['http_proxy'] = proxyUrl;
-
-// set required inputs
-process.env.GITHUB_REPOSITORY = 'owner/repo';
-process.env.GITHUB_API_URL = 'https://api.github.com';
-process.env.GITHUB_ACTION = '_tics-github-action';
-process.env.GITHUB_JOB = 'tics_client';
-process.env.GITHUB_WORKFLOW = 'tics client';
-process.env.INPUT_MODE = 'client';
-process.env.INPUT_PROJECT = 'tics-github-action';
-process.env.INPUT_VIEWERURL = 'http://localhost/tiobeweb/TICS/api/cfg?name=default';
-process.env.INPUT_EXCLUDEMOVEDFILES = 'false';
-process.env.INPUT_INSTALLTICS = 'false';
-process.env.INPUT_POSTANNOTATIONS = 'false';
-process.env.INPUT_SHOWNONBLOCKING = 'false';
-process.env.INPUT_POSTTOCONVERSATION = 'false';
-process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
-process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
-process.env.INPUT_TRUSTSTRATEGY = 'strict';
-
-// mock before importing octokit
-jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
-
-import { octokit } from '../../src/github/octokit';
 import { RequestError } from '@octokit/request-error';
 
 describe('@octokit/action (using https_proxy)', () => {
+  let proxyUrl: string | undefined;
   let proxyServer: http.Server;
   let proxyConnects: string[];
+  let octokit: any; // We will import this dynamically
 
   beforeAll(async () => {
-    // setup proxy server
+    // 3. Setup proxy server
     proxyServer = createProxy();
-    const port = Number(proxyUrl.split(':')[2]);
-    proxyServer.listen(port);
+    proxyServer.listen(0);
+
+    proxyUrl = 'http://127.0.0.1:' + (proxyServer.address() as any).port;
+
+    // 1. Setup environment variables BEFORE importing octokit/config
+    vi.stubEnv('https_proxy', proxyUrl);
+    vi.stubEnv('http_proxy', proxyUrl);
+    vi.stubEnv('GITHUB_REPOSITORY', 'owner/repo');
+    vi.stubEnv('GITHUB_API_URL', 'https://api.github.com');
+    vi.stubEnv('GITHUB_ACTION', '_tics-github-action');
+    vi.stubEnv('GITHUB_JOB', 'tics_client');
+    vi.stubEnv('GITHUB_WORKFLOW', 'tics client');
+
+    // Core inputs (using stubEnv to ensure @actions/core sees them)
+    vi.stubEnv('INPUT_MODE', 'client');
+    vi.stubEnv('INPUT_PROJECT', 'tics-github-action');
+    vi.stubEnv('INPUT_VIEWERURL', 'http://localhost/tiobeweb/TICS/api/cfg?name=default');
+    vi.stubEnv('INPUT_EXCLUDEMOVEDFILES', 'false');
+    vi.stubEnv('INPUT_INSTALLTICS', 'false');
+    vi.stubEnv('INPUT_POSTANNOTATIONS', 'false');
+    vi.stubEnv('INPUT_SHOWNONBLOCKING', 'false');
+    vi.stubEnv('INPUT_POSTTOCONVERSATION', 'false');
+    vi.stubEnv('INPUT_PULLREQUESTAPPROVAL', 'false');
+    vi.stubEnv('INPUT_SHOWBLOCKINGAFTER', 'true');
+    vi.stubEnv('INPUT_TRUSTSTRATEGY', 'strict');
+
+    // 2. Mock stdout before any imports trigger logging
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
     proxyServer.on('connect', req => {
       proxyConnects.push(req.url ?? '');
     });
+
+    // 4. Dynamic Import: This ensures config.ts reads the stubbed envs above
+    const module = await import('../../src/github/octokit.js');
+    octokit = module.octokit;
   });
 
   beforeEach(() => {
@@ -54,35 +55,25 @@ describe('@octokit/action (using https_proxy)', () => {
   });
 
   afterAll(async () => {
-    // Stop proxy server
+    vi.unstubAllEnvs();
     await new Promise<void>(resolve => {
       proxyServer.once('close', () => resolve());
       proxyServer.close();
     });
-
-    if (originalhttpsProxyUrl) {
-      process.env['https_proxy'] = originalhttpsProxyUrl;
-    }
-    if (originalhttpProxyUrl) {
-      process.env['http_proxy'] = originalhttpProxyUrl;
-    }
   });
 
   it('should return basic REST request, but not through the proxy', async () => {
-    // setting no_proxy
-    const originalNoProxy = process.env['no_proxy'];
-    process.env['no_proxy'] = 'api.github.com';
+    vi.stubEnv('no_proxy', 'api.github.com');
 
     const branch = await octokit.rest.repos.getBranch({
       owner: 'tiobe',
       repo: 'tics-github-action',
       branch: 'main'
     });
-
-    // resetting no_proxy
-    process.env['no_proxy'] = originalNoProxy;
-
     expect(branch.data.name).toBe('main');
+
+    vi.stubEnv('no_proxy', '');
+
     expect(proxyConnects).toHaveLength(0);
   });
 
@@ -100,11 +91,10 @@ describe('@octokit/action (using https_proxy)', () => {
   it('should return basic pagination request through the proxy', async () => {
     const branch = await octokit.paginate(octokit.rest.repos.listBranches, {
       owner: 'tiobe',
-      repo: 'tics-github-action',
-      branch: 'main'
+      repo: 'tics-github-action'
     });
 
-    expect(branch.find(b => b.name === 'main')).toBeDefined();
+    expect(branch.find((b: any) => b.name === 'main')).toBeDefined();
     expect(proxyConnects).toEqual(['api.github.com:443']);
   });
 
@@ -126,10 +116,10 @@ describe('@octokit/action (using https_proxy)', () => {
     let retryCount = 0;
     try {
       await octokit.request('/', {
-        baseUrl: 'http://0.0.0.0:8081',
+        baseUrl: proxyUrl,
         request: {
-          retries: 3, // for the purpose of testing, set a lower number of retries
-          retryAfter: 1 // for the purpose of testing, set a lower timeout
+          retries: 3,
+          retryAfter: 1
         }
       });
     } catch (error: unknown) {
@@ -137,7 +127,7 @@ describe('@octokit/action (using https_proxy)', () => {
     }
 
     expect((Date.now() - time) / 1000).toBeGreaterThanOrEqual(3);
-    expect(proxyConnects).toContain('http://0.0.0.0:8081/');
+    expect(proxyConnects).toContain(`${proxyUrl}/`);
     expect(proxyConnects).toHaveLength(4);
     expect(retryCount).toBe(3);
   }, 10000);

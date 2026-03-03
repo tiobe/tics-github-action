@@ -1,9 +1,9 @@
 import { EOL } from 'os';
 import { getBooleanInput, getInput } from '@actions/core';
 
-import { RetryConfig } from './interfaces';
-import { logger } from '../helper/logger';
-import { ExtendedAnnotation } from '../viewer/interfaces';
+import { RetryConfig } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { ExtendedAnnotation } from '../viewer/interfaces.js';
 
 export class ShowAnnotationSeverity {
   static readonly BLOCKING = new ShowAnnotationSeverity('blocking', ['blocking'], ['yes']);

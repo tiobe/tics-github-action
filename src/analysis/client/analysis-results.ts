@@ -1,10 +1,10 @@
-import { ChangedFile } from '../../github/interfaces';
-import { AnalysisResult, ProjectResult } from '../../helper/interfaces';
-import { getItemFromUrl, getProjectFromUrl } from '../../tics/url';
-import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
-import { getAnnotations } from '../../viewer/annotations';
-import { TicsRunIdentifier } from '../../viewer/interfaces';
-import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
+import { ChangedFile } from '../../github/interfaces.js';
+import { AnalysisResult, ProjectResult } from '../../helper/interfaces.js';
+import { getItemFromUrl, getProjectFromUrl } from '../../tics/url.js';
+import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files.js';
+import { getAnnotations } from '../../viewer/annotations.js';
+import { TicsRunIdentifier } from '../../viewer/interfaces.js';
+import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate.js';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.

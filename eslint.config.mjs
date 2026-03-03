@@ -1,11 +1,10 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier/recommended';
-import jest from 'eslint-plugin-jest';
 
 export default tseslint.config(
   {
-    ignores: ['coverage/**', 'dist/**', 'lib/**', 'jest.config.js', 'eslint.config.mjs']
+    ignores: ['coverage/**', 'dist/**', 'lib/**', 'vitest.config.ts', 'eslint.config.mjs']
   },
   {
     files: ['src/**/*.ts'],
@@ -27,7 +26,7 @@ export default tseslint.config(
   },
   {
     files: ['**/*.test.ts'],
-    extends: [eslint.configs.recommended, ...tseslint.configs.recommended, jest.configs['flat/recommended']],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off'

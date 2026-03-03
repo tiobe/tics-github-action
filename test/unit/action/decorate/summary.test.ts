@@ -30,7 +30,7 @@ describe('createSummaryBody', () => {
 
   describe('No metric grouping', () => {
     beforeEach(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
         if (feature === ViewerFeature.NEW_ANNOTATIONS) {
           return false;
         }
@@ -119,7 +119,7 @@ describe('createSummaryBody', () => {
 
   describe('With metric grouping', () => {
     beforeEach(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
         if (feature === ViewerFeature.NEW_ANNOTATIONS) {
           return true;
         }

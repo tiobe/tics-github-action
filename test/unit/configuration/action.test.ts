@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as core from '@actions/core';
 import { ActionConfiguration, ShowAnnotationSeverity } from '../../../src/configuration/action';
 
@@ -16,9 +16,9 @@ describe('action Configuration', () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 
-    jest.spyOn(core, 'getInput').mockImplementation((name): string => {
+    vi.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {
         if (value === name) {
           return values[value];
@@ -27,7 +27,7 @@ describe('action Configuration', () => {
 
       return '';
     });
-    jest.spyOn(core, 'getBooleanInput').mockImplementation((name): boolean => {
+    vi.spyOn(core, 'getBooleanInput').mockImplementation((name): boolean => {
       for (const value in values) {
         if (value === name) {
           return values[value] === 'true';
@@ -40,7 +40,7 @@ describe('action Configuration', () => {
 
   afterEach(() => {
     values = {};
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return if nothing other then defaults are given', () => {

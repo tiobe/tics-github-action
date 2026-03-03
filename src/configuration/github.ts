@@ -1,7 +1,7 @@
 import { isDebug } from '@actions/core';
 import { context } from '@actions/github';
-import { logger } from '../helper/logger';
-import { GithubEvent } from './github-event';
+import { logger } from '../helper/logger.js';
+import { GithubEvent } from './github-event.js';
 
 export class GithubConfig {
   readonly apiUrl: string;
@@ -22,6 +22,7 @@ export class GithubConfig {
   readonly debugger: boolean;
   readonly runnerName: string;
   readonly id: string;
+  readonly paginatePerPage: number;
 
   constructor() {
     this.apiUrl = context.apiUrl;
@@ -39,6 +40,7 @@ export class GithubConfig {
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
     this.runnerName = process.env.RUNNER_NAME ?? '';
+    this.paginatePerPage = 100;
 
     /**
      * Construct the id to use for storing tmpdirs. The action name will
