@@ -1,6 +1,7 @@
 import { PullRequestChangedFile } from '@octokit/graphql-schema';
 import { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import { ExtendedAnnotation } from '../viewer/interfaces.js';
+
 export interface ChangedFile {
   sha?: string | null;
   filename: string;

@@ -4,7 +4,6 @@ import { logger } from '../helper/logger.js';
 import { handleOctokitError } from '../helper/response.js';
 import { ChangedFile } from './interfaces.js';
 import { octokit } from './octokit.js';
-import { ChangeType } from './enums.js';
 import { normalize } from 'canonical-path';
 
 /**
@@ -26,7 +25,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
       return (
         files
           // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
-          .filter(item => item.changes > 0 && !(actionConfig.excludeMovedFiles && item.status === ChangeType.RENAMED))
+          .filter(item => item.changes > 0 && !(actionConfig.excludeMovedFiles && item.status === 'renamed'))
           .map(item => {
             const filename = normalize(item.filename);
             logger.debug(item.filename);

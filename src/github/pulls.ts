@@ -100,7 +100,7 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
       return (
         response.data
           // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
-          .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
+          .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === 'renamed'))
           .map(item => {
             item.filename = normalize(item.filename);
             logger.debug(item.filename);
