@@ -354,6 +354,10 @@ describe('getTicsCommand', () => {
 
 // test exec callback function (like findInStdOutOrErr)
 describe('test callback functions', () => {
+  beforeEach(() => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(vi.fn());
+  });
+
   afterEach(() => {
     vi.resetAllMocks();
     vi.resetModules();
@@ -361,13 +365,15 @@ describe('test callback functions', () => {
 
   it('should return single error if already exists in errorlist', async () => {
     const analyzer = await import('../../../src/tics/analyzer');
-    const exec = await import('@actions/exec');
-    (exec.exec as any).mockResolvedValue(0);
     ticsConfigMock.installTics = false;
 
+    vi.spyOn(exec, 'exec').mockImplementation(async (_compareDesc, _args, opts) => {
+      opts?.listeners?.errline?.('[ERROR 666] Error');
+      opts?.listeners?.errline?.('[ERROR 666] Error');
+      return 0;
+    });
+
     const response = await analyzer.runTicsAnalyzer('/path/to');
-    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
-    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
 
     expect(response.errorList).toHaveLength(1);
     expect(response.errorList).toEqual(['[ERROR 666] Error']);
@@ -375,12 +381,14 @@ describe('test callback functions', () => {
 
   it('should return two errors in errorlist', async () => {
     const analyzer = await import('../../../src/tics/analyzer');
-    const exec = await import('@actions/exec');
-    (exec.exec as any).mockResolvedValue(0);
+
+    vi.spyOn(exec, 'exec').mockImplementation(async (_compareDesc, _args, opts) => {
+      opts?.listeners?.errline?.('[ERROR 666] Error');
+      opts?.listeners?.errline?.('[ERROR 777] Different error');
+      return 0;
+    });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
-    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 666] Error');
-    (exec.exec as any).mock.calls[0][2].listeners.errline('[ERROR 777] Different error');
 
     expect(response.errorList).toHaveLength(2);
     expect(response.errorList).toEqual(['[ERROR 666] Error', '[ERROR 777] Different error']);
@@ -388,14 +396,16 @@ describe('test callback functions', () => {
 
   it('should return warnings in warningList', async () => {
     const analyzer = await import('../../../src/tics/analyzer');
-    const exec = await import('@actions/exec');
-    (exec.exec as any).mockResolvedValue(0);
+
+    vi.spyOn(exec, 'exec').mockImplementation(async (_compareDesc, _args, opts) => {
+      opts?.listeners?.stdline?.('[WARNING 5057] Warning');
+      opts?.listeners?.stdline?.(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
+      opts?.listeners?.stdline?.('[WARNING 666] Warning');
+      opts?.listeners?.stdline?.('[WARNING 777] Warning');
+      return 0;
+    });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 5057] Warning');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 666] Warning');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('[WARNING 777] Warning');
 
     expect(response.warningList).toHaveLength(4);
     expect(response.warningList).toEqual([
@@ -408,32 +418,33 @@ describe('test callback functions', () => {
 
   it('should add ExplorerUrl in response', async () => {
     const analyzer = await import('../../../src/tics/analyzer');
-    const exec = await import('@actions/exec');
-    (exec.exec as any).mockResolvedValue(0);
     ticsConfigMock.displayUrl = 'http://viewer.com';
 
-    await analyzer.runTicsAnalyzer('/path/to');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData');
+    vi.spyOn(exec, 'exec').mockImplementationOnce(async (_compareDesc, _args, opts) => {
+      opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData');
+      opts?.listeners?.stdline?.('');
+      return 0;
+    });
+
     const response = await analyzer.runTicsAnalyzer('/path/to');
 
-    expect(response.explorerUrls[0]).toBe('http://viewer.com/Explorer.html#axes=ClientData');
+    expect(response.explorerUrls).toStrictEqual(['http://viewer.com/Explorer.html#axes=ClientData']);
   });
 
   it('should add all ExplorerUrls in response', async () => {
     const analyzer = await import('../../../src/tics/analyzer');
-    const exec = await import('@actions/exec');
-    const execMock = exec.exec as any;
-    execMock.mockResolvedValue(0);
-
     ticsConfigMock.displayUrl = 'http://viewer.com';
 
-    await analyzer.runTicsAnalyzer('/another/path');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData0');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData1');
-    (exec.exec as any).mock.calls[0][2].listeners.stdline('http://base.com/Explorer.html#axes=ClientData2');
+    vi.spyOn(exec, 'exec').mockImplementationOnce(async (_compareDesc, _args, opts) => {
+      opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData0');
+      opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData1');
+      opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData2');
+      opts?.listeners?.stdline?.('');
+      return 0;
+    });
 
     const response = await analyzer.runTicsAnalyzer('/another/path');
-    expect(response.explorerUrls).toEqual([
+    expect(response.explorerUrls).toStrictEqual([
       'http://viewer.com/Explorer.html#axes=ClientData0',
       'http://viewer.com/Explorer.html#axes=ClientData1',
       'http://viewer.com/Explorer.html#axes=ClientData2'
@@ -443,9 +454,7 @@ describe('test callback functions', () => {
 
 describe('throwing errors', () => {
   it('should throw error on exec', async () => {
-    (exec.exec as any).mockImplementationOnce(() => {
-      throw new Error();
-    });
+    vi.spyOn(exec, 'exec').mockRejectedValue(new Error());
     vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { links: { installTics: '/install-url' } }, retryCount: 0, status: 200 });
 
     const response = await runTicsAnalyzer('');
