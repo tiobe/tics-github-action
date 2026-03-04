@@ -9,6 +9,6 @@ export function isOneOf<T>(value: T, ...args: [T, ...T[]]): boolean {
   return args.includes(value);
 }
 
-export function emptyToUndefined(value: string | null | undefined): string | undefined {
-  return value !== undefined && value !== null && value !== '' ? value : undefined;
+export function emptyToNull(value: string | null | undefined): string | null {
+  return value !== undefined && value !== null && value !== '' ? value : null;
 }
