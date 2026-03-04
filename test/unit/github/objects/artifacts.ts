@@ -10,6 +10,7 @@ import {
   UploadArtifactOptions,
   UploadArtifactResponse
 } from '@actions/artifact';
+import * as ArtifactV1 from '@actions/artifact-v1';
 import { Dirent } from 'fs';
 
 export class MockArtifactClient implements ArtifactClient {
@@ -33,6 +34,26 @@ export class MockArtifactClient implements ArtifactClient {
     throw new Error('Method not implemented.');
   }
   deleteArtifact(artifactName: string, options?: FindOptions): Promise<DeleteArtifactResponse> {
+    throw new Error('Method not implemented.');
+  }
+}
+
+export class MockArtifactClientV1 implements ArtifactV1.ArtifactClient {
+  uploadArtifact(name: string, files: string[], rootDirectory: string, options?: ArtifactV1.UploadOptions): Promise<ArtifactV1.UploadResponse> {
+    const response: ArtifactV1.UploadResponse = {
+      size: files.length,
+      artifactName: name,
+      artifactItems: files,
+      failedItems: []
+    };
+    return new Promise(resolve => {
+      resolve(response);
+    });
+  }
+  downloadArtifact(name: string, path?: string, options?: ArtifactV1.DownloadOptions): Promise<ArtifactV1.DownloadResponse> {
+    throw new Error('Method not implemented.');
+  }
+  downloadAllArtifacts(path?: string): Promise<ArtifactV1.DownloadResponse[]> {
     throw new Error('Method not implemented.');
   }
 }
