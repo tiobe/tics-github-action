@@ -1,38 +1,58 @@
-import { tmpdir } from 'os';
 import { readdirSync } from 'fs';
+import { tmpdir } from 'os';
 
 import { DefaultArtifactClient } from '@actions/artifact';
+import { create } from '@actions/artifact-v1';
 import { join } from 'canonical-path';
 
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
-import { setOutput } from '@actions/core';
 
 export async function uploadArtifact(): Promise<void> {
+  logger.header('Uploading artifact');
+
   const tmpdir = getTmpDir() + '/ticstmpdir';
   // Example TICS_tics-github-action_2_qserver_ticstmpdir
   const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`);
 
-  logger.header('Uploading artifact');
-  if (isGhes()) {
-    logger.info(`GitHub Enterprise Server detected, will upload later`);
-    setOutput('shouldRunGhesUpload', true);
-    setOutput('uploadArtifactName', name);
-    setOutput('uploadArtifactPath', tmpdir);
-  } else {
-    try {
-      logger.info(`Logs gotten from ${tmpdir}`);
+  logger.info(`Logs taken from ${tmpdir}`);
 
-      const artifactClient = new DefaultArtifactClient();
-      const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
-      if (response.id && response.size) {
-        logger.info(`Uploaded artifact "${name}" with id "${response.id.toString()}" (size: ${createSize(response.size)})`);
-      }
-    } catch (error: unknown) {
-      const message = handleOctokitError(error);
-      logger.debug('Failed to upload artifact: ' + message);
+  if (isGhes()) {
+    await uploadGhes(name, tmpdir);
+  } else {
+    await uploadGithub(name, tmpdir);
+  }
+}
+
+async function uploadGhes(name: string, tmpdir: string): Promise<void> {
+  const artifactClient = create();
+
+  try {
+    const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
+
+    if (response.failedItems.length > 0) {
+      logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
     }
+    logger.info(`Uploaded artifact "${name}" (size: ${createSize(response.size)})`);
+  } catch (error: unknown) {
+    const message = handleOctokitError(error);
+    logger.debug('Failed to upload artifact: ' + message);
+  }
+}
+
+async function uploadGithub(name: string, tmpdir: string): Promise<void> {
+  const artifactClient = new DefaultArtifactClient();
+
+  try {
+    const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
+
+    if (response.id && response.size) {
+      logger.info(`Uploaded artifact "${name}" with id "${response.id.toString()}" (size: ${createSize(response.size)})`);
+    }
+  } catch (error: unknown) {
+    const message = handleOctokitError(error);
+    logger.debug('Failed to upload artifact: ' + message);
   }
 }
 

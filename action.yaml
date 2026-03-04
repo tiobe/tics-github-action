@@ -101,53 +101,9 @@ inputs:
 outputs:
   annotations:
     description: All annotations the action has reported in JSON format.
-    value: ${{ steps.tics-github-action-run.outcome.annotations }}
 branding:
   icon: flag
   color: blue
 runs:
-  using: 'composite'
-  steps:
-    - name: Run TICS github action
-      uses: ./dist
-      id: tics-github-action-run
-      continue-on-error: true
-      with:
-        viewerUrl: ${{ inputs.viewerUrl }}
-        mode: ${{ inputs.mode }}
-        project: ${{ inputs.project }}
-        githubToken: ${{ inputs.githubToken }}
-        additionalFlags: ${{ inputs.additionalFlags }}
-        branchname: ${{ inputs.branchname }}
-        branchdir: ${{ inputs.branchdir }}
-        calc: ${{ inputs.calc }}
-        nocalc: ${{ inputs.nocalc }}
-        recalc: ${{ inputs.recalc }}
-        norecalc: ${{ inputs.norecalc }}
-        cdtoken: ${{ inputs.cdtoken }}
-        codetype: ${{ inputs.codetype }}
-        excludeMovedFiles: ${{ inputs.excludeMovedFiles }}
-        filelist: ${{ inputs.filelist }}
-        hostnameVerification: ${{ inputs.hostnameVerification }}
-        trustStrategy: ${{ inputs.trustStrategy }}
-        installTics: ${{ inputs.installTics }}
-        postAnnotations: ${{ inputs.postAnnotations }}
-        postToConversation: ${{ inputs.postToConversation }}
-        pullRequestApproval: ${{ inputs.pullRequestApproval }}
-        retryCodes: ${{ inputs.retryCodes }}
-        secretsFilter: ${{ inputs.secretsFilter }}
-        showBlockingAfter: ${{ inputs.showBlockingAfter }}
-        showAnnotationSeverity: ${{ inputs.showAnnotationSeverity }}
-        ticsAuthToken: ${{ inputs.ticsAuthToken }}
-        tmpdir: ${{ inputs.tmpdir }}
-        displayUrl: ${{ inputs.displayUrl }}
-    - name: GHES Upload
-      if: ${{ steps.tics-github-action-run.outputs.shouldRunGhesUpload }}
-      uses: actions/upload-artifact@v3-node20
-      with:
-        name: ${{ steps.tics-github-action-run.outputs.uploadArtifactName }}
-        path: ${{ steps.tics-github-action-run.outputs.uploadArtifactPath }}
-    - name: Pass conclusion
-      if: ${{ steps.tics-github-action-run.outcome == 'failure' }}
-      run: exit 1
-      shell: sh
+  using: node20
+  main: dist/index.js
