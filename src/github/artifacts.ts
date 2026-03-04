@@ -7,24 +7,32 @@ import { join } from 'canonical-path';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
 import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
+import { setOutput } from '@actions/core';
 
 export async function uploadArtifact(): Promise<void> {
-  const artifactClient = new DefaultArtifactClient();
   const tmpdir = getTmpDir() + '/ticstmpdir';
   // Example TICS_tics-github-action_2_qserver_ticstmpdir
   const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`);
 
-  try {
-    logger.header('Uploading artifact');
-    logger.info(`Logs gotten from ${tmpdir}`);
-    const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
+  logger.header('Uploading artifact');
+  if (isGhes()) {
+    logger.info(`GitHub Enterprise Server detected, will upload later`);
+    setOutput('shouldRunGhesUpload', true);
+    setOutput('uploadArtifactName', name);
+    setOutput('uploadArtifactPath', tmpdir);
+  } else {
+    try {
+      logger.info(`Logs gotten from ${tmpdir}`);
 
-    if (response.id && response.size) {
-      logger.info(`Uploaded artifact "${name}" with id "${response.id.toString()}" (size: ${createSize(response.size)})`);
+      const artifactClient = new DefaultArtifactClient();
+      const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
+      if (response.id && response.size) {
+        logger.info(`Uploaded artifact "${name}" with id "${response.id.toString()}" (size: ${createSize(response.size)})`);
+      }
+    } catch (error: unknown) {
+      const message = handleOctokitError(error);
+      logger.debug('Failed to upload artifact: ' + message);
     }
-  } catch (error: unknown) {
-    const message = handleOctokitError(error);
-    logger.debug('Failed to upload artifact: ' + message);
   }
 }
 
@@ -77,4 +85,15 @@ function getFilesInFolder(directory: string): string[] {
 
   traverseDirectory(directory);
   return files;
+}
+
+function isGhes(): boolean {
+  const ghUrl = new URL(process.env.GITHUB_SERVER_URL ?? 'https://github.com');
+
+  const hostname = ghUrl.hostname.trimEnd().toUpperCase();
+  const isGitHubHost = hostname === 'GITHUB.COM';
+  const isGheHost = hostname.endsWith('.GHE.COM');
+  const isLocalHost = hostname.endsWith('.LOCALHOST');
+
+  return !isGitHubHost && !isGheHost && !isLocalHost;
 }

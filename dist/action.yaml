@@ -1,0 +1,115 @@
+name: TICS Code Quality Analysis
+author: TIOBE Software
+description: Analyze your code quality with TICS Client. Integrated quality gating allows for decorated pull request reviews.
+inputs:
+  viewerUrl:
+    description: The URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration
+    required: true
+  mode:
+    description: Set the mode to run the action in. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. Default is `client`.
+    required: false
+    default: client
+  project:
+    description: Name of the TICS project.
+    required: false
+    default: auto
+  githubToken:
+    desctiption: Provided by Github automatically in an action (see [Authenticating with the GITHUB_TOKEN](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token)), can be overridden if needed.
+    required: false
+    default: ${{ github.token }}
+  additionalFlags:
+    description: Option to add flags to the TICS command.
+    required: false
+  branchname:
+    description: Name of the branch in TICS.
+    required: false
+  branchdir:
+    description: Location of the files to analyze (only applies to QServer runs).
+    required: false
+  calc:
+    description: Comma-separated list of metrics to be calculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.
+    required: false
+  nocalc:
+    description: Comma-separated list of metrics not to be calculated.
+    required: false
+  recalc:
+    description: Comma-separated list of metrics to be recalculated. GATE metric is supported for TICS Viewer versions higher than 2022.2.x.
+    required: false
+  norecalc:
+    description: Comma-separated list of metrics not to be recalculated.
+    required: false
+  cdtoken:
+    description: A custom client-data token for the purpose of the Client Viewer functionality (only applies to Client runs).
+    required: false
+  codetype:
+    description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
+    required: false
+  excludeMovedFiles:
+    description: Exclude moved files from analysis even if there are modifications in the file.
+    required: false
+    default: false
+  filelist:
+    description: Path to a file containing the files (newline separated) to run TICS for. This can be an absolute or relative (to workspace) path, and can also be `.` to analyze the whole project. This has to be set when the action is run outside of a pull request.
+    required: false
+  hostnameVerification:
+    description: Check whether the certificate matches the server. Options are `1`/`true` or `0`/`false`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).
+    required: false
+    default: true
+  trustStrategy:
+    description: Check the validity of certificates. Options are `all`, `self-signed` or `strict`. [Documentation on Client-side SSL/TLS](https://portal.tiobe.com/2022.2/docs/#doc=admin/admin_11_viewer.html%23ssl-wrapper).
+    required: false
+    default: strict
+  installTics:
+    description: Boolean parameter to install TICS command-line tools on a runner before executing the analysis.
+    required: false
+    default: false
+  postAnnotations:
+    description: Show the TICS violations in the changed files window. Options are `true` or `false` (default is `true`).
+    required: false
+    default: true
+  postToConversation:
+    description: Post the summary to the conversation page of the pull request. Options are `true` (default) or `false`.
+    required: false
+    default: true
+  pullRequestApproval:
+    description: Set the plugin to approve or deny a pull request, by default this is false. Options are `true` or `false`. Note that once a run that added a reviewer has been completed, this reviewer cannot be deleted from that pull request. (Always the case on versions between 2.0.0 and 2.5.0).
+    required: false
+    default: false
+  retryCodes:
+    description: Status codes to retry api calls for. The default codes will be overwritten if this option is set.
+    required: false
+  secretsFilter:
+    description: Comma-seperated list of extra secrets to mask in the console output.
+    required: false
+  showBlockingAfter:
+    description: (deprecated) !Will not be used if `showAnnotationSeverity` is set! Show the blocking after TICS violations in the changed files window (will also show up in `outputs.annotations`). Options are `true` or `false` (default is `true`).
+    required: false
+    default: true
+    deprecationMessage: This input parameter is deprecated in favor of `showAnnotationSeverity`.
+  showAnnotationSeverity:
+    description: Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue` (default is `blocking-after`).
+    required: false
+  ticsAuthToken:
+    description: Authentication token to authorize the plugin when it connects to the TICS Viewer.
+    required: false
+  tmpdir:
+    description: Location to store debug information.
+    required: false
+  displayUrl:
+    description: The publicly available Viewer URL of TICS viewer to link the links in the review to. (e.g. https://domain.com/tiobeweb/TICS)
+    required: false
+outputs:
+  annotations:
+    description: All annotations the action has reported in JSON format.
+  shouldRunGhesUpload:
+    description: Is `true` if running on GHES and upload artifact is enabled.
+  uploadArtifactName:
+    description: Name for the artifact to upload on GHES.
+  uploadArtifactPath:
+    description: Path for the artifact to upload on GHES.
+branding:
+  icon: flag
+  color: blue
+runs:
+  using: node20
+  main: ./index.js
