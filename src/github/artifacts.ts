@@ -8,6 +8,7 @@ import { join } from 'canonical-path';
 import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
+import { emptyToUndefined } from '../helper/utils.js';
 
 export async function uploadArtifact(): Promise<void> {
   logger.header('Uploading artifact');
@@ -107,8 +108,12 @@ function getFilesInFolder(directory: string): string[] {
   return files;
 }
 
+/**
+ * Copied from @actions/artifacts v6.2.0
+ * https://github.com/actions/toolkit/blob/02afeb157764304bb3bfe1a6cfd37258ec3fcf7c/packages/artifact/src/internal/shared/config.ts
+ */
 function isGhes(): boolean {
-  const ghUrl = new URL(process.env.GITHUB_SERVER_URL ?? 'https://github.com');
+  const ghUrl = new URL(emptyToUndefined(process.env.GITHUB_SERVER_URL) ?? 'https://github.com');
 
   const hostname = ghUrl.hostname.trimEnd().toUpperCase();
   const isGitHubHost = hostname === 'GITHUB.COM';
