@@ -119,7 +119,12 @@ export function groupConditions(projectResult: ProjectResult): GroupedConditions
 }
 
 function getIssueCounts(condition: Condition): { blockingIssues: number; deferredIssues: number } {
-  if (condition.metricGroup === 'Code Coverage') {
+  if (
+    condition.metricGroup === 'Code Coverage' ||
+    condition.metricGroup === 'Cyclomatic Complexity' ||
+    condition.metricGroup === 'Code Duplication' ||
+    condition.metricGroup === 'Fan Out'
+  ) {
     return {
       blockingIssues: condition.details?.items.length ?? 0,
       deferredIssues: condition.details?.items.filter(c => c.data.blockingAfter?.value !== undefined).length ?? 0
