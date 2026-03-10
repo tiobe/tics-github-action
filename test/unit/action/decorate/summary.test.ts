@@ -18,7 +18,8 @@ import {
   analysisResultsSoakedMetricGroup,
   analysisResultsNotSoakedMetricGroup,
   metricGroupProjectResult,
-  metricGroupProjectResultWithMultipleGates
+  metricGroupProjectResultWithMultipleGates,
+  metricGroupCodeCoverageResult
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
@@ -161,6 +162,18 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+39</a></td></tr><tr><td>');
       expect(string).toContain('>+30</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td></tr></table>');
+
+      summary.clear();
+    });
+
+    it('should contain blocking issues if there files with blocking code coverage', async () => {
+      const string = await createSummaryBody(metricGroupCodeCoverageResult);
+
+      expect(string).toContain('<h3>:x: Failed </h3>');
+      expect(string).toContain('<h3>Code Coverage: :x: 2 Blocking Issues</h3>');
+      expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>');
+      expect(string).toContain('>16.00%</a></td></tr><tr><td>');
+      expect(string).toContain('>75.00%</a></td></tr></table>');
 
       summary.clear();
     });
