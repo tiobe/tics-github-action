@@ -33,7 +33,7 @@
     "@actions/github": "^6.0.1",
     "@octokit/plugin-paginate-graphql": "^4.0.1",
     "@octokit/plugin-retry": "^6.1.0",
-    "@octokit/request-error": "^5.1.1",
+    "@octokit/request-error": "^7.1.0",
     "@tiobe/http-client": "^0.5.0",
     "@tiobe/install-tics": "^0.6.0",
     "canonical-path": "^1.0.0",
