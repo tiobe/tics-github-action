@@ -209,6 +209,13 @@ jest.mock('@actions/artifact', () => {
     }))
   };
 });
+jest.mock('@actions/artifact-v1', () => {
+  return {
+    create: jest.fn().mockImplementation(() => ({
+      uploadArtifact: jest.fn()
+    }))
+  };
+});
 jest.mock('fs', () => {
   return {
     writeFileSync: jest.fn(),
