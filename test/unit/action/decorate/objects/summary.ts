@@ -936,6 +936,86 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
   ]
 };
 
+export const metricGroupCodeCoverageResult: AnalysisResult = {
+  passed: false,
+  message: '',
+  passedWithWarning: false,
+  projectResults: [
+    {
+      project: 'Project',
+      explorerUrl: '',
+      analyzedFiles: [
+        'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
+        'PADAnalysis/ApplicationNative/src/controllers/IPerfusionController.h',
+        'PADAnalysis/ApplicationNative/src/views/AboutBox.cpp'
+      ],
+      qualityGate: {
+        passed: false,
+        passedWithWarning: false,
+        message: 'Project failed to pass quality gate',
+        url: 'api/public/v1/QualityGateStatusDetails?axes\u003dDate(1516070506),Project(20065)',
+        gates: [
+          {
+            passed: false,
+            passedWithWarning: false,
+            name: 'Gate for #32163',
+            conditions: [
+              {
+                passed: false,
+                passedWithWarning: false,
+                metricGroup: 'Code Coverage',
+                error: false,
+                message: 'Average Code Coverage should be at least 80% for each file.',
+                details: {
+                  itemTypes: ['file'],
+                  dataKeys: {
+                    actualValue: {
+                      title: 'Blocking now',
+                      order: 1,
+                      itemType: 'file'
+                    }
+                  },
+                  itemCount: 146,
+                  itemLimit: 100,
+                  items: [
+                    {
+                      itemType: 'file',
+                      name: 'PADAnalysis/ApplicationNative/Host/include/ITsmControl.hpp',
+                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
+                      data: {
+                        actualValue: {
+                          formattedValue: '16.00%',
+                          value: 16.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        }
+                      }
+                    },
+                    {
+                      itemType: 'file',
+                      name: 'PADAnalysis/ApplicationNative/src/controllers/IPerfusionController.h',
+                      link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))',
+                      data: {
+                        actualValue: {
+                          formattedValue: '75.00%',
+                          value: 75.0,
+                          classes: ['delta-worse'],
+                          link: 'AnnotatedSource.html#axes\u003dSuppressions(no),Date(1516070506),Project(20065),Level(Set(1,2,3)),DeltaDate(Run(0)),DiffType(new),File(Path(HIE,20065,main,PADAnalysis,ApplicationNative,Host,include,ITsmControl.hpp)),Blocking(Set(yes,no))\u0026diff\u003dtrue\u0026metrics\u003dG(Diff(CS,DiffType(new)),Level(Set(1,2,3)))'
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      annotations: []
+    }
+  ]
+};
+
 export const metricGroupProjectResult: ProjectResult = {
   project: 'Project',
   explorerUrl: '',

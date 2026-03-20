@@ -209,6 +209,13 @@ vi.mock('@actions/artifact', () => {
     }
   };
 });
+vi.mock('@actions/artifact-v1', () => {
+  return {
+    create: vi.fn().mockImplementation(() => ({
+      uploadArtifact: vi.fn()
+    }))
+  };
+});
 vi.mock('fs', () => {
   return {
     writeFileSync: vi.fn(),

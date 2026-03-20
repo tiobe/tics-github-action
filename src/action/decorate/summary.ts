@@ -84,14 +84,9 @@ export function groupConditions(projectResult: ProjectResult): GroupedConditions
 
   const groupedMap = new Map<string | undefined, GroupedConditions>();
   for (const condition of conditions) {
-    const group = groupedMap.get(condition.metricGroup);
-    const blockingIssues = condition.details?.items.map(c => c.data.actualValue.value).reduce(sum, 0) ?? 0;
-    const deferredIssues =
-      condition.details?.items
-        .map(c => c.data.blockingAfter?.value)
-        .filter(c => c !== undefined)
-        .reduce(sum, 0) ?? 0;
+    const { blockingIssues, deferredIssues } = getIssueCounts(condition);
 
+    const group = groupedMap.get(condition.metricGroup);
     if (group) {
       group.conditions.push(condition);
       group.blockingIssueCount += blockingIssues;
@@ -120,6 +115,29 @@ export function groupConditions(projectResult: ProjectResult): GroupedConditions
   }
   // sort groups
   return grouped.sort(sortConditions);
+}
+
+function getIssueCounts(condition: Condition): { blockingIssues: number; deferredIssues: number } {
+  if (
+    condition.metricGroup === 'Code Coverage' ||
+    condition.metricGroup === 'Cyclomatic Complexity' ||
+    condition.metricGroup === 'Code Duplication' ||
+    condition.metricGroup === 'Fan Out'
+  ) {
+    return {
+      blockingIssues: condition.details?.items.length ?? 0,
+      deferredIssues: condition.details?.items.filter(c => c.data.blockingAfter?.value !== undefined).length ?? 0
+    };
+  }
+
+  return {
+    blockingIssues: condition.details?.items.map(c => c.data.actualValue.value).reduce(sum, 0) ?? 0,
+    deferredIssues:
+      condition.details?.items
+        .map(c => c.data.blockingAfter?.value)
+        .filter(c => c !== undefined)
+        .reduce(sum, 0) ?? 0
+  };
 }
 
 function sum(partial: number, current: number): number {

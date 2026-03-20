@@ -1,22 +1,51 @@
-import { tmpdir } from 'os';
 import { readdirSync } from 'fs';
+import { tmpdir } from 'os';
 
 import { DefaultArtifactClient } from '@actions/artifact';
+import { create } from '@actions/artifact-v1';
 import { join } from 'canonical-path';
 
 import { logger } from '../helper/logger.js';
 import { handleOctokitError } from '../helper/response.js';
+import { emptyToNull } from '../helper/utils.js';
 import { githubConfig, ticsCli, ticsConfig } from '../configuration/config.js';
 
 export async function uploadArtifact(): Promise<void> {
-  const artifactClient = new DefaultArtifactClient();
+  logger.header('Uploading artifact');
+
   const tmpdir = getTmpDir() + '/ticstmpdir';
   // Example TICS_tics-github-action_2_qserver_ticstmpdir
   const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`);
 
+  logger.info(`Logs taken from ${tmpdir}`);
+
+  if (isGhes()) {
+    await uploadGhes(name, tmpdir);
+  } else {
+    await uploadGithub(name, tmpdir);
+  }
+}
+
+async function uploadGhes(name: string, tmpdir: string): Promise<void> {
+  const artifactClient = create();
+
   try {
-    logger.header('Uploading artifact');
-    logger.info(`Logs gotten from ${tmpdir}`);
+    const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
+
+    if (response.failedItems.length > 0) {
+      logger.debug(`Failed to upload file(s): ${response.failedItems.join(', ')}`);
+    }
+    logger.info(`Uploaded artifact "${name}" (size: ${createSize(response.size)})`);
+  } catch (error: unknown) {
+    const message = handleOctokitError(error);
+    logger.debug('Failed to upload artifact: ' + message);
+  }
+}
+
+async function uploadGithub(name: string, tmpdir: string): Promise<void> {
+  const artifactClient = new DefaultArtifactClient();
+
+  try {
     const response = await artifactClient.uploadArtifact(name, getFilesInFolder(tmpdir), tmpdir);
 
     if (response.id && response.size) {
@@ -77,4 +106,19 @@ function getFilesInFolder(directory: string): string[] {
 
   traverseDirectory(directory);
   return files;
+}
+
+/**
+ * Copied from @actions/artifacts v6.2.0
+ * https://github.com/actions/toolkit/blob/02afeb157764304bb3bfe1a6cfd37258ec3fcf7c/packages/artifact/src/internal/shared/config.ts
+ */
+function isGhes(): boolean {
+  const ghUrl = new URL(emptyToNull(process.env.GITHUB_SERVER_URL) ?? 'https://github.com');
+
+  const hostname = ghUrl.hostname.trimEnd().toUpperCase();
+  const isGitHubHost = hostname === 'GITHUB.COM';
+  const isGheHost = hostname.endsWith('.GHE.COM');
+  const isLocalHost = hostname.endsWith('.LOCALHOST');
+
+  return !isGitHubHost && !isGheHost && !isLocalHost;
 }
