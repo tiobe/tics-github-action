@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,11 +12,12 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Setup git config
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.TIOBE_TOKEN }}
       - name: Build
         uses: actions/setup-node@v6
         with:
