@@ -81,6 +81,8 @@ describe('cli Configuration', () => {
       project: 'auto'
     };
 
+    const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
+    delete process.env.GITHUB_WORKSPACE;
     let error: any;
     try {
       new TicsCli(Mode.QSERVER);
@@ -88,6 +90,7 @@ describe('cli Configuration', () => {
       error = err;
     }
 
+    process.env.GITHUB_WORKSPACE = GITHUB_WORKSPACE;
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toContain('Parameter `branchdir` is not set and environment variable `GITHUB_WORKSPACE` is empty. TICSQServer cannot run.');
   });
