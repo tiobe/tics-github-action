@@ -1,4 +1,4 @@
-import HttpClient from '@tiobe/http-client';
+import { HttpClient } from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 import { ticsConfig, actionConfig } from '../configuration/config';
 

@@ -76,7 +76,7 @@ describe('cli Configuration', () => {
     expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
 
-  it('should throw error if mode is qserver and project is auto', () => {
+  it('should throw error if mode is qserver, project is auto and GITHUB_WORKSPACE is not available', () => {
     values = {
       project: 'auto'
     };
@@ -89,7 +89,7 @@ describe('cli Configuration', () => {
     }
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toContain("Running TICS with project 'auto' is not possible with QServer");
+    expect(error.message).toContain('Parameter `branchdir` is not set and environment variable `GITHUB_WORKSPACE` is empty. TICSQServer cannot run.');
   });
 
   it('should add default branchdir if mode is qserver no branchdir is given', () => {

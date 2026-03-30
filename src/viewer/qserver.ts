@@ -21,6 +21,10 @@ export async function getLastQServerRunDate(): Promise<number> {
     if (response.data.data.length === 0) {
       throw Error('Request returned empty array');
     }
+    if (!response.data.data[0].value) {
+      // return -1 for projects that haven't run yet
+      return -1;
+    }
     return response.data.data[0].value / 1000;
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);

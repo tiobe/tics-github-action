@@ -1,6 +1,6 @@
 import { RequestError as OctokitError } from '@octokit/request-error';
 import { ClientResponse } from '@tiobe/http-client';
-import { RequestError as TicsError } from '@tiobe/http-client/lib/retry';
+import { RequestError as TicsError } from '@tiobe/http-client';
 
 export function handleOctokitError(error: unknown): string {
   let message = 'reason unkown';

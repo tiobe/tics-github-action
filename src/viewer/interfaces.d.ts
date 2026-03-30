@@ -170,7 +170,7 @@ export interface RunDateResponse {
     messages: string[];
     coverage: number;
     status: string;
-    value: number;
+    value: number | null;
   }[];
   dates: string;
   metrics: {

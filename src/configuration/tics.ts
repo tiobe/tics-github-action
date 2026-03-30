@@ -26,6 +26,7 @@ export class TicsConfiguration {
   readonly mode: Mode;
   readonly ticsAuthToken: string;
   readonly trustStrategy: TrustStrategy;
+  readonly createProject: boolean;
 
   /**
    * The URL pointing to the "cfg" API endpoint of the TICS Viewer. Is used for running TICS.
@@ -52,6 +53,7 @@ export class TicsConfiguration {
     this.ticsAuthToken = getInput('ticsAuthToken');
     this.baseUrl = getBaseUrl(this.viewerUrl).href;
     this.displayUrl = this.validateAndGetDisplayUrl(getInput('displayUrl'));
+    this.createProject = this.validateAndGetCreateProject(getBooleanInput('createProject'));
 
     this.setVariables();
   }
@@ -149,6 +151,13 @@ export class TicsConfiguration {
       return false;
     }
     throw Error(`Parameter 'hostnameVerification' should be '1'/'true' or '0'/'false'. Input given is '${input}'`);
+  }
+
+  private validateAndGetCreateProject(input: boolean): boolean {
+    if (this.mode !== Mode.QSERVER && input) {
+      throw Error(`Parameter 'createProject' can only be used in server mode`);
+    }
+    return input;
   }
 
   /**

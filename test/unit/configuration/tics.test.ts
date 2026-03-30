@@ -16,7 +16,8 @@ describe('tICS Configuration', () => {
     viewerUrl: '',
     trustStrategy: 'strict',
     baseUrl: '',
-    displayUrl: ''
+    displayUrl: '',
+    createProject: false
   };
 
   beforeEach(() => {
@@ -383,6 +384,26 @@ describe('tICS Configuration', () => {
         expect(error.message).toContain("Parameter 'trustStrategy' should be one of 'strict', 'self-signed' or 'all'. Input given is 'self'");
       });
     });
+
+    describe('validate createProject', () => {
+      it('should throw if mode is client and createProject is true', () => {
+        values = {
+          ...values,
+          mode: 'client',
+          createProject: 'true'
+        };
+
+        let error: any;
+        try {
+          new TicsConfiguration();
+        } catch (err) {
+          error = err;
+        }
+
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toEqual(`Parameter 'createProject' can only be used in server mode`);
+      });
+    });
   });
 
   describe('environment tests', () => {
@@ -396,7 +417,8 @@ describe('tICS Configuration', () => {
         ticsAuthToken: 'auth-token',
         viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
         trustStrategy: 'self-signed',
-        displayUrl: 'http://viewer.url'
+        displayUrl: 'http://viewer.url',
+        createProject: 'false'
       };
 
       const ticsConfig = new TicsConfiguration();
@@ -411,7 +433,8 @@ describe('tICS Configuration', () => {
         viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
         trustStrategy: TrustStrategy.SELFSIGNED,
         baseUrl: 'http://localhost/tiobeweb/TICS',
-        displayUrl: 'http://viewer.url/'
+        displayUrl: 'http://viewer.url/',
+        createProject: false
       });
       expect(process.env.TICSCI).toBe('1');
       expect(process.env.TICSIDE).toBe('GITHUB');
@@ -431,7 +454,8 @@ describe('tICS Configuration', () => {
         ticsAuthToken: 'auth-token',
         viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
         trustStrategy: 'self-signed',
-        displayUrl: 'http://viewer.url'
+        displayUrl: 'http://viewer.url',
+        createProject: 'true'
       };
 
       const ticsConfig = new TicsConfiguration();
@@ -446,7 +470,8 @@ describe('tICS Configuration', () => {
         viewerUrl: 'http://localhost/tiobeweb/TICS/api/cfg?name=default',
         trustStrategy: TrustStrategy.SELFSIGNED,
         baseUrl: 'http://localhost/tiobeweb/TICS',
-        displayUrl: 'http://viewer.url/'
+        displayUrl: 'http://viewer.url/',
+        createProject: true
       });
 
       expect(process.env.TICSCI).toBe('1');

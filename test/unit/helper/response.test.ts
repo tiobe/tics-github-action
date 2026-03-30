@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { RequestError } from '@octokit/request-error';
-import { RequestError as TicsError } from '@tiobe/http-client/lib/retry';
+import { RequestError as TicsError } from '@tiobe/http-client';
 import { ClientResponse } from '@tiobe/http-client';
 import { getRetryErrorMessage, getRetryMessage, handleOctokitError } from '../../../src/helper/response';
 
