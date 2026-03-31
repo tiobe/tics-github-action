@@ -60,4 +60,18 @@ describe('getViewerVersion', () => {
 
     expect(response).toBeTruthy();
   });
+
+  it('should throw viewer returns unparsable version', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: null }, retryCount: 0, status: 200 });
+
+    let error: any;
+    try {
+      await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION);
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toStrictEqual('Could not compute version received by the viewer, got: null.');
+  });
 });
