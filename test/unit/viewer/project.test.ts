@@ -17,6 +17,10 @@ describe('createProject', () => {
   });
 
   it('should pass creating a project using default branchdir', async () => {
+    const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF;
+    process.env.GITHUB_BASE_REF = '';
+    const GITHUB_REF_NAME = process.env.GITHUB_REF_NAME;
+    process.env.GITHUB_REF_NAME = '';
     putSpy.mockResolvedValue('');
 
     await createProject();
@@ -32,6 +36,8 @@ describe('createProject', () => {
         renameTo: { branchName: 'main' }
       })
     );
+    process.env.GITHUB_BASE_REF = GITHUB_BASE_REF;
+    process.env.GITHUB_BASE_REF = GITHUB_REF_NAME;
   });
 
   it('should pass creating a project using branchname given by input', async () => {
@@ -79,7 +85,7 @@ describe('createProject', () => {
     const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF;
     process.env.GITHUB_BASE_REF = '';
     const GITHUB_REF_NAME = process.env.GITHUB_REF_NAME;
-    process.env.GITHUB_REF_NAME = 'branch';
+    process.env.GITHUB_REF_NAME = 'branches';
     putSpy.mockResolvedValue('');
 
     await createProject();
@@ -88,11 +94,11 @@ describe('createProject', () => {
       'http://base.url/api/public/v1/fapi/Project',
       JSON.stringify({
         projectName: '',
-        branchName: 'branch',
+        branchName: 'branches',
         branchDir: '',
         calculate: true,
         visible: true,
-        renameTo: { branchName: 'branch' }
+        renameTo: { branchName: 'branches' }
       })
     );
     process.env.GITHUB_BASE_REF = GITHUB_BASE_REF;
