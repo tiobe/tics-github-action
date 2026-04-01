@@ -3,7 +3,6 @@ import { getInput } from '@actions/core';
 import { CliOption } from './interfaces';
 import { Mode } from './tics';
 import { logger } from '../helper/logger';
-import { githubConfig } from './config';
 
 export class TicsCli {
   readonly project: string;
@@ -18,8 +17,8 @@ export class TicsCli {
   readonly tmpdir: string;
   readonly additionalFlags: string;
 
-  constructor(mode: Mode) {
-    this.project = this.getProject(getInput('project'), mode);
+  constructor(mode: Mode, repoName: string) {
+    this.project = this.getProject(getInput('project'), mode, repoName);
     this.branchname = getInput('branchname');
     this.branchdir = getInput('branchdir');
     this.cdtoken = getInput('cdtoken');
@@ -42,12 +41,12 @@ export class TicsCli {
     }
   }
 
-  private getProject(input: string, mode: Mode): string {
+  private getProject(input: string, mode: Mode, repoName: string): string {
     // validate project
     if (mode === Mode.QSERVER) {
       if (input === 'auto') {
-        logger.info(`Parameter 'project' is not set, using the repository name (${githubConfig.reponame}) instead.`);
-        return githubConfig.reponame;
+        logger.info(`Parameter 'project' is not set, using the repository name (${repoName}) instead.`);
+        return repoName;
       }
     }
     return input;

@@ -46,8 +46,8 @@ describe('cli Configuration', () => {
       project: 'auto'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'auto', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'auto' });
@@ -58,8 +58,8 @@ describe('cli Configuration', () => {
       project: 'project'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'project', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'project' });
@@ -71,21 +71,32 @@ describe('cli Configuration', () => {
       branchdir: 'dir'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
 
     expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
 
-  it('should throw error if mode is qserver, project is auto and GITHUB_WORKSPACE is not available', () => {
+  it('should use repository name when mode is qserver and project is auto', () => {
     values = {
-      project: 'auto'
+      project: 'auto',
+      branchdir: 'dir'
     };
 
+    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
+
+    expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'repoName' });
+  });
+
+  it('should throw error if mode is qserver, branchdir is not given and GITHUB_WORKSPACE is not available', () => {
     const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
     delete process.env.GITHUB_WORKSPACE;
+    values = {
+      branchdir: ''
+    };
+
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER);
+      new TicsCli(Mode.QSERVER, 'repoName');
     } catch (err) {
       error = err;
     }
@@ -100,7 +111,7 @@ describe('cli Configuration', () => {
       project: 'project'
     };
     process.env.GITHUB_WORKSPACE = '/workspace/project';
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
 
     expect(cliServer).toMatchObject({ project: 'project', branchdir: '/workspace/project' });
   });
@@ -113,7 +124,7 @@ describe('cli Configuration', () => {
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER);
+      new TicsCli(Mode.QSERVER, 'repoName');
     } catch (err) {
       error = err;
     }
@@ -137,7 +148,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
 
     expect(cliServer).toMatchObject({
       project: 'project',
@@ -173,7 +184,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
+    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
 
     expect(cliClient).toMatchObject({
       project: 'project',
@@ -208,7 +219,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
 
     expect(cliDiagnostic).toMatchObject({
       project: 'project',
