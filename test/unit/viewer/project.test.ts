@@ -3,9 +3,11 @@ import { httpClient } from '../../../src/viewer/http-client';
 import { createProject } from '../../../src/viewer/project';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 import { SpiedFunction } from 'jest-mock';
+import { logger } from '../../../src/helper/logger';
 
 describe('createProject', () => {
   let putSpy: SpiedFunction<any>;
+  let infoSpy: SpiedFunction<typeof logger.info>;
 
   beforeAll(() => {
     ticsConfigMock.baseUrl = 'http://base.url';
@@ -13,96 +15,54 @@ describe('createProject', () => {
 
   beforeEach(() => {
     putSpy = jest.spyOn(httpClient, 'put');
+    infoSpy = jest.spyOn(logger, 'info');
     jest.clearAllMocks();
   });
 
-  it('should pass creating a project using default branchdir', async () => {
-    const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF;
-    process.env.GITHUB_BASE_REF = '';
-    const GITHUB_REF_NAME = process.env.GITHUB_REF_NAME;
-    process.env.GITHUB_REF_NAME = '';
-    putSpy.mockResolvedValue('');
+  it('should pass creating a project and log message if returned', async () => {
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchdir = '.';
+    putSpy.mockResolvedValue({
+      data: {
+        alertMessages: [
+          {
+            header: `Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`
+          }
+        ]
+      }
+    });
 
     await createProject();
 
     expect(putSpy).toHaveBeenCalledWith(
       'http://base.url/api/public/v1/fapi/Project',
       JSON.stringify({
-        projectName: '',
-        branchName: 'main',
-        branchDir: '',
+        projectName: 'create-project',
+        branchDir: '.',
         calculate: true,
-        visible: true,
-        renameTo: { branchName: 'main' }
+        visible: true
       })
     );
-    process.env.GITHUB_BASE_REF = GITHUB_BASE_REF;
-    process.env.GITHUB_BASE_REF = GITHUB_REF_NAME;
+    expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
   });
 
-  it('should pass creating a project using branchname given by input', async () => {
-    ticsCliMock.branchname = 'branch';
-    putSpy.mockResolvedValue('');
+  it('should pass creating a project and not log message if not returned', async () => {
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchdir = '.';
+    putSpy.mockResolvedValue({ data: { alertMessages: [] } });
 
     await createProject();
 
     expect(putSpy).toHaveBeenCalledWith(
       'http://base.url/api/public/v1/fapi/Project',
       JSON.stringify({
-        projectName: '',
-        branchName: 'branch',
-        branchDir: '',
+        projectName: 'create-project',
+        branchDir: '.',
         calculate: true,
-        visible: true,
-        renameTo: { branchName: 'branch' }
+        visible: true
       })
     );
-    ticsCliMock.branchname = '';
-  });
-
-  it('should pass creating a project using branchname given by environment GITHUB_BASE_REF', async () => {
-    const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF;
-    process.env.GITHUB_BASE_REF = 'branch';
-    putSpy.mockResolvedValue('');
-
-    await createProject();
-
-    expect(putSpy).toHaveBeenCalledWith(
-      'http://base.url/api/public/v1/fapi/Project',
-      JSON.stringify({
-        projectName: '',
-        branchName: 'branch',
-        branchDir: '',
-        calculate: true,
-        visible: true,
-        renameTo: { branchName: 'branch' }
-      })
-    );
-    process.env.GITHUB_BASE_REF = GITHUB_BASE_REF;
-  });
-
-  it('should pass creating a project using branchname given by environment GITHUB_REF_NAME', async () => {
-    const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF;
-    process.env.GITHUB_BASE_REF = '';
-    const GITHUB_REF_NAME = process.env.GITHUB_REF_NAME;
-    process.env.GITHUB_REF_NAME = 'branches';
-    putSpy.mockResolvedValue('');
-
-    await createProject();
-
-    expect(putSpy).toHaveBeenCalledWith(
-      'http://base.url/api/public/v1/fapi/Project',
-      JSON.stringify({
-        projectName: '',
-        branchName: 'branches',
-        branchDir: '',
-        calculate: true,
-        visible: true,
-        renameTo: { branchName: 'branches' }
-      })
-    );
-    process.env.GITHUB_BASE_REF = GITHUB_BASE_REF;
-    process.env.GITHUB_BASE_REF = GITHUB_REF_NAME;
+    expect(infoSpy).toHaveBeenCalledTimes(0);
   });
 
   it('should throw error when viewer returns error', async () => {

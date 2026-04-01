@@ -1,3 +1,4 @@
+import { HttpBadRequestResponse } from '@tiobe/http-client';
 import { ticsCli, ticsConfig } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
@@ -10,43 +11,21 @@ import { httpClient } from './http-client';
  */
 export async function createProject(): Promise<void> {
   const createProjectUrl = joinUrl(ticsConfig.baseUrl, 'api/public/v1/fapi/Project');
-  const branchName = getBranchName();
   const body = {
     projectName: ticsCli.project,
-    branchName: branchName,
     branchDir: ticsCli.branchdir,
     calculate: true,
-    visible: true,
-    renameTo: {
-      branchName: branchName
-    }
+    visible: true
   };
   try {
     logger.header('Creating/updating the TICS project');
     logger.debug(`With ${createProjectUrl}`);
-    await httpClient.put<string>(createProjectUrl, JSON.stringify(body));
+    const response = await httpClient.put<HttpBadRequestResponse>(createProjectUrl, JSON.stringify(body));
+    if (response.data.alertMessages.length > 0) {
+      logger.info(response.data.alertMessages[0].header);
+    }
   } catch (error: unknown) {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error creating the project: ${message}`);
   }
-}
-
-/**
- * Get the branchname of the project to create.
- * If branchdir is not set, it will try to get the default branch or else 'main'.
- */
-function getBranchName(): string {
-  if (ticsCli.branchname) {
-    return ticsCli.branchname;
-  }
-
-  if (process.env.GITHUB_BASE_REF) {
-    return process.env.GITHUB_BASE_REF;
-  }
-
-  if (process.env.GITHUB_REF_NAME) {
-    return process.env.GITHUB_REF_NAME;
-  }
-
-  return 'main';
 }
