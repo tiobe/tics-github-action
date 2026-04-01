@@ -49,6 +49,7 @@ export const ticsConfigMock = {
   installTics: false,
   mode: 'client',
   viewerUrl: '',
+  configuration: '',
   trustStrategy: 'strict',
   baseUrl: '',
   displayUrl: '',

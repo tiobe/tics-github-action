@@ -20,6 +20,7 @@ describe('createProject', () => {
   });
 
   it('should pass creating a project and log message if returned', async () => {
+    ticsConfigMock.configuration = 'default';
     ticsCliMock.project = 'create-project';
     ticsCliMock.branchdir = '.';
     putSpy.mockResolvedValue({
@@ -35,7 +36,7 @@ describe('createProject', () => {
     await createProject();
 
     expect(putSpy).toHaveBeenCalledWith(
-      'http://base.url/api/public/v1/fapi/Project',
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
       JSON.stringify({
         projectName: 'create-project',
         branchDir: '.',
@@ -47,6 +48,7 @@ describe('createProject', () => {
   });
 
   it('should pass creating a project and not log message if not returned', async () => {
+    ticsConfigMock.configuration = 'default';
     ticsCliMock.project = 'create-project';
     ticsCliMock.branchdir = '.';
     putSpy.mockResolvedValue({ data: { alertMessages: [] } });
@@ -54,7 +56,7 @@ describe('createProject', () => {
     await createProject();
 
     expect(putSpy).toHaveBeenCalledWith(
-      'http://base.url/api/public/v1/fapi/Project',
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
       JSON.stringify({
         projectName: 'create-project',
         branchDir: '.',

@@ -10,7 +10,7 @@ import { httpClient } from './http-client';
  * @throws Error if project cannot be created or does not exist.
  */
 export async function createProject(): Promise<void> {
-  const createProjectUrl = joinUrl(ticsConfig.baseUrl, 'api/public/v1/fapi/Project');
+  const createProjectUrl = joinUrl(ticsConfig.baseUrl, `api/public/v1/fapi/Project?cfg=${ticsConfig.configuration}`);
   const body = {
     projectName: ticsCli.project,
     branchDir: ticsCli.branchdir,

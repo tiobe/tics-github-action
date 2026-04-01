@@ -14,6 +14,7 @@ describe('tICS Configuration', () => {
     mode: '',
     ticsAuthToken: '',
     viewerUrl: '',
+    configuration: '',
     trustStrategy: 'strict',
     baseUrl: '',
     displayUrl: '',
@@ -157,6 +158,7 @@ describe('tICS Configuration', () => {
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
         viewerUrl: 'http://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: Mode.CLIENT,
         baseUrl: 'http://test.com/tiobeweb/TICS',
         displayUrl: 'http://test.com/tiobeweb/TICS'
@@ -166,6 +168,7 @@ describe('tICS Configuration', () => {
     it('should return correct https URL and set base- and displayUrl', () => {
       values = {
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: 'client'
       };
 
@@ -174,6 +177,7 @@ describe('tICS Configuration', () => {
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
         displayUrl: 'https://test.com/tiobeweb/TICS'
@@ -183,6 +187,7 @@ describe('tICS Configuration', () => {
     it('should throw error if incorrect displayUrl', () => {
       values = {
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: 'client',
         displayUrl: 'localhost'
       };
@@ -201,6 +206,7 @@ describe('tICS Configuration', () => {
     it('should return different displayUrl from baseUrl', () => {
       values = {
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: 'client',
         displayUrl: 'http://viewer.url'
       };
@@ -210,6 +216,7 @@ describe('tICS Configuration', () => {
       expect(ticsConfig).toMatchObject({
         ...expectDefault,
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
         displayUrl: 'http://viewer.url/'
@@ -221,12 +228,14 @@ describe('tICS Configuration', () => {
     beforeEach(() => {
       values = {
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: 'client'
       };
 
       expectDefault = {
         ...expectDefault,
         viewerUrl: 'https://test.com/tiobeweb/TICS/api/cfg?name=asdf',
+        configuration: 'asdf',
         mode: Mode.CLIENT,
         baseUrl: 'https://test.com/tiobeweb/TICS',
         displayUrl: 'https://test.com/tiobeweb/TICS'
