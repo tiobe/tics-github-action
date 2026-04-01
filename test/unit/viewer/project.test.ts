@@ -40,6 +40,36 @@ describe('createProject', () => {
       JSON.stringify({
         projectName: 'create-project',
         branchDir: '.',
+        branchName: 'main',
+        calculate: true,
+        visible: true
+      })
+    );
+    expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
+  });
+
+  it('should pass creating a project using branchname given by input', async () => {
+    ticsConfigMock.configuration = 'default';
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchname = 'branch';
+    putSpy.mockResolvedValue({
+      data: {
+        alertMessages: [
+          {
+            header: `Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`
+          }
+        ]
+      }
+    });
+
+    await createProject();
+
+    expect(putSpy).toHaveBeenCalledWith(
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
+      JSON.stringify({
+        projectName: 'create-project',
+        branchDir: '.',
+        branchName: 'branch',
         calculate: true,
         visible: true
       })
@@ -51,6 +81,7 @@ describe('createProject', () => {
     ticsConfigMock.configuration = 'default';
     ticsCliMock.project = 'create-project';
     ticsCliMock.branchdir = '.';
+    ticsCliMock.branchname = '';
     putSpy.mockResolvedValue({ data: { alertMessages: [] } });
 
     await createProject();
@@ -60,6 +91,7 @@ describe('createProject', () => {
       JSON.stringify({
         projectName: 'create-project',
         branchDir: '.',
+        branchName: 'main',
         calculate: true,
         visible: true
       })

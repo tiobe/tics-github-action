@@ -14,6 +14,7 @@ export async function createProject(): Promise<void> {
   const body = {
     projectName: ticsCli.project,
     branchDir: ticsCli.branchdir,
+    branchName: getBranchName(),
     calculate: true,
     visible: true
   };
@@ -28,4 +29,11 @@ export async function createProject(): Promise<void> {
     const message = getRetryErrorMessage(error);
     throw Error(`There was an error creating the project: ${message}`);
   }
+}
+
+function getBranchName() {
+  if (ticsCli.branchname) {
+    return ticsCli.branchname;
+  }
+  return 'main';
 }
