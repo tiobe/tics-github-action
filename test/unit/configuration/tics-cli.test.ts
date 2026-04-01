@@ -46,8 +46,8 @@ describe('cli Configuration', () => {
       project: 'auto'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
+    const cliClient = new TicsCli(Mode.CLIENT);
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'auto', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'auto' });
@@ -58,8 +58,8 @@ describe('cli Configuration', () => {
       project: 'project'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
+    const cliClient = new TicsCli(Mode.CLIENT);
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'project', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'project' });
@@ -71,32 +71,56 @@ describe('cli Configuration', () => {
       branchdir: 'dir'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
+    const cliServer = new TicsCli(Mode.QSERVER);
 
     expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
 
-  it('should use repository name when mode is qserver and project is auto', () => {
+  it('should pass when mode is qserver and project is empty', () => {
+    values = {
+      project: '',
+      branchdir: 'dir'
+    };
+
+    let error: any;
+    try {
+      new TicsCli(Mode.QSERVER);
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toContain('Parameter `project` is emtpy, TICS cannot run without it.');
+  });
+
+  it('should pass when mode is qserver and project is not given', () => {
     values = {
       project: 'auto',
       branchdir: 'dir'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
+    let error: any;
+    try {
+      new TicsCli(Mode.QSERVER);
+    } catch (err) {
+      error = err;
+    }
 
-    expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'repoName' });
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toContain(`Running TICS with project 'auto' is not possible with QServer`);
   });
 
   it('should throw error if mode is qserver, branchdir is not given and GITHUB_WORKSPACE is not available', () => {
     const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
     delete process.env.GITHUB_WORKSPACE;
     values = {
+      project: 'project',
       branchdir: ''
     };
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER, 'repoName');
+      new TicsCli(Mode.QSERVER);
     } catch (err) {
       error = err;
     }
@@ -111,7 +135,7 @@ describe('cli Configuration', () => {
       project: 'project'
     };
     process.env.GITHUB_WORKSPACE = '/workspace/project';
-    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
+    const cliServer = new TicsCli(Mode.QSERVER);
 
     expect(cliServer).toMatchObject({ project: 'project', branchdir: '/workspace/project' });
   });
@@ -124,7 +148,7 @@ describe('cli Configuration', () => {
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER, 'repoName');
+      new TicsCli(Mode.QSERVER);
     } catch (err) {
       error = err;
     }
@@ -148,7 +172,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER, 'repoName');
+    const cliServer = new TicsCli(Mode.QSERVER);
 
     expect(cliServer).toMatchObject({
       project: 'project',
@@ -184,7 +208,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT, 'repoName');
+    const cliClient = new TicsCli(Mode.CLIENT);
 
     expect(cliClient).toMatchObject({
       project: 'project',
@@ -219,7 +243,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'repoName');
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
 
     expect(cliDiagnostic).toMatchObject({
       project: 'project',

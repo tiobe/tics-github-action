@@ -10,7 +10,7 @@ inputs:
     required: false
     default: client
   project:
-    description: Name of the TICS project. In client mode this will default to project `auto`, in server mode it will use the repository name.
+    description: Name of the TICS project. In client mode this will default to project `auto`, in server mode it is mandatory.
     required: false
     default: auto
   githubToken:
