@@ -45,11 +45,8 @@ export class TicsCli {
     if (input === '') {
       throw Error('Parameter `project` is emtpy, TICS cannot run without it.');
     }
-
-    if (mode === Mode.QSERVER) {
-      if (input === 'auto') {
-        throw Error(`Running TICS with project 'auto' is not possible with QServer`);
-      }
+    if (input === 'auto' && mode === Mode.QSERVER) {
+      throw Error(`Running TICS with project 'auto' is not possible with QServer`);
     }
     return input;
   }
