@@ -4,37 +4,30 @@ import { logger } from '../helper/logger';
 import { joinUrl } from '../helper/url';
 import { httpClient } from './http-client';
 import { ticsConfig } from '../configuration/config';
-import { coerce, satisfies, SemVer } from 'semver';
 
 export enum ViewerFeature {
-  GITHUB_ACTION = '>=2022.4.0',
-  NEW_ANNOTATIONS = '>=2025.1.8'
+  GITHUB_ACTION = '2022.4.0',
+  NEW_ANNOTATIONS = '2025.1.8',
+  PROJECT_CREATION = '2026.1.2.54221'
 }
 
 class ViewerVersion {
-  private viewerVersion?: SemVer;
+  private viewerVersion?: string;
 
-  /**
-   * Gets the version of the TICS viewer used.
-   * @returns Version of the used TICS viewer.
-   */
   async viewerSupports(feature: ViewerFeature): Promise<boolean> {
     if (this.viewerVersion !== undefined) {
-      logger.debug(`Getting version from cache: ${this.viewerVersion.version}`);
-      return satisfies(this.viewerVersion, feature);
+      logger.debug(`Getting version from cache: ${this.viewerVersion}`);
+      return this.satisfies(this.viewerVersion, feature);
     }
 
     const viewerVersion = await this.fetchViewerVersion();
-    const cleanVersion = coerce(viewerVersion.version);
-
-    if (cleanVersion !== null) {
-      logger.info(`Found viewer with version: ${cleanVersion.version}`);
-      this.viewerVersion = cleanVersion;
-    } else {
-      throw Error(`Could not compute version received by the viewer, got: ${viewerVersion.version}.`);
+    if (!viewerVersion.version) {
+      throw Error(`Viewer returned empty version.`);
     }
+    this.viewerVersion = viewerVersion.version;
+    logger.info(`Found viewer with version: ${this.viewerVersion}`);
 
-    return satisfies(cleanVersion, feature);
+    return this.satisfies(this.viewerVersion, feature);
   }
 
   private async fetchViewerVersion(): Promise<VersionResponse> {
@@ -51,6 +44,29 @@ class ViewerVersion {
       const message = getRetryErrorMessage(error);
       throw Error(`There was an error retrieving the Viewer version: ${message}`);
     }
+  }
+
+  /**
+   * Checks if version given is at least as high as the minimum version given.
+   */
+  private satisfies(version: string, minimum: string): boolean {
+    const v = this.parseVersion(version);
+    const m = this.parseVersion(minimum);
+    const len = Math.max(v.length, m.length);
+
+    for (let i = 0; i < len; i++) {
+      const a = v[i] ?? 0;
+      const b = m[i] ?? 0;
+      if (a !== b) return a > b;
+    }
+    return true;
+  }
+
+  private parseVersion(version: string): number[] {
+    return version
+      .replace(/^[^\d]+|[^\d]+$/g, '')
+      .split('.')
+      .map(Number);
   }
 }
 export const viewerVersion = new ViewerVersion();

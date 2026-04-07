@@ -42,7 +42,11 @@ describe('createProject', () => {
         branchDir: '.',
         branchName: 'main',
         calculate: true,
-        visible: true
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
       })
     );
     expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
@@ -71,7 +75,11 @@ describe('createProject', () => {
         branchDir: '.',
         branchName: 'branch',
         calculate: true,
-        visible: true
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
       })
     );
     expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
@@ -93,7 +101,11 @@ describe('createProject', () => {
         branchDir: '.',
         branchName: 'main',
         calculate: true,
-        visible: true
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
       })
     );
     expect(infoSpy).toHaveBeenCalledTimes(0);

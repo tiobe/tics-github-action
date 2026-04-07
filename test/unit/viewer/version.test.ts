@@ -61,6 +61,14 @@ describe('getViewerVersion', () => {
     expect(response).toBeTruthy();
   });
 
+  it('should return true if viewer version is insufficient with reversion', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: '2026.1.2.54220' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeFalsy();
+  });
+
   it('should throw viewer returns unparsable version', async () => {
     jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: null }, retryCount: 0, status: 200 });
 
@@ -72,6 +80,6 @@ describe('getViewerVersion', () => {
     }
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toStrictEqual('Could not compute version received by the viewer, got: null.');
+    expect(error.message).toStrictEqual('Viewer returned empty version.');
   });
 });

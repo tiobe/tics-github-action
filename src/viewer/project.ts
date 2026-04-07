@@ -1,5 +1,5 @@
 import { HttpBadRequestResponse } from '@tiobe/http-client';
-import { ticsCli, ticsConfig } from '../configuration/config';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { getRetryErrorMessage } from '../helper/response';
 import { joinUrl } from '../helper/url';
@@ -16,7 +16,11 @@ export async function createProject(): Promise<void> {
     branchDir: ticsCli.branchdir,
     branchName: getBranchName(),
     calculate: true,
-    visible: true
+    visible: true,
+    scmTool: {
+      name: 'Git',
+      db: githubConfig.reponame
+    }
   };
   try {
     logger.header('Creating/updating the TICS project');

@@ -157,7 +157,7 @@ export interface Annotation {
 export interface VersionResponse {
   buildTime?: string;
   revision?: string;
-  version: string;
+  version?: string;
   fullVersion?: string;
   project?: string;
   dbversion?: string;
