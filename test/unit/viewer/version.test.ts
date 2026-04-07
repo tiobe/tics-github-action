@@ -61,12 +61,28 @@ describe('getViewerVersion', () => {
     expect(response).toBeTruthy();
   });
 
-  it('should return true if viewer version is insufficient with reversion', async () => {
+  it('should return false if viewer version is insufficient with reversion', async () => {
     jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: '2026.1.2.54220' }, retryCount: 0, status: 200 });
 
     const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
 
     expect(response).toBeFalsy();
+  });
+
+  it('should return true if viewer version is sufficient with reversion', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: '2026.1.2.54222' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeTruthy();
+  });
+
+  it('should return true if viewer version is sufficient with no reversion', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { version: '2026.1.3' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeTruthy();
   });
 
   it('should throw viewer returns unparsable version', async () => {
