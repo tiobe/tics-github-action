@@ -21,10 +21,10 @@ class ViewerVersion {
     }
 
     const viewerVersion = await this.fetchViewerVersion();
-    if (!viewerVersion.version) {
+    if (!viewerVersion.fullVersion) {
       throw Error(`Viewer returned empty version.`);
     }
-    this.viewerVersion = viewerVersion.version;
+    this.viewerVersion = viewerVersion.fullVersion;
     logger.info(`Found viewer with version: ${this.viewerVersion}`);
 
     return this.satisfies(this.viewerVersion, feature);
