@@ -18,7 +18,7 @@ export class TicsCli {
   readonly additionalFlags: string;
 
   constructor(mode: Mode) {
-    this.project = getInput('project');
+    this.project = this.getProject(getInput('project'), mode);
     this.branchname = getInput('branchname');
     this.branchdir = getInput('branchdir');
     this.cdtoken = getInput('cdtoken');
@@ -41,6 +41,16 @@ export class TicsCli {
     }
   }
 
+  private getProject(input: string, mode: Mode): string {
+    if (input === '') {
+      throw Error('Parameter `project` is emtpy, TICS cannot run without it.');
+    }
+    if (input === 'auto' && mode === Mode.QSERVER) {
+      throw Error(`Running TICS with project 'auto' is not possible with QServer`);
+    }
+    return input;
+  }
+
   /**
    * Get the calc option or the default if not set by the user
    * @returns the calc option set by user or thedefault.
@@ -60,13 +70,6 @@ export class TicsCli {
    * @throws error if project auto is used incorrectly.
    */
   private validateCliOptions(cli: TicsCli, mode: Mode) {
-    // validate project
-    if (mode === Mode.QSERVER) {
-      if (cli.project === 'auto') {
-        throw Error(`Running TICS with project 'auto' is not possible with QServer`);
-      }
-    }
-
     for (const option of CliOptions) {
       const key = option.action as keyof TicsCli;
       if (cli[key] !== '' && !option.modes.includes(mode)) {

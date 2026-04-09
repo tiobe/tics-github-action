@@ -25,12 +25,13 @@ process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
+process.env.INPUT_CREATEPROJECT = 'false';
 
 // mock before importing httpClient
 jest.spyOn(process.stdout, 'write').mockImplementation((): any => {});
 
 import { httpClient } from '../../src/viewer/http-client';
-import HttpClient from '@tiobe/http-client';
+import { HttpClient } from '@tiobe/http-client';
 import { ProxyAgent } from 'proxy-agent';
 
 describe('@actions/http-client (using http_proxy)', () => {

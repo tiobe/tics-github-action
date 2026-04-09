@@ -26,11 +26,13 @@ export class TicsConfiguration {
   readonly mode: Mode;
   readonly ticsAuthToken: string;
   readonly trustStrategy: TrustStrategy;
+  readonly createProject: boolean;
 
   /**
    * The URL pointing to the "cfg" API endpoint of the TICS Viewer. Is used for running TICS.
    */
   readonly viewerUrl: string;
+  readonly configuration: string;
   /**
    * Derived of the viewerUrl. Is used for performing API calls.
    */
@@ -42,7 +44,10 @@ export class TicsConfiguration {
   readonly displayUrl: string;
 
   constructor() {
-    this.viewerUrl = this.validateAndGetViewerUrl(getInput('viewerUrl', { required: true }));
+    const viewerUrlAndConfiguration = this.validateAndGetViewerUrlAndConfiguration(getInput('viewerUrl', { required: true }));
+    this.viewerUrl = viewerUrlAndConfiguration.href;
+    this.configuration = viewerUrlAndConfiguration.configuration;
+
     this.mode = this.validateAndGetMode(getInput('mode'));
     this.githubToken = getInput('githubToken');
     this.installTics = getBooleanInput('installTics');
@@ -52,6 +57,7 @@ export class TicsConfiguration {
     this.ticsAuthToken = getInput('ticsAuthToken');
     this.baseUrl = getBaseUrl(this.viewerUrl).href;
     this.displayUrl = this.validateAndGetDisplayUrl(getInput('displayUrl'));
+    this.createProject = this.validateAndGetCreateProject(getBooleanInput('createProject'));
 
     this.setVariables();
   }
@@ -61,18 +67,20 @@ export class TicsConfiguration {
    * @returns the input if it is correct.
    * @throws error if the input is incorrect.
    */
-  private validateAndGetViewerUrl(url: string): string {
+  private validateAndGetViewerUrlAndConfiguration(url: string): { href: string; configuration: string } {
     const uri = this.validateAndGetUrl(url, 'viewerUrl');
 
     if (uri.protocol !== 'http:' && uri.protocol !== 'https:') {
       throw Error(`Parameter 'viewerUrl' is missing the protocol (http(s)://)`);
-    } else if (!uri.pathname.endsWith('/api/cfg')) {
+    }
+    if (!uri.pathname.endsWith('/api/cfg')) {
       throw Error(`Parameter 'viewerUrl' is missing path /api/cfg`);
-    } else if (!uri.searchParams.has('name') || uri.searchParams.get('name') === '') {
+    }
+    const cfgParam = uri.searchParams.get('name');
+    if (!cfgParam || cfgParam === '') {
       throw Error(`Parameter 'viewerUrl' is missing the configuration. (eg: /cfg?name=default)`);
     }
-
-    return uri.href;
+    return { href: uri.href, configuration: cfgParam };
   }
 
   /**
@@ -149,6 +157,13 @@ export class TicsConfiguration {
       return false;
     }
     throw Error(`Parameter 'hostnameVerification' should be '1'/'true' or '0'/'false'. Input given is '${input}'`);
+  }
+
+  private validateAndGetCreateProject(input: boolean): boolean {
+    if (this.mode !== Mode.QSERVER && input) {
+      throw Error(`Parameter 'createProject' can only be used in server mode`);
+    }
+    return input;
   }
 
   /**

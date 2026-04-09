@@ -1,0 +1,126 @@
+import { describe, expect, it, jest } from '@jest/globals';
+import { httpClient } from '../../../src/viewer/http-client';
+import { createProject } from '../../../src/viewer/project';
+import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
+import { SpiedFunction } from 'jest-mock';
+import { logger } from '../../../src/helper/logger';
+
+describe('createProject', () => {
+  let putSpy: SpiedFunction<any>;
+  let infoSpy: SpiedFunction<typeof logger.info>;
+
+  beforeAll(() => {
+    ticsConfigMock.baseUrl = 'http://base.url';
+  });
+
+  beforeEach(() => {
+    putSpy = jest.spyOn(httpClient, 'put');
+    infoSpy = jest.spyOn(logger, 'info');
+    jest.clearAllMocks();
+  });
+
+  it('should pass creating a project and log message if returned', async () => {
+    ticsConfigMock.configuration = 'default';
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchdir = '.';
+    putSpy.mockResolvedValue({
+      data: {
+        alertMessages: [
+          {
+            header: `Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`
+          }
+        ]
+      }
+    });
+
+    await createProject();
+
+    expect(putSpy).toHaveBeenCalledWith(
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
+      JSON.stringify({
+        projectName: 'create-project',
+        branchDir: '.',
+        branchName: 'main',
+        calculate: true,
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
+      })
+    );
+    expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
+  });
+
+  it('should pass creating a project using branchname given by input', async () => {
+    ticsConfigMock.configuration = 'default';
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchname = 'branch';
+    putSpy.mockResolvedValue({
+      data: {
+        alertMessages: [
+          {
+            header: `Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`
+          }
+        ]
+      }
+    });
+
+    await createProject();
+
+    expect(putSpy).toHaveBeenCalledWith(
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
+      JSON.stringify({
+        projectName: 'create-project',
+        branchDir: '.',
+        branchName: 'branch',
+        calculate: true,
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
+      })
+    );
+    expect(infoSpy).toHaveBeenCalledWith(`Created database created (took 4s, dbversion: 143), Added project 'PROJECTS => created' to configuration"`);
+  });
+
+  it('should pass creating a project and not log message if not returned', async () => {
+    ticsConfigMock.configuration = 'default';
+    ticsCliMock.project = 'create-project';
+    ticsCliMock.branchdir = '.';
+    ticsCliMock.branchname = '';
+    putSpy.mockResolvedValue({ data: { alertMessages: [] } });
+
+    await createProject();
+
+    expect(putSpy).toHaveBeenCalledWith(
+      'http://base.url/api/public/v1/fapi/Project?cfg=default',
+      JSON.stringify({
+        projectName: 'create-project',
+        branchDir: '.',
+        branchName: 'main',
+        calculate: true,
+        visible: true,
+        scmTool: {
+          name: 'Git',
+          db: 'test'
+        }
+      })
+    );
+    expect(infoSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should throw error when viewer returns error', async () => {
+    putSpy.mockRejectedValue(Error());
+
+    let error: any;
+    try {
+      await createProject();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+  });
+});

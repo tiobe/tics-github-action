@@ -5,6 +5,7 @@ import * as pull_request from '../../../src/action/decorate/pull-request';
 import * as qserver from '../../../src/analysis/qserver/analysis-result';
 import * as summary from '../../../src/action/decorate/summary';
 import * as viewer from '../../../src/viewer/qserver';
+import * as project from '../../../src/viewer/project';
 
 import { githubConfigMock, ticsConfigMock } from '../../.setup/mock';
 import {
@@ -35,6 +36,7 @@ describe('setFailed checks (QServer)', () => {
 
     jest.spyOn(action, 'decorateAction');
     jest.spyOn(summary, 'createNothingAnalyzedSummaryBody').mockResolvedValue('body');
+    jest.spyOn(project, 'createProject').mockResolvedValue();
   });
 
   afterEach(() => {
@@ -166,6 +168,7 @@ describe('setFailed checks (QServer)', () => {
   });
 
   it('should return passing verdict if getAnalysisResult returns passing Quality Gate', async () => {
+    ticsConfigMock.createProject = true;
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);

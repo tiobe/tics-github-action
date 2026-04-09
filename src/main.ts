@@ -57,6 +57,8 @@ export async function main(): Promise<void> {
 async function meetsPrerequisites(): Promise<void> {
   if (!(await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION))) {
     throw Error(`Minimum required TICS Viewer version is 2022.4.0.`);
+  } else if (ticsConfig.createProject && !(await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION))) {
+    throw Error(`Minimum required TICS Viewer version for creating a project is 2026.1.2.54221.`);
   } else if (ticsConfig.mode === Mode.DIAGNOSTIC) {
     /* No need for checked out repository. */
   } else if (ticsConfig.mode === Mode.CLIENT && !githubConfig.event.isPullRequest && ticsConfig.filelist === '') {

@@ -49,9 +49,11 @@ export const ticsConfigMock = {
   installTics: false,
   mode: 'client',
   viewerUrl: '',
+  configuration: '',
   trustStrategy: 'strict',
   baseUrl: '',
-  displayUrl: ''
+  displayUrl: '',
+  createProject: false
 };
 
 export const actionConfigMock = {
@@ -94,7 +96,10 @@ jest.mock('../../src/configuration/config', () => {
 jest.mock('../../src/viewer/http-client', () => {
   return {
     httpClient: {
-      get: jest.fn()
+      get: jest.fn(),
+      delete: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn()
     }
   };
 });
