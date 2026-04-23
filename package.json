@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/tiobe/tics-github-action#readme",
   "dependencies": {
-    "@actions/artifact": "^4.0.0",
+    "@actions/artifact": "^6.2.1",
     "@actions/artifact-v1": "npm:@actions/artifact@1.1.2",
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
