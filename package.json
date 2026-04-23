@@ -29,7 +29,7 @@
   "dependencies": {
     "@actions/artifact": "^4.0.0",
     "@actions/artifact-v1": "npm:@actions/artifact@1.1.2",
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.0",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
     "@octokit/plugin-paginate-graphql": "^4.0.1",
