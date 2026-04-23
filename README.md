@@ -43,6 +43,7 @@ The quality gate and measurement results are reported in your action summary and
 Below is an example of the minimum configuration that needs to be created in the workflow to enable TICS Client analysis:
 
 ```yaml
+name: TICS Github Action
 on: [pull_request]
 
 jobs:
@@ -52,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: TICS GitHub Action
+      - name: TICS Analysis
         uses: tiobe/tics-github-action@v3
         with:
           viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
@@ -108,6 +109,7 @@ With TICSQServer, persistent measurement points are created which are stored in 
 TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
 
 ```yaml
+name: TICS Github Action
 on:
   push:
     branches:
@@ -120,7 +122,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: TICS GitHub Action
+      - name: TICSQserver Analysis
         uses: tiobe/tics-github-action@v3
         with:
           mode: qserver
@@ -200,6 +202,7 @@ Below, parameters are described to control infra structure and security related 
 There is also the possibility to do a so called "diagnostic" run. This mode can be enabled to test if TICS has been set up properly and can run on the machine the action is run on.
 
 ```yaml
+name: TICS Github Action
 on: workflow_dispatch
 
 jobs:
@@ -209,7 +212,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: TICS GitHub Action
+      - name: TICS Diagnostics
         uses: tiobe/tics-github-action@v3
         with:
           mode: diagnostic
@@ -264,6 +267,7 @@ To control the location where TICS is installed, `TICSINSTALLDIR` can be used.
 Example:
 
 ```yaml
+name: TICS Github Action
 on: workflow_dispatch
 
 jobs:
@@ -273,7 +277,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: TICS GitHub Action
+      - name: TICS Analysis
         uses: tiobe/tics-github-action@v3
         env:
           TICSINSTALLDIR: /tmp/tics/wrapper
