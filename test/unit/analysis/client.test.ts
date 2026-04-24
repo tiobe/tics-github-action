@@ -38,9 +38,7 @@ describe('setFailed checks (TICS Client)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: []
+      message: ''
     });
     expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
@@ -54,9 +52,7 @@ describe('setFailed checks (TICS Client)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Failed to complete TICS analysis.',
-      errorList: ['Error'],
-      warningList: []
+      message: 'Failed to complete TICS analysis.'
     });
   });
 
@@ -69,9 +65,7 @@ describe('setFailed checks (TICS Client)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: ['Error'],
-      warningList: []
+      message: ''
     });
   });
 
@@ -84,9 +78,7 @@ describe('setFailed checks (TICS Client)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Failed to complete TICS analysis.',
-      errorList: [],
-      warningList: ['Warning']
+      message: 'Failed to complete TICS analysis.'
     });
   });
 
@@ -99,9 +91,7 @@ describe('setFailed checks (TICS Client)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: ['Warning']
+      message: ''
     });
   });
 });
