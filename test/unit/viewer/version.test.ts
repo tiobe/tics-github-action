@@ -45,6 +45,14 @@ describe('getViewerVersion', () => {
     expect(response).toBeTruthy();
   });
 
+  it('should return github action support if version >= 2022.4.0 (match with revision)', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2022.4.0.54215' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION);
+
+    expect(response).toBeTruthy();
+  });
+
   it('should return false if viewer version is too low with prefix character', async () => {
     vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: 'r2022.1.0' }, retryCount: 0, status: 200 });
 
@@ -68,6 +76,15 @@ describe('getViewerVersion', () => {
 
     expect(response).toBeFalsy();
   });
+
+  it('should return false if viewer version is insufficient with no reversion', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.2' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeFalsy();
+  });
+
 
   it('should return true if viewer version is sufficient with reversion', async () => {
     vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.2.54222' }, retryCount: 0, status: 200 });
