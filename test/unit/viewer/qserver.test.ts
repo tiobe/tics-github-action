@@ -27,7 +27,7 @@ describe('getQualityGate', () => {
   });
 
   it('should return -1 on project that has not run yet', async () => {
-    (jest.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [{ value: undefined }] } });
+    (vi.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [{ value: undefined }] } });
 
     const response = await getLastQServerRunDate();
 

@@ -5,6 +5,7 @@ import * as pull_request from '../../../src/action/decorate/pull-request';
 import * as qserver from '../../../src/analysis/qserver/analysis-result';
 import * as summary from '../../../src/action/decorate/summary';
 import * as viewer from '../../../src/viewer/qserver';
+import * as project from '../../../src/viewer/project';
 
 import { githubConfigMock, ticsConfigMock } from '../../.setup/mock';
 import {
@@ -24,6 +25,7 @@ describe('setFailed checks (QServer)', () => {
   let spyPostToConversation: Mock<typeof pull_request.postToConversation>;
   let spyGetAnalysisResult: Mock<typeof qserver.getAnalysisResult>;
   let spyGetLastQServerRunDate: Mock<typeof viewer.getLastQServerRunDate>;
+  let spyCreateProject: Mock<typeof project.createProject>;
 
   beforeEach(() => {
     ticsConfigMock.mode = Mode.QSERVER;
@@ -32,6 +34,7 @@ describe('setFailed checks (QServer)', () => {
     spyPostToConversation = vi.spyOn(pull_request, 'postToConversation');
     spyGetAnalysisResult = vi.spyOn(qserver, 'getAnalysisResult');
     spyGetLastQServerRunDate = vi.spyOn(viewer, 'getLastQServerRunDate');
+    spyCreateProject = vi.spyOn(project, 'createProject');
 
     vi.spyOn(action, 'decorateAction');
     vi.spyOn(pull_request, 'decoratePullRequest').mockResolvedValue();
@@ -172,6 +175,7 @@ describe('setFailed checks (QServer)', () => {
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
     spyGetAnalysisResult.mockResolvedValue(analysisResultPassed);
+    spyCreateProject.mockResolvedValue();
 
     const verdict = await qServerAnalysis();
 

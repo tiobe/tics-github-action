@@ -37,6 +37,7 @@ describe('@octokit/action (using https_proxy)', () => {
     vi.stubEnv('INPUT_PULLREQUESTAPPROVAL', 'false');
     vi.stubEnv('INPUT_SHOWBLOCKINGAFTER', 'true');
     vi.stubEnv('INPUT_TRUSTSTRATEGY', 'strict');
+    vi.stubEnv('INPUT_CREATEPROJECT', 'false');
 
     // 2. Mock stdout before any imports trigger logging
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
