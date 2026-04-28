@@ -37,8 +37,8 @@ describe('getViewerVersion', () => {
     expect(response2).toBeFalsy();
   });
 
-  it('should return github action support if version >= 2022.4.0', async () => {
-    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2023.1.0' }, retryCount: 0, status: 200 });
+  it('should return github action support if version >= 2022.4.0 (exact match)', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2022.4.0' }, retryCount: 0, status: 200 });
 
     const response = await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION);
 
