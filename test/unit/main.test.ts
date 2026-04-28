@@ -43,6 +43,25 @@ describe('meetsPrerequisites', () => {
     expect((error as Error).message).toEqual(expect.stringContaining('Minimum required TICS Viewer version is 2022.4.0.'));
   });
 
+  it('should throw error if viewer version is too low for project creation', async () => {
+    ticsConfigMock.createProject = true;
+    viewerVersionSpy.mockResolvedValueOnce(true); // satisfies viewer version
+    viewerVersionSpy.mockResolvedValueOnce(false);
+
+    let error: any;
+    try {
+      await main();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toEqual(
+      expect.stringContaining('Minimum required TICS Viewer version for creating a project is 2026.1.2.54221.')
+    );
+    ticsConfigMock.createProject = false;
+  });
+
   it('should throw error on mode Client when it is not a pull request and no filelist is given', async () => {
     viewerVersionSpy.mockResolvedValue(true);
     githubConfigMock.event = GithubEvent.WORKFLOW_RUN;

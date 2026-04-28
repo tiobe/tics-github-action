@@ -49,9 +49,11 @@ export const ticsConfigMock = {
   installTics: false,
   mode: 'client',
   viewerUrl: '',
+  configuration: '',
   trustStrategy: 'strict',
   baseUrl: '',
-  displayUrl: ''
+  displayUrl: '',
+  createProject: false
 };
 
 export const actionConfigMock = {
@@ -94,7 +96,10 @@ vi.mock('../../src/configuration/config', () => {
 vi.mock('../../src/viewer/http-client', () => {
   return {
     httpClient: {
-      get: vi.fn()
+      get: vi.fn(),
+      delete: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn()
     }
   };
 });

@@ -1,10 +1,11 @@
 import { decorateAction } from '../action/decorate/action.js';
 import { postToConversation } from '../action/decorate/pull-request.js';
 import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../action/decorate/summary.js';
-import { githubConfig } from '../configuration/config.js';
+import { githubConfig, ticsConfig } from '../configuration/config.js';
 import { createAndSetOutput } from '../github/output.js';
 import { AnalysisResult, Verdict } from '../helper/interfaces.js';
 import { runTicsAnalyzer } from '../tics/analyzer.js';
+import { createProject } from '../viewer/project.js';
 import { getLastQServerRunDate } from '../viewer/qserver.js';
 import { getAnalysisResult } from './qserver/analysis-result.js';
 
@@ -13,6 +14,10 @@ import { getAnalysisResult } from './qserver/analysis-result.js';
  * @returns Verdict for a QServer run.
  */
 export async function qServerAnalysis(): Promise<Verdict> {
+  if (ticsConfig.createProject) {
+    await createProject();
+  }
+
   const oldDate = await getLastQServerRunDate();
 
   const analysis = await runTicsAnalyzer('');

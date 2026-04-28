@@ -26,6 +26,14 @@ describe('getQualityGate', () => {
     expect(error).toBeInstanceOf(Error);
   });
 
+  it('should return -1 on project that has not run yet', async () => {
+    (jest.spyOn(httpClient, 'get') as any).mockResolvedValue({ data: { data: [{ value: undefined }] } });
+
+    const response = await getLastQServerRunDate();
+
+    expect(response).toBe(-1);
+  });
+
   it('should throw error on faulty get in getQualityGate', async () => {
     vi.spyOn(httpClient, 'get').mockRejectedValue(Error());
 

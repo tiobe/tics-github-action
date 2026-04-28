@@ -60,4 +60,42 @@ describe('getViewerVersion', () => {
 
     expect(response).toBeTruthy();
   });
+
+  it('should return false if viewer version is insufficient with reversion', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.2.54220' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeFalsy();
+  });
+
+  it('should return true if viewer version is sufficient with reversion', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.2.54222' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeTruthy();
+  });
+
+  it('should return true if viewer version is sufficient with no reversion', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.3' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeTruthy();
+  });
+
+  it('should throw viewer returns unparsable version', async () => {
+    vi.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: null }, retryCount: 0, status: 200 });
+
+    let error: any;
+    try {
+      await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION);
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toStrictEqual('Viewer returned empty version.');
+  });
 });

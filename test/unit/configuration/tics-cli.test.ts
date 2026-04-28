@@ -76,9 +76,10 @@ describe('cli Configuration', () => {
     expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
 
-  it('should throw error if mode is qserver and project is auto', () => {
+  it('should pass when mode is qserver and project is empty', () => {
     values = {
-      project: 'auto'
+      project: '',
+      branchdir: 'dir'
     };
 
     let error: any;
@@ -89,7 +90,44 @@ describe('cli Configuration', () => {
     }
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toContain("Running TICS with project 'auto' is not possible with QServer");
+    expect(error.message).toContain('Parameter `project` is emtpy, TICS cannot run without it.');
+  });
+
+  it('should pass when mode is qserver and project is not given', () => {
+    values = {
+      project: 'auto',
+      branchdir: 'dir'
+    };
+
+    let error: any;
+    try {
+      new TicsCli(Mode.QSERVER);
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toContain(`Running TICS with project 'auto' is not possible with QServer`);
+  });
+
+  it('should throw error if mode is qserver, branchdir is not given and GITHUB_WORKSPACE is not available', () => {
+    const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
+    delete process.env.GITHUB_WORKSPACE;
+    values = {
+      project: 'project',
+      branchdir: ''
+    };
+
+    let error: any;
+    try {
+      new TicsCli(Mode.QSERVER);
+    } catch (err) {
+      error = err;
+    }
+
+    process.env.GITHUB_WORKSPACE = GITHUB_WORKSPACE;
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toContain('Parameter `branchdir` is not set and environment variable `GITHUB_WORKSPACE` is empty. TICSQServer cannot run.');
   });
 
   it('should add default branchdir if mode is qserver no branchdir is given', () => {

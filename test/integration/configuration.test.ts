@@ -12,6 +12,7 @@ process.env.INPUT_POSTTOCONVERSATION = 'false';
 process.env.INPUT_PULLREQUESTAPPROVAL = 'false';
 process.env.INPUT_SHOWBLOCKINGAFTER = 'true';
 process.env.INPUT_TRUSTSTRATEGY = 'strict';
+process.env.INPUT_CREATEPROJECT = 'false';
 
 beforeEach(() => {
   vi.resetModules();

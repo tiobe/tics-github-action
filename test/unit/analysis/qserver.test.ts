@@ -167,6 +167,7 @@ describe('setFailed checks (QServer)', () => {
   });
 
   it('should return passing verdict if getAnalysisResult returns passing Quality Gate', async () => {
+    ticsConfigMock.createProject = true;
     spyGetLastQServerRunDate.mockResolvedValueOnce(123456000);
     spyGetLastQServerRunDate.mockResolvedValueOnce(123457000);
     spyAnalyzer.mockResolvedValue(analysisPassed);
