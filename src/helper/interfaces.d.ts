@@ -9,8 +9,6 @@ export interface ChangedFiles {
 export interface Verdict {
   passed: boolean;
   message: string;
-  errorList: string[];
-  warningList: string[];
 }
 
 export interface Analysis {

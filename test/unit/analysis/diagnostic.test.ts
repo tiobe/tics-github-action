@@ -32,9 +32,7 @@ describe('diagnostic mode checks', () => {
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
     expect(verdict).toMatchObject({
       passed: true,
-      message: '',
-      errorList: analysisPassed.errorList,
-      warningList: analysisPassed.warningList
+      message: ''
     });
   });
 
@@ -46,9 +44,7 @@ describe('diagnostic mode checks', () => {
     expect(spyAnalyzer).toHaveBeenCalledTimes(1);
     expect(verdict).toMatchObject({
       passed: false,
-      message: 'Diagnostic run has failed.',
-      errorList: analysisFailed.errorList,
-      warningList: analysisFailed.warningList
+      message: 'Diagnostic run has failed.'
     });
   });
 });
