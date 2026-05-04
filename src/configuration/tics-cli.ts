@@ -17,8 +17,8 @@ export class TicsCli {
   readonly tmpdir: string;
   readonly additionalFlags: string;
 
-  constructor(mode: Mode) {
-    this.project = this.getProject(getInput('project'), mode);
+  constructor(mode: Mode, reponame: string) {
+    this.project = this.getProject(getInput('project'), mode, reponame);
     this.branchname = getInput('branchname');
     this.branchdir = getInput('branchdir');
     this.cdtoken = getInput('cdtoken');
@@ -41,12 +41,13 @@ export class TicsCli {
     }
   }
 
-  private getProject(input: string, mode: Mode): string {
+  private getProject(input: string, mode: Mode, reponame: string): string {
     if (input === '') {
       throw Error('Parameter `project` is emtpy, TICS cannot run without it.');
     }
     if (input === 'auto' && mode === Mode.QSERVER) {
-      throw Error(`Running TICS with project 'auto' is not possible with QServer`);
+      logger.info(`Project parameter not set, using repository name: ${reponame}`);
+      return reponame;
     }
     return input;
   }

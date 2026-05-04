@@ -46,8 +46,8 @@ describe('cli Configuration', () => {
       project: 'auto'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliClient = new TicsCli(Mode.CLIENT, 'reponame');
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'reponame');
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'auto', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'auto' });
@@ -58,8 +58,8 @@ describe('cli Configuration', () => {
       project: 'project'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliClient = new TicsCli(Mode.CLIENT, 'reponame');
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'reponame');
 
     expect(cliClient).toMatchObject({ ...expectCli, project: 'project', calc: 'GATE' });
     expect(cliDiagnostic).toMatchObject({ ...expectCli, project: 'project' });
@@ -71,7 +71,7 @@ describe('cli Configuration', () => {
       branchdir: 'dir'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'reponame');
 
     expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'project' });
   });
@@ -84,7 +84,7 @@ describe('cli Configuration', () => {
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER);
+      new TicsCli(Mode.QSERVER, 'reponame');
     } catch (err) {
       error = err;
     }
@@ -93,21 +93,15 @@ describe('cli Configuration', () => {
     expect(error.message).toContain('Parameter `project` is emtpy, TICS cannot run without it.');
   });
 
-  it('should pass when mode is qserver and project is not given', () => {
+  it('should use repository name when mode is qserver and project is not given', () => {
     values = {
       project: 'auto',
       branchdir: 'dir'
     };
 
-    let error: any;
-    try {
-      new TicsCli(Mode.QSERVER);
-    } catch (err) {
-      error = err;
-    }
+    const cliServer = new TicsCli(Mode.QSERVER, 'reponame');
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error.message).toContain(`Running TICS with project 'auto' is not possible with QServer`);
+    expect(cliServer).toMatchObject({ ...expectCli, branchdir: 'dir', project: 'reponame' });
   });
 
   it('should throw error if mode is qserver, branchdir is not given and GITHUB_WORKSPACE is not available', () => {
@@ -120,7 +114,7 @@ describe('cli Configuration', () => {
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER);
+      new TicsCli(Mode.QSERVER, 'reponame');
     } catch (err) {
       error = err;
     }
@@ -135,7 +129,7 @@ describe('cli Configuration', () => {
       project: 'project'
     };
     process.env.GITHUB_WORKSPACE = '/workspace/project';
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'reponame');
 
     expect(cliServer).toMatchObject({ project: 'project', branchdir: '/workspace/project' });
   });
@@ -148,7 +142,7 @@ describe('cli Configuration', () => {
 
     let error: any;
     try {
-      new TicsCli(Mode.QSERVER);
+      new TicsCli(Mode.QSERVER, 'reponame');
     } catch (err) {
       error = err;
     }
@@ -172,7 +166,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliServer = new TicsCli(Mode.QSERVER);
+    const cliServer = new TicsCli(Mode.QSERVER, 'reponame');
 
     expect(cliServer).toMatchObject({
       project: 'project',
@@ -208,7 +202,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliClient = new TicsCli(Mode.CLIENT);
+    const cliClient = new TicsCli(Mode.CLIENT, 'reponame');
 
     expect(cliClient).toMatchObject({
       project: 'project',
@@ -243,7 +237,7 @@ describe('cli Configuration', () => {
       additionalFlags: '-log 9'
     };
 
-    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC);
+    const cliDiagnostic = new TicsCli(Mode.DIAGNOSTIC, 'reponame');
 
     expect(cliDiagnostic).toMatchObject({
       project: 'project',
