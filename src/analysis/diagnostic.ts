@@ -18,8 +18,6 @@ export async function diagnosticAnalysis(): Promise<Verdict> {
 
   return {
     passed: passed,
-    message: !passed ? 'Diagnostic run has failed.' : '',
-    errorList: analysis.errorList,
-    warningList: analysis.warningList
+    message: !passed ? 'Diagnostic run has failed.' : ''
   };
 }

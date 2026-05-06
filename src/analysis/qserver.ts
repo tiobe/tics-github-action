@@ -26,9 +26,7 @@ export async function qServerAnalysis(): Promise<Verdict> {
 
   const verdict: Verdict = {
     passed: analysis.completed && analysis.statusCode === 0 && newDate !== oldDate,
-    message: '',
-    errorList: analysis.errorList,
-    warningList: analysis.warningList
+    message: ''
   };
 
   if (!verdict.passed) {

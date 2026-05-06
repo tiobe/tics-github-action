@@ -9,9 +9,7 @@ export async function clientAnalysis(): Promise<Verdict> {
 
   const verdict: Verdict = {
     passed: true,
-    message: '',
-    errorList: [],
-    warningList: []
+    message: ''
   };
 
   // if no changed files are found, return early
@@ -21,9 +19,6 @@ export async function clientAnalysis(): Promise<Verdict> {
   }
 
   const analysis = await runTicsAnalyzer(changedFiles.path);
-
-  verdict.errorList = analysis.errorList;
-  verdict.warningList = analysis.warningList;
 
   let failedMessage: string;
   if (analysis.explorerUrls.length === 0) {

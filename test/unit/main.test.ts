@@ -7,7 +7,6 @@ import * as artifacts from '../../src/github/artifacts';
 import * as client from '../../src/analysis/client';
 import * as diagnostic from '../../src/analysis/diagnostic';
 import * as qserver from '../../src/analysis/qserver';
-import * as summary from '../../src/action/cli/summary';
 import * as version from '../../src/viewer/version';
 
 import { main } from '../../src/main';
@@ -85,9 +84,7 @@ describe('meetsPrerequisites', () => {
     existsSpy.mockReturnValue(true);
     jest.spyOn(qserver, 'qServerAnalysis').mockResolvedValue({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: []
+      message: ''
     });
 
     githubConfigMock.event = GithubEvent.PUSH;
@@ -123,7 +120,6 @@ describe('verdict', () => {
 
   let spyUpload: jest.SpiedFunction<typeof artifacts.uploadArtifact>;
   let spySetFailed: jest.SpiedFunction<typeof logger.setFailed>;
-  let spyPostCli: jest.SpiedFunction<typeof summary.postCliSummary>;
   let spySummaryWrite: jest.SpiedFunction<typeof coreSummary.write>;
 
   beforeEach(() => {
@@ -133,7 +129,6 @@ describe('verdict', () => {
 
     spyUpload = jest.spyOn(artifacts, 'uploadArtifact');
     spySetFailed = jest.spyOn(logger, 'setFailed');
-    spyPostCli = jest.spyOn(summary, 'postCliSummary').mockImplementation(() => {});
     spySummaryWrite = jest.spyOn(coreSummary, 'write');
 
     // meets prerequisites
@@ -144,59 +139,55 @@ describe('verdict', () => {
 
   it('should not call setfailed if the verdict is passing', async () => {
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
+    spyDiagnostic.mockResolvedValue({ passed: true, message: '' });
     await main();
 
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
+    spyClient.mockResolvedValue({ passed: true, message: '' });
     await main();
 
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: true, message: '', errorList: [], warningList: [] });
+    spyQServer.mockResolvedValue({ passed: true, message: '' });
     await main();
 
     expect(spyUpload).not.toHaveBeenCalled();
     expect(spySetFailed).not.toHaveBeenCalled();
-    expect(spyPostCli).toHaveBeenCalledTimes(3);
-    expect(spyPostCli).toHaveBeenCalledWith({ passed: true, message: '', errorList: [], warningList: [] });
     expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
   it('should call setfailed if the verdict is failing', async () => {
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
     await main();
 
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyClient.mockResolvedValue({ passed: false, message: 'message' });
     await main();
 
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
     await main();
 
     expect(spyUpload).not.toHaveBeenCalled();
     expect(spySetFailed).toHaveBeenCalledTimes(3);
     expect(spySetFailed).toHaveBeenCalledWith('message');
-    expect(spyPostCli).toHaveBeenCalledTimes(3);
-    expect(spyPostCli).toHaveBeenCalledWith({ passed: false, message: 'message', errorList: [], warningList: [] });
     expect(spySummaryWrite).toHaveBeenCalledTimes(3);
   });
 
   it('should call uploadArtifact there is a tmpdir set or in the debug state', async () => {
     githubConfigMock.debugger = true;
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
-    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
     main();
 
     ticsCliMock.tmpdir = '/path/to/tmp';
     ticsConfigMock.mode = Mode.CLIENT;
-    spyClient.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyClient.mockResolvedValue({ passed: false, message: 'message' });
     await main();
 
     githubConfigMock.debugger = false;
     ticsConfigMock.mode = Mode.QSERVER;
-    spyQServer.mockResolvedValue({ passed: false, message: 'message', errorList: [], warningList: [] });
+    spyQServer.mockResolvedValue({ passed: false, message: 'message' });
     await main();
 
     expect(spyUpload).toHaveBeenCalledTimes(3);

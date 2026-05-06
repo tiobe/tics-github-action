@@ -53,9 +53,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Failed to complete TICSQServer analysis.',
-      errorList: ['Error'],
-      warningList: []
+      message: 'Failed to complete TICSQServer analysis.'
     });
   });
 
@@ -69,9 +67,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Failed to complete TICSQServer analysis.',
-      errorList: ['Error'],
-      warningList: []
+      message: 'Failed to complete TICSQServer analysis.'
     });
   });
 
@@ -84,9 +80,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Failed to complete TICSQServer analysis.',
-      errorList: [],
-      warningList: ['Warning']
+      message: 'Failed to complete TICSQServer analysis.'
     });
   });
 
@@ -99,9 +93,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: ['[WARNING 5057]']
+      message: ''
     });
     expect(spyPostToConversation).not.toHaveBeenCalled();
 
@@ -112,9 +104,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: ['[WARNING 5057]']
+      message: ''
     });
     expect(spyPostToConversation).toHaveBeenCalled();
   });
@@ -129,9 +119,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'error',
-      errorList: [],
-      warningList: ['Warning']
+      message: 'error'
     });
   });
 
@@ -145,9 +133,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Something went wrong: reason unknown',
-      errorList: [],
-      warningList: ['Warning']
+      message: 'Something went wrong: reason unknown'
     });
   });
 
@@ -161,9 +147,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: false,
-      message: 'Project failed quality gate',
-      errorList: [],
-      warningList: ['Warning']
+      message: 'Project failed quality gate'
     });
   });
 
@@ -178,9 +162,7 @@ describe('setFailed checks (QServer)', () => {
 
     expect(verdict).toEqual({
       passed: true,
-      message: '',
-      errorList: [],
-      warningList: ['Warning']
+      message: ''
     });
   });
 });

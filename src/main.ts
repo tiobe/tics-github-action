@@ -2,7 +2,6 @@ import { Mode } from './configuration/tics';
 import { existsSync } from 'fs';
 import { logger } from './helper/logger';
 import { githubConfig, ticsCli, ticsConfig } from './configuration/config';
-import { postCliSummary } from './action/cli/summary';
 import { summary } from '@actions/core';
 import { Verdict } from './helper/interfaces';
 import { uploadArtifact } from './github/artifacts';
@@ -43,8 +42,6 @@ export async function main(): Promise<void> {
   if (!verdict.passed) {
     logger.setFailed(verdict.message);
   }
-
-  postCliSummary(verdict);
 
   // Write the summary made to the action summary.
   await summary.write({ overwrite: true });
