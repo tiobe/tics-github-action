@@ -9,10 +9,13 @@ The TICS GitHub action integrates the [TICS code quality framework](https://www.
 The incorporated `Quality Gating` feature can be used for `Pull Request` and `Commit` approvals. It can also decorate your pull request so the quality data is easily available.
 Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
 
-There are two types of analysis modes available:
+There are two use cases:
 
 - `Reference runs` using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for base branches of pull requests, e.g. `main`.
 - `Qualification runs` using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for pull requests and branches like feature or bug-fix branches.
+
+> [!Important]
+> Both use cases are need to be implemented in **separate actions** so the pull request are compared to the correct state of the repository and quality database.
 
 ## Before you start
 
@@ -35,9 +38,17 @@ Linux and Windows based runners, both GitHub-hosted and self-hosted, are support
 
 Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request. Below are some example of how to include the `TICS GitHub Action` step as part of your workflow.
 
-## Step 1: QServer (for reference runs)
+## Use case 1: QServer (for reference runs)
 
-As of v3, the option to run [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analyses has been made available.
+> [!IMPORTANT]
+> `Purpose:`             Create reference points  
+> `Recommended Events:`  Push to main  
+> `Usage:`               To be used as a separate action (not together with TICS Client)
+
+> [!NOTE]
+> This use case can be omitted if TICSQServer is run for your project from another CI tool like Jenkins.
+
+As of v3, the option to run [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analysis has been made available.
 With TICSQServer, persistent measurement points are created which are stored in your Quality Database. These measurement points are used by the TICS Client to determine how the code quality evolved from that point.
 TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
 
@@ -107,7 +118,12 @@ The following options allow to instrument TICSQServer more specifically:
 | `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
 
-## Step 2: Client for qualification runs
+## Use case 2: Client for qualification runs
+
+> [!IMPORTANT]
+> `Purpose:`             Create reference points  
+> `Recommended Events:`  Push to main  
+> `Usage:`               To be used as a separate action (not together with TICSQServer)
 
 The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines whether the commit or pull request qualifies for delivery.
 The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
