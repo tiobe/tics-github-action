@@ -121,9 +121,9 @@ The following options allow to instrument TICSQServer more specifically:
 ## Use case 2: Client for qualification runs
 
 > [!IMPORTANT]
-> `Purpose:`             Create reference points  
-> `Recommended Events:`  Push to main  
-> `Usage:`               To be used as a separate action (not together with TICSQServer)
+> `Purpose:`             Qualification of code changes  
+> `Recommended Events:`  Pull request or commit to a feature/bugfix branch
+> `Usage:`               To be used as a separate action (not together with TICS Client)
 
 The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines whether the commit or pull request qualifies for delivery.
 The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
