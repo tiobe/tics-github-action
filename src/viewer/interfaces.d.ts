@@ -163,16 +163,16 @@ export interface VersionResponse {
   dbversion?: string;
 }
 
-export interface RunDateResponse {
+export interface MeasureApiResponse {
   data: {
     formattedValue: string;
-    letter: string | undefined;
+    letter?: string | null;
     messages: string[];
     coverage: number;
     status: string;
-    value: number | null;
+    value: number;
   }[];
-  dates: string;
+  dates: string[];
   metrics: {
     expression: string;
     fullName: string;
@@ -181,4 +181,12 @@ export interface RunDateResponse {
     name: string;
     fullPath: string;
   }[];
+}
+
+export interface LabelInfo {
+  metric: string;
+  status: string;
+  letter: string;
+  score: number;
+  deltaValue: number;
 }

@@ -5,6 +5,7 @@ import {
   createFilesSummary,
   createNothingAnalyzedSummaryBody,
   createSummaryBody,
+  createQiLabelTable,
   createUnpostableAnnotationsDetails,
   groupConditions
 } from '../../../../src/action/decorate/summary';
@@ -23,6 +24,7 @@ import {
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
+import { expect } from '@jest/globals';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
@@ -305,6 +307,9 @@ describe('createUnpostableAnnotationsDetails', () => {
   it('should return summary of one unpostable review comment', () => {
     const unpostable: ExtendedAnnotation[] = [
       {
+        blocking: {
+          state: 'no'
+        },
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
@@ -326,7 +331,7 @@ describe('createUnpostableAnnotationsDetails', () => {
 
     expect(response).toContain(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
-      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
+      `<tr><td>:beetle:</td><td>Non-Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
     );
   });
 
@@ -469,6 +474,79 @@ describe('createUnpostableAnnotationsDetails', () => {
     expect(response).toContainTimes(
       `<tr><td>:warning:</td><td>Blocking after 2024-08-16</td><td><b>Line:</b> ${unpostable[1].line}</td><td><b>${unpostable[1].type} violation:</b> ${unpostable[1].rule} <b>${unpostable[1].displayCount}</b><br>${unpostable[1].msg}</td></tr>`,
       1
+    );
+  });
+});
+
+describe('createColoredTqiGrade', () => {
+  const labelInfo = [
+    { deltaValue: -1.47, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 26.04368514792632 },
+    {
+      deltaValue: 0,
+      letter: 'E',
+      metric: 'TQI Code Coverage',
+      status: 'DISABLED',
+      score: 46.75
+    },
+    {
+      deltaValue: 0,
+      letter: 'F',
+      metric: 'TQI Abstract Interpretation',
+      status: 'DISABLED',
+      score: 0
+    },
+    {
+      deltaValue: 0,
+      letter: 'A',
+      metric: 'TQI Cyclomatic Complexity',
+      status: 'PRESENT',
+      score: 99.16763462235956
+    },
+    {
+      deltaValue: +0.25,
+      letter: 'F',
+      metric: 'TQI Compiler Warnings',
+      status: 'PRESENT',
+      score: 0.37523452157598497
+    },
+    {
+      deltaValue: -14.71,
+      letter: 'B',
+      metric: 'TQI Coding Standards',
+      status: 'PRESENT',
+      score: 83.7767208441954
+    },
+    {
+      deltaValue: 0,
+      letter: 'D',
+      metric: 'TQI Code Duplication',
+      status: 'PRESENT',
+      score: 63.54
+    },
+    { deltaValue: 0, letter: 'A', metric: 'TQI Fan Out', status: 'PRESENT', score: 93.85928846068848 },
+    {
+      deltaValue: 0,
+      letter: 'C',
+      metric: 'TQI Code Security',
+      status: 'DISABLED',
+      score: 70
+    }
+  ];
+
+  it('should return label', () => {
+    const labelTable = createQiLabelTable(labelInfo);
+    expect(labelTable).toStrictEqual(
+      `| Metric | Grade | Score | Δ Previous |
+| --- | --- | --- | --- |
+| TQI | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{26.04\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\%}}}$ |
+| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{\\textsf{\\textbf{E}}}}$ | $\\large{\\textsf{46.75\\%}}$ | - |
+| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.00\\%}}$ | - |
+| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.17\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
+| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.38\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\%}}}$ |
+| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.78\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\%}}}$ |
+| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{\\textsf{\\textbf{D}}}}$ | $\\large{\\textsf{63.54\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
+| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.86\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
+| TQI Code Security | $\\color{#f3ea29}{\\LARGE{\\textsf{\\textbf{C}}}}$ | $\\large{\\textsf{70.00\\%}}$ | - |`
     );
   });
 });

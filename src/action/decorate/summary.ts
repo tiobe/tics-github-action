@@ -10,7 +10,7 @@ import { generateComment, generateExpandableAreaMarkdown, generateItalic, genera
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 import { GroupedConditions } from './interface';
-import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
+import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation, LabelInfo } from '../../viewer/interfaces';
 import { ViewerFeature, viewerVersion } from '../../viewer/version';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
@@ -380,4 +380,59 @@ export function createUnpostableAnnotationsDetails(unpostableAnnotations: Extend
   });
   body += '</table>';
   return generateExpandableAreaMarkdown(label, body);
+}
+
+export function createQiLabelTable(labelInfo: LabelInfo[]) {
+  let body = '| Metric | Grade | Score | Δ Previous |';
+  body += `${EOL}| --- | --- | --- | --- |`;
+
+  for (const info of labelInfo) {
+    const grade = createColoredQiGrade(info.letter);
+    const score = info.score.toFixed(2);
+    const delta = createColoredDeltaValue(info.status, info.deltaValue);
+    body += `${EOL}| ${info.metric} | ${grade} | $\\large{\\textsf{${score}\\%}}$ | ${delta} |`;
+  }
+
+  return body;
+}
+
+function createColoredQiGrade(letter: string) {
+  let color = '';
+  switch (letter) {
+    case 'A':
+      color = '#00783d';
+      break;
+    case 'B':
+      color = '#3db349';
+      break;
+    case 'C':
+      color = '#f3ea29';
+      break;
+    case 'D':
+      color = '#eac01e';
+      break;
+    case 'E':
+      color = '#ef8022';
+      break;
+    case 'F':
+      color = '#d73d29';
+      break;
+  }
+
+  return `$\\color{${color}}{\\LARGE{\\textsf{\\textbf{${letter}}}}}$`;
+}
+
+function createColoredDeltaValue(status: string, delta: number) {
+  if (status !== 'PRESENT') {
+    return '-';
+  }
+  let color = '';
+  if (delta < 0) {
+    color = '\\color{#d73d29}';
+  } else if (delta > 0) {
+    color = '\\color{#00783d}';
+  }
+
+  const deltaString = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+  return `$${color}{\\large{\\textsf{${deltaString}\\%}}}$`;
 }

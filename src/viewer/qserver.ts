@@ -1,9 +1,5 @@
-import { ticsCli, ticsConfig } from '../configuration/config';
-import { RunDateResponse } from './interfaces';
 import { logger } from '../helper/logger';
-import { getRetryMessage, getRetryErrorMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
+import { getMeasureApiData } from './measure';
 
 /**
  * Gets the date of the last QServer run the viewer knows of.
@@ -11,23 +7,14 @@ import { httpClient } from './http-client';
  * @throws Error if no date could be retrieved.
  */
 export async function getLastQServerRunDate(): Promise<number> {
-  const getRunDateUrl = joinUrl(ticsConfig.baseUrl, `api/public/v1/Measure?filters=Project(${ticsCli.project})&metrics=lastRunInDatabase`);
-  try {
-    logger.header('Retrieving the last QServer run date');
-    logger.debug(`From ${getRunDateUrl}`);
-    const response = await httpClient.get<RunDateResponse>(getRunDateUrl);
-    logger.info(getRetryMessage(response, 'Retrieved the last QServer run date.'));
-    logger.debug(JSON.stringify(response));
-    if (response.data.data.length === 0) {
-      throw Error('Request returned empty array');
-    }
-    if (!response.data.data[0].value) {
-      // return -1 for projects that haven't run yet
-      return -1;
-    }
-    return response.data.data[0].value / 1000;
-  } catch (error: unknown) {
-    const message = getRetryErrorMessage(error);
-    throw Error(`There was an error retrieving last QServer run date: ${message}`);
+  logger.header('Retrieving the last QServer run date');
+  const response = await getMeasureApiData(['lastRunInDatabase']);
+  if (response.data.length === 0) {
+    throw Error('Request returned empty array');
   }
+  if (!response.data[0].value) {
+    // return -1 for projects that haven't run yet
+    return -1;
+  }
+  return response.data[0].value / 1000;
 }
