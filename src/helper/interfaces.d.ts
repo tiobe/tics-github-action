@@ -1,5 +1,5 @@
 import { ChangedFile } from '../github/interfaces';
-import { ExtendedAnnotation, QualityGate } from '../viewer/interfaces';
+import { ExtendedAnnotation, LabelInfo, QualityGate } from '../viewer/interfaces';
 
 export interface ChangedFiles {
   files: ChangedFile[];
@@ -25,6 +25,7 @@ export interface ProjectResult {
   qualityGate: QualityGate;
   analyzedFiles: string[];
   annotations: ExtendedAnnotation[];
+  labelInfo: LabelInfo[];
 }
 
 export interface AnalysisResult {

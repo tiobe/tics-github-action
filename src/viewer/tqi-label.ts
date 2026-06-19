@@ -15,13 +15,11 @@ export const METRICS_5 = [
   'tqiFanOut'
 ];
 
-export async function getTqiLabel(metrics: string[], cdtoken?: string): Promise<LabelInfo[]> {
+export async function getTqiLabel(metrics: string[], project: string, cdtoken?: string): Promise<LabelInfo[]> {
   const labelInfo = new Map<string, LabelInfo>();
 
-  const [currentData, deltaData] = await Promise.all([
-    getMeasureApiData(metrics, { cdtoken }),
-    getMeasureApiData(metrics, { deltaPrevious: true, cdtoken })
-  ]);
+  const currentData = await getMeasureApiData(metrics, project, { cdtoken });
+  const deltaData = await getMeasureApiData(metrics, project, { deltaPrevious: true, cdtoken });
 
   currentData.data.forEach((d, i) => {
     const metric = currentData.metrics[i];

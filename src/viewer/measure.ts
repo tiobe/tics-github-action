@@ -11,9 +11,10 @@ import { MeasureApiResponse } from './interfaces';
  */
 export async function getMeasureApiData(
   metrics: string[],
+  project: string,
   opts?: { cdtoken?: string; deltaDate?: number; deltaPrevious?: boolean }
 ): Promise<MeasureApiResponse> {
-  const filtersParam = getFilters(opts?.cdtoken);
+  const filtersParam = getFilters(project, opts?.cdtoken);
   const metricsParam = getMetrics(metrics, opts?.deltaDate, opts?.deltaPrevious);
   const createProjectUrl = joinUrl(ticsConfig.baseUrl, `api/public/v1/Measure?filters=${filtersParam}&metrics=${metricsParam}`);
   try {
@@ -29,8 +30,8 @@ export async function getMeasureApiData(
   }
 }
 
-function getFilters(cdtoken?: string) {
-  let filters = `Project(${ticsCli.project})`;
+function getFilters(project: string, cdtoken?: string) {
+  let filters = `Project(${project})`;
   if (ticsCli.branchname) {
     filters += `,Branch(${ticsCli.branchname})`;
   }

@@ -23,6 +23,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     const groupedConditions = groupConditions(projectResult);
     summary.addHeading(projectResult.project, 2);
 
+    summary.addRaw(`<details><summary><h3>Grouped results</h3></summary>`, true);
     for (const group of groupedConditions) {
       if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
         newConditionsView(group);
@@ -30,7 +31,9 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
         oldConditionsView(group);
       }
     }
+    summary.addRaw('</details>', true);
 
+    summary.addRaw(createQiLabelTable(projectResult.labelInfo), true);
     summary.addEOL();
     summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
@@ -383,6 +386,10 @@ export function createUnpostableAnnotationsDetails(unpostableAnnotations: Extend
 }
 
 export function createQiLabelTable(labelInfo: LabelInfo[]) {
+  if (labelInfo.length === 0) {
+    return '';
+  }
+
   let body = '| Metric | Grade | Score | Δ Previous |';
   body += `${EOL}| --- | --- | --- | --- |`;
 
