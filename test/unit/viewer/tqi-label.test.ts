@@ -12,7 +12,11 @@ describe('getTqiLabel', () => {
     getSpy = jest.spyOn(measure, 'getMeasureApiData');
 
     getSpy.mockImplementation(
-      (_metrics: string[], opts?: { cdtoken?: string; deltaDate?: number; deltaPrevious?: boolean }): Promise<MeasureApiResponse> => {
+      (
+        _metrics: string[],
+        _project: string,
+        opts?: { cdtoken?: string; deltaDate?: number; deltaPrevious?: boolean }
+      ): Promise<MeasureApiResponse> => {
         if (opts?.deltaPrevious) {
           if (opts?.cdtoken) {
             return Promise.resolve({
@@ -524,7 +528,7 @@ describe('getTqiLabel', () => {
   });
 
   it('should create tqi label information retrieved from viewer with client token present', async () => {
-    const response = await getTqiLabel(METRICS_5, 'asdfasdfasdf');
+    const response = await getTqiLabel(METRICS_5, 'project', 'asdfasdfasdf');
 
     expect(response).toStrictEqual([
       { deltaValue: -1.47, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 26.04368514792632 },
@@ -582,7 +586,7 @@ describe('getTqiLabel', () => {
   });
 
   it('should create tqi label information retrieved from viewer', async () => {
-    const response = await getTqiLabel(METRICS_5);
+    const response = await getTqiLabel(METRICS_5, 'project');
 
     expect(response).toStrictEqual([
       { deltaValue: -0.01, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 27.51433490874863 },

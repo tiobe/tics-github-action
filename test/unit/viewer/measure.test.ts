@@ -9,7 +9,6 @@ describe('getMeasureApiData', () => {
 
   beforeAll(() => {
     ticsConfigMock.baseUrl = 'http://base.url';
-    ticsCliMock.project = 'project';
   });
 
   beforeEach(() => {
@@ -23,7 +22,7 @@ describe('getMeasureApiData', () => {
   it('should return data passed back and call with client data token', async () => {
     getSpy.mockResolvedValue({ data: { data: [{ value: undefined }] } });
 
-    const response = await getMeasureApiData(['loc', 'tqi'], { cdtoken: 'token' });
+    const response = await getMeasureApiData(['loc', 'tqi'], 'project', { cdtoken: 'token' });
 
     expect(response.data).toStrictEqual([{ value: undefined }]);
     expect(getSpy).toHaveBeenCalledWith('http://base.url/api/public/v1/Measure?filters=Project(project),ClientData(token)&metrics=loc,tqi');
@@ -33,7 +32,7 @@ describe('getMeasureApiData', () => {
     ticsCliMock.branchname = 'main';
     getSpy.mockResolvedValue({ data: { data: [{ value: undefined }] } });
 
-    const response = await getMeasureApiData(['loc', 'tqi'], { deltaPrevious: true });
+    const response = await getMeasureApiData(['loc', 'tqi'], 'project', { deltaPrevious: true });
 
     expect(response.data).toStrictEqual([{ value: undefined }]);
     expect(getSpy).toHaveBeenCalledWith(
@@ -46,7 +45,7 @@ describe('getMeasureApiData', () => {
 
     let error: any;
     try {
-      await getMeasureApiData(['loc', 'tqi'], { deltaDate: 1781777589 });
+      await getMeasureApiData(['loc', 'tqi'], 'project', { deltaDate: 1781777589 });
     } catch (err) {
       error = err;
     }

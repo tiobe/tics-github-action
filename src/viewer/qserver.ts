@@ -1,3 +1,4 @@
+import { ticsCli } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { getMeasureApiData } from './measure';
 
@@ -8,7 +9,7 @@ import { getMeasureApiData } from './measure';
  */
 export async function getLastQServerRunDate(): Promise<number> {
   logger.header('Retrieving the last QServer run date');
-  const response = await getMeasureApiData(['lastRunInDatabase']);
+  const response = await getMeasureApiData(['lastRunInDatabase'], ticsCli.project);
   if (response.data.length === 0) {
     throw Error('Request returned empty array');
   }
