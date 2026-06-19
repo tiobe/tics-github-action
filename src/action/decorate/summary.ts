@@ -33,6 +33,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     }
     summary.addRaw('</details>', true);
 
+    summary.addEOL();
     summary.addRaw(createQiLabelTable(projectResult.labelInfo), true);
     summary.addEOL();
     summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
@@ -53,7 +54,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 }
 
 function newConditionsView(group: GroupedConditions): void {
-  summary.addRaw(`<details><summary><h3>${getConditionHeading(group)}</h3></summary>`, true);
+  summary.addRaw(`<details><summary><h4>${getConditionHeading(group)}</h4></summary>`, true);
 
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
@@ -397,7 +398,7 @@ export function createQiLabelTable(labelInfo: LabelInfo[]) {
     const grade = createColoredQiGrade(info.letter);
     const score = info.score.toFixed(2);
     const delta = createColoredDeltaValue(info.status, info.deltaValue);
-    body += `${EOL}| ${info.metric} | ${grade} | $\\large{\\textsf{${score}\\%}}$ | ${delta} |`;
+    body += `${EOL}| ${info.metric} | ${grade} | $\\large{\\textsf{${score}\\\\%}}$ | ${delta} |`;
   }
 
   return body;
