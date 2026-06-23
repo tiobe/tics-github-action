@@ -466,7 +466,7 @@ describe('getTqiLabel', () => {
             {
               formattedValue:
                 '\u003ci data-bind\u003d"i18n:{title: \u0027$t(metricValueStatus.DISABLED.message)\u0027}" class\u003d"text-muted fa-solid fa-ban" style\u003d"cursor: help"\u003e\u003c/i\u003e',
-              letter: 'F',
+              letter: null,
               messages: [],
               coverage: 0.0,
               status: 'DISABLED',

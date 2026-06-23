@@ -134,8 +134,8 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsSoakedMetricGroup);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Coding Standard: :x: 117 Blocking Issues</h3>');
-      expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking-after Issues</h3>');
+      expect(string).toContain('<h4>Coding Standard: :x: 117 Blocking Issues</h4>');
+      expect(string).toContain('<h4>Compiler Warnings: :warning: 3 Blocking-after Issues</h4>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="3">Issues</th></tr>', 2);
       expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
@@ -157,8 +157,8 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsNotSoakedMetricGroup);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Coding Standards: :x: 93 Blocking Issues</h3>');
-      expect(string).toContain('<h3>Compiler Warnings: :heavy_check_mark: Passed </h3>');
+      expect(string).toContain('<h4>Coding Standards: :x: 93 Blocking Issues</h4>');
+      expect(string).toContain('<h4>Compiler Warnings: :heavy_check_mark: Passed </h4>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>', 2);
       expect(string).toContain('>+39</a></td></tr><tr><td>');
@@ -172,7 +172,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(metricGroupCodeCoverageResult);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Code Coverage: :x: 2 Blocking Issues</h3>');
+      expect(string).toContain('<h4>Code Coverage: :x: 2 Blocking Issues</h4>');
       expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>16.00%</a></td></tr><tr><td>');
       expect(string).toContain('>75.00%</a></td></tr></table>');
@@ -538,15 +538,15 @@ describe('createColoredTqiGrade', () => {
     expect(labelTable).toStrictEqual(
       `| Metric | Grade | Score | Δ Previous |
 | --- | --- | --- | --- |
-| TQI | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{26.04\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\%}}}$ |
-| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{\\textsf{\\textbf{E}}}}$ | $\\large{\\textsf{46.75\\%}}$ | - |
-| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.00\\%}}$ | - |
-| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.17\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
-| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.38\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\%}}}$ |
-| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.78\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\%}}}$ |
-| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{\\textsf{\\textbf{D}}}}$ | $\\large{\\textsf{63.54\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
-| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.86\\%}}$ | \${\\large{\\textsf{0.00\\%}}}$ |
-| TQI Code Security | $\\color{#f3ea29}{\\LARGE{\\textsf{\\textbf{C}}}}$ | $\\large{\\textsf{70.00\\%}}$ | - |`
+| TQI | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{26.04\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47}}}$ |
+| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{\\textsf{\\textbf{E}}}}$ | $\\large{\\textsf{46.75\\\\%}}$ | - |
+| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.00\\\\%}}$ | - |
+| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.17\\\\%}}$ | \${\\large{\\textsf{0.00}}}$ |
+| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.38\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25}}}$ |
+| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.78\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71}}}$ |
+| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{\\textsf{\\textbf{D}}}}$ | $\\large{\\textsf{63.54\\\\%}}$ | \${\\large{\\textsf{0.00}}}$ |
+| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.86\\\\%}}$ | \${\\large{\\textsf{0.00}}}$ |
+| TQI Code Security | $\\color{#f3ea29}{\\LARGE{\\textsf{\\textbf{C}}}}$ | $\\large{\\textsf{70.00\\\\%}}$ | - |`
     );
   });
 });

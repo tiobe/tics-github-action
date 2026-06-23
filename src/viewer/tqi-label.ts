@@ -26,7 +26,7 @@ export async function getTqiLabel(metrics: string[], project: string, cdtoken?: 
     labelInfo.set(metric.expression, {
       metric: metric.fullName.split(' for client data')[0],
       status: d.status,
-      letter: d.letter ?? '-',
+      letter: d.letter ?? 'F',
       score: d.value,
       deltaValue: deltaData.data[i].value
     });

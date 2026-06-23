@@ -38,7 +38,7 @@ describe('getViewerVersion', () => {
   });
 
   it('should return github action support if version >= 2022.4.0', async () => {
-    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2023.1.0' }, retryCount: 0, status: 200 });
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2022.4.0.25684' }, retryCount: 0, status: 200 });
 
     const response = await viewerVersion.viewerSupports(ViewerFeature.GITHUB_ACTION);
 
@@ -79,6 +79,22 @@ describe('getViewerVersion', () => {
 
   it('should return true if viewer version is sufficient with no reversion', async () => {
     jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.3' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeTruthy();
+  });
+
+  it('should return false if viewer version is insufficient with no revision', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: '2026.1.2' }, retryCount: 0, status: 200 });
+
+    const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
+
+    expect(response).toBeFalsy();
+  });
+
+  it('should return true if viewer version is sufficient with exact version match', async () => {
+    jest.spyOn(httpClient, 'get').mockResolvedValueOnce({ data: { fullVersion: ViewerFeature.PROJECT_CREATION }, retryCount: 0, status: 200 });
 
     const response = await viewerVersion.viewerSupports(ViewerFeature.PROJECT_CREATION);
 
