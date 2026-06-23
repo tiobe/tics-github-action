@@ -23,7 +23,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     const groupedConditions = groupConditions(projectResult);
     summary.addHeading(projectResult.project, 2);
 
-    summary.addRaw(`<details><summary><h3>Grouped results</h3></summary>`, true);
+    summary.addRaw(`<details><summary><h3>Evaluated Conditions</h3></summary>`, true);
     for (const group of groupedConditions) {
       if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
         newConditionsView(group);
@@ -54,7 +54,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 }
 
 function newConditionsView(group: GroupedConditions): void {
-  summary.addRaw(`<details><summary><h4>${getConditionHeading(group)}</h4></summary>`, true);
+  summary.addRaw(getConditionHeading(group), true);
 
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
@@ -65,7 +65,6 @@ function newConditionsView(group: GroupedConditions): void {
       summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
     }
   }
-  summary.addRaw('</details>', true);
 }
 
 function oldConditionsView(group: GroupedConditions): void {
@@ -74,10 +73,9 @@ function oldConditionsView(group: GroupedConditions): void {
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
     if (condition.details && condition.details.items.length > 0) {
-      summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+      summary.addRaw(`${EOL}${statusMarkdown}${condition.message}${EOL}`);
       summary.addBreak();
       createConditionTables(condition.details).forEach(table => summary.addTable(table));
-      summary.addRaw('</details>', true);
     } else {
       summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
     }

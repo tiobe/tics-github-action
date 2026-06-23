@@ -1,33 +1,40 @@
+import { logger } from '../helper/logger';
 import { LabelInfo, QiVersion } from './interfaces';
 import { getMeasureApiData } from './measure';
 
 export async function getTqiLabel(project: string, cdtoken?: string): Promise<LabelInfo[]> {
-  const labelInfo = new Map<string, LabelInfo>();
+  const labelInfo: LabelInfo[] = [];
 
   const metrics = await getMetrics(project, cdtoken);
   const currentData = await getMeasureApiData(metrics, project, { cdtoken });
   const deltaData = await getMeasureApiData(metrics, project, { deltaPrevious: true, cdtoken });
 
+  if (currentData.data.length !== deltaData.data.length) {
+    logger.warning('Could not create TQI label information');
+    return [];
+  }
+
   currentData.data.forEach((d, i) => {
-    const metric = currentData.metrics[i];
-    labelInfo.set(metric.expression, {
-      metric: metric.fullName.split(' for client data')[0],
+    const deltaValue = deltaData.data[i].value;
+    labelInfo.push({
+      metric: currentData.metrics[i].fullName.split(' for client data')[0],
       status: d.status,
       letter: d.letter ?? 'F',
-      score: Number(d.value),
-      deltaValue: Number(deltaData.data[i].value)
+      score: typeof d.value == 'number' ? d.value : 0,
+      deltaValue: typeof deltaValue == 'number' ? deltaValue : 0
     });
   });
 
-  return Array.from(labelInfo.values());
+  return labelInfo;
 }
 
 async function getMetrics(project: string, cdtoken?: string) {
   const response = await getMeasureApiData(['tqiVersion'], project, { cdtoken });
-  let majorVersion = 5;
+  let majorVersion = null;
   if (response.data.length > 0) {
-    if ((response.data[0].value as QiVersion).major) {
-      majorVersion = (response.data[0].value as QiVersion).major;
+    const qiVersion = response.data[0].value as QiVersion;
+    if (qiVersion.major) {
+      majorVersion = qiVersion.major;
     }
   }
 
@@ -37,7 +44,7 @@ async function getMetrics(project: string, cdtoken?: string) {
     case 4:
       return ['tqi', 'tqiTestCoverage', 'tqiAbstrInt', 'tqiComplexity', 'tqiCompWarn', 'tqiCodingStd', 'tqiDupCode', 'tqiFanOut', 'tqiSecurity'];
     case 5:
-    default:
+    default: // If TQI version cannot be determined, assume it is version 5
       return ['tqi', 'tqiTestCoverage', 'tqiAbstrInt', 'tqiSecurity', 'tqiCompWarn', 'tqiCodingStd', 'tqiComplexity', 'tqiDupCode', 'tqiFanOut'];
   }
 }
