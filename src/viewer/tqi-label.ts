@@ -1,20 +1,6 @@
 import { LabelInfo, QiVersion } from './interfaces';
 import { getMeasureApiData } from './measure';
 
-// const METRICS_3 = ['tqi', 'tqiTestCoverage', 'tqiAbstrInt', 'tqiComplexity', 'tqiCompWarn', 'tqiCodingStd', 'tqiDupCode', 'tqiFanOut', 'tqiDeadCode'];
-// const METRICS_4 = ['tqi', 'tqiTestCoverage', 'tqiAbstrInt', 'tqiComplexity', 'tqiCompWarn', 'tqiCodingStd', 'tqiDupCode', 'tqiFanOut', 'tqiSecurity'];
-export const METRICS_5 = [
-  'tqi',
-  'tqiTestCoverage',
-  'tqiAbstrInt',
-  'tqiSecurity',
-  'tqiCompWarn',
-  'tqiCodingStd',
-  'tqiComplexity',
-  'tqiDupCode',
-  'tqiFanOut'
-];
-
 export async function getTqiLabel(project: string, cdtoken?: string): Promise<LabelInfo[]> {
   const labelInfo = new Map<string, LabelInfo>();
 
