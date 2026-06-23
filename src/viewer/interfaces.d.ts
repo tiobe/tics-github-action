@@ -163,6 +163,11 @@ export interface VersionResponse {
   dbversion?: string;
 }
 
+export interface QiVersion {
+  major: number;
+  minor: number;
+}
+
 export interface MeasureApiResponse {
   data: {
     formattedValue: string;
@@ -170,7 +175,7 @@ export interface MeasureApiResponse {
     messages: string[];
     coverage: number;
     status: string;
-    value: number;
+    value: number | QiVersion;
   }[];
   dates: string[];
   metrics: {

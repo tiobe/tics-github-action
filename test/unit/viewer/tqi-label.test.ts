@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { getTqiLabel, METRICS_5 } from '../../../src/viewer/tqi-label';
+import { getTqiLabel } from '../../../src/viewer/tqi-label';
 import { SpiedFunction } from 'jest-mock';
 import * as measure from '../../../src/viewer/measure';
 import { MeasureApiResponse } from '../../../src/viewer/interfaces';
@@ -13,10 +13,71 @@ describe('getTqiLabel', () => {
 
     getSpy.mockImplementation(
       (
-        _metrics: string[],
+        metrics: string[],
         _project: string,
         opts?: { cdtoken?: string; deltaDate?: number; deltaPrevious?: boolean }
       ): Promise<MeasureApiResponse> => {
+        if (metrics.includes('tqiVersion')) {
+          if (opts?.cdtoken) {
+            return Promise.resolve({
+              data: [
+                {
+                  formattedValue: '4.17',
+                  letter: null,
+                  messages: [],
+                  coverage: 100.0,
+                  status: 'PRESENT',
+                  value: {
+                    major: 4,
+                    minor: 17
+                  }
+                }
+              ],
+              dates: ['2026-06-19T17:42:09.000+02:00'],
+              metrics: [
+                {
+                  expression: 'G(tqiVersion,ClientData(tester:OVNLwwwJWNF4fod7uMBq))',
+                  fullName: 'TQI version for client data tester:OVNLwwwJWNF4fod7uMBq'
+                }
+              ],
+              nodes: [
+                {
+                  name: 'main',
+                  fullPath: 'HIE://two-projects-c-demo/main'
+                }
+              ]
+            });
+          }
+          return Promise.resolve({
+            data: [
+              {
+                formattedValue: '5.2',
+                letter: null,
+                messages: [],
+                coverage: 100.0,
+                status: 'PRESENT',
+                value: {
+                  major: 5,
+                  minor: 2
+                }
+              }
+            ],
+            dates: ['2026-06-19T17:42:09.000+02:00'],
+            metrics: [
+              {
+                expression: 'G(tqiVersion,ClientData(tester:OVNLwwwJWNF4fod7uMBq))',
+                fullName: 'TQI version for client data tester:OVNLwwwJWNF4fod7uMBq'
+              }
+            ],
+            nodes: [
+              {
+                name: 'main',
+                fullPath: 'HIE://two-projects-c-demo/main'
+              }
+            ]
+          });
+        }
+
         if (opts?.deltaPrevious) {
           if (opts?.cdtoken) {
             return Promise.resolve({
@@ -528,7 +589,7 @@ describe('getTqiLabel', () => {
   });
 
   it('should create tqi label information retrieved from viewer with client token present', async () => {
-    const response = await getTqiLabel(METRICS_5, 'project', 'asdfasdfasdf');
+    const response = await getTqiLabel('project', 'asdfasdfasdf');
 
     expect(response).toStrictEqual([
       { deltaValue: -1.47, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 26.04368514792632 },
@@ -586,7 +647,7 @@ describe('getTqiLabel', () => {
   });
 
   it('should create tqi label information retrieved from viewer', async () => {
-    const response = await getTqiLabel(METRICS_5, 'project');
+    const response = await getTqiLabel('project');
 
     expect(response).toStrictEqual([
       { deltaValue: -0.01, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 27.51433490874863 },

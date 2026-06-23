@@ -1,5 +1,4 @@
-import { ExtendedAnnotation, QualityGate } from '../../../../../src/helper/interfaces';
-import { LabelInfo } from '../../../../../src/viewer/interfaces';
+import { ExtendedAnnotation, LabelInfo, QualityGate } from '../../../../../src/viewer/interfaces';
 
 export const failedQualityGate: QualityGate = {
   passed: false,
@@ -42,7 +41,9 @@ export const annotationsMock: ExtendedAnnotation[] = [
     supp: false,
     type: 'CS',
     count: 1,
-    gateId: 0
+    gateId: 0,
+    postable: false,
+    path: ''
   },
   {
     instanceName: 'Coding Standard',
@@ -55,7 +56,9 @@ export const annotationsMock: ExtendedAnnotation[] = [
     supp: false,
     type: 'CS',
     count: 2,
-    gateId: 0
+    gateId: 0,
+    postable: false,
+    path: ''
   }
 ];
 

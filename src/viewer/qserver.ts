@@ -17,5 +17,5 @@ export async function getLastQServerRunDate(): Promise<number> {
     // return -1 for projects that haven't run yet
     return -1;
   }
-  return response.data[0].value / 1000;
+  return Number(response.data[0].value) / 1000;
 }

@@ -1,4 +1,5 @@
-import { AnalysisResult, QualityGate } from '../../../../../src/helper/interfaces';
+import { AnalysisResult } from '../../../../../src/helper/interfaces';
+import { QualityGate } from '../../../../../src/viewer/interfaces';
 
 export const analysisIncompleteFailedNoUrl = {
   completed: false,
@@ -245,7 +246,8 @@ export const analysisResultsSingleQgFailed: AnalysisResult = {
       explorerUrl: 'url',
       project: 'project',
       qualityGate: singleQualityGateFailed,
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -260,14 +262,16 @@ export const analysisResultsDualQgFailed: AnalysisResult = {
       explorerUrl: 'url',
       project: 'project',
       qualityGate: singleQualityGateFailed,
-      annotations: []
+      annotations: [],
+      labelInfo: []
     },
     {
       analyzedFiles: ['test.js'],
       explorerUrl: 'url',
       project: 'project',
       qualityGate: singleQualityGateFailed,
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -282,7 +286,8 @@ export const analysisResultsSingleFilePassed: AnalysisResult = {
       explorerUrl: 'url',
       project: 'project',
       qualityGate: singleFileQualityGatePassed,
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -297,7 +302,8 @@ export const analysisResultsDoubleFilePassed: AnalysisResult = {
       explorerUrl: 'url',
       project: 'project',
       qualityGate: doubleFileQualityGatePassed,
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ],
   passedWithWarning: false
