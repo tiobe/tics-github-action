@@ -54,7 +54,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 }
 
 function newConditionsView(group: GroupedConditions): void {
-  summary.addRaw(getConditionHeading(group), true);
+  summary.addRaw(`<h4>${getConditionHeading(group)}</h4>`, true);
 
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
