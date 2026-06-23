@@ -442,5 +442,5 @@ function createColoredDeltaValue(status: string, delta: number) {
   }
 
   const deltaString = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
-  return `$${color}{\\large{\\textsf{${deltaString}}}}$`;
+  return `$${color}{\\large{\\textsf{${deltaString}\\\\%}}}$`;
 }

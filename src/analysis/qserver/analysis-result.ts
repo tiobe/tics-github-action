@@ -5,7 +5,7 @@ import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-fil
 import { getAnnotations } from '../../viewer/annotations';
 import { TicsRunIdentifier } from '../../viewer/interfaces';
 import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
-import { getTqiLabel, METRICS_5 } from '../../viewer/tqi-label';
+import { getTqiLabel } from '../../viewer/tqi-label';
 import { getChangedFiles } from '../helper/changed-files';
 
 export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
@@ -15,7 +15,7 @@ export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
 
   const changedFiles = await getChangedFiles();
   const annotations = await getAnnotations(qualityGate, changedFiles.files, identifier);
-  const labelInfo = await getTqiLabel(METRICS_5, ticsCli.project);
+  const labelInfo = await getTqiLabel(ticsCli.project);
 
   return {
     passed: qualityGate.passed,
