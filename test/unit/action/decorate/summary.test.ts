@@ -478,7 +478,7 @@ describe('createUnpostableAnnotationsDetails', () => {
   });
 });
 
-describe('createColoredTqiGrade', () => {
+describe('createQiLabelTable', () => {
   const labelInfo = [
     { deltaValue: -1.47, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 26.04368514792632 },
     {
