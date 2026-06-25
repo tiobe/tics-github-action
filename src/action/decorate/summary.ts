@@ -23,15 +23,17 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     const groupedConditions = groupConditions(projectResult);
     summary.addHeading(projectResult.project, 2);
 
-    summary.addRaw(`<details><summary><h3>Evaluated Conditions</h3></summary>`, true);
-    for (const group of groupedConditions) {
-      if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
-        newConditionsView(group);
-      } else {
-        oldConditionsView(group);
+    if (groupedConditions.length > 0) {
+      summary.addRaw(`<details><summary><h3>Evaluated Conditions</h3></summary>`, true);
+      for (const group of groupedConditions) {
+        if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+          newConditionsView(group);
+        } else {
+          oldConditionsView(group);
+        }
       }
+      summary.addRaw('</details>', true);
     }
-    summary.addRaw('</details>', true);
 
     summary.addEOL();
     summary.addRaw(createQiLabelTable(projectResult.labelInfo), true);
