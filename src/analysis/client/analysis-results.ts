@@ -5,6 +5,7 @@ import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-fil
 import { getAnnotations } from '../../viewer/annotations';
 import { TicsRunIdentifier } from '../../viewer/interfaces';
 import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
+import { getTqiLabel } from '../../viewer/tqi-label';
 
 /**
  * Retrieve all analysis results from the viewer in one convenient object.
@@ -22,15 +23,16 @@ export async function getClientAnalysisResults(explorerUrls: string[], changedFi
 
       const analyzedFiles = await getAnalyzedFiles(getAnalyzedFilesUrl(identifier));
       const qualityGate = await getQualityGate(await getQualityGateUrl(identifier));
-
       const annotations = await getAnnotations(qualityGate, changedFiles, identifier);
+      const labelInfo = await getTqiLabel(identifier.project, identifier.cdtoken);
 
       return {
         project: identifier.project,
         explorerUrl: url,
         qualityGate: qualityGate,
         analyzedFiles: analyzedFiles,
-        annotations: annotations
+        annotations: annotations,
+        labelInfo: labelInfo
       };
     })
   );

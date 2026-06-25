@@ -147,7 +147,8 @@ export const analysisResultsSoaked: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -370,7 +371,8 @@ export const analysisResultsSoakedMetricGroup: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -461,7 +463,8 @@ export const analysisResultsNotSoaked: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -613,7 +616,8 @@ export const analysisResultsNotSoakedMetricGroup: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -726,7 +730,8 @@ export const analysisResultsPartlySoakedFailed: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -839,7 +844,8 @@ export const analysisResultsNoSoakedPassed: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -931,7 +937,8 @@ export const analysisResultsPartlySoakedPassed: AnalysisResult = {
         ],
         annotationsApiV1Links: []
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -1011,7 +1018,8 @@ export const metricGroupCodeCoverageResult: AnalysisResult = {
           }
         ]
       },
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ]
 };
@@ -1152,7 +1160,8 @@ export const metricGroupProjectResult: ProjectResult = {
       }
     ]
   },
-  annotations: []
+  annotations: [],
+  labelInfo: []
 };
 
 export const metricGroupProjectResultWithMultipleGates: ProjectResult = {
@@ -1411,5 +1420,6 @@ export const metricGroupProjectResultWithMultipleGates: ProjectResult = {
       }
     ]
   },
-  annotations: []
+  annotations: [],
+  labelInfo: []
 };

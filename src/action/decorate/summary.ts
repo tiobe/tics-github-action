@@ -10,7 +10,7 @@ import { generateComment, generateExpandableAreaMarkdown, generateItalic, genera
 import { githubConfig, ticsConfig } from '../../configuration/config';
 import { getCurrentStepPath } from '../../github/runs';
 import { GroupedConditions } from './interface';
-import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation } from '../../viewer/interfaces';
+import { AbstractCondition, Condition, ConditionDetails, ExtendedAnnotation, LabelInfo } from '../../viewer/interfaces';
 import { ViewerFeature, viewerVersion } from '../../viewer/version';
 
 const capitalize = (s: string): string => s && s[0].toUpperCase() + s.slice(1);
@@ -23,14 +23,20 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
     const groupedConditions = groupConditions(projectResult);
     summary.addHeading(projectResult.project, 2);
 
-    for (const group of groupedConditions) {
-      if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
-        newConditionsView(group);
-      } else {
-        oldConditionsView(group);
+    if (groupedConditions.length > 0) {
+      summary.addRaw(`<details><summary><h3>Evaluated Conditions</h3></summary>`, true);
+      for (const group of groupedConditions) {
+        if (await viewerVersion.viewerSupports(ViewerFeature.NEW_ANNOTATIONS)) {
+          newConditionsView(group);
+        } else {
+          oldConditionsView(group);
+        }
       }
+      summary.addRaw('</details>', true);
     }
 
+    summary.addEOL();
+    summary.addRaw(createQiLabelTable(projectResult.labelInfo), true);
     summary.addEOL();
     summary.addLink('See the results in the TICS Viewer', projectResult.explorerUrl);
 
@@ -50,7 +56,7 @@ export async function createSummaryBody(analysisResult: AnalysisResult): Promise
 }
 
 function newConditionsView(group: GroupedConditions): void {
-  summary.addRaw(`<details><summary><h3>${getConditionHeading(group)}</h3></summary>`, true);
+  summary.addRaw(`<h4>${getConditionHeading(group)}</h4>`, true);
 
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
@@ -61,7 +67,6 @@ function newConditionsView(group: GroupedConditions): void {
       summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
     }
   }
-  summary.addRaw('</details>', true);
 }
 
 function oldConditionsView(group: GroupedConditions): void {
@@ -70,10 +75,9 @@ function oldConditionsView(group: GroupedConditions): void {
   for (const condition of group.conditions) {
     const statusMarkdown = generateStatusMarkdown(getStatus(condition.passed, condition.passedWithWarning));
     if (condition.details && condition.details.items.length > 0) {
-      summary.addRaw(`${EOL}<details><summary>${statusMarkdown}${condition.message}</summary>${EOL}`);
+      summary.addRaw(`${EOL}${statusMarkdown}${condition.message}${EOL}`);
       summary.addBreak();
       createConditionTables(condition.details).forEach(table => summary.addTable(table));
-      summary.addRaw('</details>', true);
     } else {
       summary.addRaw(`${EOL}${statusMarkdown}${condition.message}`, true);
     }
@@ -380,4 +384,69 @@ export function createUnpostableAnnotationsDetails(unpostableAnnotations: Extend
   });
   body += '</table>';
   return generateExpandableAreaMarkdown(label, body);
+}
+
+export function createQiLabelTable(labelInfo: LabelInfo[]) {
+  if (labelInfo.length === 0) {
+    return '';
+  }
+
+  let body = '| Metric | Grade | Score | Δ Previous |';
+  body += `${EOL}| --- | --- | --- | --- |`;
+
+  for (const info of labelInfo) {
+    const grade = createColoredQiGrade(info.letter);
+    const score = twoDecimalValue(info.score);
+    const delta = createColoredDeltaValue(info.status, info.deltaValue);
+    body += `${EOL}| ${info.metric} | ${grade} | $\\large{\\textsf{${score}\\\\%}}$ | ${delta} |`;
+  }
+
+  return body;
+}
+
+function createColoredQiGrade(letter: string) {
+  let color = '';
+  switch (letter) {
+    case 'A':
+      color = '#00783d';
+      break;
+    case 'B':
+      color = '#3db349';
+      break;
+    case 'C':
+      color = '#f3ea29';
+      break;
+    case 'D':
+      color = '#eac01e';
+      break;
+    case 'E':
+      color = '#ef8022';
+      break;
+    case 'F':
+      color = '#d73d29';
+      break;
+  }
+
+  return `$\\color{${color}}{\\LARGE{\\textsf{\\textbf{${letter}}}}}$`;
+}
+
+function createColoredDeltaValue(status: string, delta: number) {
+  if (status !== 'PRESENT') {
+    return '-';
+  }
+  let color = '';
+  if (delta < 0) {
+    color = '\\color{#d73d29}';
+  } else if (delta > 0) {
+    color = '\\color{#00783d}';
+  }
+
+  const twoDecimalDelta = twoDecimalValue(delta);
+  const deltaString = delta > 0 ? `+${twoDecimalDelta}` : twoDecimalDelta;
+  return `$${color}{\\large{\\textsf{${deltaString}\\\\%}}}$`;
+}
+
+function twoDecimalValue(value: number) {
+  const [whole, decimal] = value.toString().split('.');
+  return `${whole}.${(decimal || '00').substring(0, 2).padEnd(2, '0')}`;
 }
