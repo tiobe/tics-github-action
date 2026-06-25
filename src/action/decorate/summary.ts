@@ -394,7 +394,7 @@ export function createQiLabelTable(labelInfo: LabelInfo[]) {
 
   for (const info of labelInfo) {
     const grade = createColoredQiGrade(info.letter);
-    const score = info.score.toFixed(2);
+    const score = twoDecimalValue(info.score);
     const delta = createColoredDeltaValue(info.status, info.deltaValue);
     body += `${EOL}| ${info.metric} | ${grade} | $\\large{\\textsf{${score}\\\\%}}$ | ${delta} |`;
   }
@@ -439,6 +439,12 @@ function createColoredDeltaValue(status: string, delta: number) {
     color = '\\color{#00783d}';
   }
 
-  const deltaString = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+  const twoDecimalDelta = twoDecimalValue(delta);
+  const deltaString = delta > 0 ? `+${twoDecimalDelta}` : twoDecimalDelta;
   return `$${color}{\\large{\\textsf{${deltaString}\\\\%}}}$`;
+}
+
+function twoDecimalValue(value: number) {
+  const [whole, decimal] = value.toString().split('.');
+  return `${whole}.${(decimal || '00').substring(0, 2).padEnd(2, '0')}`;
 }

@@ -503,7 +503,7 @@ describe('createColoredTqiGrade', () => {
       score: 99.16763462235956
     },
     {
-      deltaValue: +0.25,
+      deltaValue: +0.255,
       letter: 'F',
       metric: 'TQI Compiler Warnings',
       status: 'PRESENT',
@@ -541,11 +541,11 @@ describe('createColoredTqiGrade', () => {
 | TQI | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{26.04\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\\\%}}}$ |
 | TQI Code Coverage | $\\color{#ef8022}{\\LARGE{\\textsf{\\textbf{E}}}}$ | $\\large{\\textsf{46.75\\\\%}}$ | - |
 | TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.00\\\\%}}$ | - |
-| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.17\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
-| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.38\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\\\%}}}$ |
-| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.78\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\\\%}}}$ |
+| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.16\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.37\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\\\%}}}$ |
+| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.77\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\\\%}}}$ |
 | TQI Code Duplication | $\\color{#eac01e}{\\LARGE{\\textsf{\\textbf{D}}}}$ | $\\large{\\textsf{63.54\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
-| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.86\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.85\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
 | TQI Code Security | $\\color{#f3ea29}{\\LARGE{\\textsf{\\textbf{C}}}}$ | $\\large{\\textsf{70.00\\\\%}}$ | - |`
     );
   });
