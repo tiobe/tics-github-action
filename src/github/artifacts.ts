@@ -9,13 +9,14 @@ import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
 import { logger } from '../helper/logger';
 import { handleOctokitError } from '../helper/response';
 import { emptyToNull } from '../helper/utils';
+import { randomUUID } from 'crypto';
 
 export async function uploadArtifact(): Promise<void> {
   logger.header('Uploading artifact');
 
   const tmpdir = getTmpDir() + '/ticstmpdir';
   // Example TICS_tics-github-action_2_qserver_ticstmpdir
-  const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`);
+  const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir_${randomUUID().substring(0, 8)}`);
 
   logger.info(`Logs taken from ${tmpdir}`);
 
