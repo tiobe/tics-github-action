@@ -404,30 +404,19 @@ export function createQiLabelTable(labelInfo: LabelInfo[]) {
   return body;
 }
 
-function createColoredQiGrade(letter: string) {
-  let color = '';
-  switch (letter) {
-    case 'A':
-      color = '#00783d';
-      break;
-    case 'B':
-      color = '#3db349';
-      break;
-    case 'C':
-      color = '#f3ea29';
-      break;
-    case 'D':
-      color = '#eac01e';
-      break;
-    case 'E':
-      color = '#ef8022';
-      break;
-    case 'F':
-      color = '#d73d29';
-      break;
-  }
+function createColoredQiGrade(letter: string): string {
+  const gradeMap: Record<string, { color: string; unicode: string }> = {
+    A: { color: '#00783d', unicode: '𝗔' },
+    B: { color: '#3db349', unicode: '𝗕' },
+    C: { color: '#f3ea29', unicode: '𝗖' },
+    D: { color: '#eac01e', unicode: '𝗗' },
+    E: { color: '#ef8022', unicode: '𝗘' },
+    F: { color: '#d73d29', unicode: '𝗙' }
+  };
 
-  return `$\\color{${color}}{\\LARGE{\\textsf{\\textbf{${letter}}}}}$`;
+  const grade = gradeMap[letter.toUpperCase()] ?? gradeMap.F;
+
+  return `$\\color{${grade.color}}{\\LARGE{${grade.unicode}}}$`;
 }
 
 function createColoredDeltaValue(status: string, delta: number) {

@@ -538,15 +538,15 @@ describe('createQiLabelTable', () => {
     expect(labelTable).toStrictEqual(
       `| Metric | Grade | Score | Δ Previous |
 | --- | --- | --- | --- |
-| TQI | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{26.04\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\\\%}}}$ |
-| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{\\textsf{\\textbf{E}}}}$ | $\\large{\\textsf{46.75\\\\%}}$ | - |
-| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.00\\\\%}}$ | - |
-| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{99.16\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
-| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{\\textsf{\\textbf{F}}}}$ | $\\large{\\textsf{0.37\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\\\%}}}$ |
-| TQI Coding Standards | $\\color{#3db349}{\\LARGE{\\textsf{\\textbf{B}}}}$ | $\\large{\\textsf{83.77\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\\\%}}}$ |
-| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{\\textsf{\\textbf{D}}}}$ | $\\large{\\textsf{63.54\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
-| TQI Fan Out | $\\color{#00783d}{\\LARGE{\\textsf{\\textbf{A}}}}$ | $\\large{\\textsf{93.85\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
-| TQI Code Security | $\\color{#f3ea29}{\\LARGE{\\textsf{\\textbf{C}}}}$ | $\\large{\\textsf{70.00\\\\%}}$ | - |`
+| TQI | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{26.04\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\\\%}}}$ |
+| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{𝗘}}$ | $\\large{\\textsf{46.75\\\\%}}$ | - |
+| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{0.00\\\\%}}$ | - |
+| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{𝗔}}$ | $\\large{\\textsf{99.16\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{0.37\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\\\%}}}$ |
+| TQI Coding Standards | $\\color{#3db349}{\\LARGE{𝗕}}$ | $\\large{\\textsf{83.77\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\\\%}}}$ |
+| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{𝗗}}$ | $\\large{\\textsf{63.54\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Fan Out | $\\color{#00783d}{\\LARGE{𝗔}}$ | $\\large{\\textsf{93.85\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Code Security | $\\color{#f3ea29}{\\LARGE{𝗖}}$ | $\\large{\\textsf{70.00\\\\%}}$ | - |`
     );
   });
 });
