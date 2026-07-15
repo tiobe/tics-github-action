@@ -24,7 +24,7 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       pull_number: githubConfig.pullRequestNumber,
-      per_page: githubConfig.paginatePerPage
+      per_page: githubConfig.itemsPerPage
     };
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
     logger.info('Retrieve posted review comments.');

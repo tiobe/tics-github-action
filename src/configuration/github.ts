@@ -22,7 +22,7 @@ export class GithubConfig {
   readonly debugger: boolean;
   readonly runnerName: string;
   readonly id: string;
-  readonly paginatePerPage: number;
+  readonly itemsPerPage: number;
 
   constructor() {
     this.apiUrl = context.apiUrl;
@@ -40,7 +40,7 @@ export class GithubConfig {
     this.pullRequestNumber = this.getPullRequestNumber();
     this.debugger = isDebug();
     this.runnerName = process.env.RUNNER_NAME ?? '';
-    this.paginatePerPage = 100;
+    this.itemsPerPage = 100;
 
     /**
      * Construct the id to use for storing tmpdirs. The action name will

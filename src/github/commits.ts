@@ -15,7 +15,7 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     ref: githubConfig.sha,
-    per_page: githubConfig.paginatePerPage
+    per_page: githubConfig.itemsPerPage
   };
   try {
     logger.header('Retrieving changed files.');

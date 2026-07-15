@@ -20,10 +20,9 @@ export async function getPostedComments(): Promise<Comment[]> {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
       issue_number: githubConfig.pullRequestNumber,
-      per_page: githubConfig.paginatePerPage
+      per_page: githubConfig.itemsPerPage
     };
-    const resp = await octokit.paginate(octokit.rest.issues.listComments, params);
-    response = resp;
+    response = await octokit.paginate(octokit.rest.issues.listComments, params);
     logger.info('Retrieved posted comments.');
   } catch (error: unknown) {
     const message = handleOctokitError(error);

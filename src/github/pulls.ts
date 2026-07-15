@@ -92,7 +92,7 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
     pull_number: githubConfig.pullRequestNumber,
-    per_page: githubConfig.paginatePerPage
+    per_page: githubConfig.itemsPerPage
   };
   try {
     logger.header('Retrieving changed files.');
