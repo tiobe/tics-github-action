@@ -15,7 +15,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Build dist after push to main'))
     steps:
       - name: Setup git config
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.TIOBE_TOKEN }}
       - name: Build

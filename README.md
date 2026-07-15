@@ -9,10 +9,13 @@ The TICS GitHub action integrates the [TICS code quality framework](https://www.
 The incorporated `Quality Gating` feature can be used for `Pull Request` and `Commit` approvals. It can also decorate your pull request so the quality data is easily available.
 Furthermore, the changed files are annotated with findings from the TICS analysis, so it is clear where the issues are and thus where they need to be addressed.
 
-There are two types of analysis modes available:
+There are two use cases:
 
 - `Reference runs` using TICS QServer (See section QServer). Reference points with code quality metric data are created that are used for the qualification runs. Intended for base branches of pull requests, e.g. `main`.
 - `Qualification runs` using TICS Client (See section Client). Compares a set of changed files from a commit or pull request to the reference point for qualification, using a Quality Gate. Intended for pull requests and branches like feature or bug-fix branches.
+
+> [!Important]
+> Both use cases are need to be implemented in **separate actions** so the pull request are compared to the correct state of the repository and quality database.
 
 ## Before you start
 
@@ -35,7 +38,92 @@ Linux and Windows based runners, both GitHub-hosted and self-hosted, are support
 
 Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and post the results of Quality Gating feature as part of your pull request. Below are some example of how to include the `TICS GitHub Action` step as part of your workflow.
 
-## Client (default)
+## Use case 1: QServer (for reference runs)
+
+> [!IMPORTANT]
+> `Purpose:`             Create reference points  
+> `Recommended Events:`  Push to main  
+> `Usage:`               To be used as a separate action (not together with TICS Client)
+
+> [!NOTE]
+> This use case can be omitted if TICSQServer is run for your project from another CI tool like Jenkins.
+
+As of v3, the option to run [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analysis has been made available.
+With TICSQServer, persistent measurement points are created which are stored in your Quality Database. These measurement points are used by the TICS Client to determine how the code quality evolved from that point.
+TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
+
+```yaml
+name: TICS Github Action
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  TICS:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TICSQserver Analysis
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: project-name
+          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+```
+
+### Action triggers and events
+
+The most common use case to trigger a workflow running TICSQServer is typically on `push` to `main`, or any other branch from which other branches are derived. Other examples are release and develop branches.
+Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and
+[events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
+When triggering on multiple branches, please make sure to provide the correct `project` or `branchName` value, corresponding to the TICS branch QServer will be running on.
+
+### Basic parameters
+
+The following inputs are recommended or required for this action:
+
+| Input           | Description                                                                                                                                                                                                                                                                                                                                                                                                                    | Required |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `mode`          | Set `mode` to `qserver` run the action in TICSQServer mode. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                                                                                                                                                                                                            | true     |
+| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>                                                                                                                                                       | true     |
+| `project`       | Name of the TICS project present in the TICS Viewer. If absent the repository name will be used.                                                                                                                                                                                                                                                                                                                               | false    |
+| `branchdir`     | Root directory of the source files for the branch. By default this is set to `github.workspace`, which is the root of the repository.                                                                                                                                                                                                                                                                                          | false    |
+| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre> | false    |
+| `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`.                                                                                                                                                                                                               | false    |
+
+### Advanced parameters
+
+The following options allow to instrument TICSQServer more specifically:
+
+| Input                    | Description                                                                                                                                                                                                                                   | Default          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `calc`                   | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.                                                                                   | `ALL`            |
+| `recalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.                                                                                 | -                |
+| `nocalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.                                                                               | -                |
+| `norecalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.                                                                             | -                |
+| `branchname`             | Name of the branch in TICS.                                                                                                                                                                                                                   | -                |
+| `createProject`          | Create the project in the TICS Viewer if it does not exist already (requires a viewer of version 2026.1.2 or higher).                                                                                                                         | `false`          |
+| `showAnnotationSeverity` | Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue`. This feature requires TICS Viewer 2025.1.8 or later. | `blocking-after` |
+| `tmpdir`                 | Location to store debug information.                                                                                                                                                                                                          | -                |
+
+#### Deprecated parameters
+
+| Input               | Description                                                                                                                                          | Default | Replacement              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
+| `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
+
+
+## Use case 2: Client for qualification runs
+
+> [!IMPORTANT]
+> `Purpose:`             Qualification of code changes  
+> `Recommended Events:`  Pull request or commit to a feature/bugfix branch  
+> `Usage:`               To be used as a separate action (not together with TICSQServer)
 
 The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines whether the commit or pull request qualifies for delivery.
 The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
@@ -102,76 +190,6 @@ The following options allow to instrument TICS Client more specifically:
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
-## QServer
-
-As of v3, the option to run [TICSQServer](https://ticsdocumentation.tiobe.com/latest/docs/#doc=admin/admin_A3_qserverref.html) analyses has been made available.
-With TICSQServer, persistent measurement points are created which are stored in your Quality Database. These measurement points are used by the TICS Client to determine how the code quality evolved from that point.
-TICSQServer can also compare the last obtained results with the previous run and apply Quality Gating.
-
-```yaml
-name: TICS Github Action
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  TICS:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: TICSQserver Analysis
-        uses: tiobe/tics-github-action@v3
-        with:
-          mode: qserver
-          project: project-name
-          viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-          installTics: true
-```
-
-### Action triggers and events
-
-The most common use case to trigger a workflow running TICSQServer is typically on `push` to `main`, or any other branch from which other branches are derived. Other examples are release and develop branches.
-Please consult Github documentation for [triggering a workflow](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#using-a-single-event) and
-[events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows) for more information.
-When triggering on multiple branches, please make sure to provide the correct `project` or `branchName` value, corresponding to the TICS branch QServer will be running on.
-
-### Basic parameters
-
-The following inputs are recommended or required for this action:
-
-| Input           | Description                                                                                                                                                                                                                                                                                                                                                                                                                    | Required |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `mode`          | Set `mode` to `qserver` run the action in TICSQServer mode. Options are `client` or `qserver` for an analysis run and `diagnostic` for a diagnostic run to test the setup. The default is `client`.                                                                                                                                                                                                                            | true     |
-| `project`       | Name of the TICS project present in the TICS Viewer.                                                                                                                                                                                                                                                                                                                                                                           | true     |
-| `viewerUrl`     | A URL pointing to the "cfg" API endpoint of the TICS Viewer. It contains the name of the TICS Analyzer Configuration or "-" in case of the default configuration.<br><br>Example: <pre lang="yaml">viewerUrl: https://domain.com/tiobeweb/TICS/api/cfg?name=config</pre>                                                                                                                                                       | true     |
-| `branchdir`     | Root directory of the source files for the branch. By default this is set to `github.workspace`, which is the root of the repository.                                                                                                                                                                                                                                                                                          | false    |
-| `ticsAuthToken` | Authentication token to authorize the plugin when it connects to the TICS Viewer (Only required if a token is needed to run TICS). It is highly recommended to store these tokens in [GitHub Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and use the secrets inside your workflow instead.<br><br>Example: <pre lang="yaml">ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}</pre> | false    |
-| `installTics`   | Boolean parameter to install TICS command-line tools on a runner before executing the analysis. If not specified, TICS should be installed manually on the machine that runs this job, default value is `false`.                                                                                                                                                                                                               | false    |
-
-### Advanced parameters
-
-The following options allow to instrument TICSQServer more specifically:
-
-| Input                    | Description                                                                                                                                                                                                                                   | Default          |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `calc`                   | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be calculated.                                                                                   | `ALL`            |
-| `recalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to be recalculated.                                                                                 | -                |
-| `nocalc`                 | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be calculated.                                                                               | -                |
-| `norecalc`               | Comma-separated list of [metrics](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23MetricAliases) to not be recalculated.                                                                             | -                |
-| `branchname`             | Name of the branch in TICS.                                                                                                                                                                                                                   | -                |
-| `createProject`          | Create the project in the TICS Viewer if it does not exist already (requires a viewer of version 2026.1.2 or higher).                                                                                                                         | `false`          |
-| `showAnnotationSeverity` | Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue`. This feature requires TICS Viewer 2025.1.8 or later. | `blocking-after` |
-| `tmpdir`                 | Location to store debug information.                                                                                                                                                                                                          | -                |
-
-#### Deprecated parameters
-
-| Input               | Description                                                                                                                                          | Default | Replacement              |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
-| `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
 ## Other features
 

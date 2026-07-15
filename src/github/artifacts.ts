@@ -1,5 +1,6 @@
 import { readdirSync } from 'fs';
 import { tmpdir } from 'os';
+import { randomUUID } from 'crypto';
 
 import { DefaultArtifactClient } from '@actions/artifact';
 import { create } from '@actions/artifact-v1';
@@ -15,7 +16,7 @@ export async function uploadArtifact(): Promise<void> {
 
   const tmpdir = getTmpDir() + '/ticstmpdir';
   // Example TICS_tics-github-action_2_qserver_ticstmpdir
-  const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir`);
+  const name = sanitizeArtifactName(`${githubConfig.job}_${githubConfig.action}_${ticsConfig.mode}_ticstmpdir_${randomUUID().substring(0, 8)}`);
 
   logger.info(`Logs taken from ${tmpdir}`);
 

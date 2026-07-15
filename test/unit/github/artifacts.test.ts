@@ -56,7 +56,7 @@ describe('artifacts test (github.com)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -74,7 +74,7 @@ describe('artifacts test (github.com)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -91,7 +91,7 @@ describe('artifacts test (github.com)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -120,7 +120,7 @@ describe('artifacts test (ghes)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -139,7 +139,7 @@ describe('artifacts test (ghes)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/tics/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -161,7 +161,7 @@ describe('artifacts test (ghes)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -187,7 +187,7 @@ describe('artifacts test (ghes)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log', '/tmp/123_TICS_1_tics-github-action/ticstmpdir/file1.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );
@@ -205,7 +205,7 @@ describe('artifacts test (ghes)', () => {
     await uploadArtifact();
 
     expect(uploadSpy).toHaveBeenCalledWith(
-      'TICS_tics-github-action_client_ticstmpdir',
+      expect.stringContaining('TICS_tics-github-action_client_ticstmpdir'),
       ['/tmp/123_TICS_1_tics-github-action/ticstmpdir/file.log'],
       '/tmp/123_TICS_1_tics-github-action/ticstmpdir'
     );

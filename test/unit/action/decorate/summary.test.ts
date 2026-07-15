@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { summary } from '@actions/core';
 import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 import {
@@ -5,6 +6,7 @@ import {
   createFilesSummary,
   createNothingAnalyzedSummaryBody,
   createSummaryBody,
+  createQiLabelTable,
   createUnpostableAnnotationsDetails,
   groupConditions
 } from '../../../../src/action/decorate/summary';
@@ -132,8 +134,8 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsSoakedMetricGroup);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Coding Standard: :x: 117 Blocking Issues</h3>');
-      expect(string).toContain('<h3>Compiler Warnings: :warning: 3 Blocking-after Issues</h3>');
+      expect(string).toContain('<h4>Coding Standard: :x: 117 Blocking Issues</h4>');
+      expect(string).toContain('<h4>Compiler Warnings: :warning: 3 Blocking-after Issues</h4>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="3">Issues</th></tr>', 2);
       expect(string).toContain('<tr><th>:beetle: Total</th><th>:x: Blocking now</th><th>:warning: Blocking after 2018-03-23</th></tr>');
@@ -155,8 +157,8 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(analysisResultsNotSoakedMetricGroup);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Coding Standards: :x: 93 Blocking Issues</h3>');
-      expect(string).toContain('<h3>Compiler Warnings: :heavy_check_mark: Passed </h3>');
+      expect(string).toContain('<h4>Coding Standards: :x: 93 Blocking Issues</h4>');
+      expect(string).toContain('<h4>Compiler Warnings: :heavy_check_mark: Passed </h4>');
       expect(string).toContain(':x: No new Coding Standard Violations');
       expect(string).toContainTimes('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>', 2);
       expect(string).toContain('>+39</a></td></tr><tr><td>');
@@ -170,7 +172,7 @@ describe('createSummaryBody', () => {
       const string = await createSummaryBody(metricGroupCodeCoverageResult);
 
       expect(string).toContain('<h3>:x: Failed </h3>');
-      expect(string).toContain('<h3>Code Coverage: :x: 2 Blocking Issues</h3>');
+      expect(string).toContain('<h4>Code Coverage: :x: 2 Blocking Issues</h4>');
       expect(string).toContain('<tr><th rowspan="2">File</th><th colspan="1">Issues</th></tr><tr><th>:x: Blocking now</th></tr>');
       expect(string).toContain('>16.00%</a></td></tr><tr><td>');
       expect(string).toContain('>75.00%</a></td></tr></table>');
@@ -305,6 +307,9 @@ describe('createUnpostableAnnotationsDetails', () => {
   it('should return summary of one unpostable review comment', () => {
     const unpostable: ExtendedAnnotation[] = [
       {
+        blocking: {
+          state: 'no'
+        },
         fullPath: '/home/src/hello.js',
         path: 'src/hello.js',
         line: 0,
@@ -326,7 +331,7 @@ describe('createUnpostableAnnotationsDetails', () => {
 
     expect(response).toContain(`<table><tr><th colspan='4'>${unpostable[0].path}</th></tr>`);
     expect(response).toContain(
-      `<tr><td>:x:</td><td>Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
+      `<tr><td>:beetle:</td><td>Non-Blocking</td><td><b>Line:</b> ${unpostable[0].line}<br><b>Level:</b> ${unpostable[0].level}<br><b>Category:</b> ${unpostable[0].category}</td><td><b>${unpostable[0].type} violation:</b> ${unpostable[0].rule} <b>${unpostable[0].displayCount}</b><br>${unpostable[0].msg}</td></tr>`
     );
   });
 
@@ -469,6 +474,79 @@ describe('createUnpostableAnnotationsDetails', () => {
     expect(response).toContainTimes(
       `<tr><td>:warning:</td><td>Blocking after 2024-08-16</td><td><b>Line:</b> ${unpostable[1].line}</td><td><b>${unpostable[1].type} violation:</b> ${unpostable[1].rule} <b>${unpostable[1].displayCount}</b><br>${unpostable[1].msg}</td></tr>`,
       1
+    );
+  });
+});
+
+describe('createQiLabelTable', () => {
+  const labelInfo = [
+    { deltaValue: -1.47, letter: 'F', metric: 'TQI', status: 'PRESENT', score: 26.04368514792632 },
+    {
+      deltaValue: 0,
+      letter: 'E',
+      metric: 'TQI Code Coverage',
+      status: 'DISABLED',
+      score: 46.75
+    },
+    {
+      deltaValue: 0,
+      letter: 'F',
+      metric: 'TQI Abstract Interpretation',
+      status: 'DISABLED',
+      score: 0
+    },
+    {
+      deltaValue: 0,
+      letter: 'A',
+      metric: 'TQI Cyclomatic Complexity',
+      status: 'PRESENT',
+      score: 99.16763462235956
+    },
+    {
+      deltaValue: +0.255,
+      letter: 'F',
+      metric: 'TQI Compiler Warnings',
+      status: 'PRESENT',
+      score: 0.37523452157598497
+    },
+    {
+      deltaValue: -14.71,
+      letter: 'B',
+      metric: 'TQI Coding Standards',
+      status: 'PRESENT',
+      score: 83.7767208441954
+    },
+    {
+      deltaValue: 0,
+      letter: 'D',
+      metric: 'TQI Code Duplication',
+      status: 'PRESENT',
+      score: 63.54
+    },
+    { deltaValue: 0, letter: 'A', metric: 'TQI Fan Out', status: 'PRESENT', score: 93.85928846068848 },
+    {
+      deltaValue: 0,
+      letter: 'C',
+      metric: 'TQI Code Security',
+      status: 'DISABLED',
+      score: 70
+    }
+  ];
+
+  it('should return label', () => {
+    const labelTable = createQiLabelTable(labelInfo);
+    expect(labelTable).toStrictEqual(
+      `| Metric | Grade | Score | Δ Previous |
+| --- | --- | --- | --- |
+| TQI | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{26.04\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-1.47\\\\%}}}$ |
+| TQI Code Coverage | $\\color{#ef8022}{\\LARGE{𝗘}}$ | $\\large{\\textsf{46.75\\\\%}}$ | - |
+| TQI Abstract Interpretation | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{0.00\\\\%}}$ | - |
+| TQI Cyclomatic Complexity | $\\color{#00783d}{\\LARGE{𝗔}}$ | $\\large{\\textsf{99.16\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Compiler Warnings | $\\color{#d73d29}{\\LARGE{𝗙}}$ | $\\large{\\textsf{0.37\\\\%}}$ | $\\color{#00783d}{\\large{\\textsf{+0.25\\\\%}}}$ |
+| TQI Coding Standards | $\\color{#3db349}{\\LARGE{𝗕}}$ | $\\large{\\textsf{83.77\\\\%}}$ | $\\color{#d73d29}{\\large{\\textsf{-14.71\\\\%}}}$ |
+| TQI Code Duplication | $\\color{#eac01e}{\\LARGE{𝗗}}$ | $\\large{\\textsf{63.54\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Fan Out | $\\color{#00783d}{\\LARGE{𝗔}}$ | $\\large{\\textsf{93.85\\\\%}}$ | \${\\large{\\textsf{0.00\\\\%}}}$ |
+| TQI Code Security | $\\color{#f3ea29}{\\LARGE{𝗖}}$ | $\\large{\\textsf{70.00\\\\%}}$ | - |`
     );
   });
 });

@@ -4,10 +4,11 @@ import * as annotations from '../../../../src/viewer/annotations';
 import * as changed_files from '../../../../src/analysis/helper/changed-files';
 import * as qualityGate from '../../../../src/viewer/qualitygate';
 import * as changedFiles from '../../../../src/analysis/helper/changed-files';
+import * as tqiLabel from '../../../../src/viewer/tqi-label';
 
 import { getAnalysisResult } from '../../../../src/analysis/qserver/analysis-result';
 import { ticsCliMock, ticsConfigMock, actionConfigMock } from '../../../.setup/mock';
-import { passedQualityGate, failedQualityGate, annotationsMock } from './objects/analysis-results';
+import { passedQualityGate, failedQualityGate, annotationsMock, labelInfo } from './objects/analysis-results';
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -20,6 +21,7 @@ describe('getAnalysisResult', () => {
   let spyQualityGate: Mock<typeof qualityGate.getQualityGate>;
   let spyGetAnnotations: Mock<typeof annotations.getAnnotations>;
   let spyCreateChangedFiles: Mock<any>;
+  let spyTqiLabel: Mock<typeof tqiLabel.getTqiLabel>;
 
   // For multiproject run with project auto
   ticsCliMock.project = 'project';
@@ -34,6 +36,7 @@ describe('getAnalysisResult', () => {
     spyQualityGate = vi.spyOn(qualityGate, 'getQualityGate');
     spyGetAnnotations = vi.spyOn(annotations, 'getAnnotations');
     spyCreateChangedFiles = vi.spyOn(changed_files, 'getChangedFiles');
+    spyTqiLabel = vi.spyOn(tqiLabel, 'getTqiLabel');
   });
 
   it('should return on one passed quality gate with warnings', async () => {
@@ -41,6 +44,7 @@ describe('getAnalysisResult', () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(passedQualityGate);
     spyGetAnnotations.mockResolvedValue([]);
+    spyTqiLabel.mockResolvedValue([]);
 
     const result = await getAnalysisResult(12345000);
 
@@ -54,7 +58,8 @@ describe('getAnalysisResult', () => {
           explorerUrl: 'http://base.url/url',
           analyzedFiles: ['file'],
           qualityGate: passedQualityGate,
-          annotations: []
+          annotations: [],
+          labelInfo: []
         }
       ]
     });
@@ -65,6 +70,7 @@ describe('getAnalysisResult', () => {
     spyAnalyzedFiles.mockResolvedValue(['file']);
     spyQualityGate.mockResolvedValueOnce(failedQualityGate);
     spyGetAnnotations.mockResolvedValueOnce([]);
+    spyTqiLabel.mockResolvedValue([]);
 
     const result = await getAnalysisResult(12345000);
 
@@ -78,7 +84,8 @@ describe('getAnalysisResult', () => {
           explorerUrl: 'http://base.url/url',
           analyzedFiles: ['file'],
           qualityGate: failedQualityGate,
-          annotations: []
+          annotations: [],
+          labelInfo: []
         }
       ]
     });
@@ -92,6 +99,7 @@ describe('getAnalysisResult', () => {
     spyQualityGate.mockResolvedValueOnce(failedQualityGate);
     spyGetAnnotations.mockResolvedValueOnce(annotationsMock);
     spyCreateChangedFiles.mockResolvedValue(['file']);
+    spyTqiLabel.mockResolvedValue(labelInfo);
 
     const result = await getAnalysisResult(12345000);
 
@@ -105,7 +113,8 @@ describe('getAnalysisResult', () => {
           explorerUrl: 'http://base.url/url',
           analyzedFiles: ['file'],
           qualityGate: failedQualityGate,
-          annotations: annotationsMock
+          annotations: annotationsMock,
+          labelInfo: labelInfo
         }
       ]
     });
