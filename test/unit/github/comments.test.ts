@@ -215,7 +215,8 @@ const commentWithBody: Comment = {
   user: null,
   created_at: '',
   updated_at: '',
-  body: '<h1>TICS Quality Gate</h1>'
+  body: '<h1>TICS Quality Gate</h1>',
+  author_association: 'COLLABORATOR'
 };
 
 const commentWithoutBody: Comment = {

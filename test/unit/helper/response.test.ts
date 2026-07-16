@@ -26,8 +26,7 @@ describe('handleOctokitError', () => {
         request: {
           retryCount: 5
         }
-      },
-      headers: {}
+      }
     });
 
     const message = handleOctokitError(error);

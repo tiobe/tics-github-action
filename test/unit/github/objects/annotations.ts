@@ -1,8 +1,8 @@
-import { Links, ReviewComment, User } from '../../../../src/github/interfaces';
+import { ReviewComment } from '../../../../src/github/interfaces';
 import { AnalysisResult, ProjectResult } from '../../../../src/helper/interfaces';
 import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 
-export const user: User = {
+export const user = {
   login: '',
   id: 0,
   node_id: '',
@@ -23,7 +23,7 @@ export const user: User = {
   site_admin: false
 };
 
-export const links: Links = {
+export const links = {
   self: {
     href: 'link'
   },
@@ -112,7 +112,8 @@ export const analysisResults: AnalysisResult = {
         url: '',
         gates: [],
         annotationsApiV1Links: []
-      }
+      },
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -238,7 +239,8 @@ export const twoMixedAnalysisResults: AnalysisResult = {
         url: '',
         gates: [],
         annotationsApiV1Links: []
-      }
+      },
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -280,7 +282,8 @@ export const fourMixedAnalysisResults: AnalysisResult = {
         url: '',
         gates: [],
         annotationsApiV1Links: []
-      }
+      },
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -322,7 +325,8 @@ export const fiveMixedAnalysisResults: AnalysisResult = {
         url: '',
         gates: [],
         annotationsApiV1Links: []
-      }
+      },
+      labelInfo: []
     }
   ],
   passedWithWarning: false
@@ -341,7 +345,8 @@ export const twohundredAnnotations = () => {
         annotationsApiV1Links: []
       },
       analyzedFiles: [],
-      annotations: []
+      annotations: [],
+      labelInfo: []
     }
   ];
 

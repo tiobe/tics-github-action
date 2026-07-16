@@ -1,15 +1,12 @@
 {
+  "files": [], // Prevents automatically compiling files under this root config
+  "references": [{ "path": "./tsconfig.src.json" }, { "path": "./tsconfig.test.json" }],
   "compilerOptions": {
+    "composite": true,
     "esModuleInterop": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "noImplicitAny": true,
-    "outDir": "./lib",
-    "rootDir": "./src",
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022"
-  },
-  "exclude": ["dist", "node_modules"],
-  "include": ["src/**/*"]
+  }
 }

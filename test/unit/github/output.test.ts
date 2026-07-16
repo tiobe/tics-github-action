@@ -27,7 +27,8 @@ describe('createAndSetOutput', () => {
         annotationsApiV1Links: []
       },
       analyzedFiles: [],
-      annotations: []
+      annotations: [],
+      labelInfo: []
     };
   });
 

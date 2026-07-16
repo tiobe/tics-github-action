@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as processResults from '../../../src/analysis/client/process-analysis';
 import * as changedFiles from '../../../src/analysis/helper/changed-files';
 import * as analyzer from '../../../src/tics/analyzer';

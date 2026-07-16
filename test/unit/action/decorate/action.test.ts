@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as summary from '../../../../src/action/decorate/summary';
 import * as pullRequest from '../../../../src/action/decorate/pull-request';
 import * as annotations from '../../../../src/github/annotations';

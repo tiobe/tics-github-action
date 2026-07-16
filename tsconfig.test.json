@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  },
+  "include": ["test/**/*", "test/.setup/**/*"],
+  "references": [{ "path": "./tsconfig.src.json" }]
+}
