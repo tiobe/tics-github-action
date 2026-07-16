@@ -1,12 +1,12 @@
-import { decorateAction } from '../../action/decorate/action';
-import { postToConversation } from '../../action/decorate/pull-request';
-import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../../action/decorate/summary';
-import { githubConfig } from '../../configuration/config';
-import { getPostedComments, deletePreviousComments } from '../../github/comments';
-import { ChangedFile } from '../../github/interfaces';
-import { createAndSetOutput } from '../../github/output';
-import { Analysis } from '../../helper/interfaces';
-import { getClientAnalysisResults } from './analysis-results';
+import { decorateAction } from '../../action/decorate/action.js';
+import { postToConversation } from '../../action/decorate/pull-request.js';
+import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../../action/decorate/summary.js';
+import { githubConfig } from '../../configuration/config.js';
+import { getPostedComments, deletePreviousComments } from '../../github/comments.js';
+import { ChangedFile } from '../../github/interfaces.js';
+import { createAndSetOutput } from '../../github/output.js';
+import { Analysis } from '../../helper/interfaces.js';
+import { getClientAnalysisResults } from './analysis-results.js';
 
 export async function processIncompleteAnalysis(analysis: Analysis): Promise<string> {
   if (githubConfig.event.isPullRequest) {

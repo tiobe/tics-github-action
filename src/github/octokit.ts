@@ -1,11 +1,11 @@
-import { OctokitOptions } from '@octokit/core/dist-types/types';
-import { getOctokitOptions, GitHub } from '@actions/github/lib/utils';
-import { paginateGraphql } from '@octokit/plugin-paginate-graphql';
+import { Octokit, OctokitOptions } from '@octokit/core';
+import { paginateGraphQL } from '@octokit/plugin-paginate-graphql';
+import { paginateRest } from '@octokit/plugin-paginate-rest';
+import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods';
 import { retry } from '@octokit/plugin-retry';
-import { ProxyAgent } from 'proxy-agent';
 import fetch from 'node-fetch';
-
-import { githubConfig, actionConfig, ticsConfig } from '../configuration/config';
+import { ProxyAgent } from 'proxy-agent';
+import { actionConfig, githubConfig, ticsConfig } from '../configuration/config.js';
 
 const octokitOptions: OctokitOptions = {
   baseUrl: githubConfig.apiUrl,
@@ -22,6 +22,22 @@ const octokitOptions: OctokitOptions = {
   }
 };
 
+// Function copied from '@actions/github' (not possible to import due to ESM)
+function getOctokitOptions(token: string, options: OctokitOptions): OctokitOptions {
+  if (!token && !options.auth) {
+    throw new Error('Parameter token or opts.auth is required');
+  } else if (token && options.auth) {
+    throw new Error('Parameters token and opts.auth may not both be specified');
+  }
+
+  const opts = Object.assign({}, options);
+  const auth = typeof options.auth === 'string' ? options.auth : `token ${token}`;
+  if (auth) {
+    opts.auth = auth;
+  }
+  return opts;
+}
+
 // Recreate getOctokit() from '@actions/github' to get the correct typing
-const GitHubWithPlugins = GitHub.plugin(paginateGraphql, retry);
+export const GitHubWithPlugins = Octokit.plugin(restEndpointMethods, paginateRest, paginateGraphQL, retry);
 export const octokit = new GitHubWithPlugins(getOctokitOptions(ticsConfig.githubToken, octokitOptions));

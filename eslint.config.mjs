@@ -1,11 +1,11 @@
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import { defineConfig } from 'eslint/config';
 import prettier from 'eslint-plugin-prettier/recommended';
-import jest from 'eslint-plugin-jest';
+import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
-    ignores: ['coverage/**', 'dist/**', 'lib/**', 'jest.config.js', 'eslint.config.mjs']
+    ignores: ['coverage/**', 'dist/**', 'lib/**', 'vitest.config.ts', 'eslint.config.mjs']
   },
   {
     files: ['src/**/*.ts'],
@@ -27,10 +27,18 @@ export default tseslint.config(
   },
   {
     files: ['**/*.test.ts'],
-    extends: [eslint.configs.recommended, ...tseslint.configs.recommended, jest.configs['flat/recommended']],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.test.json',
+        tsconfigDirName: import.meta.dirname
+      }
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off'
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off'
     }
   }
 );

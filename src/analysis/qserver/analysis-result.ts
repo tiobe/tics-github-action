@@ -1,12 +1,12 @@
-import { ticsCli, ticsConfig } from '../../configuration/config';
-import { AnalysisResult } from '../../helper/interfaces';
-import { joinUrl } from '../../helper/url';
-import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files';
-import { getAnnotations } from '../../viewer/annotations';
-import { TicsRunIdentifier } from '../../viewer/interfaces';
-import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate';
-import { getTqiLabel } from '../../viewer/tqi-label';
-import { getChangedFiles } from '../helper/changed-files';
+import { ticsCli, ticsConfig } from '../../configuration/config.js';
+import { AnalysisResult } from '../../helper/interfaces.js';
+import { joinUrl } from '../../helper/url.js';
+import { getAnalyzedFiles, getAnalyzedFilesUrl } from '../../viewer/analyzed-files.js';
+import { getAnnotations } from '../../viewer/annotations.js';
+import { TicsRunIdentifier } from '../../viewer/interfaces.js';
+import { getQualityGate, getQualityGateUrl } from '../../viewer/qualitygate.js';
+import { getTqiLabel } from '../../viewer/tqi-label.js';
+import { getChangedFiles } from '../helper/changed-files.js';
 
 export async function getAnalysisResult(date: number): Promise<AnalysisResult> {
   const identifier: TicsRunIdentifier = { project: ticsCli.project, date };

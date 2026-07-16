@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import { httpClient } from '../../../src/viewer/http-client';
 import { actionConfigMock, githubConfigMock, ticsConfigMock } from '../../.setup/mock';
 import { ChangedFile } from '../../../src/github/interfaces';
@@ -10,14 +10,14 @@ import { ViewerFeature, viewerVersion } from '../../../src/viewer/version';
 import { ShowAnnotationSeverity } from '../../../src/configuration/action';
 
 describe('fetchAllAnnotations', () => {
-  let httpClientSpy: jest.SpiedFunction<typeof httpClient.get>;
+  let httpClientSpy: Mock<typeof httpClient.get>;
   let qualityGate: QualityGate;
   let identifier: TicsRunIdentifier;
 
   beforeEach(() => {
     ticsConfigMock.baseUrl = 'http://base.url';
 
-    httpClientSpy = jest.spyOn(httpClient, 'get');
+    httpClientSpy = vi.spyOn(httpClient, 'get');
 
     qualityGate = {
       passed: false,
@@ -36,8 +36,8 @@ describe('fetchAllAnnotations', () => {
 
   describe('viewers with versions < 2025.1.8', () => {
     beforeAll(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
-        return !(feature === ViewerFeature.NEW_ANNOTATIONS);
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
+        return Promise.resolve(!(feature === ViewerFeature.NEW_ANNOTATIONS));
       });
     });
 
@@ -135,8 +135,8 @@ describe('fetchAllAnnotations', () => {
 
   describe('viewers with versions >= 2025.1.8', () => {
     beforeAll(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
-        return feature === ViewerFeature.NEW_ANNOTATIONS;
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
+        return Promise.resolve(feature === ViewerFeature.NEW_ANNOTATIONS);
       });
     });
 
@@ -227,27 +227,14 @@ describe('fetchAllAnnotations', () => {
 });
 
 describe('groupAndExtendAnnotations', () => {
-  it('should return no review comments on empty input', async () => {
+  it('should return no review comments on empty input', () => {
     const response = groupAndExtendAnnotations([], []);
 
     expect(response).toEqual([]);
   });
 
-  it('should return one postable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        sha: 'sha',
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        blob_url: 'url',
-        raw_url: 'url',
-        contents_url: 'url',
-        patch: '@@ -0,1 +0,1 @@'
-      }
-    ];
+  it('should return one postable review comment', () => {
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -270,21 +257,9 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual([{ ...fetchedAnnotations[0], postable: true, displayCount: '', path: 'src/test.js' }]);
   });
 
-  it('should return one combined postable review comment for the same line', async () => {
+  it('should return one combined postable review comment for the same line', () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -329,21 +304,9 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual(expected);
   });
 
-  it('should return one blocking now and a blocking after review comment for the same line', async () => {
+  it('should return one blocking now and a blocking after review comment for the same line', () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -392,20 +355,8 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual(expected);
   });
 
-  it('should return one postable and one unpostable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+  it('should return one postable and one unpostable review comment', () => {
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -422,8 +373,8 @@ describe('groupAndExtendAnnotations', () => {
         gateId: 0
       },
       {
-        fullPath: 'HIE://project/branch/src/jest.js',
-        path: 'src/jest.js',
+        fullPath: 'HIE://project/branch/src/best.js',
+        path: 'src/best.js',
         line: 2,
         level: 1,
         category: 'test',
@@ -452,7 +403,7 @@ describe('groupAndExtendAnnotations', () => {
     ];
 
     const expected = [
-      { ...fetchedAnnotations[1], postable: false, path: 'src/jest.js', displayCount: '' },
+      { ...fetchedAnnotations[1], postable: false, path: 'src/best.js', displayCount: '' },
       { ...fetchedAnnotations[0], postable: true, path: 'src/test.js', displayCount: '' },
       { ...fetchedAnnotations[2], postable: false, path: 'src/zest.js', displayCount: '' }
     ];

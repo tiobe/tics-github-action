@@ -1,7 +1,7 @@
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig } from '../configuration/config';
-import { octokit } from './octokit';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig } from '../configuration/config.js';
+import { octokit } from './octokit.js';
 
 /**
  * Create review on the pull request from the analysis given.

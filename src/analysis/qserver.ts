@@ -1,13 +1,13 @@
-import { decorateAction } from '../action/decorate/action';
-import { postToConversation } from '../action/decorate/pull-request';
-import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../action/decorate/summary';
-import { githubConfig, ticsConfig } from '../configuration/config';
-import { createAndSetOutput } from '../github/output';
-import { AnalysisResult, Verdict } from '../helper/interfaces';
-import { runTicsAnalyzer } from '../tics/analyzer';
-import { createProject } from '../viewer/project';
-import { getLastQServerRunDate } from '../viewer/qserver';
-import { getAnalysisResult } from './qserver/analysis-result';
+import { decorateAction } from '../action/decorate/action.js';
+import { postToConversation } from '../action/decorate/pull-request.js';
+import { createErrorSummaryBody, createNothingAnalyzedSummaryBody } from '../action/decorate/summary.js';
+import { githubConfig, ticsConfig } from '../configuration/config.js';
+import { createAndSetOutput } from '../github/output.js';
+import { AnalysisResult, Verdict } from '../helper/interfaces.js';
+import { runTicsAnalyzer } from '../tics/analyzer.js';
+import { createProject } from '../viewer/project.js';
+import { getLastQServerRunDate } from '../viewer/qserver.js';
+import { getAnalysisResult } from './qserver/analysis-result.js';
 
 /**
  * Function for running the action in QServer mode.

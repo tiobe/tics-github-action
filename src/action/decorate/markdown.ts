@@ -1,5 +1,5 @@
 import { EOL } from 'os';
-import { Status } from '../../helper/enums';
+import { Status } from '../../helper/enums.js';
 
 /**
  * Generates a status symbol with optional suffix.

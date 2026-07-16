@@ -1,7 +1,7 @@
 import { setOutput } from '@actions/core';
-import { ProjectResult } from '../helper/interfaces';
-import { logger } from '../helper/logger';
-import { ActionOutput } from './interfaces';
+import { ProjectResult } from '../helper/interfaces.js';
+import { logger } from '../helper/logger.js';
+import { ActionOutput } from './interfaces.js';
 
 export function createAndSetOutput(projectResults: ProjectResult[]): void {
   logger.header('Setting output variable "annotations"');

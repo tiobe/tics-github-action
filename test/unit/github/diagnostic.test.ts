@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import { getRateLimit } from '../../../src/github/diagnostic';
 import { octokit } from '../../../src/github/octokit';
 
 describe('getRateLimit', () => {
-  let rateLimitSpy: jest.SpyInstance;
+  let rateLimitSpy: Mock;
 
   beforeEach(() => {
-    rateLimitSpy = jest.spyOn(octokit.rest.rateLimit, 'get');
+    rateLimitSpy = vi.spyOn(octokit.rest.rateLimit, 'get');
   });
 
   it('should throw error if request fails', async () => {

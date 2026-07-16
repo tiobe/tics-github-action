@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as core from '@actions/core';
 
 import { Mode } from '../../../src/configuration/tics';
@@ -6,7 +6,7 @@ import { TicsCli } from '../../../src/configuration/tics-cli';
 import { logger } from '../../../src/helper/logger';
 
 describe('cli Configuration', () => {
-  let warningSpy: jest.SpiedFunction<typeof logger.warning>;
+  let warningSpy: Mock<typeof logger.warning>;
 
   let values: Record<string, string>;
   const expectCli = {
@@ -24,9 +24,9 @@ describe('cli Configuration', () => {
   };
 
   beforeEach(() => {
-    warningSpy = jest.spyOn(logger, 'warning');
+    warningSpy = vi.spyOn(logger, 'warning');
 
-    jest.spyOn(core, 'getInput').mockImplementation((name): string => {
+    vi.spyOn(core, 'getInput').mockImplementation((name): string => {
       for (const value in values) {
         if (value === name) {
           return values[value];
@@ -38,7 +38,7 @@ describe('cli Configuration', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should pass when mode is client diagnostic and project is auto', () => {

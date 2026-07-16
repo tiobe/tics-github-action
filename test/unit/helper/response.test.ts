@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { RequestError } from '@octokit/request-error';
 import { RequestError as TicsError } from '@tiobe/http-client';
 import { ClientResponse } from '@tiobe/http-client';
@@ -26,8 +26,7 @@ describe('handleOctokitError', () => {
         request: {
           retryCount: 5
         }
-      },
-      headers: {}
+      }
     });
 
     const message = handleOctokitError(error);

@@ -1,26 +1,29 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { httpClient } from '../../../src/viewer/http-client';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
 import { getMeasureApiData } from '../../../src/viewer/measure';
-import { SpiedFunction } from 'jest-mock';
 
 describe('getMeasureApiData', () => {
-  let getSpy: SpiedFunction<any>;
+  let getSpy: Mock<typeof httpClient.get>;
 
   beforeAll(() => {
     ticsConfigMock.baseUrl = 'http://base.url';
   });
 
   beforeEach(() => {
-    getSpy = jest.spyOn(httpClient, 'get');
+    getSpy = vi.spyOn(httpClient, 'get');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return data passed back and call with client data token', async () => {
-    getSpy.mockResolvedValue({ data: { data: [{ value: undefined }] } });
+    getSpy.mockResolvedValue({
+      data: { data: [{ value: undefined }] },
+      status: 0,
+      retryCount: 0
+    });
 
     const response = await getMeasureApiData(['loc', 'tqi'], 'project', { cdtoken: 'token' });
 
@@ -30,7 +33,11 @@ describe('getMeasureApiData', () => {
 
   it('should return data passed back and call with Delta()', async () => {
     ticsCliMock.branchname = 'main';
-    getSpy.mockResolvedValue({ data: { data: [{ value: undefined }] } });
+    getSpy.mockResolvedValue({
+      data: { data: [{ value: undefined }] },
+      status: 0,
+      retryCount: 0
+    });
 
     const response = await getMeasureApiData(['loc', 'tqi'], 'project', { deltaPrevious: true });
 
