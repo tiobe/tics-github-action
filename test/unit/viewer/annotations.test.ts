@@ -234,20 +234,7 @@ describe('groupAndExtendAnnotations', () => {
   });
 
   it('should return one postable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        sha: 'sha',
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        blob_url: 'url',
-        raw_url: 'url',
-        contents_url: 'url',
-        patch: '@@ -0,1 +0,1 @@'
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -272,19 +259,7 @@ describe('groupAndExtendAnnotations', () => {
 
   it('should return one combined postable review comment for the same line', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -331,19 +306,7 @@ describe('groupAndExtendAnnotations', () => {
 
   it('should return one blocking now and a blocking after review comment for the same line', async () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',
@@ -393,19 +356,7 @@ describe('groupAndExtendAnnotations', () => {
   });
 
   it('should return one postable and one unpostable review comment', async () => {
-    const changedFiles: ChangedFile[] = [
-      {
-        filename: 'src/test.js',
-        status: 'modified',
-        additions: 1,
-        deletions: 1,
-        changes: 2,
-        sha: '',
-        blob_url: '',
-        raw_url: '',
-        contents_url: ''
-      }
-    ];
+    const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
         fullPath: 'HIE://project/branch/src/test.js',

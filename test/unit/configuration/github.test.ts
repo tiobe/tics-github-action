@@ -4,18 +4,18 @@ import { GithubConfig } from '../../../src/configuration/github';
 import { contextMock } from '../../.setup/mock';
 import { GithubEvent } from '../../../src/configuration/github-event';
 
+vi.mock('@actions/github', (): any => ({
+  get context() {
+    return contextMock;
+  }
+}));
+
 describe('gitHub Configuration', () => {
   let githubConfig: GithubConfig;
   let debugSpy: Mock<typeof core.isDebug>;
 
   beforeEach(() => {
     debugSpy = vi.spyOn(core, 'isDebug');
-
-    vi.mock('@actions/github', (): any => ({
-      get context() {
-        return contextMock;
-      }
-    }));
   });
 
   afterEach(() => {

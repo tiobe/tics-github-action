@@ -2,19 +2,7 @@ import { PullRequestChangedFile } from '@octokit/graphql-schema';
 import { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import { ExtendedAnnotation } from '../viewer/interfaces.js';
 
-export interface ChangedFile {
-  sha?: string | null;
-  filename: string;
-  status: 'added' | 'changed' | 'copied' | 'removed' | 'modified' | 'renamed' | 'unchanged';
-  additions: number;
-  deletions: number;
-  changes: number;
-  blob_url?: string;
-  raw_url?: string;
-  contents_url?: string;
-  patch?: string;
-  previous_filename?: string;
-}
+export type ChangedFile = string;
 
 export interface RateLimit {
   rate: {

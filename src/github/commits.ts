@@ -19,24 +19,17 @@ export async function getChangedFilesOfCommit(): Promise<ChangedFile[]> {
   };
   try {
     logger.header('Retrieving changed files.');
-    const changedFiles = await octokit.paginate(octokit.rest.repos.getCommit, params, resp => {
+    const response = await octokit.paginate(octokit.rest.repos.getCommit, params, resp => {
       const data = resp.data as RestEndpointMethodTypes['repos']['getCommit']['response']['data'];
-      const files = data.files ?? [];
-      return (
-        files
-          // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
-          .filter(item => item.changes > 0 && !(actionConfig.excludeMovedFiles && item.status === 'renamed'))
-          .map(item => {
-            const filename = normalize(item.filename);
-            logger.debug(item.filename);
-            return {
-              ...item,
-              filename: filename
-            };
-          })
-      );
+      return data.files ?? [];
     });
+    const changedFiles = response
+      // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
+      .filter(item => item.changes > 0 && !(actionConfig.excludeMovedFiles && item.status === 'renamed'))
+      .map(item => normalize(item.filename));
+
     logger.info('Retrieved changed files from commit.');
+    logger.debug(JSON.stringify(changedFiles));
     return changedFiles;
   } catch (error: unknown) {
     const message = handleOctokitError(error);

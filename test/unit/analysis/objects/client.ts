@@ -1,6 +1,4 @@
-import { ChangedFile } from '../../../../src/github/interfaces';
-
-export const singleChangedFiles: ChangedFile[] = [
+export const singleChangedFiles = [
   {
     filename: 'test.js',
     status: 'modified',

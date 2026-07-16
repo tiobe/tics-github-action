@@ -121,6 +121,7 @@ describe('maskOutput', () => {
     const message = 'Picked up JAVA_OPTIONS testing once';
 
     logger.info(message);
+    logger.header(message);
     logger.notice(message);
     logger.debug(message);
     logger.warning(message);

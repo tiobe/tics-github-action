@@ -1,130 +1,98 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getChangedFilesOfCommit } from '../../../src/github/commits';
-import { changedFile } from './objects/pulls';
-import { logger } from '../../../src/helper/logger';
 import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock } from '../../.setup/mock';
 
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.resetModules();
+});
+
 describe('getChangedFilesOfCommit', () => {
-  afterEach(() => {
-    vi.resetAllMocks();
-    vi.resetModules();
-  });
+  it('should return single file', async () => {
+    const changedFiles = [{ filename: 'test.js', changes: 1, status: 'added' }];
 
-  it('should return single file on getChangedFilesOfCommit', async () => {
-    const changedFiles = [changedFile];
-
-    (octokit.paginate as any).mockResolvedValueOnce(changedFiles);
+    vi.spyOn(octokit, 'paginate').mockResolvedValueOnce(changedFiles);
 
     const response = await getChangedFilesOfCommit();
 
-    expect(response).toEqual(changedFiles);
-  });
-
-  it('should return empty array on undefined files', async () => {
-    const spy = vi.spyOn(logger, 'debug');
-    await getChangedFilesOfCommit();
-
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: { files: undefined }
-    });
-
-    await getChangedFilesOfCommit();
-
-    expect(spy).toHaveBeenCalledTimes(0);
+    expect(response).toEqual(['test.js']);
   });
 
   it('should include changed moved file', async () => {
-    const spy = vi.spyOn(logger, 'debug');
-    await getChangedFilesOfCommit();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', status: 'renamed', changes: 1 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: {
-        files: [
-          { filename: 'test.js', status: 'renamed', changes: 1 },
-          { filename: 'test.js', changes: 1 }
-        ]
-      }
-    });
+    const response = await getChangedFilesOfCommit();
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['test.js', 'jest.js']);
   });
 
   it('should exclude unchanged moved file', async () => {
-    const spy = vi.spyOn(logger, 'debug');
-    await getChangedFilesOfCommit();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', status: 'renamed', changes: 0 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: {
-        files: [
-          { filename: 'test.js', status: 'renamed', changes: 0 },
-          { filename: 'test.js', changes: 1 }
-        ]
-      }
-    });
+    const response = await getChangedFilesOfCommit();
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['jest.js']);
   });
 
   it('should exclude changed moved file on excludeMovedFiles', async () => {
     actionConfigMock.excludeMovedFiles = true;
 
-    const spy = vi.spyOn(logger, 'debug');
-    await getChangedFilesOfCommit();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'rest.js', status: 'renamed', changes: 1 },
+      { filename: 'test.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: {
-        files: [
-          { filename: 'test.js', status: 'renamed', changes: 1 },
-          { filename: 'test.js', changes: 1 }
-        ]
-      }
-    });
+    const response = await getChangedFilesOfCommit();
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['test.js']);
 
     actionConfigMock.excludeMovedFiles = false;
   });
 
   it('should call debug on callback of paginate', async () => {
-    const spy = vi.spyOn(logger, 'debug');
-    await getChangedFilesOfCommit();
+    actionConfigMock.excludeMovedFiles = false;
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: {
-        files: [
-          { filename: 'test.js', changes: 1 },
-          { filename: 'test.js', changes: 1 }
-        ]
-      }
-    });
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenCalledWith('test.js');
-  });
-
-  it('should be called with specific parameters on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockResolvedValue([]);
-    const spy = vi.spyOn(octokit, 'paginate');
-
-    await getChangedFilesOfCommit();
-
-    expect(spy).toHaveBeenCalledWith(octokit.rest.repos.getCommit, { repo: 'test', owner: 'tester', ref: 'sha-128' }, expect.any(Function));
-  });
-
-  it('should return three files on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockResolvedValue([{}, {}, {}]);
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', changes: 1 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
     const response = await getChangedFilesOfCommit();
 
-    expect(response).toHaveLength(3);
+    expect(response).toEqual(['test.js', 'jest.js']);
+  });
+
+  it('should be called with specific parameters', async () => {
+    const spy = vi.spyOn(octokit, 'paginate');
+    spy.mockResolvedValue([{ filename: 'test.js', changes: 1 }]);
+
+    const response = await getChangedFilesOfCommit();
+
+    expect(spy).toHaveBeenCalledWith(octokit.rest.repos.getCommit, { repo: 'test', owner: 'tester', ref: 'sha-128' }, expect.any(Function));
+    expect(response).toEqual(['test.js']);
+  });
+
+  it('should return two files if one has no changes', async () => {
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', changes: 1 },
+      { filename: 'jest.js', changes: 1 },
+      { filename: 'rest.js', changes: 0 }
+    ]);
+
+    const response = await getChangedFilesOfCommit();
+
+    expect(response).toEqual(['test.js', 'jest.js']);
   });
 
   it('should call error on thrown error on paginate', async () => {
-    (octokit.paginate as any).mockImplementationOnce(() => {
+    vi.spyOn(octokit, 'paginate').mockImplementationOnce(() => {
       throw new Error();
     });
 

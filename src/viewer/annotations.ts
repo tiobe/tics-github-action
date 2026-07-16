@@ -118,12 +118,11 @@ export function groupAndExtendAnnotations(annotations: FetchedAnnotation[], chan
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations);
 
-  const changedSet = new Set<string>(changedFiles.map(c => c.filename)); // optimization
   return groupedAnnotations.map(a => {
     const annotation: ExtendedAnnotation = {
       ...a,
       displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
-      postable: changedSet.has(a.path)
+      postable: changedFiles.includes(a.path)
     };
 
     logger.debug(`Annotation: ${JSON.stringify(annotation)}`);
