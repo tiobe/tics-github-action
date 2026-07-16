@@ -37,7 +37,7 @@ describe('fetchAllAnnotations', () => {
   describe('viewers with versions < 2025.1.8', () => {
     beforeAll(() => {
       vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
-        return !(feature === ViewerFeature.NEW_ANNOTATIONS);
+        return Promise.resolve(!(feature === ViewerFeature.NEW_ANNOTATIONS));
       });
     });
 
@@ -136,7 +136,7 @@ describe('fetchAllAnnotations', () => {
   describe('viewers with versions >= 2025.1.8', () => {
     beforeAll(() => {
       vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async (feature: ViewerFeature) => {
-        return feature === ViewerFeature.NEW_ANNOTATIONS;
+        return Promise.resolve(feature === ViewerFeature.NEW_ANNOTATIONS);
       });
     });
 
@@ -227,13 +227,13 @@ describe('fetchAllAnnotations', () => {
 });
 
 describe('groupAndExtendAnnotations', () => {
-  it('should return no review comments on empty input', async () => {
+  it('should return no review comments on empty input', () => {
     const response = groupAndExtendAnnotations([], []);
 
     expect(response).toEqual([]);
   });
 
-  it('should return one postable review comment', async () => {
+  it('should return one postable review comment', () => {
     const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {
@@ -257,7 +257,7 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual([{ ...fetchedAnnotations[0], postable: true, displayCount: '', path: 'src/test.js' }]);
   });
 
-  it('should return one combined postable review comment for the same line', async () => {
+  it('should return one combined postable review comment for the same line', () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
@@ -304,7 +304,7 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual(expected);
   });
 
-  it('should return one blocking now and a blocking after review comment for the same line', async () => {
+  it('should return one blocking now and a blocking after review comment for the same line', () => {
     githubConfigMock.event = GithubEvent.PULL_REQUEST;
     const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
@@ -355,7 +355,7 @@ describe('groupAndExtendAnnotations', () => {
     expect(response).toEqual(expected);
   });
 
-  it('should return one postable and one unpostable review comment', async () => {
+  it('should return one postable and one unpostable review comment', () => {
     const changedFiles: ChangedFile[] = ['src/test.js'];
     const fetchedAnnotations: FetchedAnnotation[] = [
       {

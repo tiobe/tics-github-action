@@ -32,19 +32,19 @@ describe('createAndSetOutput', () => {
     };
   });
 
-  it('output should be empty when no projectResults', async () => {
+  it('output should be empty when no projectResults', () => {
     createAndSetOutput([]);
 
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should be empty when projectResults has no qualityGates', async () => {
+  it('output should be empty when projectResults has no qualityGates', () => {
     createAndSetOutput([projectResult]);
 
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions when projectResults has qualityGate with no annotations', async () => {
+  it('output should have conditions when projectResults has qualityGate with no annotations', () => {
     createAndSetOutput([{ ...projectResult, qualityGate: passedQualityGate }]);
 
     expectedOutput.conditions.push(
@@ -55,7 +55,7 @@ describe('createAndSetOutput', () => {
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions when projectResults has two qualityGates with no annotations', async () => {
+  it('output should have conditions when projectResults has two qualityGates with no annotations', () => {
     createAndSetOutput([
       { ...projectResult, qualityGate: passedQualityGate },
       { ...projectResult, qualityGate: failedQualityGate }
@@ -69,7 +69,7 @@ describe('createAndSetOutput', () => {
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions and annotations when projectResults has qualityGate with annotations', async () => {
+  it('output should have conditions and annotations when projectResults has qualityGate with annotations', () => {
     createAndSetOutput([
       { ...projectResult, qualityGate: passedQualityGate },
       { ...projectResult, qualityGate: failedQualityGate, annotations: allAnnotations }

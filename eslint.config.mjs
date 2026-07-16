@@ -27,10 +27,18 @@ export default defineConfig(
   },
   {
     files: ['**/*.test.ts'],
-    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigDirName: import.meta.dirname
+      }
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off'
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off'
     }
   }
 );

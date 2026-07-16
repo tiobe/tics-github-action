@@ -53,7 +53,7 @@ describe('getAnalyzedFilesUrl', () => {
   ticsConfigMock.baseUrl = 'http://viewer.url';
   ticsCliMock.project = 'project';
 
-  it('should return url containing date if given', async () => {
+  it('should return url containing date if given', () => {
     ticsCliMock.branchname = 'branch';
 
     const url = getAnalyzedFilesUrl({ project: 'project', date: 1714577689 });
@@ -63,7 +63,7 @@ describe('getAnalyzedFilesUrl', () => {
     );
   });
 
-  it('should return url containing cdtoken if given', async () => {
+  it('should return url containing cdtoken if given', () => {
     ticsCliMock.branchname = '';
 
     const url = getAnalyzedFilesUrl({ project: 'project', cdtoken: '1714577689' });
@@ -73,7 +73,7 @@ describe('getAnalyzedFilesUrl', () => {
     );
   });
 
-  it('should return url containing both if both are given', async () => {
+  it('should return url containing both if both are given', () => {
     const url = getAnalyzedFilesUrl({ project: 'project', date: 1714577689, cdtoken: '1714577689' });
 
     expect(url).toBe(
@@ -81,7 +81,7 @@ describe('getAnalyzedFilesUrl', () => {
     );
   });
 
-  it('should return url containing none if none are given', async () => {
+  it('should return url containing none if none are given', () => {
     const url = getAnalyzedFilesUrl({ project: 'project' });
 
     expect(url).toBe(

@@ -370,7 +370,7 @@ describe('test callback functions', () => {
     vi.spyOn(exec, 'exec').mockImplementation(async (_compareDesc, _args, opts) => {
       opts?.listeners?.errline?.('[ERROR 666] Error');
       opts?.listeners?.errline?.('[ERROR 666] Error');
-      return 0;
+      return Promise.resolve(0);
     });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
@@ -385,7 +385,7 @@ describe('test callback functions', () => {
     vi.spyOn(exec, 'exec').mockImplementation(async (_compareDesc, _args, opts) => {
       opts?.listeners?.errline?.('[ERROR 666] Error');
       opts?.listeners?.errline?.('[ERROR 777] Different error');
-      return 0;
+      return Promise.resolve(0);
     });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
@@ -402,7 +402,7 @@ describe('test callback functions', () => {
       opts?.listeners?.stdline?.(`No files to analyze with option '-changed': all checkable files seem to be unchanged.`);
       opts?.listeners?.stdline?.('[WARNING 666] Warning');
       opts?.listeners?.stdline?.('[WARNING 777] Warning');
-      return 0;
+      return Promise.resolve(0);
     });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
@@ -423,7 +423,7 @@ describe('test callback functions', () => {
     vi.spyOn(exec, 'exec').mockImplementationOnce(async (_compareDesc, _args, opts) => {
       opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData');
       opts?.listeners?.stdline?.('');
-      return 0;
+      return Promise.resolve(0);
     });
 
     const response = await analyzer.runTicsAnalyzer('/path/to');
@@ -440,7 +440,7 @@ describe('test callback functions', () => {
       opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData1');
       opts?.listeners?.stdline?.('http://base.com/Explorer.html#axes=ClientData2');
       opts?.listeners?.stdline?.('');
-      return 0;
+      return Promise.resolve(0);
     });
 
     const response = await analyzer.runTicsAnalyzer('/another/path');

@@ -178,7 +178,7 @@ describe('verdict', () => {
     githubConfigMock.debugger = true;
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
     spyDiagnostic.mockResolvedValue({ passed: false, message: 'message' });
-    main();
+    await main();
 
     ticsCliMock.tmpdir = '/path/to/tmp';
     ticsConfigMock.mode = Mode.CLIENT;

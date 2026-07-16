@@ -68,7 +68,7 @@ describe('@actions/http-client (using http_proxy)', () => {
     proxyConnects = [];
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     vi.unstubAllEnvs();
     proxyServer.close();
     httpServer.close();

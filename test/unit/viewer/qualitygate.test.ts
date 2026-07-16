@@ -32,7 +32,7 @@ describe('getQualityGateUrl', () => {
 
   beforeAll(() => {
     vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async () => {
-      return supportNewAnnotations;
+      return Promise.resolve(supportNewAnnotations);
     });
   });
 

@@ -74,7 +74,7 @@ describe('action Configuration', () => {
   });
 
   describe('secretsFilter', () => {
-    it('should add filters containing spaces', async () => {
+    it('should add filters containing spaces', () => {
       values = {
         secretsFilter: 'additional secrets, feature'
       };
@@ -87,7 +87,7 @@ describe('action Configuration', () => {
       });
     });
 
-    it('should not add filters that contain only spaces or nothing at all', async () => {
+    it('should not add filters that contain only spaces or nothing at all', () => {
       values = {
         secretsFilter: ',TOKEN, ,AUTH, '
       };
@@ -100,7 +100,7 @@ describe('action Configuration', () => {
       });
     });
 
-    it('should add filters that are not delimited by a comma', async () => {
+    it('should add filters that are not delimited by a comma', () => {
       values = {
         secretsFilter: 'TOKEN;AUTH:FILTER'
       };
@@ -115,7 +115,7 @@ describe('action Configuration', () => {
   });
 
   describe('retry Config', () => {
-    it('should set default retryConfig if none are given', async () => {
+    it('should set default retryConfig if none are given', () => {
       const config = new ActionConfiguration();
 
       expect(config).toMatchObject({
@@ -128,7 +128,7 @@ describe('action Configuration', () => {
       });
     });
 
-    it('should set custom retryCodes when given correctly', async () => {
+    it('should set custom retryCodes when given correctly', () => {
       values = {
         retryCodes: '500, 502'
       };
@@ -145,7 +145,7 @@ describe('action Configuration', () => {
       });
     });
 
-    it('should throw Error for retryCode when input is Should throw error on incorrect', async () => {
+    it('should throw Error for retryCode when input is Should throw error on incorrect', () => {
       values = {
         retryCodes: '404,500;502'
       };
