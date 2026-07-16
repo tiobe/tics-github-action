@@ -8,8 +8,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc --build ./tsconfig.src.json",
-    "type-check": "tsc --build",
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "package": "npm run build && ncc build --license licenses.txt",
     "test": "vitest run",

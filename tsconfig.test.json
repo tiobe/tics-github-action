@@ -3,8 +3,8 @@
   "compilerOptions": {
     "module": "preserve",
     "moduleResolution": "bundler",
-    "noEmit": true
+    "noEmit": true,
+    "rootDir": "."
   },
-  "include": ["test/**/*", "test/.setup/**/*"],
-  "references": [{ "path": "./tsconfig.src.json" }]
+  "include": ["test/**/*", "test/.setup/**/*"]
 }
