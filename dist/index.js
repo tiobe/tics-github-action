@@ -37564,6 +37564,20 @@ var escClose = '\0CLOSE'+Math.random()+'\0';
 var escComma = '\0COMMA'+Math.random()+'\0';
 var escPeriod = '\0PERIOD'+Math.random()+'\0';
 
+var EXPANSION_MAX = 100000
+
+// `EXPANSION_MAX` caps the *number* of expansions, but not their length. An
+// input like `'{a,b}'.repeat(1500)` stays under that count - its output is
+// truncated to 100k results - while making every result ~1500 characters
+// long. The result set, and the intermediate arrays built while combining
+// brace sets, then grow large enough to exhaust memory and crash the process
+// (CVE-2026-14257). `EXPANSION_MAX_LENGTH` bounds the total number of
+// characters the accumulator may hold at any point, so memory stays flat no
+// matter how many brace groups are chained. The limit sits well above any
+// realistic expansion (100k results hitting `EXPANSION_MAX` measure ~1M
+// characters) so legitimate input is unaffected.
+var EXPANSION_MAX_LENGTH = 4000000
+
 function numeric(str) {
   return parseInt(str, 10) == str
     ? parseInt(str, 10)
@@ -37617,9 +37631,13 @@ function parseCommaParts(str) {
   return parts;
 }
 
-function expandTop(str) {
+function expandTop(str, options) {
   if (!str)
     return [];
+
+  options = options || {};
+  var max = options.max == null ? EXPANSION_MAX : options.max;
+  var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
 
   // I don't know why Bash 4.3 does this, but it does.
   // Anything starting with {} will have the first two bytes preserved
@@ -37631,7 +37649,7 @@ function expandTop(str) {
     str = '\\{\\}' + str.substr(2);
   }
 
-  return expand(escapeBraces(str), true).map(unescapeBraces);
+  return expand(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
 }
 
 function embrace(str) {
@@ -37648,24 +37666,144 @@ function gte(i, y) {
   return i >= y;
 }
 
-function expand(str, isTop) {
-  var expansions = [];
-
-  var m = balanced('{', '}', str);
-  if (!m) return [str];
-
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
-  var post = m.post.length
-    ? expand(m.post, false)
-    : [''];
-
-  if (/\$$/.test(m.pre)) {    
-    for (var k = 0; k < post.length; k++) {
-      var expansion = pre+ '{' + m.body + '}' + post[k];
-      expansions.push(expansion);
+// Build `{ acc[a] + pre + values[v] }` for every combination, capping the
+// number of results at `max` and the total number of characters at `maxLength`.
+// This is the one place output grows, so bounding it here keeps the single
+// accumulator - and therefore memory - flat regardless of how many brace groups
+// are combined (CVE-2026-14257).
+function combine(
+  acc,
+  pre,
+  values,
+  max,
+  maxLength,
+  dropEmpties
+) {
+  var out = []
+  var length = 0
+  for (var a = 0; a < acc.length; a++) {
+    for (var v = 0; v < values.length; v++) {
+      if (out.length >= max) return out
+      var expansion = acc[a] + pre + values[v]
+      // Bash drops empty results at the top level. Skip them before they count
+      // against `max`, so `max` bounds the number of *kept* results.
+      if (dropEmpties && !expansion) continue
+      if (length + expansion.length > maxLength) return out
+      out.push(expansion)
+      length += expansion.length
     }
-  } else {
+  }
+  return out
+}
+
+// The expansion values of a single numeric (`1..5`) or alphabetic (`a..e..2`)
+// sequence body.
+function expandSequence(
+  body,
+  isAlphaSequence,
+  max,
+  maxLength
+) {
+  var n = body.split(/\.\./)
+  var N = []
+  // A sequence body always splits into two or three parts, but the compiler
+  // can't know that.
+  /* c8 ignore start */
+  if (n[0] === undefined || n[1] === undefined) {
+    return N
+  }
+  /* c8 ignore stop */
+  var x = numeric(n[0])
+  var y = numeric(n[1])
+  var width = Math.max(n[0].length, n[1].length)
+  var incr =
+    n.length === 3 && n[2] !== undefined ?
+      Math.max(Math.abs(numeric(n[2])), 1)
+    : 1
+  var test = lte
+  var reverse = y < x
+  if (reverse) {
+    incr *= -1
+    test = gte
+  }
+  var pad = n.some(isPadded)
+
+  var length = 0
+  for (var i = x; test(i, y) && N.length < max; i += incr) {
+    var c
+    if (isAlphaSequence) {
+      c = String.fromCharCode(i)
+      if (c === '\\') {
+        c = ''
+      }
+    } else {
+      c = String(i)
+      if (pad) {
+        var need = width - c.length
+        if (need > 0) {
+          var z = new Array(need + 1).join('0')
+          if (i < 0) {
+            c = '-' + z + c.slice(1)
+          } else {
+            c = z + c
+          }
+        }
+      }
+    }
+    if (length + c.length > maxLength) break
+    N.push(c)
+    length += c.length
+  }
+  return N
+}
+
+function expand(
+  str,
+  max,
+  maxLength,
+  isTop
+) {
+  // Consume the string's top-level brace groups left to right, threading a
+  // running set of combined prefixes (`acc`). Expanding the tail iteratively -
+  // rather than recursing on `m.post` once per group - keeps the native stack
+  // depth constant, so deeply chained input (`'{a,b}'.repeat(3000)`) can no
+  // longer overflow the stack, and leaves a single accumulator whose size
+  // `maxLength` bounds directly (CVE-2026-14257).
+  var acc = ['']
+
+  // Bash drops empty results, but only when the *first* top-level group is a
+  // comma set - a sequence like `{a..\}` may legitimately yield ''. The drop
+  // is on the final strings, so it is applied to whichever `combine` produces
+  // them (the one with no brace set left in the tail).
+  var dropEmpties = false
+  var firstGroup = true
+
+  for (;;) {
+    const m = balanced('{', '}', str)
+
+    // No brace set left: the rest of the string is literal.
+    if (!m) {
+      return combine(acc, str, [''], max, maxLength, dropEmpties)
+    }
+
+    // no need to expand pre, since it is guaranteed to be free of brace-sets
+    const pre = m.pre
+
+    if (/\$$/.test(pre)) {
+      acc = combine(
+        acc,
+        pre + '{' + m.body + '}',
+        [''],
+        max,
+        maxLength,
+        dropEmpties && !m.post.length
+      )
+      firstGroup = false
+      if (!m.post.length) break
+      str = m.post
+      continue
+    }
+
     var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
     var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
     var isSequence = isNumericSequence || isAlphaSequence;
@@ -37674,87 +37812,85 @@ function expand(str, isTop) {
       // {a},b}
       if (m.post.match(/,(?!,).*\}/)) {
         str = m.pre + '{' + m.body + escClose + m.post;
-        return expand(str);
+        isTop = true;
+        continue;
       }
-      return [str];
+      // Nothing here expands, so the whole remaining string is literal.
+      return combine(
+        acc,
+        pre + '{' + m.body + '}' + m.post,
+        [''],
+        max,
+        maxLength,
+        dropEmpties
+      )
     }
 
-    var n;
+    if (firstGroup) {
+      dropEmpties = isTop && !isSequence
+      firstGroup = false
+    }
+
+    var values;
     if (isSequence) {
-      n = m.body.split(/\.\./);
+      values = expandSequence(m.body, isAlphaSequence, max, maxLength);
     } else {
-      n = parseCommaParts(m.body);
-      if (n.length === 1) {
+      var n = parseCommaParts(m.body);
+      if (n.length === 1 && n[0] !== undefined) {
         // x{{a,b}}y ==> x{a}y x{b}y
-        n = expand(n[0], false).map(embrace);
+        n = expand(n[0], max, maxLength, false).map(embrace);
+        //XXX is this necessary? Can't seem to hit it in tests.
+        /* c8 ignore start */
         if (n.length === 1) {
-          return post.map(function(p) {
-            return m.pre + n[0] + p;
-          });
+          acc = combine(
+            acc,
+            pre + n[0],
+            [''],
+            max,
+            maxLength,
+            dropEmpties && !m.post.length
+          )
+          if (!m.post.length) break
+          str = m.post
+          continue
+        }
+        /* c8 ignore stop */
+      }
+
+      // Values that `combine` is going to drop as empty produce no result, so
+      // they must not count against `max` - otherwise `{a,,b}` with `max: 2`
+      // would stop at `['a', '']` and yield one result instead of two. Skipping
+      // them outright keeps `values` bounded while leaving `max` a bound on
+      // *kept* results.
+      var dropsEmpties = dropEmpties && !m.post.length && !pre
+      for (var d = 0; dropsEmpties && d < acc.length; d++) {
+        if (acc[d]) {
+          dropsEmpties = false
         }
       }
-    }
 
-    // at this point, n is the parts, and we know it's not a comma set
-    // with a single entry.
-    var N;
-
-    if (isSequence) {
-      var x = numeric(n[0]);
-      var y = numeric(n[1]);
-      var width = Math.max(n[0].length, n[1].length)
-      var incr = n.length == 3
-        ? Math.max(Math.abs(numeric(n[2])), 1)
-        : 1;
-      var test = lte;
-      var reverse = y < x;
-      if (reverse) {
-        incr *= -1;
-        test = gte;
-      }
-      var pad = n.some(isPadded);
-
-      N = [];
-
-      for (var i = x; test(i, y); i += incr) {
-        var c;
-        if (isAlphaSequence) {
-          c = String.fromCharCode(i);
-          if (c === '\\')
-            c = '';
-        } else {
-          c = String(i);
-          if (pad) {
-            var need = width - c.length;
-            if (need > 0) {
-              var z = new Array(need + 1).join('0');
-              if (i < 0)
-                c = '-' + z + c.slice(1);
-              else
-                c = z + c;
-            }
+      values = []
+      var valuesLength = 0
+      outer: for (var j = 0; j < n.length; j++) {
+        var expanded = expand(n[j], max, maxLength, false)
+        for (var k = 0; k < expanded.length; k++) {
+          var v = expanded[k]
+          if (dropsEmpties && !v) continue
+          if (values.length >= max || valuesLength + v.length > maxLength) {
+            break outer
           }
+          values.push(v)
+          valuesLength += v.length
         }
-        N.push(c);
-      }
-    } else {
-      N = [];
-
-      for (var j = 0; j < n.length; j++) {
-        N.push.apply(N, expand(n[j], false));
       }
     }
 
-    for (var j = 0; j < N.length; j++) {
-      for (var k = 0; k < post.length; k++) {
-        var expansion = pre + N[j] + post[k];
-        if (!isTop || isSequence || expansion)
-          expansions.push(expansion);
-      }
-    }
+    acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length)
+    if (!m.post.length) break
+    str = m.post
   }
 
-  return expansions;
+  return acc
 }
 
 
@@ -71557,23 +71693,83 @@ exports.AddressError = AddressError;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isInSubnet = isInSubnet;
+exports.isHostInSubnet = isHostInSubnet;
+exports.isGloballyReachable = isGloballyReachable;
+exports.offsetBigInt = offsetBigInt;
 exports.isCorrect = isCorrect;
 exports.prefixLengthFromMask = prefixLengthFromMask;
+exports.assertByteArray = assertByteArray;
 exports.numberToPaddedHex = numberToPaddedHex;
 exports.stringToPaddedHex = stringToPaddedHex;
 exports.testBit = testBit;
 const address_error_1 = __nccwpck_require__(68850);
+/**
+ * Returns whether this address's *network* is contained within `address`,
+ * i.e. whether every address this one can represent also falls inside
+ * `address`. A network wider than `address` is not contained in it, so
+ * `10.0.0.0/8` is not in `10.0.0.0/16`.
+ *
+ * To ask whether the address itself falls inside a range, ignoring any CIDR
+ * suffix it was written with, use {@link isHostInSubnet} instead. That is the
+ * question the special-use classifiers ask.
+ */
 function isInSubnet(address) {
     if (this.subnetMask < address.subnetMask) {
         return false;
     }
-    if (this.mask(address.subnetMask) === address.mask()) {
-        return true;
+    return isHostInSubnet.call(this, address);
+}
+/**
+ * Returns whether this address's host bits fall inside `address`, ignoring
+ * this address's own subnet mask.
+ *
+ * This is the primitive the special-use classifiers (`isLoopback`,
+ * `isPrivate`, `isLinkLocal`, `getType`, …) are built on: they answer a
+ * question about the address, so the answer must not change with the CIDR
+ * suffix the caller happened to write. Use this rather than
+ * {@link isInSubnet} when classifying a single address — notably when the
+ * address came from untrusted input and the result backs a trust-boundary
+ * decision such as an SSRF allow/deny filter.
+ */
+function isHostInSubnet(address) {
+    return this.mask(address.subnetMask) === address.mask();
+}
+/**
+ * Returns whether the registry marks this address globally reachable: the
+ * answer of the most specific entry containing it that has one, or `true`
+ * when no entry contains it.
+ */
+function isGloballyReachable(entries) {
+    let best = null;
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (entry.reachable !== null &&
+            isHostInSubnet.call(this, entry.subnet) &&
+            (best === null || entry.subnet.subnetMask > best.subnet.subnetMask)) {
+            best = entry;
+        }
     }
-    return false;
+    return best === null ? true : best.reachable;
+}
+/**
+ * Adds `n` to `value` and returns the result, throwing `AddressError` unless
+ * `n` is an integer and the result stays within `[0, 2**bits - 1]`.
+ */
+function offsetBigInt(value, n, bits, family) {
+    if (typeof n === 'number' && !Number.isSafeInteger(n)) {
+        throw new address_error_1.AddressError(`${family} offset must be an integer`);
+    }
+    if (typeof n !== 'number' && typeof n !== 'bigint') {
+        throw new address_error_1.AddressError(`${family} offset must be an integer`);
+    }
+    const result = value + BigInt(n);
+    if (result < BigInt(0) || result > (BigInt(1) << BigInt(bits)) - BigInt(1)) {
+        throw new address_error_1.AddressError(`${family} offset leaves the address space`);
+    }
+    return result;
 }
 function isCorrect(defaultBits) {
-    return function () {
+    return function isCorrectForm() {
         if (this.addressMinusSuffix !== this.correctForm()) {
             return false;
         }
@@ -71601,6 +71797,21 @@ function prefixLengthFromMask(value, totalBits) {
         throw new address_error_1.AddressError('Invalid subnet mask.');
     }
     return firstZero;
+}
+/**
+ * Throws `AddressError` unless `bytes` holds exactly `byteCount` integers,
+ * each from `minimum` to 255. Pass a `minimum` of `-128` where signed bytes
+ * are accepted and folded to unsigned, and `0` where they are not.
+ */
+function assertByteArray(bytes, byteCount, family, minimum) {
+    if (bytes.length !== byteCount) {
+        throw new address_error_1.AddressError(`${family} addresses require exactly ${byteCount} bytes`);
+    }
+    for (let i = 0; i < bytes.length; i++) {
+        if (!Number.isInteger(bytes[i]) || bytes[i] < minimum || bytes[i] > 255) {
+            throw new address_error_1.AddressError(`All bytes must be integers between ${minimum} and 255`);
+        }
+    }
 }
 function numberToPaddedHex(number) {
     return number.toString(16).padStart(2, '0');
@@ -71705,6 +71916,7 @@ const isCorrect4 = common.isCorrect(constants.BITS);
  */
 class Address4 {
     constructor(address) {
+        this.addressMinusSuffix = '';
         this.groups = constants.GROUPS;
         this.parsedAddress = [];
         this.parsedSubnet = '';
@@ -71721,6 +71933,15 @@ class Address4 {
          * @returns {boolean}
          */
         this.isInSubnet = common.isInSubnet;
+        /**
+         * Returns true if this address's host bits fall inside the given subnet,
+         * ignoring this address's own subnet mask. Prefer this over `isInSubnet`
+         * when classifying a single address, so the answer doesn't change with the
+         * CIDR suffix the caller happened to write — notably when the address came
+         * from untrusted input and the result backs a trust-boundary decision.
+         * @returns {boolean}
+         */
+        this.isHostInSubnet = common.isHostInSubnet;
         this.address = address;
         const subnet = constants.RE_SUBNET_STRING.exec(address);
         if (subnet) {
@@ -71748,7 +71969,7 @@ class Address4 {
             new Address4(address);
             return true;
         }
-        catch (e) {
+        catch {
             return false;
         }
     }
@@ -71760,6 +71981,11 @@ class Address4 {
      */
     parse(address) {
         const groups = address.split('.');
+        // Checked before the general match so the error names the actual problem.
+        // Address6 rejects the same notation on its v4-in-v6 path.
+        if (groups.some((group) => /^0\d/.test(group))) {
+            throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.");
+        }
         if (!address.match(constants.RE_ADDRESS)) {
             throw new address_error_1.AddressError('Invalid IPv4 address.');
         }
@@ -71798,7 +72024,6 @@ class Address4 {
     static fromAddressAndWildcardMask(address, wildcardMask) {
         const wildcard = new Address4(wildcardMask).bigInt();
         const allOnes = (BigInt(1) << BigInt(constants.BITS)) - BigInt(1);
-        // eslint-disable-next-line no-bitwise
         const mask = wildcard ^ allOnes;
         const bits = common.prefixLengthFromMask(mask, constants.BITS);
         return new Address4(`${address}/${bits}`);
@@ -71942,6 +72167,33 @@ class Address4 {
         return Address4.fromBigInt(this._startAddress() + adjust);
     }
     /**
+     * Returns the address `n` addresses after this one (or before, when `n` is
+     * negative), keeping this address's subnet mask. Throws `AddressError` when
+     * the result would fall outside the IPv4 address space or `n` is not an
+     * integer.
+     * @param {number | bigint} n
+     * @returns {Address4}
+     * @example
+     * new Address4('10.0.0.0/24').offset(1).correctForm(); // '10.0.0.1'
+     */
+    offset(n) {
+        return Address4.fromBigInt(common.offsetBigInt(this.bigInt(), n, constants.BITS, 'IPv4')).withSubnetMask(this.subnetMask);
+    }
+    /**
+     * Returns the network that follows this address's network: the address after
+     * {@link endAddress}, with the same subnet mask. Throws `AddressError` when
+     * this network is the last one in the address space.
+     * @returns {Address4}
+     * @example
+     * new Address4('10.0.0.0/24').nextNetwork().networkForm(); // '10.0.1.0/24'
+     */
+    nextNetwork() {
+        return Address4.fromBigInt(common.offsetBigInt(this._endAddress(), 1, constants.BITS, 'IPv4')).withSubnetMask(this.subnetMask);
+    }
+    withSubnetMask(subnetMask) {
+        return new Address4(`${this.correctForm()}/${subnetMask}`);
+    }
+    /**
      * Helper function getting end address.
      * @returns {bigint}
      */
@@ -71998,32 +72250,32 @@ class Address4 {
      * @returns {Address4}
      */
     static fromBigInt(bigInt) {
-        if (bigInt < 0n || bigInt > 0xffffffffn) {
+        if (bigInt < BigInt(0) || bigInt > BigInt(0xffffffff)) {
             throw new address_error_1.AddressError('IPv4 BigInt must be in the range 0 to 2**32 - 1');
         }
         return Address4.fromHex(bigInt.toString(16).padStart(8, '0'));
     }
     /**
-     * Convert a byte array to an Address4 object.
+     * Convert a byte array to an Address4 object. Throws `AddressError` unless
+     * given exactly 4 integers from 0 to 255. Signed bytes are rejected, so
+     * this differs from `Address6.fromByteArray`, which folds them; the two
+     * contracts converge on this stricter form in the next major version.
      *
      * To convert from a Node.js `Buffer`, spread it: `Address4.fromByteArray([...buf])`.
      * @param {Array<number>} bytes - an array of 4 bytes (0-255)
      * @returns {Address4}
      */
     static fromByteArray(bytes) {
-        if (bytes.length !== 4) {
-            throw new address_error_1.AddressError('IPv4 addresses require exactly 4 bytes');
-        }
-        // Validate that all bytes are within valid range (0-255)
-        for (let i = 0; i < bytes.length; i++) {
-            if (!Number.isInteger(bytes[i]) || bytes[i] < 0 || bytes[i] > 255) {
-                throw new address_error_1.AddressError('All bytes must be integers between 0 and 255');
-            }
-        }
+        common.assertByteArray(bytes, 4, 'IPv4', 0);
         return this.fromUnsignedByteArray(bytes);
     }
     /**
-     * Convert an unsigned byte array to an Address4 object
+     * Convert an unsigned byte array to an Address4 object. Throws
+     * `AddressError` unless given exactly 4 bytes, and rejects values outside
+     * 0 to 255 when parsing the resulting address.
+     *
+     * To convert from a Node.js `Buffer`, spread it:
+     * `Address4.fromUnsignedByteArray([...buf])`.
      * @param {Array<number>} bytes - an array of 4 unsigned bytes (0-255)
      * @returns {Address4}
      */
@@ -72053,7 +72305,8 @@ class Address4 {
         return this.binaryZeroPad().slice(start, end);
     }
     /**
-     * Return the reversed ip6.arpa form of the address
+     * Return the reversed in-addr.arpa form of the address, e.g.
+     * `42.2.0.192.in-addr.arpa.` for `192.0.2.42`.
      * @param {Object} options
      * @param {boolean} options.omitSuffix - omit the "in-addr.arpa" suffix
      * @returns {String}
@@ -72073,49 +72326,86 @@ class Address4 {
      * @returns {boolean}
      */
     isMulticast() {
-        return this.isInSubnet(MULTICAST_V4);
+        return this.isHostInSubnet(MULTICAST_V4);
     }
     /**
      * Returns true if the address is in one of the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private address ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
      * @returns {boolean}
      */
     isPrivate() {
-        return PRIVATE_V4.some((subnet) => this.isInSubnet(subnet));
+        return PRIVATE_V4.some((subnet) => this.isHostInSubnet(subnet));
     }
     /**
      * Returns true if the address is in the loopback range `127.0.0.0/8` ([RFC 1122](https://datatracker.ietf.org/doc/html/rfc1122)).
      * @returns {boolean}
      */
     isLoopback() {
-        return this.isInSubnet(LOOPBACK_V4);
+        return this.isHostInSubnet(LOOPBACK_V4);
     }
     /**
      * Returns true if the address is in the link-local range `169.254.0.0/16` ([RFC 3927](https://datatracker.ietf.org/doc/html/rfc3927)).
      * @returns {boolean}
      */
     isLinkLocal() {
-        return this.isInSubnet(LINK_LOCAL_V4);
+        return this.isHostInSubnet(LINK_LOCAL_V4);
     }
     /**
      * Returns true if the address is the unspecified address `0.0.0.0`.
      * @returns {boolean}
      */
     isUnspecified() {
-        return this.isInSubnet(UNSPECIFIED_V4);
+        return this.isHostInSubnet(UNSPECIFIED_V4);
     }
     /**
      * Returns true if the address is the limited broadcast address `255.255.255.255` ([RFC 919](https://datatracker.ietf.org/doc/html/rfc919)).
      * @returns {boolean}
      */
     isBroadcast() {
-        return this.isInSubnet(BROADCAST_V4);
+        return this.isHostInSubnet(BROADCAST_V4);
     }
     /**
      * Returns true if the address is in the carrier-grade NAT range `100.64.0.0/10` ([RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598)).
      * @returns {boolean}
      */
     isCGNAT() {
-        return this.isInSubnet(CGNAT_V4);
+        return this.isHostInSubnet(CGNAT_V4);
+    }
+    /**
+     * Returns true if the address is in one of the documentation ranges
+     * `192.0.2.0/24`, `198.51.100.0/24`, or `203.0.113.0/24` ([RFC 5737](https://datatracker.ietf.org/doc/html/rfc5737)).
+     * @returns {boolean}
+     */
+    isDocumentation() {
+        return DOCUMENTATION_V4.some((subnet) => this.isHostInSubnet(subnet));
+    }
+    /**
+     * Returns true if the address is in the benchmarking range `198.18.0.0/15` ([RFC 2544](https://datatracker.ietf.org/doc/html/rfc2544)).
+     * @returns {boolean}
+     */
+    isBenchmarking() {
+        return this.isHostInSubnet(BENCHMARKING_V4);
+    }
+    /**
+     * Returns true if the address is in the reserved range `240.0.0.0/4` ([RFC 1112](https://datatracker.ietf.org/doc/html/rfc1112)),
+     * which includes the limited broadcast address.
+     * @returns {boolean}
+     */
+    isReserved() {
+        return this.isHostInSubnet(RESERVED_V4);
+    }
+    /**
+     * Returns true if the address is globally reachable: not multicast, and not
+     * in any block the [IANA IPv4 Special-Purpose Address Registry](https://www.iana.org/assignments/iana-ipv4-special-registry/)
+     * marks as not globally reachable. That covers everything the individual
+     * classifiers name (private, loopback, link-local, CGNAT, unspecified,
+     * broadcast, documentation, benchmarking, reserved) and the blocks they do
+     * not, such as `0.0.0.0/8` and the IETF protocol assignments in
+     * `192.0.0.0/24`. This is the single predicate to use where a request must
+     * not reach an internal or special-purpose destination; see SECURITY.md.
+     * @returns {boolean}
+     */
+    isGlobal() {
+        return !this.isMulticast() && common.isGloballyReachable.call(this, SPECIAL_PURPOSE_V4);
     }
     /**
      * Returns a zero-padded base-2 string representation of the address
@@ -72128,12 +72418,17 @@ class Address4 {
         return this._binaryZeroPad;
     }
     /**
-     * Groups an IPv4 address for inclusion at the end of an IPv6 address
+     * Groups an IPv4 address for inclusion at the end of an IPv6 address.
+     *
+     * Returns an HTML fragment: each half of the address is wrapped in a
+     * `<span>` carrying the group classes an address-inspector UI hovers on.
+     * The address content is HTML-escaped; anything you concatenate around it
+     * is your responsibility.
      * @returns {String}
      */
     groupForV6() {
         const segments = this.parsedAddress;
-        return this.address.replace(constants.RE_ADDRESS, `<span class="hover-group group-v4 group-6">${segments
+        return this.correctForm().replace(constants.RE_ADDRESS, `<span class="hover-group group-v4 group-6">${segments
             .slice(0, 2)
             .join('.')}</span>.<span class="hover-group group-v4 group-7">${segments
             .slice(2, 4)
@@ -72152,6 +72447,17 @@ const LINK_LOCAL_V4 = new Address4('169.254.0.0/16');
 const UNSPECIFIED_V4 = new Address4('0.0.0.0/32');
 const BROADCAST_V4 = new Address4('255.255.255.255/32');
 const CGNAT_V4 = new Address4('100.64.0.0/10');
+const DOCUMENTATION_V4 = [
+    new Address4('192.0.2.0/24'),
+    new Address4('198.51.100.0/24'),
+    new Address4('203.0.113.0/24'),
+];
+const BENCHMARKING_V4 = new Address4('198.18.0.0/15');
+const RESERVED_V4 = new Address4('240.0.0.0/4');
+const SPECIAL_PURPOSE_V4 = constants.SPECIAL_PURPOSE.map(([cidr, , reachable]) => ({
+    subnet: new Address4(cidr),
+    reachable,
+}));
 //# sourceMappingURL=ipv4.js.map
 
 /***/ }),
@@ -72234,7 +72540,6 @@ function paddedHex(octet) {
     return parseInt(octet, 16).toString(16).padStart(4, '0');
 }
 function unsignByte(b) {
-    // eslint-disable-next-line no-bitwise
     return b & 0xff;
 }
 /**
@@ -72259,6 +72564,15 @@ class Address6 {
          */
         this.isInSubnet = common.isInSubnet;
         /**
+         * Returns true if this address's host bits fall inside the given subnet,
+         * ignoring this address's own subnet mask. Prefer this over `isInSubnet`
+         * when classifying a single address, so the answer doesn't change with the
+         * CIDR suffix the caller happened to write — notably when the address came
+         * from untrusted input and the result backs a trust-boundary decision.
+         * @returns {boolean}
+         */
+        this.isHostInSubnet = common.isHostInSubnet;
+        /**
          * Returns true if the address is correct, false otherwise
          * @returns {boolean}
          */
@@ -72282,7 +72596,10 @@ class Address6 {
             }
             address = address.replace(constants6.RE_SUBNET_STRING, '');
         }
-        else if (/\//.test(address)) {
+        // RE_SUBNET_STRING anchors on the end of the address, so it strips only
+        // the trailing suffix. A second one left behind (`::/0/1`) is malformed
+        // and must be rejected rather than parsed as an address group.
+        if (/\//.test(address)) {
             throw new address_error_1.AddressError('Invalid subnet mask.');
         }
         const zone = constants6.RE_ZONE_STRING.exec(address);
@@ -72306,7 +72623,7 @@ class Address6 {
             new Address6(address);
             return true;
         }
-        catch (e) {
+        catch {
             return false;
         }
     }
@@ -72321,7 +72638,7 @@ class Address6 {
      * address.correctForm(); // '::e8:d4a5:1000'
      */
     static fromBigInt(bigInt) {
-        if (bigInt < 0n || bigInt > (1n << BigInt(constants6.BITS)) - 1n) {
+        if (bigInt < BigInt(0) || bigInt > (BigInt(1) << BigInt(constants6.BITS)) - BigInt(1)) {
             throw new address_error_1.AddressError('IPv6 BigInt must be in the range 0 to 2**128 - 1');
         }
         const hex = bigInt.toString(16).padStart(32, '0');
@@ -72342,46 +72659,36 @@ class Address6 {
      * addressAndPort.port; // 8080
      */
     static fromURL(url) {
+        var _a;
         let host;
         let port = null;
         let result;
+        let error;
+        // Remove the protocol prefix, if any
+        const stripped = url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
         // If we have brackets parse them and find a port
-        if (url.indexOf('[') !== -1 && url.indexOf(']:') !== -1) {
-            result = constants6.RE_URL_WITH_PORT.exec(url);
+        if (stripped.indexOf('[') !== -1 && stripped.indexOf(']:') !== -1) {
+            error = 'failed to parse address with port';
+            result = constants6.RE_URL_WITH_PORT.exec(stripped);
             if (result === null) {
-                return {
-                    error: 'failed to parse address with port',
-                    address: null,
-                    port: null,
-                };
+                return { error, address: null, port: null };
             }
             host = result[1];
             port = result[2];
-            // If there's a URL extract the address
-        }
-        else if (url.indexOf('/') !== -1) {
-            // Remove the protocol prefix
-            url = url.replace(/^[a-z0-9]+:\/\//, '');
-            // Parse the address
-            result = constants6.RE_URL.exec(url);
-            if (result === null) {
-                return {
-                    error: 'failed to parse address from URL',
-                    address: null,
-                    port: null,
-                };
-            }
-            host = result[1];
-            // Otherwise just assign the URL to the host and let the library parse it
         }
         else {
-            host = url;
+            error = 'failed to parse address from URL';
+            result = constants6.RE_URL.exec(stripped);
+            if (result === null) {
+                return { error, address: null, port: null };
+            }
+            host = (_a = result[1]) !== null && _a !== void 0 ? _a : result[2];
         }
         // If there's a port convert it to an integer
         if (port) {
             port = parseInt(port, 10);
-            // squelch out of range ports
-            if (port < 0 || port > 65536) {
+            // squelch out of range ports (valid ports are 0-65535)
+            if (port < 0 || port > 65535) {
                 port = null;
             }
         }
@@ -72389,10 +72696,17 @@ class Address6 {
             // Standardize `undefined` to `null`
             port = null;
         }
-        return {
-            address: new Address6(host),
-            port,
-        };
+        // The URL character class is a superset of valid IPv6, so a host the
+        // regex accepted (an IPv4 literal, bare punctuation, too many groups)
+        // can still be rejected by the parser
+        let address;
+        try {
+            address = new Address6(host);
+        }
+        catch {
+            return { error, address: null, port: null };
+        }
+        return { address, port };
     }
     /**
      * Construct an `Address6` from an address and a hex subnet mask given as
@@ -72419,7 +72733,6 @@ class Address6 {
     static fromAddressAndWildcardMask(address, wildcardMask) {
         const wildcard = new Address6(wildcardMask).bigInt();
         const allOnes = (BigInt(1) << BigInt(constants6.BITS)) - BigInt(1);
-        // eslint-disable-next-line no-bitwise
         const mask = wildcard ^ allOnes;
         const bits = common.prefixLengthFromMask(mask, constants6.BITS);
         return new Address6(`${address}/${bits}`);
@@ -72493,28 +72806,31 @@ class Address6 {
         return new Address6(`::ffff:${address4.correctForm()}/${mask6}`);
     }
     /**
-     * Return an address from ip6.arpa form
+     * Return an address from ip6.arpa form. A full 32-nibble name gives a /128
+     * address; a shorter name, as used for a delegated reverse zone, gives the
+     * network it covers, with a subnet mask of four bits per nibble, so
+     * `fromArpa(x.reverseForm())` round-trips {@link reverseForm} for any prefix.
      * @param {string} arpaFormAddress - an 'ip6.arpa' form address
      * @returns {Adress6}
      * @example
      * var address = Address6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
      * address.correctForm(); // '2001:0:ce49:7601:e866:efff:62c3:fffe'
+     * Address6.fromArpa('8.b.d.0.1.0.0.2.ip6.arpa.').networkForm(); // '2001:db8::/32'
      */
     static fromArpa(arpaFormAddress) {
-        // remove ending ".ip6.arpa." or just "."
-        let address = arpaFormAddress.replace(/(\.ip6\.arpa)?\.$/, '');
-        const semicolonAmount = 7;
-        // correct ip6.arpa form with ending removed will be 63 characters
-        if (address.length !== 63) {
+        // remove an ending ".ip6.arpa", with or without the root dot
+        const nibbles = arpaFormAddress.replace(/(\.ip6\.arpa)?\.?$/, '');
+        if (!/^[0-9a-f](\.[0-9a-f]){0,31}$/i.test(nibbles)) {
             throw new address_error_1.AddressError("Invalid 'ip6.arpa' form.");
         }
-        const parts = address.split('.').reverse();
-        for (let i = semicolonAmount; i > 0; i--) {
-            const insertIndex = i * 4;
-            parts.splice(insertIndex, 0, ':');
+        const reversed = nibbles.split('.').reverse();
+        const subnetMask = reversed.length * 4;
+        const hex = reversed.join('').padEnd(32, '0');
+        const groups = [];
+        for (let i = 0; i < constants6.GROUPS; i++) {
+            groups.push(hex.slice(i * 4, (i + 1) * 4));
         }
-        address = parts.join('');
-        return new Address6(address);
+        return new Address6(`${groups.join(':')}/${subnetMask}`);
     }
     /**
      * Return the Microsoft UNC transcription of the address
@@ -72578,21 +72894,52 @@ class Address6 {
         return BigInt(`0b${this.mask() + '1'.repeat(constants6.BITS - this.subnetMask)}`);
     }
     /**
-     * The last address in the range given by this address' subnet
-     * Often referred to as the Broadcast
+     * The last address in the range given by this address's subnet. IPv6 has
+     * no broadcast address, so this is an ordinary assignable address (in a
+     * 64-bit-interface-identifier subnet it falls inside the reserved
+     * subnet-anycast block of [RFC 2526](https://datatracker.ietf.org/doc/html/rfc2526)).
      * @returns {Address6}
      */
     endAddress() {
         return Address6.fromBigInt(this._endAddress());
     }
     /**
-     * The last host address in the range given by this address's subnet ie
-     * the last address prior to the Broadcast Address
+     * The address one before {@link endAddress}. This is the IPv6 counterpart
+     * of the IPv4 method that skips the broadcast address; IPv6 has no broadcast,
+     * so it drops exactly one address and does not model the 128 reserved
+     * subnet-anycast identifiers of [RFC 2526](https://datatracker.ietf.org/doc/html/rfc2526).
      * @returns {Address6}
      */
     endAddressExclusive() {
         const adjust = BigInt('1');
         return Address6.fromBigInt(this._endAddress() - adjust);
+    }
+    /**
+     * Returns the address `n` addresses after this one (or before, when `n` is
+     * negative), keeping this address's subnet mask. Throws `AddressError` when
+     * the result would fall outside the IPv6 address space or `n` is not an
+     * integer.
+     * @param {number | bigint} n
+     * @returns {Address6}
+     * @example
+     * new Address6('2001:db8::/64').offset(1).correctForm(); // '2001:db8::1'
+     */
+    offset(n) {
+        return Address6.fromBigInt(common.offsetBigInt(this.bigInt(), n, constants6.BITS, 'IPv6')).withSubnetMask(this.subnetMask);
+    }
+    /**
+     * Returns the network that follows this address's network: the address after
+     * {@link endAddress}, with the same subnet mask. Throws `AddressError` when
+     * this network is the last one in the address space.
+     * @returns {Address6}
+     * @example
+     * new Address6('2001:db8::/64').nextNetwork().networkForm(); // '2001:db8:0:1::/64'
+     */
+    nextNetwork() {
+        return Address6.fromBigInt(common.offsetBigInt(this._endAddress(), 1, constants6.BITS, 'IPv6')).withSubnetMask(this.subnetMask);
+    }
+    withSubnetMask(subnetMask) {
+        return new Address6(`${this.correctForm()}/${subnetMask}`);
     }
     /**
      * The hex form of the subnet mask, e.g. `ffff:ffff:ffff:ffff::` for a
@@ -72654,7 +73001,7 @@ class Address6 {
     getType() {
         for (let i = 0; i < TYPE_SUBNETS.length; i++) {
             const entry = TYPE_SUBNETS[i];
-            if (this.isInSubnet(entry[0])) {
+            if (this.isHostInSubnet(entry[0])) {
                 return entry[1];
             }
         }
@@ -72796,20 +73143,27 @@ class Address6 {
         }
         const groups = address.split(':');
         const lastGroup = groups.slice(-1)[0];
+        // RE_ADDRESS rejects octets with a leading zero, so a dotted-quad tail is
+        // matched permissively first: that way this notation still gets its own
+        // message with the offending octet highlighted, rather than falling
+        // through as an unrecognized group.
+        const v4Octets = lastGroup.split('.');
+        if (v4Octets.length === constants4.GROUPS &&
+            v4Octets.every((octet) => /^\d{1,3}$/.test(octet))) {
+            if (v4Octets.some((octet) => /^0\d/.test(octet))) {
+                // The prefix groups haven't been through the bad-character check
+                // yet, so escape them before including in the error HTML.
+                const highlighted = v4Octets.map(spanLeadingZeroes4).join('.');
+                const prefix = groups.slice(0, -1).map(helpers.escapeHtml).join(':');
+                const separator = groups.length > 1 ? ':' : '';
+                throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", `${prefix}${separator}${highlighted}`);
+            }
+        }
         const address4 = lastGroup.match(constants4.RE_ADDRESS);
         if (address4) {
             this.parsedAddress4 = address4[0];
-            this.address4 = new ipv4_1.Address4(this.parsedAddress4);
-            for (let i = 0; i < this.address4.groups; i++) {
-                if (/^0[0-9]+/.test(this.address4.parsedAddress[i])) {
-                    // The prefix groups haven't been through the bad-character check
-                    // yet, so escape them before including in the error HTML.
-                    const highlighted = this.address4.parsedAddress.map(spanLeadingZeroes4).join('.');
-                    const prefix = groups.slice(0, -1).map(helpers.escapeHtml).join(':');
-                    const separator = groups.length > 1 ? ':' : '';
-                    throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", `${prefix}${separator}${highlighted}`);
-                }
-            }
+            const v4Suffix = this.subnetMask >= 96 ? `/${this.subnetMask - 96}` : '';
+            this.address4 = new ipv4_1.Address4(`${this.parsedAddress4}${v4Suffix}`);
             this.v4 = true;
             groups[groups.length - 1] = this.address4.toGroup6();
             address = groups.join(':');
@@ -72895,7 +73249,11 @@ class Address6 {
         return BigInt(`0x${this.parsedAddress.map(paddedHex).join('')}`);
     }
     /**
-     * Return the last two groups of this address as an IPv4 address string
+     * Return the last two groups of this address as an IPv4 address string.
+     * If this address carries a CIDR prefix that covers the trailing 32 bits
+     * (i.e. `subnetMask >= 96`), the resulting `Address4` inherits the
+     * corresponding v4 prefix (`subnetMask - 96`); otherwise it defaults to
+     * `/32`.
      * @returns {Address4}
      * @example
      * var address = new Address6('2001:4860:4001::1825:bf11');
@@ -72903,7 +73261,18 @@ class Address6 {
      */
     to4() {
         const binary = this.binaryZeroPad().split('');
-        return ipv4_1.Address4.fromHex(BigInt(`0b${binary.slice(96, 128).join('')}`).toString(16).padStart(8, '0'));
+        const hex = BigInt(`0b${binary.slice(96, 128).join('')}`)
+            .toString(16)
+            .padStart(8, '0');
+        if (this.subnetMask >= 96) {
+            const v4Mask = this.subnetMask - 96;
+            const groups = [];
+            for (let i = 0; i < 8; i += 2) {
+                groups.push(parseInt(hex.slice(i, i + 2), 16));
+            }
+            return new ipv4_1.Address4(`${groups.join('.')}/${v4Mask}`);
+        }
+        return ipv4_1.Address4.fromHex(hex);
     }
     /**
      * Return the v4-in-v6 form of the address
@@ -72917,7 +73286,7 @@ class Address6 {
         if (!/:$/.test(correct)) {
             infix = ':';
         }
-        return correct + infix + address4.address;
+        return correct + infix + address4.correctForm();
     }
     /**
      * Decodes the Teredo tunneling fields embedded in this address. Returns the
@@ -72949,11 +73318,9 @@ class Address6 {
         */
         const prefix = this.getBitsBase16(0, 32);
         const bitsForUdpPort = this.getBits(80, 96);
-        // eslint-disable-next-line no-bitwise
         const udpPort = (bitsForUdpPort ^ BigInt('0xffff')).toString();
         const server4 = ipv4_1.Address4.fromHex(this.getBitsBase16(32, 64));
         const bitsForClient4 = this.getBits(96, 128);
-        // eslint-disable-next-line no-bitwise
         const client4 = ipv4_1.Address4.fromHex((bitsForClient4 ^ BigInt('0xffffffff')).toString(16).padStart(8, '0'));
         const flagsBase2 = this.getBitsBase2(64, 80);
         const coneNat = (0, common_1.testBit)(flagsBase2, 15);
@@ -73035,12 +73402,14 @@ class Address6 {
         }
         else {
             const beforeU = 64 - pl;
-            bits =
-                prefixBits.slice(0, pl) +
-                    v4Bits.slice(0, beforeU) +
-                    '00000000' +
-                    v4Bits.slice(beforeU) +
-                    '0'.repeat(128 - 72 - (32 - beforeU));
+            bits = [
+                prefixBits.slice(0, pl),
+                v4Bits.slice(0, beforeU),
+                // Bits 64 to 71 are the reserved u octet and are always zero.
+                '00000000',
+                v4Bits.slice(beforeU),
+                '0'.repeat(128 - 72 - (32 - beforeU)),
+            ].join('');
         }
         const hex = BigInt(`0b${bits}`).toString(16).padStart(32, '0');
         const groups = [];
@@ -73063,7 +73432,7 @@ class Address6 {
         if (pl !== 32 && pl !== 40 && pl !== 48 && pl !== 56 && pl !== 64 && pl !== 96) {
             throw new address_error_1.AddressError('NAT64 prefix length must be 32, 40, 48, 56, 64, or 96');
         }
-        if (!this.isInSubnet(prefix6)) {
+        if (!this.isHostInSubnet(prefix6)) {
             return null;
         }
         const bits = this.binaryZeroPad();
@@ -73088,9 +73457,9 @@ class Address6 {
      * @returns {Array}
      */
     toByteArray() {
-        const valueWithoutPadding = this.bigInt().toString(16);
-        const leadingPad = '0'.repeat(valueWithoutPadding.length % 2);
-        const value = `${leadingPad}${valueWithoutPadding}`;
+        const value = this.bigInt()
+            .toString(16)
+            .padStart(constants6.BITS / 4, '0');
         const bytes = [];
         for (let i = 0, length = value.length; i < length; i += 2) {
             bytes.push(parseInt(value.substring(i, i + 2), 16));
@@ -73104,24 +73473,39 @@ class Address6 {
      * @returns {Array}
      */
     toUnsignedByteArray() {
+        // toByteArray() emits 0 to 255, so unsigning it is an identity mapping and
+        // the two methods return equal arrays. 11.0.0 keeps one of them and makes
+        // this a deprecated alias; test/common-test.ts fails at that version.
         return this.toByteArray().map(unsignByte);
     }
     /**
      * Convert a byte array to an Address6 object.
      *
+     * Accepts unsigned bytes (0 to 255) or signed bytes (-128 to 127, as an
+     * `Int8Array` or a Java `byte[]` holds them), folding signed values to their
+     * unsigned equivalent. Throws `AddressError` unless given exactly 16
+     * integers from -128 to 255.
+     *
      * To convert from a Node.js `Buffer`, spread it: `Address6.fromByteArray([...buf])`.
      * @returns {Address6}
      */
     static fromByteArray(bytes) {
+        // Address4.fromByteArray takes unsigned bytes only. 11.0.0 aligns this
+        // method with it, at which point the -128 floor here, unsignByte, and the
+        // mapping below all go; test/common-test.ts fails at that version.
+        common.assertByteArray(bytes, 16, 'IPv6', -128);
         return this.fromUnsignedByteArray(bytes.map(unsignByte));
     }
     /**
      * Convert an unsigned byte array to an Address6 object.
      *
+     * Throws `AddressError` unless given exactly 16 integers from 0 to 255.
+     *
      * To convert from a Node.js `Buffer`, spread it: `Address6.fromUnsignedByteArray([...buf])`.
      * @returns {Address6}
      */
     static fromUnsignedByteArray(bytes) {
+        common.assertByteArray(bytes, 16, 'IPv6', 0);
         const BYTE_MAX = BigInt('256');
         let result = BigInt('0');
         let multiplier = BigInt('1');
@@ -73139,22 +73523,28 @@ class Address6 {
         return this.addressMinusSuffix === this.canonicalForm();
     }
     /**
-     * Returns true if the address is a link local address, false otherwise
+     * Returns true if the address is a link-local unicast address in `fe80::/10`
+     * ([RFC 4291 §2.4](https://datatracker.ietf.org/doc/html/rfc4291#section-2.4))
+     * or an IPv4-mapped / NAT64 address whose embedded IPv4 address is link-local
+     * (`169.254.0.0/16`, e.g. `::ffff:169.254.169.254`), false otherwise.
      * @returns {boolean}
      */
     isLinkLocal() {
-        // Zeroes are required, i.e. we can't check isInSubnet with 'fe80::/10'
-        if (this.getBitsBase2(0, 64) ===
-            '1111111010000000000000000000000000000000000000000000000000000000') {
-            return true;
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isLinkLocal();
         }
-        return false;
+        return this.isHostInSubnet(LINK_LOCAL_SUBNET);
     }
     /**
      * Returns true if the address is a multicast address, false otherwise
      * @returns {boolean}
      */
     isMulticast() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isMulticast();
+        }
         const type = this.getType();
         return type === 'Multicast' || type.startsWith('Multicast ');
     }
@@ -73177,27 +73567,54 @@ class Address6 {
      * @returns {boolean}
      */
     isMapped4() {
-        return this.isInSubnet(IPV4_MAPPED_SUBNET);
+        return this.isHostInSubnet(IPV4_MAPPED_SUBNET);
+    }
+    /**
+     * If this address embeds a routable IPv4 address — i.e. it is IPv4-mapped
+     * (`::ffff:0:0/96`) or sits in the NAT64 well-known prefix (`64:ff9b::/96`,
+     * [RFC 6052](https://datatracker.ietf.org/doc/html/rfc6052)) — return that
+     * embedded address as an {@link Address4}; otherwise return null.
+     *
+     * The special-property checks (`isLoopback`, `isLinkLocal`, `isMulticast`,
+     * `isUnspecified`, `isPrivate`, `isCGNAT`, `isBroadcast`) call this first and
+     * delegate to the embedded {@link Address4} when present, so a literal such as
+     * `::ffff:127.0.0.1` is classified by what it actually reaches (loopback)
+     * rather than by its IPv6 wrapper (which `getType()` reports as IPv4-mapped).
+     * This matters wherever the checks back a trust-boundary decision (e.g. an
+     * SSRF allow/deny filter): without normalization, `::ffff:10.0.0.1`,
+     * `::ffff:169.254.169.254`, `64:ff9b::7f00:1`, etc. would all read as
+     * non-internal.
+     * @returns {Address4 | null}
+     */
+    embeddedIPv4() {
+        if (this.isMapped4() || this.isHostInSubnet(NAT64_WELL_KNOWN_SUBNET)) {
+            return this.to4();
+        }
+        return null;
     }
     /**
      * Returns true if the address is a Teredo address, false otherwise
      * @returns {boolean}
      */
     isTeredo() {
-        return this.isInSubnet(TEREDO_SUBNET);
+        return this.isHostInSubnet(TEREDO_SUBNET);
     }
     /**
      * Returns true if the address is a 6to4 address, false otherwise
      * @returns {boolean}
      */
     is6to4() {
-        return this.isInSubnet(SIX_TO_FOUR_SUBNET);
+        return this.isHostInSubnet(SIX_TO_FOUR_SUBNET);
     }
     /**
      * Returns true if the address is a loopback address, false otherwise
      * @returns {boolean}
      */
     isLoopback() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isLoopback();
+        }
         return this.getType() === 'Loopback';
     }
     /**
@@ -73205,13 +73622,72 @@ class Address6 {
      * @returns {boolean}
      */
     isULA() {
-        return this.isInSubnet(ULA_SUBNET);
+        return this.isHostInSubnet(ULA_SUBNET);
+    }
+    /**
+     * Returns true if the address is private, i.e. a Unique Local Address in
+     * `fc00::/7` ([RFC 4193](https://datatracker.ietf.org/doc/html/rfc4193)), an
+     * address in the NAT64 local-use range `64:ff9b:1::/48`
+     * ([RFC 8215](https://datatracker.ietf.org/doc/html/rfc8215)), or an
+     * IPv4-mapped / NAT64 well-known address whose embedded IPv4 address is in
+     * one of the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918)
+     * private ranges (e.g. `::ffff:10.0.0.1`). This is the IPv6 counterpart to
+     * {@link Address4.isPrivate}; use it instead of {@link isULA} when you need to
+     * catch mapped RFC 1918 addresses as well as native ULAs.
+     *
+     * The local-use NAT64 range is reported private as a whole rather than by
+     * its embedded IPv4 address: an operator may carve a prefix of any RFC 6052
+     * length out of `64:ff9b:1::/48`, so the same bits decode to different IPv4
+     * addresses under different deployments and no single decoding is correct.
+     * Use {@link toAddress4Nat64} with the deployment's prefix to decode one.
+     * @returns {boolean}
+     */
+    isPrivate() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isPrivate();
+        }
+        return this.isULA() || this.isHostInSubnet(NAT64_LOCAL_USE_SUBNET);
+    }
+    /**
+     * Returns true if the address is an IPv4-mapped / NAT64 address whose embedded
+     * IPv4 address is in the carrier-grade NAT range `100.64.0.0/10`
+     * ([RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598)), false
+     * otherwise. There is no native IPv6 CGNAT range, so this only ever returns
+     * true for an embedded IPv4 address (e.g. `::ffff:100.64.0.1`).
+     * @returns {boolean}
+     */
+    isCGNAT() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isCGNAT();
+        }
+        return false;
+    }
+    /**
+     * Returns true if the address is an IPv4-mapped / NAT64 address whose embedded
+     * IPv4 address is the limited broadcast address `255.255.255.255`
+     * ([RFC 919](https://datatracker.ietf.org/doc/html/rfc919)), false otherwise.
+     * There is no IPv6 broadcast, so this only ever returns true for an embedded
+     * IPv4 address (e.g. `::ffff:255.255.255.255`).
+     * @returns {boolean}
+     */
+    isBroadcast() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isBroadcast();
+        }
+        return false;
     }
     /**
      * Returns true if the address is the unspecified address `::`.
      * @returns {boolean}
      */
     isUnspecified() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isUnspecified();
+        }
         return this.getType() === 'Unspecified';
     }
     /**
@@ -73219,7 +73695,49 @@ class Address6 {
      * @returns {boolean}
      */
     isDocumentation() {
-        return this.isInSubnet(DOCUMENTATION_SUBNET);
+        return DOCUMENTATION_SUBNETS.some((subnet) => this.isHostInSubnet(subnet));
+    }
+    /**
+     * Returns true if the address is in the benchmarking range `2001:2::/48`
+     * ([RFC 5180](https://datatracker.ietf.org/doc/html/rfc5180)) or is an
+     * IPv4-mapped / NAT64 address whose embedded IPv4 address is in
+     * `198.18.0.0/15`, false otherwise.
+     * @returns {boolean}
+     */
+    isBenchmarking() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isBenchmarking();
+        }
+        return this.isHostInSubnet(BENCHMARKING_SUBNET);
+    }
+    /**
+     * Returns true if the address is globally reachable: inside the global
+     * unicast allocation `2000::/3` (the only range the [IANA IPv6 Address Space
+     * Registry](https://www.iana.org/assignments/ipv6-address-space/) assigns
+     * for global unicast; everything else is reserved, ULA, link-local, or
+     * multicast) and not in any block the [IANA IPv6 Special-Purpose Address Registry](https://www.iana.org/assignments/iana-ipv6-special-registry/)
+     * marks as not globally reachable. An IPv4-mapped or NAT64 well-known
+     * address answers for its embedded IPv4 address, so `::ffff:10.0.0.1` and
+     * `64:ff9b::7f00:1` are not global. Teredo (`2001::/32`) and 6to4
+     * (`2002::/16`) are not global either: the registry lists them as N/A and a
+     * packet to one needs a relay.
+     *
+     * This covers everything the individual classifiers name and the blocks they
+     * do not: the discard-only prefix `100::/64`, the IETF protocol assignments
+     * in `2001::/23`, the deprecated site-local `fec0::/10` and IPv4-compatible
+     * `::/96` ranges, and unallocated space such as `4000::/3`. It is the single
+     * predicate to use where a request must not reach an internal or
+     * special-purpose destination; see SECURITY.md.
+     * @returns {boolean}
+     */
+    isGlobal() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+            return embedded.isGlobal();
+        }
+        return (this.isHostInSubnet(GLOBAL_UNICAST_SUBNET) &&
+            common.isGloballyReachable.call(this, SPECIAL_PURPOSE_V6));
     }
     // #endregion
     // #region HTML
@@ -73272,7 +73790,12 @@ class Address6 {
         return `<a href="${safeHref}">${safeForm}</a>`;
     }
     /**
-     * Groups an address
+     * Groups an address.
+     *
+     * Returns an HTML fragment: each group is wrapped in a `<span>` carrying
+     * the group classes an address-inspector UI hovers on. The address content
+     * is HTML-escaped; anything you concatenate around it is your
+     * responsibility.
      * @returns {String}
      */
     group() {
@@ -73373,8 +73896,17 @@ const TYPE_SUBNETS = Object.keys(constants6.TYPES).map((subnet) => [
 const TEREDO_SUBNET = new Address6('2001::/32');
 const SIX_TO_FOUR_SUBNET = new Address6('2002::/16');
 const ULA_SUBNET = new Address6('fc00::/7');
-const DOCUMENTATION_SUBNET = new Address6('2001:db8::/32');
+const LINK_LOCAL_SUBNET = new Address6('fe80::/10');
+const DOCUMENTATION_SUBNETS = [new Address6('2001:db8::/32'), new Address6('3fff::/20')];
+const BENCHMARKING_SUBNET = new Address6('2001:2::/48');
+const GLOBAL_UNICAST_SUBNET = new Address6('2000::/3');
+const SPECIAL_PURPOSE_V6 = constants6.SPECIAL_PURPOSE.map(([cidr, , reachable]) => ({
+    subnet: new Address6(cidr),
+    reachable,
+}));
 const IPV4_MAPPED_SUBNET = new Address6('::ffff:0:0/96');
+const NAT64_WELL_KNOWN_SUBNET = new Address6('64:ff9b::/96');
+const NAT64_LOCAL_USE_SUBNET = new Address6('64:ff9b:1::/48');
 //# sourceMappingURL=ipv6.js.map
 
 /***/ }),
@@ -73384,11 +73916,54 @@ const IPV4_MAPPED_SUBNET = new Address6('::ffff:0:0/96');
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RE_SUBNET_STRING = exports.RE_ADDRESS = exports.GROUPS = exports.BITS = void 0;
+exports.SPECIAL_PURPOSE = exports.RE_SUBNET_STRING = exports.RE_ADDRESS = exports.GROUPS = exports.BITS = void 0;
 exports.BITS = 32;
 exports.GROUPS = 4;
-exports.RE_ADDRESS = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/g;
+// Each octet is 0-255 written without a leading zero. A leading zero is
+// octal to the WHATWG URL parser, inet_aton, and getaddrinfo, but decimal to
+// parseInt(part, 10), so accepting the notation would make this library
+// disagree with the network stack about which host a string names.
+exports.RE_ADDRESS = /^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/g;
 exports.RE_SUBNET_STRING = /\/\d{1,2}$/;
+/**
+ * The IANA IPv4 Special-Purpose Address Registry
+ * (https://www.iana.org/assignments/iana-ipv4-special-registry/), one entry
+ * per block: `[cidr, name, globallyReachable]`. A `null` reachability means
+ * the registry leaves the column blank and the block inherits the answer of
+ * the block containing it (or is global when nothing contains it).
+ *
+ * `Address4.isGlobal()` answers from the most specific entry containing the
+ * address. `test/data/iana-corpus.json` is generated from the registry's CSV
+ * and pins this table to it.
+ */
+exports.SPECIAL_PURPOSE = [
+    ['0.0.0.0/8', 'This network', false],
+    ['0.0.0.0/32', 'This host on this network', false],
+    ['10.0.0.0/8', 'Private-Use', false],
+    ['100.64.0.0/10', 'Shared Address Space', false],
+    ['127.0.0.0/8', 'Loopback', false],
+    ['169.254.0.0/16', 'Link Local', false],
+    ['172.16.0.0/12', 'Private-Use', false],
+    ['192.0.0.0/24', 'IETF Protocol Assignments', false],
+    ['192.0.0.0/29', 'IPv4 Service Continuity Prefix', false],
+    ['192.0.0.8/32', 'IPv4 dummy address', false],
+    ['192.0.0.9/32', 'Port Control Protocol Anycast', true],
+    ['192.0.0.10/32', 'Traversal Using Relays around NAT Anycast', true],
+    ['192.0.0.170/32', 'NAT64/DNS64 Discovery', false],
+    ['192.0.0.171/32', 'NAT64/DNS64 Discovery', false],
+    ['192.0.2.0/24', 'Documentation (TEST-NET-1)', false],
+    ['192.31.196.0/24', 'AS112-v4', true],
+    ['192.52.193.0/24', 'AMT', true],
+    ['192.88.99.0/24', 'Deprecated (6to4 Relay Anycast)', null],
+    ['192.88.99.2/32', '6a44-relay anycast address', false],
+    ['192.168.0.0/16', 'Private-Use', false],
+    ['192.175.48.0/24', 'Direct Delegation AS112 Service', true],
+    ['198.18.0.0/15', 'Benchmarking', false],
+    ['198.51.100.0/24', 'Documentation (TEST-NET-2)', false],
+    ['203.0.113.0/24', 'Documentation (TEST-NET-3)', false],
+    ['240.0.0.0/4', 'Reserved', false],
+    ['255.255.255.255/32', 'Limited Broadcast', false],
+];
 //# sourceMappingURL=constants.js.map
 
 /***/ }),
@@ -73398,7 +73973,7 @@ exports.RE_SUBNET_STRING = /\/\d{1,2}$/;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RE_URL_WITH_PORT = exports.RE_URL = exports.RE_ZONE_STRING = exports.RE_SUBNET_STRING = exports.RE_BAD_ADDRESS = exports.RE_BAD_CHARACTERS = exports.TYPES = exports.SCOPES = exports.GROUPS = exports.BITS = void 0;
+exports.SPECIAL_PURPOSE = exports.RE_URL_WITH_PORT = exports.RE_URL = exports.RE_ZONE_STRING = exports.RE_SUBNET_STRING = exports.RE_BAD_ADDRESS = exports.RE_BAD_CHARACTERS = exports.TYPES = exports.SCOPES = exports.GROUPS = exports.BITS = void 0;
 exports.BITS = 128;
 exports.GROUPS = 8;
 /**
@@ -73442,11 +74017,18 @@ exports.TYPES = {
     'ff05::1:3/128': 'Multicast (All DHCP servers in this site)',
     '::/128': 'Unspecified',
     '::1/128': 'Loopback',
+    '::ffff:0:0/96': 'IPv4-mapped',
     'ff00::/8': 'Multicast',
     'fe80::/10': 'Link-local unicast',
     'fc00::/7': 'Unique local',
+    '2001::/32': 'Teredo',
+    '2001:2::/48': 'Benchmarking',
     '2002::/16': '6to4',
     '2001:db8::/32': 'Documentation',
+    '3fff::/20': 'Documentation',
+    '100::/64': 'Discard-only',
+    'fec0::/10': 'Site-local unicast (deprecated)',
+    '::/96': 'IPv4-compatible (deprecated)',
     '64:ff9b::/96': 'NAT64 (well-known)',
     '64:ff9b:1::/48': 'NAT64 (local-use)',
 };
@@ -73474,8 +74056,48 @@ exports.RE_SUBNET_STRING = /\/\d{1,3}(?=%|$)/;
  * @static
  */
 exports.RE_ZONE_STRING = /%.*$/;
-exports.RE_URL = /^\[{0,1}([0-9a-f:]+)\]{0,1}/;
-exports.RE_URL_WITH_PORT = /\[([0-9a-f:]+)\]:([0-9]{1,5})/;
+exports.RE_URL = /^(?:\[([0-9a-f:.]+)\]|([0-9a-f:.]+))(?:[/?#].*)?$/i;
+exports.RE_URL_WITH_PORT = /^\[([0-9a-f:.]+)\]:([0-9]{1,5})(?:[/?#].*)?$/i;
+/**
+ * The IANA IPv6 Special-Purpose Address Registry
+ * (https://www.iana.org/assignments/iana-ipv6-special-registry/), one entry
+ * per block: `[cidr, name, globallyReachable]`. A `null` reachability means
+ * the registry says N/A or leaves the column blank; N/A blocks (Teredo, 6to4)
+ * are treated as not globally reachable, since a packet to one needs a relay,
+ * and blank blocks inherit the answer of the block containing them.
+ *
+ * `Address6.isGlobal()` answers from the most specific entry containing the
+ * address, after delegating IPv4-mapped and NAT64 well-known addresses to the
+ * embedded IPv4 address. `test/data/iana-corpus.json` is generated from the
+ * registry's CSV and pins this table to it.
+ */
+exports.SPECIAL_PURPOSE = [
+    ['::1/128', 'Loopback Address', false],
+    ['::/128', 'Unspecified Address', false],
+    ['::ffff:0:0/96', 'IPv4-mapped Address', false],
+    ['64:ff9b::/96', 'IPv4-IPv6 Translat.', true],
+    ['64:ff9b:1::/48', 'IPv4-IPv6 Translat.', false],
+    ['100::/64', 'Discard-Only Address Block', false],
+    ['100:0:0:1::/64', 'Dummy IPv6 Prefix', false],
+    ['2001::/23', 'IETF Protocol Assignments', false],
+    ['2001::/32', 'TEREDO', false],
+    ['2001:1::1/128', 'Port Control Protocol Anycast', true],
+    ['2001:1::2/128', 'Traversal Using Relays around NAT Anycast', true],
+    ['2001:1::3/128', 'DNS-SD Service Registration Protocol Anycast', true],
+    ['2001:2::/48', 'Benchmarking', false],
+    ['2001:3::/32', 'AMT', true],
+    ['2001:4:112::/48', 'AS112-v6', true],
+    ['2001:10::/28', 'Deprecated (previously ORCHID)', null],
+    ['2001:20::/28', 'ORCHIDv2', true],
+    ['2001:30::/28', 'Drone Remote ID Protocol Entity Tags (DETs) Prefix', true],
+    ['2001:db8::/32', 'Documentation', false],
+    ['2002::/16', '6to4', false],
+    ['2620:4f:8000::/48', 'Direct Delegation AS112 Service', true],
+    ['3fff::/20', 'Documentation', false],
+    ['5f00::/16', 'Segment Routing (SRv6) SIDs', false],
+    ['fc00::/7', 'Unique-Local', false],
+    ['fe80::/10', 'Link-Local Unicast', false],
+];
 //# sourceMappingURL=constants.js.map
 
 /***/ }),
@@ -107669,6 +108291,20 @@ var escClose = '\0CLOSE'+Math.random()+'\0';
 var escComma = '\0COMMA'+Math.random()+'\0';
 var escPeriod = '\0PERIOD'+Math.random()+'\0';
 
+var EXPANSION_MAX = 100000
+
+// `EXPANSION_MAX` caps the *number* of expansions, but not their length. An
+// input like `'{a,b}'.repeat(1500)` stays under that count - its output is
+// truncated to 100k results - while making every result ~1500 characters
+// long. The result set, and the intermediate arrays built while combining
+// brace sets, then grow large enough to exhaust memory and crash the process
+// (CVE-2026-14257). `EXPANSION_MAX_LENGTH` bounds the total number of
+// characters the accumulator may hold at any point, so memory stays flat no
+// matter how many brace groups are chained. The limit sits well above any
+// realistic expansion (100k results hitting `EXPANSION_MAX` measure ~1M
+// characters) so legitimate input is unaffected.
+var EXPANSION_MAX_LENGTH = 4000000
+
 function numeric(str) {
   return parseInt(str, 10) == str
     ? parseInt(str, 10)
@@ -107722,9 +108358,13 @@ function parseCommaParts(str) {
   return parts;
 }
 
-function expandTop(str) {
+function expandTop(str, options) {
   if (!str)
     return [];
+
+  options = options || {};
+  var max = options.max == null ? EXPANSION_MAX : options.max;
+  var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
 
   // I don't know why Bash 4.3 does this, but it does.
   // Anything starting with {} will have the first two bytes preserved
@@ -107736,7 +108376,7 @@ function expandTop(str) {
     str = '\\{\\}' + str.substr(2);
   }
 
-  return expand(escapeBraces(str), true).map(unescapeBraces);
+  return expand(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
 }
 
 function embrace(str) {
@@ -107753,24 +108393,144 @@ function gte(i, y) {
   return i >= y;
 }
 
-function expand(str, isTop) {
-  var expansions = [];
-
-  var m = balanced('{', '}', str);
-  if (!m) return [str];
-
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
-  var post = m.post.length
-    ? expand(m.post, false)
-    : [''];
-
-  if (/\$$/.test(m.pre)) {    
-    for (var k = 0; k < post.length; k++) {
-      var expansion = pre+ '{' + m.body + '}' + post[k];
-      expansions.push(expansion);
+// Build `{ acc[a] + pre + values[v] }` for every combination, capping the
+// number of results at `max` and the total number of characters at `maxLength`.
+// This is the one place output grows, so bounding it here keeps the single
+// accumulator - and therefore memory - flat regardless of how many brace groups
+// are combined (CVE-2026-14257).
+function combine(
+  acc,
+  pre,
+  values,
+  max,
+  maxLength,
+  dropEmpties
+) {
+  var out = []
+  var length = 0
+  for (var a = 0; a < acc.length; a++) {
+    for (var v = 0; v < values.length; v++) {
+      if (out.length >= max) return out
+      var expansion = acc[a] + pre + values[v]
+      // Bash drops empty results at the top level. Skip them before they count
+      // against `max`, so `max` bounds the number of *kept* results.
+      if (dropEmpties && !expansion) continue
+      if (length + expansion.length > maxLength) return out
+      out.push(expansion)
+      length += expansion.length
     }
-  } else {
+  }
+  return out
+}
+
+// The expansion values of a single numeric (`1..5`) or alphabetic (`a..e..2`)
+// sequence body.
+function expandSequence(
+  body,
+  isAlphaSequence,
+  max,
+  maxLength
+) {
+  var n = body.split(/\.\./)
+  var N = []
+  // A sequence body always splits into two or three parts, but the compiler
+  // can't know that.
+  /* c8 ignore start */
+  if (n[0] === undefined || n[1] === undefined) {
+    return N
+  }
+  /* c8 ignore stop */
+  var x = numeric(n[0])
+  var y = numeric(n[1])
+  var width = Math.max(n[0].length, n[1].length)
+  var incr =
+    n.length === 3 && n[2] !== undefined ?
+      Math.max(Math.abs(numeric(n[2])), 1)
+    : 1
+  var test = lte
+  var reverse = y < x
+  if (reverse) {
+    incr *= -1
+    test = gte
+  }
+  var pad = n.some(isPadded)
+
+  var length = 0
+  for (var i = x; test(i, y) && N.length < max; i += incr) {
+    var c
+    if (isAlphaSequence) {
+      c = String.fromCharCode(i)
+      if (c === '\\') {
+        c = ''
+      }
+    } else {
+      c = String(i)
+      if (pad) {
+        var need = width - c.length
+        if (need > 0) {
+          var z = new Array(need + 1).join('0')
+          if (i < 0) {
+            c = '-' + z + c.slice(1)
+          } else {
+            c = z + c
+          }
+        }
+      }
+    }
+    if (length + c.length > maxLength) break
+    N.push(c)
+    length += c.length
+  }
+  return N
+}
+
+function expand(
+  str,
+  max,
+  maxLength,
+  isTop
+) {
+  // Consume the string's top-level brace groups left to right, threading a
+  // running set of combined prefixes (`acc`). Expanding the tail iteratively -
+  // rather than recursing on `m.post` once per group - keeps the native stack
+  // depth constant, so deeply chained input (`'{a,b}'.repeat(3000)`) can no
+  // longer overflow the stack, and leaves a single accumulator whose size
+  // `maxLength` bounds directly (CVE-2026-14257).
+  var acc = ['']
+
+  // Bash drops empty results, but only when the *first* top-level group is a
+  // comma set - a sequence like `{a..\}` may legitimately yield ''. The drop
+  // is on the final strings, so it is applied to whichever `combine` produces
+  // them (the one with no brace set left in the tail).
+  var dropEmpties = false
+  var firstGroup = true
+
+  for (;;) {
+    const m = balanced('{', '}', str)
+
+    // No brace set left: the rest of the string is literal.
+    if (!m) {
+      return combine(acc, str, [''], max, maxLength, dropEmpties)
+    }
+
+    // no need to expand pre, since it is guaranteed to be free of brace-sets
+    const pre = m.pre
+
+    if (/\$$/.test(pre)) {
+      acc = combine(
+        acc,
+        pre + '{' + m.body + '}',
+        [''],
+        max,
+        maxLength,
+        dropEmpties && !m.post.length
+      )
+      firstGroup = false
+      if (!m.post.length) break
+      str = m.post
+      continue
+    }
+
     var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
     var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
     var isSequence = isNumericSequence || isAlphaSequence;
@@ -107779,87 +108539,85 @@ function expand(str, isTop) {
       // {a},b}
       if (m.post.match(/,(?!,).*\}/)) {
         str = m.pre + '{' + m.body + escClose + m.post;
-        return expand(str);
+        isTop = true;
+        continue;
       }
-      return [str];
+      // Nothing here expands, so the whole remaining string is literal.
+      return combine(
+        acc,
+        pre + '{' + m.body + '}' + m.post,
+        [''],
+        max,
+        maxLength,
+        dropEmpties
+      )
     }
 
-    var n;
+    if (firstGroup) {
+      dropEmpties = isTop && !isSequence
+      firstGroup = false
+    }
+
+    var values;
     if (isSequence) {
-      n = m.body.split(/\.\./);
+      values = expandSequence(m.body, isAlphaSequence, max, maxLength);
     } else {
-      n = parseCommaParts(m.body);
-      if (n.length === 1) {
+      var n = parseCommaParts(m.body);
+      if (n.length === 1 && n[0] !== undefined) {
         // x{{a,b}}y ==> x{a}y x{b}y
-        n = expand(n[0], false).map(embrace);
+        n = expand(n[0], max, maxLength, false).map(embrace);
+        //XXX is this necessary? Can't seem to hit it in tests.
+        /* c8 ignore start */
         if (n.length === 1) {
-          return post.map(function(p) {
-            return m.pre + n[0] + p;
-          });
+          acc = combine(
+            acc,
+            pre + n[0],
+            [''],
+            max,
+            maxLength,
+            dropEmpties && !m.post.length
+          )
+          if (!m.post.length) break
+          str = m.post
+          continue
+        }
+        /* c8 ignore stop */
+      }
+
+      // Values that `combine` is going to drop as empty produce no result, so
+      // they must not count against `max` - otherwise `{a,,b}` with `max: 2`
+      // would stop at `['a', '']` and yield one result instead of two. Skipping
+      // them outright keeps `values` bounded while leaving `max` a bound on
+      // *kept* results.
+      var dropsEmpties = dropEmpties && !m.post.length && !pre
+      for (var d = 0; dropsEmpties && d < acc.length; d++) {
+        if (acc[d]) {
+          dropsEmpties = false
         }
       }
-    }
 
-    // at this point, n is the parts, and we know it's not a comma set
-    // with a single entry.
-    var N;
-
-    if (isSequence) {
-      var x = numeric(n[0]);
-      var y = numeric(n[1]);
-      var width = Math.max(n[0].length, n[1].length)
-      var incr = n.length == 3
-        ? Math.max(Math.abs(numeric(n[2])), 1)
-        : 1;
-      var test = lte;
-      var reverse = y < x;
-      if (reverse) {
-        incr *= -1;
-        test = gte;
-      }
-      var pad = n.some(isPadded);
-
-      N = [];
-
-      for (var i = x; test(i, y); i += incr) {
-        var c;
-        if (isAlphaSequence) {
-          c = String.fromCharCode(i);
-          if (c === '\\')
-            c = '';
-        } else {
-          c = String(i);
-          if (pad) {
-            var need = width - c.length;
-            if (need > 0) {
-              var z = new Array(need + 1).join('0');
-              if (i < 0)
-                c = '-' + z + c.slice(1);
-              else
-                c = z + c;
-            }
+      values = []
+      var valuesLength = 0
+      outer: for (var j = 0; j < n.length; j++) {
+        var expanded = expand(n[j], max, maxLength, false)
+        for (var k = 0; k < expanded.length; k++) {
+          var v = expanded[k]
+          if (dropsEmpties && !v) continue
+          if (values.length >= max || valuesLength + v.length > maxLength) {
+            break outer
           }
+          values.push(v)
+          valuesLength += v.length
         }
-        N.push(c);
-      }
-    } else {
-      N = [];
-
-      for (var j = 0; j < n.length; j++) {
-        N.push.apply(N, expand(n[j], false));
       }
     }
 
-    for (var j = 0; j < N.length; j++) {
-      for (var k = 0; k < post.length; k++) {
-        var expansion = pre + N[j] + post[k];
-        if (!isTop || isSequence || expansion)
-          expansions.push(expansion);
-      }
-    }
+    acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length)
+    if (!m.post.length) break
+    str = m.post
   }
 
-  return expansions;
+  return acc
 }
 
 
@@ -123044,7 +123802,13 @@ function processHeader (request, key, val) {
       } else if (typeof val[i] === 'object') {
         throw new InvalidArgumentError(`invalid ${key} header`)
       } else {
-        arr.push(`${val[i]}`)
+        // Coerce primitives (and reject unsafe coercions such as functions
+        // with a crafted toString/Symbol.toPrimitive).
+        const str = `${val[i]}`
+        if (!isValidHeaderValue(str)) {
+          throw new InvalidArgumentError(`invalid ${key} header`)
+        }
+        arr.push(str)
       }
     }
     val = arr
@@ -123055,7 +123819,12 @@ function processHeader (request, key, val) {
   } else if (val === null) {
     val = ''
   } else {
+    // Coerce primitives (and reject unsafe coercions such as functions
+    // with a crafted toString/Symbol.toPrimitive).
     val = `${val}`
+    if (!isValidHeaderValue(val)) {
+      throw new InvalidArgumentError(`invalid ${key} header`)
+    }
   }
 
   if (headerName === 'host') {
@@ -124427,6 +125196,7 @@ const {
   RequestContentLengthMismatchError,
   ResponseContentLengthMismatchError,
   RequestAbortedError,
+  InvalidArgumentError,
   HeadersTimeoutError,
   HeadersOverflowError,
   SocketError,
@@ -125292,7 +126062,7 @@ async function connectH1 (client, socket) {
 
 function clearIdleSocketValidation (socket) {
   if (socket[kIdleSocketValidationTimeout]) {
-    clearTimeout(socket[kIdleSocketValidationTimeout])
+    clearImmediate(socket[kIdleSocketValidationTimeout])
     socket[kIdleSocketValidationTimeout] = null
   }
 
@@ -125301,15 +126071,23 @@ function clearIdleSocketValidation (socket) {
 
 function scheduleIdleSocketValidation (client, socket) {
   socket[kIdleSocketValidation] = 1
-  socket[kIdleSocketValidationTimeout] = setTimeout(() => {
+  // Yield to the check phase (after poll) so unsolicited bytes / FIN / RST
+  // already pending on this idle keep-alive socket are processed before the
+  // next request is written (GHSA-35p6-xmwp-9g52).
+  //
+  // setTimeout(0) pays Node's ~1ms timer floor on every sequential reuse
+  // (#5493). setImmediate avoids that, but an *unref'd* Immediate lets poll
+  // block for ~500ms when the event loop is otherwise idle (#5600 / #5606).
+  // A ref'd Immediate both keeps the pending request alive and makes poll
+  // return immediately — the hybrid those issues asked for.
+  socket[kIdleSocketValidationTimeout] = setImmediate(() => {
     socket[kIdleSocketValidationTimeout] = null
     socket[kIdleSocketValidation] = 2
 
     if (client[kSocket] === socket && !socket.destroyed) {
       client[kResume]()
     }
-  }, 0)
-  socket[kIdleSocketValidationTimeout].unref?.()
+  })
 }
 
 /**
@@ -125410,8 +126188,16 @@ function writeH1 (client, request) {
     }
     body = bodyStream.stream
     contentLength = bodyStream.length
-  } else if (util.isBlobLike(body) && request.contentType == null && body.type) {
-    headers.push('content-type', body.type)
+  } else if (util.isBlobLike(body) && request.contentType == null) {
+    const contentType = body.type
+    if (contentType) {
+      const contentTypeValue = `${contentType}`
+      if (!util.isValidHeaderValue(contentTypeValue)) {
+        util.errorRequest(client, request, new InvalidArgumentError('invalid content-type header'))
+        return false
+      }
+      headers.push('content-type', contentTypeValue)
+    }
   }
 
   if (body && typeof body.read === 'function') {
@@ -128884,6 +129670,28 @@ function calculateRetryAfterHeader (retryAfter) {
   return new Date(retryAfter).getTime() - current
 }
 
+function validatePartialResponseContentLength (headers, range, statusCode, retryCount) {
+  const contentLength = headers['content-length']
+  if (contentLength == null) {
+    return null
+  }
+
+  if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) {
+    return null
+  }
+
+  const length = Number(contentLength)
+  const expectedLength = range.end - range.start + 1
+  if (!Number.isFinite(length) || length !== expectedLength) {
+    return new RequestRetryError('Content-Length mismatch', statusCode, {
+      headers,
+      data: { count: retryCount }
+    })
+  }
+
+  return null
+}
+
 class RetryHandler {
   constructor (opts, handlers) {
     const { retryOptions, ...dispatchOpts } = opts
@@ -128937,6 +129745,7 @@ class RetryHandler {
     this.end = null
     this.etag = null
     this.resume = null
+    this.headersSent = false
 
     // Handle possible onConnect duplication
     this.handler.onConnect(reason => {
@@ -128947,6 +129756,20 @@ class RetryHandler {
         this.reason = reason
       }
     })
+  }
+
+  checkpointResponseEnd (headers, resume) {
+    if (this.end == null && this.opts.method !== 'HEAD') {
+      const contentLength = headers['content-length']
+      this.end = contentLength != null ? Number(contentLength) - 1 : null
+
+      assert(
+        this.end == null || Number.isFinite(this.end),
+        'invalid content-length'
+      )
+    }
+
+    this.resume = this.end != null ? resume : null
   }
 
   onRequestSent () {
@@ -129038,6 +129861,8 @@ class RetryHandler {
 
     if (statusCode >= 300) {
       if (this.retryOpts.statusCodes.includes(statusCode) === false) {
+        this.headersSent = true
+        this.checkpointResponseEnd(headers, resume)
         return this.handler.onHeaders(
           statusCode,
           rawHeaders,
@@ -129098,10 +129923,23 @@ class RetryHandler {
         return false
       }
 
+      const contentLengthError = validatePartialResponseContentLength(headers, contentRange, statusCode, this.retryCount)
+      if (contentLengthError != null) {
+        this.abort(contentLengthError)
+        return false
+      }
+
       const { start, size, end = size - 1 } = contentRange
 
-      assert(this.start === start, 'content-range mismatch')
-      assert(this.end == null || this.end === end, 'content-range mismatch')
+      if (this.start !== start || (this.end != null && this.end !== end)) {
+        this.abort(
+          new RequestRetryError('Content-Range mismatch', statusCode, {
+            headers,
+            data: { count: this.retryCount }
+          })
+        )
+        return false
+      }
 
       this.resume = resume
       return true
@@ -129113,12 +129951,19 @@ class RetryHandler {
         const range = parseRangeHeader(headers['content-range'])
 
         if (range == null) {
+          this.headersSent = true
           return this.handler.onHeaders(
             statusCode,
             rawHeaders,
             resume,
             statusMessage
           )
+        }
+
+        const contentLengthError = validatePartialResponseContentLength(headers, range, statusCode, this.retryCount)
+        if (contentLengthError != null) {
+          this.abort(contentLengthError)
+          return false
         }
 
         const { start, size, end = size - 1 } = range
@@ -129145,6 +129990,7 @@ class RetryHandler {
       )
 
       this.resume = resume
+      this.headersSent = true
       this.etag = headers.etag != null ? headers.etag : null
 
       // Weak etags are not useful for comparison nor cache
@@ -129184,7 +130030,7 @@ class RetryHandler {
   }
 
   onError (err) {
-    if (this.aborted || isDisturbed(this.opts.body)) {
+    if (this.aborted || isDisturbed(this.opts.body) || (this.headersSent && this.resume == null)) {
       return this.handler.onError(err)
     }
 
@@ -133365,7 +134211,7 @@ function validateCookiePath (path) {
 
     if (
       code < 0x20 || // exclude CTLs (0-31)
-      code === 0x7F || // DEL
+      code > 0x7E || // exclude DEL and non-ascii
       code === 0x3B // ;
     ) {
       throw new Error('Invalid cookie path')
@@ -133374,16 +134220,80 @@ function validateCookiePath (path) {
 }
 
 /**
- * I have no idea why these values aren't allowed to be honest,
- * but Deno tests these. - Khafra
+ * <let-dig> ::= <letter> | <digit>
+ *
+ * <letter> ::= any one of the 52 alphabetic characters A through Z in
+ * upper case and a through z in lower case
+ *
+ * <digit> ::= any one of the ten digits 0 through 9r
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+ * @param {number} code
+ */
+function isLetterOrDigit (code) {
+  return (
+    (code >= 0x30 && code <= 0x39) || // 0-9
+    (code >= 0x41 && code <= 0x5A) || // A-Z
+    (code >= 0x61 && code <= 0x7A) // a-z
+  )
+}
+
+/**
+ * Validates a cookie domain against the "preferred name syntax".
+ *
+ * <domain>      ::= <subdomain> | " "
+ * <subdomain>   ::= <label> | <subdomain> "." <label>
+ * <label>       ::= <let-dig> [ [ <ldh-str> ] <let-dig> ]
+ * <ldh-str>     ::= <let-dig-hyp> | <let-dig-hyp> <ldh-str>
+ * <let-dig-hyp> ::= <let-dig> | "-"
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+ * @see https://www.rfc-editor.org/rfc/rfc1123#section-2.1
+ * @see https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
  * @param {string} domain
  */
 function validateCookieDomain (domain) {
-  if (
-    domain.startsWith('-') ||
-    domain.endsWith('.') ||
-    domain.endsWith('-')
-  ) {
+  // <domain> ::= <subdomain> | " "
+  if (domain === ' ') {
+    return
+  }
+
+  if (domain.length > 255) {
+    throw new Error('Invalid cookie domain')
+  }
+
+  let labelLength = 0
+
+  for (let i = 0; i < domain.length; ++i) {
+    const code = domain.charCodeAt(i)
+
+    if (code === 0x2E) {
+      if (labelLength === 0) {
+        throw new Error('Invalid cookie domain')
+      }
+
+      if (domain.charCodeAt(i - 1) === 0x2D) { // "-"
+        throw new Error('Invalid cookie domain')
+      }
+
+      labelLength = 0
+      continue
+    }
+
+    if (labelLength === 0 && !isLetterOrDigit(code)) {
+      throw new Error('Invalid cookie domain')
+    }
+
+    if (!isLetterOrDigit(code) && code !== 0x2D) { // "-"
+      throw new Error('Invalid cookie domain')
+    }
+
+    if (++labelLength > 63) {
+      throw new Error('Invalid cookie domain')
+    }
+  }
+
+  if (labelLength === 0 || domain.charCodeAt(domain.length - 1) === 0x2D) { // "-"
     throw new Error('Invalid cookie domain')
   }
 }
@@ -133526,7 +134436,13 @@ function stringify (cookie) {
 
     const [key, ...value] = part.split('=')
 
-    out.push(`${key.trim()}=${value.join('=')}`)
+    const trimmedKey = key.trim()
+    const joinedValue = value.join('=')
+
+    validateCookieName(trimmedKey)
+    validateCookieValue(joinedValue)
+
+    out.push(`${trimmedKey}=${joinedValue}`)
   }
 
   return out.join('; ')
@@ -133572,6 +134488,49 @@ const COLON = 0x3A
  */
 const SPACE = 0x20
 
+const DATA = Buffer.from('data')
+const EVENT = Buffer.from('event')
+const ID = Buffer.from('id')
+const RETRY = Buffer.from('retry')
+
+function isASCIINumberBytes (buffer, start) {
+  if (start >= buffer.length) {
+    return false
+  }
+
+  for (let i = start; i < buffer.length; i++) {
+    if (buffer[i] < 0x30 || buffer[i] > 0x39) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function isValidLastEventIdBytes (buffer, start) {
+  for (let i = start; i < buffer.length; i++) {
+    if (buffer[i] === 0x00) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function isFieldName (line, length, field) {
+  if (length !== field.length) {
+    return false
+  }
+
+  for (let i = 0; i < length; i++) {
+    if (line[i] !== field[i]) {
+      return false
+    }
+  }
+
+  return true
+}
+
 /**
  * @typedef {object} EventSourceStreamEvent
  * @type {object}
@@ -133612,11 +134571,14 @@ class EventSourceStream extends Transform {
   eventEndCheck = false
 
   /**
-   * @type {Buffer}
+   * @type {Buffer[]}
    */
-  buffer = null
+  chunks = []
 
+  chunkIndex = 0
   pos = 0
+  lineChunkIndex = 0
+  linePos = 0
 
   event = {
     data: undefined,
@@ -133655,92 +134617,20 @@ class EventSourceStream extends Transform {
       return
     }
 
-    // Cache the chunk in the buffer, as the data might not be complete while
-    // processing it
-    // TODO: Investigate if there is a more performant way to handle
-    // incoming chunks
-    // see: https://github.com/nodejs/undici/issues/2630
-    if (this.buffer) {
-      this.buffer = Buffer.concat([this.buffer, chunk])
-    } else {
-      this.buffer = chunk
-    }
+    this.chunks.push(chunk)
 
     // Strip leading byte-order-mark if we opened the stream and started
     // the processing of the incoming data
     if (this.checkBOM) {
-      switch (this.buffer.length) {
-        case 1:
-          // Check if the first byte is the same as the first byte of the BOM
-          if (this.buffer[0] === BOM[0]) {
-            // If it is, we need to wait for more data
-            callback()
-            return
-          }
-          // Set the checkBOM flag to false as we don't need to check for the
-          // BOM anymore
-          this.checkBOM = false
-
-          // The buffer only contains one byte so we need to wait for more data
-          callback()
-          return
-        case 2:
-          // Check if the first two bytes are the same as the first two bytes
-          // of the BOM
-          if (
-            this.buffer[0] === BOM[0] &&
-            this.buffer[1] === BOM[1]
-          ) {
-            // If it is, we need to wait for more data, because the third byte
-            // is needed to determine if it is the BOM or not
-            callback()
-            return
-          }
-
-          // Set the checkBOM flag to false as we don't need to check for the
-          // BOM anymore
-          this.checkBOM = false
-          break
-        case 3:
-          // Check if the first three bytes are the same as the first three
-          // bytes of the BOM
-          if (
-            this.buffer[0] === BOM[0] &&
-            this.buffer[1] === BOM[1] &&
-            this.buffer[2] === BOM[2]
-          ) {
-            // If it is, we can drop the buffered data, as it is only the BOM
-            this.buffer = Buffer.alloc(0)
-            // Set the checkBOM flag to false as we don't need to check for the
-            // BOM anymore
-            this.checkBOM = false
-
-            // Await more data
-            callback()
-            return
-          }
-          // If it is not the BOM, we can start processing the data
-          this.checkBOM = false
-          break
-        default:
-          // The buffer is longer than 3 bytes, so we can drop the BOM if it is
-          // present
-          if (
-            this.buffer[0] === BOM[0] &&
-            this.buffer[1] === BOM[1] &&
-            this.buffer[2] === BOM[2]
-          ) {
-            // Remove the BOM from the buffer
-            this.buffer = this.buffer.subarray(3)
-          }
-
-          // Set the checkBOM flag to false as we don't need to check for the
-          this.checkBOM = false
-          break
+      if (this.handleBOM()) {
+        callback()
+        return
       }
     }
 
-    while (this.pos < this.buffer.length) {
+    while (this.hasCurrentByte()) {
+      const byte = this.currentByte()
+
       // If the previous line ended with an end-of-line, we need to check
       // if the next character is also an end-of-line.
       if (this.eventEndCheck) {
@@ -133753,10 +134643,9 @@ class EventSourceStream extends Transform {
         if (this.crlfCheck) {
           // If the current character is a line feed, we can remove it
           // from the buffer and reset the crlfCheck flag
-          if (this.buffer[this.pos] === LF) {
-            this.buffer = this.buffer.subarray(this.pos + 1)
-            this.pos = 0
+          if (byte === LF) {
             this.crlfCheck = false
+            this.consumeCurrentByte()
 
             // It is possible that the line feed is not the end of the
             // event. We need to check if the next character is an
@@ -133772,19 +134661,17 @@ class EventSourceStream extends Transform {
           this.crlfCheck = false
         }
 
-        if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+        if (byte === LF || byte === CR) {
           // If the current character is a carriage return, we need to
           // set the crlfCheck flag to true, as we need to check if the
           // next character is a line feed so we can remove it from the
           // buffer
-          if (this.buffer[this.pos] === CR) {
+          if (byte === CR) {
             this.crlfCheck = true
           }
 
-          this.buffer = this.buffer.subarray(this.pos + 1)
-          this.pos = 0
-          if (
-            this.event.data !== undefined || this.event.event || this.event.id || this.event.retry) {
+          this.consumeCurrentByte()
+          if (this.hasPendingEvent()) {
             this.processEvent(this.event)
           }
           this.clearEvent()
@@ -133798,22 +134685,18 @@ class EventSourceStream extends Transform {
 
       // If the current character is an end-of-line, we can process the
       // line
-      if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+      if (byte === LF || byte === CR) {
         // If the current character is a carriage return, we need to
         // set the crlfCheck flag to true, as we need to check if the
         // next character is a line feed
-        if (this.buffer[this.pos] === CR) {
+        if (byte === CR) {
           this.crlfCheck = true
         }
 
         // In any case, we can process the line as we reached an
         // end-of-line character
-        this.parseLine(this.buffer.subarray(0, this.pos), this.event)
-
-        // Remove the processed line from the buffer
-        this.buffer = this.buffer.subarray(this.pos + 1)
-        // Reset the position as we removed the processed line from the buffer
-        this.pos = 0
+        this.parseLine(this.readLine(), this.event)
+        this.consumeCurrentByte()
         // A line was processed and this could be the end of the event. We need
         // to check if the next line is empty to determine if the event is
         // finished.
@@ -133821,7 +134704,7 @@ class EventSourceStream extends Transform {
         continue
       }
 
-      this.pos++
+      this.advanceCursor()
     }
 
     callback()
@@ -133846,64 +134729,53 @@ class EventSourceStream extends Transform {
       return
     }
 
-    let field = ''
-    let value = ''
+    let fieldLength = line.length
+    let valueStart = line.length
 
     // If the line contains a U+003A COLON character (:)
     if (colonPosition !== -1) {
-      // Collect the characters on the line before the first U+003A COLON
-      // character (:), and let field be that string.
-      // TODO: Investigate if there is a more performant way to extract the
-      // field
-      // see: https://github.com/nodejs/undici/issues/2630
-      field = line.subarray(0, colonPosition).toString('utf8')
+      fieldLength = colonPosition
 
       // Collect the characters on the line after the first U+003A COLON
       // character (:), and let value be that string.
       // If value starts with a U+0020 SPACE character, remove it from value.
-      let valueStart = colonPosition + 1
+      valueStart = colonPosition + 1
       if (line[valueStart] === SPACE) {
         ++valueStart
       }
-      // TODO: Investigate if there is a more performant way to extract the
-      // value
-      // see: https://github.com/nodejs/undici/issues/2630
-      value = line.subarray(valueStart).toString('utf8')
-
-      // Otherwise, the string is not empty but does not contain a U+003A COLON
-      // character (:)
-    } else {
-      // Process the field using the steps described below, using the whole
-      // line as the field name, and the empty string as the field value.
-      field = line.toString('utf8')
-      value = ''
     }
 
-    // Modify the event with the field name and value. The value is also
-    // decoded as UTF-8
-    switch (field) {
-      case 'data':
-        if (event[field] === undefined) {
-          event[field] = value
-        } else {
-          event[field] += `\n${value}`
-        }
-        break
-      case 'retry':
-        if (isASCIINumber(value)) {
-          event[field] = value
-        }
-        break
-      case 'id':
-        if (isValidLastEventId(value)) {
-          event[field] = value
-        }
-        break
-      case 'event':
-        if (value.length > 0) {
-          event[field] = value
-        }
-        break
+    if (isFieldName(line, fieldLength, DATA)) {
+      const value = line.toString('utf8', valueStart)
+
+      if (event.data === undefined) {
+        event.data = value
+      } else {
+        event.data += `\n${value}`
+      }
+      return
+    }
+
+    if (isFieldName(line, fieldLength, RETRY)) {
+      if (isASCIINumberBytes(line, valueStart)) {
+        event.retry = line.toString('utf8', valueStart)
+      }
+      return
+    }
+
+    if (isFieldName(line, fieldLength, ID)) {
+      if (isValidLastEventIdBytes(line, valueStart)) {
+        event.id = line.toString('utf8', valueStart)
+      }
+      return
+    }
+
+    if (isFieldName(line, fieldLength, EVENT)) {
+      const value = line.toString('utf8', valueStart)
+
+      if (value.length > 0) {
+        event.event = value
+      }
     }
   }
 
@@ -133933,12 +134805,151 @@ class EventSourceStream extends Transform {
   }
 
   clearEvent () {
-    this.event = {
-      data: undefined,
-      event: undefined,
-      id: undefined,
-      retry: undefined
+    this.event.data = undefined
+    this.event.event = undefined
+    this.event.id = undefined
+    this.event.retry = undefined
+  }
+
+  hasPendingEvent () {
+    return this.event.data !== undefined ||
+      this.event.event !== undefined ||
+      this.event.id !== undefined ||
+      this.event.retry !== undefined
+  }
+
+  hasCurrentByte () {
+    return this.chunkIndex < this.chunks.length &&
+      this.pos < this.chunks[this.chunkIndex].length
+  }
+
+  currentByte () {
+    return this.chunks[this.chunkIndex][this.pos]
+  }
+
+  consumeCurrentByte () {
+    this.advanceCursor()
+    this.syncLineStartToCursor()
+  }
+
+  advanceCursor () {
+    this.pos++
+
+    while (this.chunkIndex < this.chunks.length && this.pos >= this.chunks[this.chunkIndex].length) {
+      this.chunkIndex++
+      this.pos = 0
     }
+  }
+
+  syncLineStartToCursor () {
+    this.lineChunkIndex = this.chunkIndex
+    this.linePos = this.pos
+    this.dropConsumedChunks()
+  }
+
+  dropConsumedChunks () {
+    while (this.lineChunkIndex > 0) {
+      this.chunks.shift()
+      this.lineChunkIndex--
+      this.chunkIndex--
+    }
+
+    if (this.chunkIndex === this.chunks.length) {
+      this.chunks.length = 0
+      this.chunkIndex = 0
+      this.pos = 0
+      this.lineChunkIndex = 0
+      this.linePos = 0
+    }
+  }
+
+  readLine () {
+    if (this.lineChunkIndex === this.chunkIndex) {
+      return this.chunks[this.chunkIndex].subarray(this.linePos, this.pos)
+    }
+
+    const chunks = []
+    let length = 0
+
+    for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
+      const chunk = this.chunks[i]
+      const start = i === this.lineChunkIndex ? this.linePos : 0
+      const end = i === this.chunkIndex ? this.pos : chunk.length
+      const slice = chunk.subarray(start, end)
+      length += slice.length
+      chunks.push(slice)
+    }
+
+    return Buffer.concat(chunks, length)
+  }
+
+  peekBufferedByte (offset) {
+    let chunkIndex = this.lineChunkIndex
+    let pos = this.linePos
+
+    while (chunkIndex < this.chunks.length) {
+      const chunk = this.chunks[chunkIndex]
+      const remaining = chunk.length - pos
+
+      if (offset < remaining) {
+        return chunk[pos + offset]
+      }
+
+      offset -= remaining
+      chunkIndex++
+      pos = 0
+    }
+  }
+
+  discardLeadingBytes (count) {
+    while (count > 0 && this.lineChunkIndex < this.chunks.length) {
+      const chunk = this.chunks[this.lineChunkIndex]
+      const remaining = chunk.length - this.linePos
+
+      if (count < remaining) {
+        this.linePos += count
+        count = 0
+      } else {
+        count -= remaining
+        this.lineChunkIndex++
+        this.linePos = 0
+      }
+    }
+
+    this.chunkIndex = this.lineChunkIndex
+    this.pos = this.linePos
+    this.dropConsumedChunks()
+  }
+
+  handleBOM () {
+    const first = this.peekBufferedByte(0)
+    const second = this.peekBufferedByte(1)
+    const third = this.peekBufferedByte(2)
+
+    if (second === undefined) {
+      if (first === BOM[0]) {
+        return true
+      }
+
+      this.checkBOM = false
+      return true
+    }
+
+    if (third === undefined) {
+      if (first === BOM[0] && second === BOM[1]) {
+        return true
+      }
+
+      this.checkBOM = false
+      return false
+    }
+
+    if (first === BOM[0] && second === BOM[1] && third === BOM[2]) {
+      this.discardLeadingBytes(3)
+    }
+
+    this.checkBOM = false
+    return !this.hasCurrentByte()
   }
 }
 
@@ -145207,7 +146218,7 @@ function establishWebSocketConnection (url, protocols, client, ws, onEstablish, 
         // is specified, the server needs to include the same field and one of
         // the selected subprotocol values in its response for the connection to
         // be established.
-        if (!requestProtocols.includes(secProtocol)) {
+        if (requestProtocols === null || !requestProtocols.includes(secProtocol)) {
           failWebsocketConnection(ws, 'Protocol was not set in the opening handshake.')
           return
         }
@@ -145968,7 +146979,12 @@ class PerMessageDeflate {
 
         if (this.#maxPayloadSize > 0 && this.#inflate[kLength] > this.#maxPayloadSize) {
           callback(new MessageSizeExceededError())
+          // The inflater may still hold buffered input that can emit a late
+          // zlib error. Remove the data listener, then deterministically stop
+          // the stream so a subsequent 'error' cannot fire without a listener
+          // (which would terminate the process as an unhandled error event).
           this.#inflate.removeAllListeners()
+          this.#inflate.destroy()
           this.#inflate = null
           return
         }
@@ -157710,7 +158726,11 @@ const isStream = (s) => !!s &&
     (s instanceof Minipass ||
         s instanceof node_stream_1.default ||
         (0, exports.isReadable)(s) ||
-        (0, exports.isWritable)(s));
+        (0, exports.isWritable)(s))
+/**
+ * Return true if the argument is a valid {@link Minipass.Readable}
+ */
+;
 exports.isStream = isStream;
 /**
  * Return true if the argument is a valid {@link Minipass.Readable}
@@ -157720,7 +158740,11 @@ const isReadable = (s) => !!s &&
     s instanceof node_events_1.EventEmitter &&
     typeof s.pipe === 'function' &&
     // node core Writable streams have a pipe() method, but it throws
-    s.pipe !== node_stream_1.default.Writable.prototype.pipe;
+    s.pipe !== node_stream_1.default.Writable.prototype.pipe
+/**
+ * Return true if the argument is a valid {@link Minipass.Writable}
+ */
+;
 exports.isReadable = isReadable;
 /**
  * Return true if the argument is a valid {@link Minipass.Writable}
@@ -157817,7 +158841,7 @@ class PipeProxyErrors extends Pipe {
     }
     constructor(src, dest, opts) {
         super(src, dest, opts);
-        this.proxyErrors = er => dest.emit('error', er);
+        this.proxyErrors = (er) => this.dest.emit('error', er);
         src.on('error', this.proxyErrors);
     }
 }
@@ -158627,6 +159651,7 @@ class Minipass extends node_events_1.EventEmitter {
             [Symbol.asyncIterator]() {
                 return this;
             },
+            [Symbol.asyncDispose]: async () => { },
         };
     }
     /**
@@ -158664,6 +159689,7 @@ class Minipass extends node_events_1.EventEmitter {
             [Symbol.iterator]() {
                 return this;
             },
+            [Symbol.dispose]: () => { },
         };
     }
     /**
