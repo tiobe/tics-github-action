@@ -80,7 +80,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
         };
         logger.debug('Creating check run with: ' + JSON.stringify(pars));
         const response = await octokit.rest.checks.create(pars);
-        checkRunId = response.data.id;
+        checkRunId = response.data.id as number;
       } else {
         const pars: UpdateCheckRunParams = { ...params, check_run_id: checkRunId };
         if (i + batchSize >= annotations.length) {

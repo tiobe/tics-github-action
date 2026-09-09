@@ -12,8 +12,10 @@ const config = {
     esModule: true,
     file: 'dist/index.js',
     format: 'es',
-    sourcemap: true
+    sourcemap: true,
+    inlineDynamicImports: true
   },
+  external: ['kerberos'],
   plugins: [
     json(),
     typescript(),
