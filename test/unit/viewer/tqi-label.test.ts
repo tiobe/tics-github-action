@@ -1,15 +1,14 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { getTqiLabel } from '../../../src/viewer/tqi-label';
-import { SpiedFunction } from 'jest-mock';
 import * as measure from '../../../src/viewer/measure';
 import { MeasureApiResponse } from '../../../src/viewer/interfaces';
 import { afterEach } from 'node:test';
 
 describe('getTqiLabel', () => {
-  let getSpy: SpiedFunction<typeof measure.getMeasureApiData>;
+  let getSpy: Mock<typeof measure.getMeasureApiData>;
 
   beforeEach(() => {
-    getSpy = jest.spyOn(measure, 'getMeasureApiData');
+    getSpy = vi.spyOn(measure, 'getMeasureApiData');
 
     getSpy.mockImplementation(
       (
@@ -585,7 +584,7 @@ describe('getTqiLabel', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should create tqi label information retrieved from viewer with client token present', async () => {

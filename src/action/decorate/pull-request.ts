@@ -1,11 +1,11 @@
-import { actionConfig } from '../../configuration/config';
-import { getPostedReviewComments, deletePreviousReviewComments } from '../../github/annotations';
-import { getPostedComments, deletePreviousComments, postComment } from '../../github/comments';
-import { postReview } from '../../github/review';
-import { Events } from '../../github/enums';
+import { actionConfig } from '../../configuration/config.js';
+import { getPostedReviewComments, deletePreviousReviewComments } from '../../github/annotations.js';
+import { getPostedComments, deletePreviousComments, postComment } from '../../github/comments.js';
+import { postReview } from '../../github/review.js';
+import { Events } from '../../github/enums.js';
 
 // imported for testing
-import * as self from './pull-request';
+import * as self from './pull-request.js';
 
 /**
  * Function to combine the posting to conversation in a single location.

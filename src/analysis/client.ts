@@ -1,8 +1,8 @@
-import { Verdict } from '../helper/interfaces';
-import { logger } from '../helper/logger';
-import { runTicsAnalyzer } from '../tics/analyzer';
-import { getChangedFiles } from './helper/changed-files';
-import { processCompleteAnalysis, processIncompleteAnalysis } from './client/process-analysis';
+import { Verdict } from '../helper/interfaces.js';
+import { logger } from '../helper/logger.js';
+import { runTicsAnalyzer } from '../tics/analyzer.js';
+import { getChangedFiles } from './helper/changed-files.js';
+import { processCompleteAnalysis, processIncompleteAnalysis } from './client/process-analysis.js';
 
 export async function clientAnalysis(): Promise<Verdict> {
   const changedFiles = await getChangedFiles();

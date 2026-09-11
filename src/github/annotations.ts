@@ -1,10 +1,10 @@
-import { AnnotationLevel, CreateCheckRunParams, GithubAnnotation, ReviewComment, UpdateCheckRunParams } from './interfaces';
-import { logger } from '../helper/logger';
-import { ProjectResult } from '../helper/interfaces';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/config';
-import { ExtendedAnnotation } from '../viewer/interfaces';
-import { octokit } from './octokit';
+import { AnnotationLevel, CreateCheckRunParams, GithubAnnotation, ReviewComment, UpdateCheckRunParams } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { ProjectResult } from '../helper/interfaces.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig, actionConfig } from '../configuration/config.js';
+import { ExtendedAnnotation } from '../viewer/interfaces.js';
+import { octokit } from './octokit.js';
 import { EOL } from 'os';
 import { format } from 'date-fns';
 
@@ -23,7 +23,8 @@ export async function getPostedReviewComments(): Promise<ReviewComment[]> {
     const params = {
       owner: githubConfig.owner,
       repo: githubConfig.reponame,
-      pull_number: githubConfig.pullRequestNumber
+      pull_number: githubConfig.pullRequestNumber,
+      per_page: githubConfig.itemsPerPage
     };
     response = await octokit.paginate(octokit.rest.pulls.listReviewComments, params);
     logger.info('Retrieve posted review comments.');
@@ -79,7 +80,7 @@ export async function postAnnotations(projectResults: ProjectResult[]): Promise<
         };
         logger.debug('Creating check run with: ' + JSON.stringify(pars));
         const response = await octokit.rest.checks.create(pars);
-        checkRunId = response.data.id;
+        checkRunId = response.data.id as number;
       } else {
         const pars: UpdateCheckRunParams = { ...params, check_run_id: checkRunId };
         if (i + batchSize >= annotations.length) {

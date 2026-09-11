@@ -1,5 +1,46 @@
-import { SummaryImageOptions, SummaryTableRow, SummaryWriteOptions } from '@actions/core/lib/summary';
 import { EOL } from 'os';
+
+export type SummaryTableRow = (SummaryTableCell | string)[];
+export interface SummaryTableCell {
+  /**
+   * Cell content
+   */
+  data: string;
+  /**
+   * Render cell as header
+   * (optional) default: false
+   */
+  header?: boolean;
+  /**
+   * Number of columns the cell extends
+   * (optional) default: '1'
+   */
+  colspan?: string;
+  /**
+   * Number of rows the cell extends
+   * (optional) default: '1'
+   */
+  rowspan?: string;
+}
+export interface SummaryImageOptions {
+  /**
+   * The width of the image in pixels. Must be an integer without a unit.
+   * (optional)
+   */
+  width?: string;
+  /**
+   * The height of the image in pixels. Must be an integer without a unit.
+   * (optional)
+   */
+  height?: string;
+}
+export interface SummaryWriteOptions {
+  /**
+   * Replace all existing content in summary file with buffer contents
+   * (optional) default: false
+   */
+  overwrite?: boolean;
+}
 
 class Summary {
   _buffer: string;

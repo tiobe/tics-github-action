@@ -1,9 +1,9 @@
 import { HttpBadRequestResponse } from '@tiobe/http-client';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
-import { logger } from '../helper/logger';
-import { getRetryErrorMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config.js';
+import { logger } from '../helper/logger.js';
+import { getRetryErrorMessage } from '../helper/response.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
 
 /**
  * Creates a project in the viewer if it does not exist.

@@ -1,10 +1,10 @@
-import { githubConfig, ticsConfig } from '../../configuration/config';
-import { Mode } from '../../configuration/tics';
-import { getChangedFilesOfCommit } from '../../github/commits';
-import { ChangedFile } from '../../github/interfaces';
-import { getChangedFilesOfPullRequestQL, changedFilesToFile, getChangedFilesOfPullRequestRest } from '../../github/pulls';
-import { ChangedFiles } from '../../helper/interfaces';
-import { logger } from '../../helper/logger';
+import { githubConfig, ticsConfig } from '../../configuration/config.js';
+import { Mode } from '../../configuration/tics.js';
+import { getChangedFilesOfCommit } from '../../github/commits.js';
+import { ChangedFile } from '../../github/interfaces.js';
+import { getChangedFilesOfPullRequestQL, changedFilesToFile, getChangedFilesOfPullRequestRest } from '../../github/pulls.js';
+import { ChangedFiles } from '../../helper/interfaces.js';
+import { logger } from '../../helper/logger.js';
 
 export async function getChangedFiles(): Promise<ChangedFiles> {
   let changedFilesFilePath: string;

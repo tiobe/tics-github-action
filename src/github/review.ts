@@ -1,8 +1,8 @@
-import { logger } from '../helper/logger';
-import { Events } from './enums';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig } from '../configuration/config';
-import { octokit } from './octokit';
+import { logger } from '../helper/logger.js';
+import { Events } from './enums.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig } from '../configuration/config.js';
+import { octokit } from './octokit.js';
 
 /**
  * Create review on the pull request from the analysis given.

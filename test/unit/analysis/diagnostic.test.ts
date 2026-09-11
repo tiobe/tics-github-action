@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as analyzer from '../../../src/tics/analyzer';
 import * as diagnostic from '../../../src/github/diagnostic';
 
@@ -8,11 +8,11 @@ import { analysisFailed, analysisPassed } from './objects/diagnostic';
 import { diagnosticAnalysis } from '../../../src/analysis/diagnostic';
 
 describe('diagnostic mode checks', () => {
-  let spyAnalyzer: jest.SpiedFunction<typeof analyzer.runTicsAnalyzer>;
+  let spyAnalyzer: Mock<typeof analyzer.runTicsAnalyzer>;
 
   beforeEach(() => {
-    spyAnalyzer = jest.spyOn(analyzer, 'runTicsAnalyzer');
-    jest.spyOn(diagnostic, 'getRateLimit').mockResolvedValue({
+    spyAnalyzer = vi.spyOn(analyzer, 'runTicsAnalyzer');
+    vi.spyOn(diagnostic, 'getRateLimit').mockResolvedValue({
       rate: {
         limit: 5000,
         used: 1,
@@ -22,6 +22,10 @@ describe('diagnostic mode checks', () => {
     });
 
     ticsConfigMock.mode = Mode.DIAGNOSTIC;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('diagnostic mode succeeds', async () => {

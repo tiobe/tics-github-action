@@ -1,9 +1,9 @@
 import { getInput, getBooleanInput } from '@actions/core';
 
-import { isOneOf } from '../helper/utils';
-import { logger } from '../helper/logger';
+import { isOneOf } from '../helper/utils.js';
+import { logger } from '../helper/logger.js';
 import { getBaseUrl } from '@tiobe/install-tics';
-import { setVariable, unsetVariable } from '../helper/environment';
+import { setVariable, unsetVariable } from '../helper/environment.js';
 
 export enum Mode {
   CLIENT = 'client',

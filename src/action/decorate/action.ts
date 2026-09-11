@@ -1,8 +1,8 @@
-import { decoratePullRequest } from './pull-request';
-import { createErrorSummaryBody, createSummaryBody } from './summary';
-import { githubConfig, actionConfig } from '../../configuration/config';
-import { postAnnotations } from '../../github/annotations';
-import { Analysis, AnalysisResult } from '../../helper/interfaces';
+import { decoratePullRequest } from './pull-request.js';
+import { createErrorSummaryBody, createSummaryBody } from './summary.js';
+import { githubConfig, actionConfig } from '../../configuration/config.js';
+import { postAnnotations } from '../../github/annotations.js';
+import { Analysis, AnalysisResult } from '../../helper/interfaces.js';
 
 /**
  * Decorate the action with annotations, the summary and an optional

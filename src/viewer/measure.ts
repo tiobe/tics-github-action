@@ -1,9 +1,9 @@
-import { ticsCli, ticsConfig } from '../configuration/config';
-import { logger } from '../helper/logger';
-import { getRetryErrorMessage, getRetryMessage } from '../helper/response';
-import { joinUrl } from '../helper/url';
-import { httpClient } from './http-client';
-import { MeasureApiResponse } from './interfaces';
+import { ticsCli, ticsConfig } from '../configuration/config.js';
+import { logger } from '../helper/logger.js';
+import { getRetryErrorMessage, getRetryMessage } from '../helper/response.js';
+import { joinUrl } from '../helper/url.js';
+import { httpClient } from './http-client.js';
+import { MeasureApiResponse } from './interfaces.js';
 
 /**
  * Creates a project in the viewer if it does not exist.

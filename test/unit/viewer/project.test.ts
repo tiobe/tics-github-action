@@ -1,22 +1,21 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeAll, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { httpClient } from '../../../src/viewer/http-client';
 import { createProject } from '../../../src/viewer/project';
 import { ticsCliMock, ticsConfigMock } from '../../.setup/mock';
-import { SpiedFunction } from 'jest-mock';
 import { logger } from '../../../src/helper/logger';
 
 describe('createProject', () => {
-  let putSpy: SpiedFunction<any>;
-  let infoSpy: SpiedFunction<typeof logger.info>;
+  let putSpy: Mock;
+  let infoSpy: Mock<typeof logger.info>;
 
   beforeAll(() => {
     ticsConfigMock.baseUrl = 'http://base.url';
   });
 
   beforeEach(() => {
-    putSpy = jest.spyOn(httpClient, 'put');
-    infoSpy = jest.spyOn(logger, 'info');
-    jest.clearAllMocks();
+    putSpy = vi.spyOn(httpClient, 'put');
+    infoSpy = vi.spyOn(logger, 'info');
+    vi.clearAllMocks();
   });
 
   it('should pass creating a project and log message if returned', async () => {

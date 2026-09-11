@@ -1,15 +1,15 @@
 import { readdirSync } from 'fs';
 import { tmpdir } from 'os';
+import { randomUUID } from 'crypto';
 
 import { DefaultArtifactClient } from '@actions/artifact';
 import { create } from '@actions/artifact-v1';
 import { join } from 'canonical-path';
 
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { emptyToNull } from '../helper/utils';
-import { randomUUID } from 'crypto';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { emptyToNull } from '../helper/utils.js';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config.js';
 
 export async function uploadArtifact(): Promise<void> {
   logger.header('Uploading artifact');

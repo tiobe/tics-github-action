@@ -1,12 +1,11 @@
 import { writeFileSync } from 'fs';
 import { normalize, resolve } from 'canonical-path';
 
-import { ChangedFile, ChangedFilesQueryResponse } from './interfaces';
-import { logger } from '../helper/logger';
-import { handleOctokitError } from '../helper/response';
-import { githubConfig, actionConfig } from '../configuration/config';
-import { octokit } from './octokit';
-import { ChangeType } from './enums';
+import { ChangedFile, ChangedFilesQueryResponse } from './interfaces.js';
+import { logger } from '../helper/logger.js';
+import { handleOctokitError } from '../helper/response.js';
+import { githubConfig, actionConfig } from '../configuration/config.js';
+import { octokit } from './octokit.js';
 
 /**
  * Sends a request to retrieve the changed files for a given pull request to the GitHub API.
@@ -65,17 +64,9 @@ export async function getChangedFilesOfPullRequestQL(): Promise<ChangedFile[]> {
 
   return (
     response.repository.pullRequest.files.nodes
-      .map(n => {
-        return {
-          filename: n.path,
-          additions: n.additions,
-          deletions: n.deletions,
-          changes: n.additions + n.deletions,
-          status: ChangeType[n.changeType]
-        };
-      })
       // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
-      .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
+      .filter(n => n.additions + n.deletions > 0 && !(actionConfig.excludeMovedFiles && n.changeType === 'RENAMED'))
+      .map(n => n.path)
   );
 }
 
@@ -91,29 +82,23 @@ export async function getChangedFilesOfPullRequestRest(): Promise<ChangedFile[]>
   const params = {
     owner: githubConfig.owner,
     repo: githubConfig.reponame,
-    pull_number: githubConfig.pullRequestNumber
+    pull_number: githubConfig.pullRequestNumber,
+    per_page: githubConfig.itemsPerPage
   };
-  let response: ChangedFile[] = [];
   try {
     logger.header('Retrieving changed files.');
-    response = await octokit.paginate(octokit.rest.pulls.listFiles, params, response => {
-      return (
-        response.data
-          // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
-          .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === ChangeType.RENAMED))
-          .map(item => {
-            item.filename = normalize(item.filename);
-            logger.debug(item.filename);
-            return item;
-          })
-      );
-    });
+    const response = await octokit.paginate(octokit.rest.pulls.listFiles, params);
+    const changedFiles = response
+      // If excludeMovedFiles, filter out moved files (a file is moved if the status is 'renamed')
+      .filter(f => f.changes > 0 && !(actionConfig.excludeMovedFiles && f.status === 'renamed'))
+      .map(item => normalize(item.filename));
     logger.info('Retrieved changed files from pull request.');
+    logger.debug(JSON.stringify(changedFiles));
+    return changedFiles;
   } catch (error: unknown) {
     const message = handleOctokitError(error);
     throw Error(`Could not retrieve the changed files: ${message}`);
   }
-  return response;
 }
 
 /**
@@ -126,7 +111,7 @@ export function changedFilesToFile(changedFiles: ChangedFile[]): string {
 
   let contents = '';
   changedFiles.forEach(item => {
-    contents += item.filename + '\n';
+    contents += item + '\n';
   });
 
   const fileListPath = resolve('changedFiles.txt');

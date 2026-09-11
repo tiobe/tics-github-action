@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as core from '@actions/core';
 import { createAndSetOutput } from '../../../src/github/output';
 import { ActionOutput } from '../../../src/github/interfaces';
@@ -6,12 +6,12 @@ import { ProjectResult } from '../../../src/helper/interfaces';
 import { annotationsMock, failedQualityGate, passedQualityGate, allAnnotations } from './objects/output';
 
 describe('createAndSetOutput', () => {
-  let setOutputSpy: jest.SpiedFunction<typeof core.setOutput>;
+  let setOutputSpy: Mock<typeof core.setOutput>;
   let expectedOutput: ActionOutput;
   let projectResult: ProjectResult;
 
   beforeEach(() => {
-    setOutputSpy = jest.spyOn(core, 'setOutput');
+    setOutputSpy = vi.spyOn(core, 'setOutput');
     expectedOutput = {
       conditions: [],
       annotations: []
@@ -27,23 +27,24 @@ describe('createAndSetOutput', () => {
         annotationsApiV1Links: []
       },
       analyzedFiles: [],
-      annotations: []
+      annotations: [],
+      labelInfo: []
     };
   });
 
-  it('output should be empty when no projectResults', async () => {
+  it('output should be empty when no projectResults', () => {
     createAndSetOutput([]);
 
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should be empty when projectResults has no qualityGates', async () => {
+  it('output should be empty when projectResults has no qualityGates', () => {
     createAndSetOutput([projectResult]);
 
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions when projectResults has qualityGate with no annotations', async () => {
+  it('output should have conditions when projectResults has qualityGate with no annotations', () => {
     createAndSetOutput([{ ...projectResult, qualityGate: passedQualityGate }]);
 
     expectedOutput.conditions.push(
@@ -54,7 +55,7 @@ describe('createAndSetOutput', () => {
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions when projectResults has two qualityGates with no annotations', async () => {
+  it('output should have conditions when projectResults has two qualityGates with no annotations', () => {
     createAndSetOutput([
       { ...projectResult, qualityGate: passedQualityGate },
       { ...projectResult, qualityGate: failedQualityGate }
@@ -68,7 +69,7 @@ describe('createAndSetOutput', () => {
     expect(setOutputSpy).toHaveBeenCalledWith('annotations', expectedOutput);
   });
 
-  it('output should have conditions and annotations when projectResults has qualityGate with annotations', async () => {
+  it('output should have conditions and annotations when projectResults has qualityGate with annotations', () => {
     createAndSetOutput([
       { ...projectResult, qualityGate: passedQualityGate },
       { ...projectResult, qualityGate: failedQualityGate, annotations: allAnnotations }

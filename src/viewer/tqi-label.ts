@@ -1,6 +1,6 @@
-import { logger } from '../helper/logger';
-import { LabelInfo, QiVersion } from './interfaces';
-import { getMeasureApiData } from './measure';
+import { logger } from '../helper/logger.js';
+import { LabelInfo, QiVersion } from './interfaces.js';
+import { getMeasureApiData } from './measure.js';
 
 export async function getTqiLabel(project: string, cdtoken?: string): Promise<LabelInfo[]> {
   const labelInfo: LabelInfo[] = [];

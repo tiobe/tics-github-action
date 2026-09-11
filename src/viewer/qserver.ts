@@ -1,6 +1,6 @@
-import { ticsCli } from '../configuration/config';
-import { logger } from '../helper/logger';
-import { getMeasureApiData } from './measure';
+import { ticsCli } from '../configuration/config.js';
+import { logger } from '../helper/logger.js';
+import { getMeasureApiData } from './measure.js';
 
 /**
  * Gets the date of the last QServer run the viewer knows of.

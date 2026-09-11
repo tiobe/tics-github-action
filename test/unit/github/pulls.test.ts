@@ -1,12 +1,16 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, describe, expect, it, test, vi } from 'vitest';
 import * as fs from 'fs';
-import { resolve } from 'canonical-path';
+import * as path from 'canonical-path';
 import { changedFilesToFile, getChangedFilesOfPullRequestQL, getChangedFilesOfPullRequestRest } from '../../../src/github/pulls';
-import { logger } from '../../../src/helper/logger';
-import { changedFile, fourFilesChangedResponse, renamedChangedFileResponse, renamedUnchangedFileResponse, singleFileResponse } from './objects/pulls';
+import { fourFilesChangedResponse, renamedChangedFileResponse, renamedUnchangedFileResponse, singleFileResponse } from './objects/pulls';
 import { octokit } from '../../../src/github/octokit';
 import { actionConfigMock, githubConfigMock } from '../../.setup/mock';
 import { GithubEvent } from '../../../src/configuration/github-event';
+
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.resetModules();
+});
 
 describe('getChangedFilesOfPullRequestQL', () => {
   test('Should not run on non-pullrequest', async () => {
@@ -42,52 +46,21 @@ describe('getChangedFilesOfPullRequestQL', () => {
     (octokit.graphql.paginate as any).mockReturnValueOnce(singleFileResponse);
 
     const response = await getChangedFilesOfPullRequestQL();
-    expect(response).toEqual([
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'test.js',
-        status: 'modified'
-      }
-    ]);
+    expect(response).toEqual(['test.js']);
   });
 
   test('Should include changed moved file', async () => {
     (octokit.graphql.paginate as any).mockReturnValueOnce(renamedChangedFileResponse);
 
     const response = await getChangedFilesOfPullRequestQL();
-    expect(response).toEqual([
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'test.js',
-        status: 'modified'
-      },
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'jest.js',
-        status: 'renamed'
-      }
-    ]);
+    expect(response).toEqual(['test.js', 'jest.js']);
   });
 
   test('Should exclude unchanged moved file', async () => {
     (octokit.graphql.paginate as any).mockReturnValueOnce(renamedUnchangedFileResponse);
 
     const response = await getChangedFilesOfPullRequestQL();
-    expect(response).toEqual([
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'test.js',
-        status: 'modified'
-      }
-    ]);
+    expect(response).toEqual(['test.js']);
   });
 
   test('Should exclude changed moved file on excludeMovedFiles', async () => {
@@ -95,15 +68,7 @@ describe('getChangedFilesOfPullRequestQL', () => {
     (octokit.graphql.paginate as any).mockReturnValueOnce(renamedChangedFileResponse);
 
     const response = await getChangedFilesOfPullRequestQL();
-    expect(response).toEqual([
-      {
-        additions: 3,
-        changes: 4,
-        deletions: 1,
-        filename: 'test.js',
-        status: 'modified'
-      }
-    ]);
+    expect(response).toEqual(['test.js']);
 
     actionConfigMock.excludeMovedFiles = false;
   });
@@ -148,101 +113,91 @@ describe('getChangedFilesOfPullRequestRest', () => {
     expect((error as Error).message).toBe('This function can only be run on a pull request.');
   });
 
-  it('should return single file on getChangedFilesOfCommit', async () => {
+  it('should return single file', async () => {
     githubConfigMock.pullRequestNumber = 1;
-    const changedFiles = [changedFile];
+    const changedFiles = [{ filename: 'test.js', changes: 1, status: 'added' }];
 
-    (octokit.paginate as any).mockResolvedValueOnce(changedFiles);
+    vi.spyOn(octokit, 'paginate').mockResolvedValueOnce(changedFiles);
 
     const response = await getChangedFilesOfPullRequestRest();
 
-    expect(response).toEqual(changedFiles);
+    expect(response).toEqual(['test.js']);
   });
 
   it('should include changed moved file', async () => {
-    const spy = jest.spyOn(logger, 'debug');
-    await getChangedFilesOfPullRequestRest();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', status: 'renamed', changes: 1 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [
-        { filename: 'test.js', status: 'renamed', changes: 1 },
-        { filename: 'test.js', changes: 1 }
-      ]
-    });
+    const response = await getChangedFilesOfPullRequestRest();
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['test.js', 'jest.js']);
   });
 
   it('should exclude unchanged moved file', async () => {
-    const spy = jest.spyOn(logger, 'debug');
-    await getChangedFilesOfPullRequestRest();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', status: 'renamed', changes: 0 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [
-        { filename: 'test.js', status: 'renamed', changes: 0 },
-        { filename: 'test.js', changes: 1 }
-      ]
-    });
+    const response = await getChangedFilesOfPullRequestRest();
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['jest.js']);
   });
 
   it('should exclude changed moved file on excludeMovedFiles', async () => {
     actionConfigMock.excludeMovedFiles = true;
 
-    const spy = jest.spyOn(logger, 'debug');
-    await getChangedFilesOfPullRequestRest();
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'rest.js', status: 'renamed', changes: 1 },
+      { filename: 'test.js', changes: 1 }
+    ]);
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [
-        { filename: 'test.js', status: 'renamed', changes: 1 },
-        { filename: 'test.js', changes: 1 }
-      ]
-    });
+    const response = await getChangedFilesOfPullRequestRest();
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('test.js');
+    expect(response).toEqual(['test.js']);
 
     actionConfigMock.excludeMovedFiles = false;
   });
 
   it('should call debug on callback of paginate', async () => {
     actionConfigMock.excludeMovedFiles = false;
-    const spy = jest.spyOn(logger, 'debug');
-    await getChangedFilesOfPullRequestRest();
 
-    (octokit.paginate as any).mock.calls[0][2]({
-      data: [
-        { filename: 'test.js', changes: 1 },
-        { filename: 'test.js', changes: 1 }
-      ]
-    });
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenCalledWith('test.js');
-  });
-
-  it('should be called with specific parameters on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockReturnValueOnce();
-    const spy = jest.spyOn(octokit, 'paginate');
-
-    await getChangedFilesOfPullRequestRest();
-
-    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listFiles, { repo: 'test', owner: 'tester', pull_number: 1 }, expect.any(Function));
-  });
-
-  it('should return three files on getChangedFilesOfCommit', async () => {
-    (octokit.paginate as any).mockReturnValueOnce([{}, {}, {}]);
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', changes: 1 },
+      { filename: 'jest.js', changes: 1 }
+    ]);
 
     const response = await getChangedFilesOfPullRequestRest();
 
-    expect(response as any[]).toHaveLength(3);
+    expect(response).toEqual(['test.js', 'jest.js']);
+  });
+
+  it('should be called with specific parameters', async () => {
+    const spy = vi.spyOn(octokit, 'paginate');
+    spy.mockResolvedValue([{ filename: 'test.js', changes: 1 }]);
+
+    const response = await getChangedFilesOfPullRequestRest();
+
+    expect(spy).toHaveBeenCalledWith(octokit.rest.pulls.listFiles, { repo: 'test', owner: 'tester', pull_number: 1 });
+    expect(response).toEqual(['test.js']);
+  });
+
+  it('should return two files if one has no changes', async () => {
+    vi.spyOn(octokit, 'paginate').mockResolvedValue([
+      { filename: 'test.js', changes: 1 },
+      { filename: 'jest.js', changes: 1 },
+      { filename: 'rest.js', changes: 0 }
+    ]);
+
+    const response = await getChangedFilesOfPullRequestRest();
+
+    expect(response).toEqual(['test.js', 'jest.js']);
   });
 
   it('should call error on thrown error on paginate', async () => {
-    (octokit.paginate as any).mockImplementationOnce(() => {
+    vi.spyOn(octokit, 'paginate').mockImplementationOnce(() => {
       throw new Error();
     });
 
@@ -259,15 +214,15 @@ describe('getChangedFilesOfPullRequestRest', () => {
 
 describe('changedFilesToFile', () => {
   it('should return file location on changedFilesToFile', () => {
-    (resolve as any).mockReturnValueOnce('/path/to/changedFiles.txt');
+    vi.spyOn(path, 'resolve').mockReturnValueOnce('/path/to/changedFiles.txt');
 
-    const response = changedFilesToFile([changedFile]);
+    const response = changedFilesToFile(['test.js']);
 
     expect(response).toBe('/path/to/changedFiles.txt');
   });
 
   it('should have writeFileSync to have been called once on changedFilesToFile', () => {
-    const spy = jest.spyOn(fs, 'writeFileSync');
+    const spy = vi.spyOn(fs, 'writeFileSync');
 
     changedFilesToFile([]);
 
@@ -275,11 +230,12 @@ describe('changedFilesToFile', () => {
   });
 
   it('should call writeFileSync once with content', () => {
-    (resolve as any).mockReturnValueOnce('/path/to/changedFiles.txt');
-    const spy = jest.spyOn(fs, 'writeFileSync');
+    vi.spyOn(path, 'resolve').mockReturnValueOnce('/path/to/changedFiles.txt');
+    const spy = vi.spyOn(fs, 'writeFileSync');
 
-    changedFilesToFile([changedFile, changedFile]);
+    changedFilesToFile(['test.js', 'test.js']);
 
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('/path/to/changedFiles.txt', 'test.js\ntest.js\n');
   });
 });

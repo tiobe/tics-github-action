@@ -1,7 +1,7 @@
-import { getRateLimit } from '../github/diagnostic';
-import { Verdict } from '../helper/interfaces';
-import { logger } from '../helper/logger';
-import { runTicsAnalyzer } from '../tics/analyzer';
+import { getRateLimit } from '../github/diagnostic.js';
+import { Verdict } from '../helper/interfaces.js';
+import { logger } from '../helper/logger.js';
+import { runTicsAnalyzer } from '../tics/analyzer.js';
 
 /**
  * Function for running the action in diagnostic mode.

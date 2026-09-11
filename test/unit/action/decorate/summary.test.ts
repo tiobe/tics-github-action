@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { summary } from '@actions/core';
 import { ExtendedAnnotation } from '../../../../src/viewer/interfaces';
 import {
@@ -24,7 +25,6 @@ import {
 } from './objects/summary';
 import { githubConfigMock, ticsConfigMock } from '../../../.setup/mock';
 import { ViewerFeature, viewerVersion } from '../../../../src/viewer/version';
-import { expect } from '@jest/globals';
 
 describe('createSummaryBody', () => {
   beforeEach(() => {
@@ -33,11 +33,11 @@ describe('createSummaryBody', () => {
 
   describe('No metric grouping', () => {
     beforeEach(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
         if (feature === ViewerFeature.NEW_ANNOTATIONS) {
-          return false;
+          return Promise.resolve(false);
         }
-        return true;
+        return Promise.resolve(true);
       });
     });
 
@@ -59,7 +59,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('should not contain blocking after if there are no soaked violations', async () => {
@@ -74,7 +74,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+30</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td></tr></table>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('Should contain blocking after if there are partly violations', async () => {
@@ -90,7 +90,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+1</a></td>');
       expect(string).toContain('>-</td></tr></table>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('Should contain blocking after for one of the two conditions', async () => {
@@ -107,7 +107,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>0</a></td>');
       expect(string).toContain('>+3</a></td></tr></table>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('Should pass with no conditions that passed with warnings', async () => {
@@ -116,17 +116,17 @@ describe('createSummaryBody', () => {
       expect(string).toContain('<h3>:heavy_check_mark: Passed </h3>');
       expect(string).toContain('<h3>Conditions: 0 Failed, 2 Passed</h3>');
 
-      summary.clear();
+      await summary.clear();
     });
   });
 
   describe('With metric grouping', () => {
     beforeEach(() => {
-      jest.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
+      vi.spyOn(viewerVersion, 'viewerSupports').mockImplementation(async feature => {
         if (feature === ViewerFeature.NEW_ANNOTATIONS) {
-          return true;
+          return Promise.resolve(true);
         }
-        return false;
+        return Promise.resolve(false);
       });
     });
 
@@ -150,7 +150,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+25</a></td>');
       expect(string).toContain('>0</a></td></tr>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('should not contain blocking after if there are no soaked violations', async () => {
@@ -165,7 +165,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>+30</a></td></tr><tr><td>');
       expect(string).toContain('>+24</a></td></tr></table>');
 
-      summary.clear();
+      await summary.clear();
     });
 
     it('should contain blocking issues if there files with blocking code coverage', async () => {
@@ -177,7 +177,7 @@ describe('createSummaryBody', () => {
       expect(string).toContain('>16.00%</a></td></tr><tr><td>');
       expect(string).toContain('>75.00%</a></td></tr></table>');
 
-      summary.clear();
+      await summary.clear();
     });
   });
 });
@@ -219,7 +219,7 @@ describe('createErrorSummary', () => {
     githubConfigMock.debugger = false;
 
     const body = await createErrorSummaryBody(['Error', 'Error'], []);
-    summary.clear();
+    await summary.clear();
 
     expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 1);
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 0);
@@ -231,7 +231,7 @@ describe('createErrorSummary', () => {
     githubConfigMock.debugger = false;
 
     const body = await createErrorSummaryBody([], ['Warning', 'Warning']);
-    summary.clear();
+    await summary.clear();
 
     expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 0);
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 0);
@@ -243,7 +243,7 @@ describe('createErrorSummary', () => {
     githubConfigMock.debugger = true;
 
     const body = await createErrorSummaryBody([], ['Warning', 'Warning']);
-    summary.clear();
+    await summary.clear();
 
     expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 0);
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);
@@ -257,7 +257,7 @@ describe('createErrorSummary', () => {
     githubConfigMock.debugger = true;
 
     const body = await createErrorSummaryBody(['Error'], ['Warning', 'Warning']);
-    summary.clear();
+    await summary.clear();
 
     expect(body).toContainTimes('<h2>The following errors have occurred during analysis:</h2>', 1);
     expect(body).toContainTimes('<h2>The following warnings have occurred during analysis:</h2>', 1);

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { summary } from './summary_mock';
 import { GithubEvent } from '../../src/configuration/github-event';
 import { ShowAnnotationSeverity } from '../../src/configuration/action';
@@ -84,7 +84,7 @@ export const ticsCliMock = {
   additionalFlags: ''
 };
 
-jest.mock('../../src/configuration/config', () => {
+vi.mock('../../src/configuration/config', () => {
   return {
     githubConfig: githubConfigMock,
     ticsConfig: ticsConfigMock,
@@ -93,49 +93,49 @@ jest.mock('../../src/configuration/config', () => {
   };
 });
 
-jest.mock('../../src/viewer/http-client', () => {
+vi.mock('../../src/viewer/http-client', () => {
   return {
     httpClient: {
-      get: jest.fn(),
-      delete: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn()
+      get: vi.fn(),
+      delete: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn()
     }
   };
 });
 
-jest.mock('../../src/github/octokit', () => {
+vi.mock('../../src/github/octokit', () => {
   return {
     octokit: {
-      paginate: jest.fn(),
+      paginate: vi.fn(),
       rest: {
         pulls: {
           listFiles: () => {},
           listReviewComments: () => {},
-          createReview: jest.fn(),
-          deleteReviewComment: jest.fn()
+          createReview: vi.fn(),
+          deleteReviewComment: vi.fn()
         },
         issues: {
-          listComments: jest.fn(),
-          createComment: jest.fn(),
-          deleteComment: jest.fn()
+          listComments: vi.fn(),
+          createComment: vi.fn(),
+          deleteComment: vi.fn()
         },
         repos: {
-          getCommit: jest.fn()
+          getCommit: vi.fn()
         },
         actions: {
-          listJobsForWorkflowRunAttempt: jest.fn()
+          listJobsForWorkflowRunAttempt: vi.fn()
         },
         rateLimit: {
-          get: jest.fn()
+          get: vi.fn()
         },
         checks: {
-          create: jest.fn(),
-          update: jest.fn()
+          create: vi.fn(),
+          update: vi.fn()
         }
       },
       graphql: {
-        paginate: jest.fn()
+        paginate: vi.fn()
       }
     }
   };
@@ -181,64 +181,64 @@ export const contextMock: {
   }
 };
 
-jest.mock('@actions/github', () => {
+vi.mock('@actions/github', () => {
   return {
     context: contextMock
   };
 });
 
-jest.mock('@actions/core', () => {
+vi.mock('@actions/core', () => {
   return {
-    info: jest.fn(),
-    debug: jest.fn(),
-    notice: jest.fn(),
-    warning: jest.fn(),
-    error: jest.fn(),
-    setFailed: jest.fn(),
-    getInput: jest.fn(),
-    getBooleanInput: jest.fn(),
-    isDebug: jest.fn(),
-    setOutput: jest.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    notice: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+    setFailed: vi.fn(),
+    getInput: vi.fn(),
+    getBooleanInput: vi.fn(),
+    isDebug: vi.fn(),
+    setOutput: vi.fn(),
     summary: summary
   };
 });
-jest.mock('@actions/exec', () => {
+vi.mock('@actions/exec', () => {
   return {
-    exec: jest.fn()
+    exec: vi.fn()
   };
 });
-jest.mock('@actions/artifact', () => {
+vi.mock('@actions/artifact', () => {
   return {
-    DefaultArtifactClient: jest.fn().mockImplementation(() => ({
-      uploadArtifact: jest.fn()
+    DefaultArtifactClient: class {
+      uploadArtifact = vi.fn();
+    }
+  };
+});
+vi.mock('@actions/artifact-v1', () => {
+  return {
+    create: vi.fn().mockImplementation(() => ({
+      uploadArtifact: vi.fn()
     }))
   };
 });
-jest.mock('@actions/artifact-v1', () => {
+vi.mock('fs', () => {
   return {
-    create: jest.fn().mockImplementation(() => ({
-      uploadArtifact: jest.fn()
-    }))
+    writeFileSync: vi.fn(),
+    existsSync: vi.fn(),
+    readdirSync: vi.fn()
   };
 });
-jest.mock('fs', () => {
+vi.mock('canonical-path', () => {
   return {
-    writeFileSync: jest.fn(),
-    existsSync: jest.fn(),
-    readdirSync: jest.fn()
+    resolve: vi.fn(data => data),
+    normalize: vi.fn(data => data),
+    join: vi.fn((one, two) => `${one}/${two}`)
   };
 });
-jest.mock('canonical-path', () => {
+vi.mock('os', () => {
   return {
-    resolve: jest.fn(data => data),
-    normalize: jest.fn(data => data),
-    join: jest.fn((one, two) => `${one}/${two}`)
-  };
-});
-jest.mock('os', () => {
-  return {
-    tmpdir: jest.fn(() => '/tmp'),
-    platform: jest.fn(),
+    tmpdir: vi.fn(() => '/tmp'),
+    platform: vi.fn(),
     EOL: '\n'
   };
 });

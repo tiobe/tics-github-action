@@ -1,7 +1,7 @@
-import { TicsConfiguration } from './tics';
-import { TicsCli } from './tics-cli';
-import { ActionConfiguration } from './action';
-import { GithubConfig } from './github';
+import { TicsConfiguration } from './tics.js';
+import { TicsCli } from './tics-cli.js';
+import { ActionConfiguration } from './action.js';
+import { GithubConfig } from './github.js';
 
 export const actionConfig = new ActionConfiguration();
 export const githubConfig = new GithubConfig();

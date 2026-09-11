@@ -1,10 +1,10 @@
-import { actionConfig, ticsConfig } from '../configuration/config';
-import { ChangedFile } from '../github/interfaces';
-import { logger } from '../helper/logger';
-import { getRetryErrorMessage } from '../helper/response';
-import { httpClient } from './http-client';
-import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces';
-import { ViewerFeature, viewerVersion } from './version';
+import { actionConfig, ticsConfig } from '../configuration/config.js';
+import { ChangedFile } from '../github/interfaces.js';
+import { logger } from '../helper/logger.js';
+import { getRetryErrorMessage } from '../helper/response.js';
+import { httpClient } from './http-client.js';
+import { AnnotationApiLink, ExtendedAnnotation, AnnotationResponse, FetchedAnnotation, QualityGate, TicsRunIdentifier } from './interfaces.js';
+import { ViewerFeature, viewerVersion } from './version.js';
 
 /**
  * Gets the annotations from the TICS viewer.
@@ -118,12 +118,11 @@ export function groupAndExtendAnnotations(annotations: FetchedAnnotation[], chan
   const sortedAnnotations = sortAnnotations(annotations);
   const groupedAnnotations = groupAnnotations(sortedAnnotations);
 
-  const changedSet = new Set<string>(changedFiles.map(c => c.filename)); // optimization
   return groupedAnnotations.map(a => {
     const annotation: ExtendedAnnotation = {
       ...a,
       displayCount: a.count === 1 ? '' : `(${a.count.toString()}x) `,
-      postable: changedSet.has(a.path)
+      postable: changedFiles.includes(a.path)
     };
 
     logger.debug(`Annotation: ${JSON.stringify(annotation)}`);

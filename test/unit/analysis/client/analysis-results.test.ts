@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import * as analyzedFiles from '../../../../src/viewer/analyzed-files';
 import * as annotations from '../../../../src/viewer/annotations';
 import * as qualityGate from '../../../../src/viewer/qualitygate';
@@ -14,23 +14,23 @@ describe('getClientAnalysisResults', () => {
   ticsCliMock.project = 'auto';
   ticsConfigMock.baseUrl = 'http://base.url';
 
-  let analyzedFilesSpy: jest.SpiedFunction<typeof analyzedFiles.getAnalyzedFiles>;
-  let gateSpy: jest.SpiedFunction<typeof qualityGate.getQualityGate>;
-  let spyGetAnnotations: jest.SpiedFunction<typeof annotations.getAnnotations>;
-  let spyTqiLabel: jest.SpiedFunction<typeof tqiLabel.getTqiLabel>;
+  let analyzedFilesSpy: Mock<typeof analyzedFiles.getAnalyzedFiles>;
+  let gateSpy: Mock<typeof qualityGate.getQualityGate>;
+  let spyGetAnnotations: Mock<typeof annotations.getAnnotations>;
+  let spyTqiLabel: Mock<typeof tqiLabel.getTqiLabel>;
 
   beforeEach(() => {
-    jest.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
-    jest.spyOn(qualityGate, 'getQualityGateUrl').mockResolvedValue('QualityGate?filter=Project(project)');
+    vi.spyOn(analyzedFiles, 'getAnalyzedFilesUrl').mockReturnValue('AnalyzedFiles?filter=Project(project)');
+    vi.spyOn(qualityGate, 'getQualityGateUrl').mockResolvedValue('QualityGate?filter=Project(project)');
 
-    analyzedFilesSpy = jest.spyOn(analyzedFiles, 'getAnalyzedFiles');
-    gateSpy = jest.spyOn(qualityGate, 'getQualityGate');
-    spyGetAnnotations = jest.spyOn(annotations, 'getAnnotations');
-    spyTqiLabel = jest.spyOn(tqiLabel, 'getTqiLabel');
+    analyzedFilesSpy = vi.spyOn(analyzedFiles, 'getAnalyzedFiles');
+    gateSpy = vi.spyOn(qualityGate, 'getQualityGate');
+    spyGetAnnotations = vi.spyOn(annotations, 'getAnnotations');
+    spyTqiLabel = vi.spyOn(tqiLabel, 'getTqiLabel');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return nothing on no ExplorerUrl given (should not happen, sanity check)', async () => {

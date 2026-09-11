@@ -1,44 +1,8 @@
 import { ChangedFile } from '../../src/github/interfaces';
-import { ExtendedAnnotation } from '../../src/helper/interfaces';
+import { ExtendedAnnotation } from '../../src/viewer/interfaces';
 
-export const singleChangedFiles: ChangedFile[] = [
-  {
-    filename: 'test.js',
-    status: 'modified',
-    additions: 1,
-    deletions: 1,
-    changes: 1,
-    sha: '',
-    blob_url: '',
-    raw_url: '',
-    contents_url: ''
-  }
-];
-
-export const doubleChangedFiles: ChangedFile[] = [
-  {
-    filename: 'test.js',
-    status: 'modified',
-    additions: 1,
-    deletions: 1,
-    changes: 1,
-    sha: '',
-    blob_url: '',
-    raw_url: '',
-    contents_url: ''
-  },
-  {
-    filename: 'jest.js',
-    status: 'modified',
-    additions: 1,
-    deletions: 1,
-    changes: 1,
-    sha: '',
-    blob_url: '',
-    raw_url: '',
-    contents_url: ''
-  }
-];
+export const singleChangedFiles: ChangedFile[] = ['test.js'];
+export const doubleChangedFiles: ChangedFile[] = ['test.js', 'jest.js'];
 
 export const analysisPassedNoUrlWarning5057 = {
   completed: true,
@@ -75,7 +39,9 @@ export const singleAnnotations: ExtendedAnnotation[] = [
     msg: 'test',
     count: 1,
     supp: false,
-    instanceName: 'CS'
+    instanceName: 'CS',
+    postable: true,
+    path: ''
   }
 ];
 

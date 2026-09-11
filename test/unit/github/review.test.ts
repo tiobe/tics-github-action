@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { postReview } from '../../../src/github/review';
 import { Events } from '../../../src/github/enums';
 import { logger } from '../../../src/helper/logger';
@@ -7,10 +7,10 @@ import { githubConfig } from '../../../src/configuration/config';
 import { githubConfigMock } from '../../.setup/mock';
 
 describe('postReview', () => {
-  let createReviewSpy: jest.SpiedFunction<typeof octokit.rest.pulls.createReview>;
+  let createReviewSpy: Mock<typeof octokit.rest.pulls.createReview>;
 
   beforeEach(() => {
-    createReviewSpy = jest.spyOn(octokit.rest.pulls, 'createReview');
+    createReviewSpy = vi.spyOn(octokit.rest.pulls, 'createReview');
   });
 
   it('should throw error when a pullRequestNumber is not present', async () => {
@@ -66,7 +66,7 @@ describe('postReview', () => {
 
   it('should post a notice on createReview', async () => {
     createReviewSpy.mockRejectedValue(new Error());
-    const noticeSpy = jest.spyOn(logger, 'notice');
+    const noticeSpy = vi.spyOn(logger, 'notice');
 
     await postReview('ReviewBody...', Events.REQUEST_CHANGES);
 

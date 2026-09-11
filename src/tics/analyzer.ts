@@ -1,15 +1,15 @@
 import { exec } from '@actions/exec';
-import { logger } from '../helper/logger';
-import { Analysis } from '../helper/interfaces';
-import { getTmpDir } from '../github/artifacts';
+import { logger } from '../helper/logger.js';
+import { Analysis } from '../helper/interfaces.js';
+import { getTmpDir } from '../github/artifacts.js';
 import { InstallTics } from '@tiobe/install-tics';
 import { EOL, platform } from 'os';
-import { isOneOf } from '../helper/utils';
-import { joinUrl } from '../helper/url';
-import { githubConfig, ticsCli, ticsConfig } from '../configuration/config';
-import { httpClient } from '../viewer/http-client';
-import { Mode } from '../configuration/tics';
-import { CliOptions, TicsCli } from '../configuration/tics-cli';
+import { isOneOf } from '../helper/utils.js';
+import { joinUrl } from '../helper/url.js';
+import { githubConfig, ticsCli, ticsConfig } from '../configuration/config.js';
+import { CliOptions, TicsCli } from '../configuration/tics-cli.js';
+import { Mode } from '../configuration/tics.js';
+import { httpClient } from '../viewer/http-client.js';
 
 const errorList: string[] = [];
 const warningList: string[] = [];
@@ -25,7 +25,6 @@ export async function runTicsAnalyzer(fileListPath: string): Promise<Analysis> {
   logger.header(`Analyzing for project ${ticsCli.project}`);
 
   const command = await buildRunCommand(fileListPath);
-
   logger.header('Running TICS');
   logger.debug(`With command: ${command}`);
   try {
