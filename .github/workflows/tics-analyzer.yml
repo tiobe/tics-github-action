@@ -20,7 +20,7 @@ jobs:
         env:
           INPUT_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run TICSQSERVER
-        uses: tiobe/tics-github-action@v3
+        uses: tiobe/tics-github-action@v4
         with:
           mode: qserver
           project: GitHub
