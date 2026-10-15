@@ -48,6 +48,9 @@ inputs:
   codetype:
     description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
     required: false
+  resultdir:
+    description: Path to the result directory for code coverage.
+    required: false
   excludeMovedFiles:
     description: Exclude moved files from analysis even if there are modifications in the file.
     required: false

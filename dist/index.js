@@ -130214,6 +130214,7 @@ class TicsCli {
     nocalc;
     norecalc;
     recalc;
+    resultdir;
     tmpdir;
     additionalFlags;
     constructor(mode, reponame) {
@@ -130226,6 +130227,7 @@ class TicsCli {
         this.nocalc = getInput('nocalc');
         this.norecalc = getInput('norecalc');
         this.recalc = getInput('recalc');
+        this.resultdir = getInput('resultdir');
         this.tmpdir = getInput('tmpdir');
         this.additionalFlags = getInput('additionalFlags');
         this.validateCliOptions(this, mode);
@@ -130311,6 +130313,10 @@ const CliOptions = [
     {
         action: 'recalc',
         modes: [Mode.CLIENT, Mode.QSERVER]
+    },
+    {
+        action: 'resultdir',
+        modes: [Mode.CLIENT]
     },
     {
         action: 'tmpdir',
@@ -258099,7 +258105,7 @@ function getCliOptionsForCommand() {
         if (option.modes.includes(ticsConfig.mode)) {
             const value = ticsCli[option.action];
             if (value) {
-                command.push(`-${option.action} ${value}`);
+                command.push(`-${option.action} '${value}'`);
             }
         }
     });

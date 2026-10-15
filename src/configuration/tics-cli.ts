@@ -14,6 +14,7 @@ export class TicsCli {
   readonly nocalc: string;
   readonly norecalc: string;
   readonly recalc: string;
+  readonly resultdir: string;
   readonly tmpdir: string;
   readonly additionalFlags: string;
 
@@ -27,6 +28,7 @@ export class TicsCli {
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
+    this.resultdir = getInput('resultdir');
     this.tmpdir = getInput('tmpdir');
     this.additionalFlags = getInput('additionalFlags');
 
@@ -116,6 +118,10 @@ export const CliOptions: CliOption[] = [
   {
     action: 'recalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'resultdir',
+    modes: [Mode.CLIENT]
   },
   {
     action: 'tmpdir',

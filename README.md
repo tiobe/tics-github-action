@@ -41,9 +41,9 @@ Add the `TICS GitHub Action` to your workflow to launch TICS code analysis and p
 ## Use case 1: QServer (for reference runs)
 
 > [!IMPORTANT]
-> `Purpose:`             Create reference points  
-> `Recommended Events:`  Push to main  
-> `Usage:`               To be used as a separate action (not together with TICS Client)
+> `Purpose:` Create reference points  
+> `Recommended Events:` Push to main  
+> `Usage:` To be used as a separate action (not together with TICS Client)
 
 > [!NOTE]
 > This use case can be omitted if TICSQServer is run for your project from another CI tool like Jenkins.
@@ -117,13 +117,12 @@ The following options allow to instrument TICSQServer more specifically:
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
 
-
 ## Use case 2: Client for qualification runs
 
 > [!IMPORTANT]
-> `Purpose:`             Qualification of code changes  
-> `Recommended Events:`  Pull request or commit to a feature/bugfix branch  
-> `Usage:`               To be used as a separate action (not together with TICSQServer)
+> `Purpose:` Qualification of code changes  
+> `Recommended Events:` Pull request or commit to a feature/bugfix branch  
+> `Usage:` To be used as a separate action (not together with TICSQServer)
 
 The default mode to run is [TICS Client](https://ticsdocumentation.tiobe.com/latest/docs/#doc=user/enduser.html). In this mode, the commit or pull request will be evaluated. The `Quality Gate` determines whether the commit or pull request qualifies for delivery.
 The quality gate and measurement results are reported in your action summary and optionally the pull request can be decorated.
@@ -182,6 +181,7 @@ The following options allow to instrument TICS Client more specifically:
 | `codetype`               | Allows you to pick which specific types of code you want to analyze with the TICS client. Options are `PRODUCTION`, `TESTCODE`, `EXTERNAL` and `GENERATED`.                                                                                                                                                                                                        | `PRODUCTION`     |
 | `excludeMovedFiles`      | Exclude moved files from analysis even if there are modifications in the file.                                                                                                                                                                                                                                                                                     | `false`          |
 | `showAnnotationSeverity` | Show TICS violations with at least the specified severity in the changed files window (will also show up in `outputs.annotations`). Options are `blocking`, `blocking-after` or `issue`. This feature requires TICS Viewer 2025.1.8 or later.                                                                                                                      | `blocking-after` |
+| `resultdir`              | Path to the result directory for code coverage.                                                                                                                                                                                                                                                                                                                    | -                |
 | `tmpdir`                 | Location to store debug information.                                                                                                                                                                                                                                                                                                                               | -                |
 
 #### Deprecated parameters
@@ -189,7 +189,6 @@ The following options allow to instrument TICS Client more specifically:
 | Input               | Description                                                                                                                                          | Default | Replacement              |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `showBlockingAfter` | !Will not be used if `showAnnotationSeverity` is set! Show the blocking after violations in the changed files window. Options are `true` or `false`. | `true`  | `showAnnotationSeverity` |
-
 
 ## Other features
 
