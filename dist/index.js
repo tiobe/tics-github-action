@@ -179907,6 +179907,26 @@ function requireBraceExpansion$1 () {
 	// characters) so legitimate input is unaffected.
 	var EXPANSION_MAX_LENGTH = 4000000;
 
+	// `expand` recurses once per level of brace *nesting* - both when expanding a
+	// set's comma members and when re-wrapping a set whose body is a single part.
+	// The CVE-2026-14257 fix made the *tail* iterative (recursion on `m.post`, one
+	// level per chained group), which left nesting depth unbounded: about 3,100
+	// levels of `{{{...a,b...}}}` - only ~6KB of input - exhausted the native stack
+	// and crashed the process. `EXPANSION_MAX_DEPTH` bounds how deep the parser
+	// will follow nesting. It sits far above any realistic pattern and well below
+	// the depth at which the stack runs out.
+	var EXPANSION_MAX_DEPTH = 1000;
+
+	// Bash keeps a quirk where a brace group followed by a comma set still expands
+	// (`{a},b}`). The parser implements it by rewriting the string and restarting
+	// the scan, absorbing one `}` per pass. `n` trailing braces therefore cost `n`
+	// full passes over a string that itself grows by one `escClose` sentinel each
+	// time - quadratic in `n`, with a ~26x constant from the sentinel's length.
+	// 128KB of `'{a}' + '}'.repeat(n) + ',z}'` blocked the event loop for 27
+	// seconds to produce two results. `EXPANSION_MAX_REWRITES` bounds how many
+	// times the scan may restart. Real `{a},b}` input needs a handful.
+	var EXPANSION_MAX_REWRITES = 1000;
+
 	function numeric(str) {
 	  return parseInt(str, 10) == str
 	    ? parseInt(str, 10)
@@ -179930,34 +179950,54 @@ function requireBraceExpansion$1 () {
 	}
 
 
+	// Like `target.push(...items)` but doesn't overflow the stack
+	function pushAll(target, items) {
+	  for (var i = 0; i < items.length; i++) {
+	    target.push(items[i]);
+	  }
+	}
+
 	// Basically just str.split(","), but handling cases
 	// where we have nested braced sections, which should be
 	// treated as individual members, like {a,{b,c},d}
 	function parseCommaParts(str) {
-	  if (!str)
-	    return [''];
-
 	  var parts = [];
-	  var m = balanced('{', '}', str);
 
-	  if (!m)
-	    return str.split(',');
+	  // Walk the brace groups iteratively. Recursing on `post` once per group let a
+	  // chain of them exhaust the stack - the parsing-side counterpart to
+	  // the `expand` overflow fixed for CVE-2026-14257, and not something `max` or
+	  // `maxLength` can bound, since it happens before expansion.
+	  //
+	  // The part the next chunk continues
+	  var carry = '';
 
-	  var pre = m.pre;
-	  var body = m.body;
-	  var post = m.post;
-	  var p = pre.split(',');
+	  for (;;) {
+	    var m = balanced('{', '}', str);
 
-	  p[p.length-1] += '{' + body + '}';
-	  var postParts = parseCommaParts(post);
-	  if (post.length) {
-	    p[p.length-1] += postParts.shift();
-	    p.push.apply(p, postParts);
+	    if (!m) {
+	      var tail = str.split(',');
+	      tail[0] = carry + tail[0];
+	      pushAll(parts, tail);
+	      return parts;
+	    }
+
+	    var pre = m.pre;
+	    var body = m.body;
+	    var post = m.post;
+	    var p = pre.split(',');
+
+	    p[0] = carry + p[0];
+	    p[p.length-1] += '{' + body + '}';
+
+	    if (!post.length) {
+	      pushAll(parts, p);
+	      return parts;
+	    }
+
+	    carry = p.pop();
+	    pushAll(parts, p);
+	    str = post;
 	  }
-
-	  parts.push.apply(parts, p);
-
-	  return parts;
 	}
 
 	function expandTop(str, options) {
@@ -179967,6 +180007,8 @@ function requireBraceExpansion$1 () {
 	  options = options || {};
 	  var max = options.max == null ? EXPANSION_MAX : options.max;
 	  var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
+	  var maxDepth = options.maxDepth == null ? EXPANSION_MAX_DEPTH : options.maxDepth;
+	  var maxRewrites = options.maxRewrites == null ? EXPANSION_MAX_REWRITES : options.maxRewrites;
 
 	  // I don't know why Bash 4.3 does this, but it does.
 	  // Anything starting with {} will have the first two bytes preserved
@@ -179978,7 +180020,7 @@ function requireBraceExpansion$1 () {
 	    str = '\\{\\}' + str.substr(2);
 	  }
 
-	  return expand(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
+	  return expand(escapeBraces(str), max, maxLength, maxDepth, 0, maxRewrites, true).map(unescapeBraces);
 	}
 
 	function embrace(str) {
@@ -180090,8 +180132,18 @@ function requireBraceExpansion$1 () {
 	  str,
 	  max,
 	  maxLength,
+	  maxDepth,
+	  depth,
+	  maxRewrites,
 	  isTop
 	) {
+	  // Too deeply nested to keep following: treat the rest as literal, the same
+	  // way a group that cannot expand is already handled. Truncating rather than
+	  // throwing keeps expansion total, matching `max` and `maxLength`.
+	  if (depth > maxDepth) {
+	    return [str];
+	  }
+
 	  // Consume the string's top-level brace groups left to right, threading a
 	  // running set of combined prefixes (`acc`). Expanding the tail iteratively -
 	  // rather than recursing on `m.post` once per group - keeps the native stack
@@ -180104,6 +180156,9 @@ function requireBraceExpansion$1 () {
 	  // comma set - a sequence like `{a..\}` may legitimately yield ''. The drop
 	  // is on the final strings, so it is applied to whichever `combine` produces
 	  // them (the one with no brace set left in the tail).
+	  // How many times the `{a},b}` rewrite below has restarted the scan. Each pass
+	  // re-reads the whole string, so leaving this unbounded is quadratic.
+	  var rewrites = 0;
 	  var dropEmpties = false;
 	  var firstGroup = true;
 
@@ -180139,7 +180194,8 @@ function requireBraceExpansion$1 () {
 	    var isOptions = m.body.indexOf(',') >= 0;
 	    if (!isSequence && !isOptions) {
 	      // {a},b}
-	      if (m.post.match(/,(?!,).*\}/)) {
+	      if (rewrites < maxRewrites && m.post.match(/,(?!,).*\}/)) {
+	        rewrites++;
 	        str = m.pre + '{' + m.body + escClose + m.post;
 	        isTop = true;
 	        continue;
@@ -180167,7 +180223,7 @@ function requireBraceExpansion$1 () {
 	      var n = parseCommaParts(m.body);
 	      if (n.length === 1 && n[0] !== undefined) {
 	        // x{{a,b}}y ==> x{a}y x{b}y
-	        n = expand(n[0], max, maxLength, false).map(embrace);
+	        n = expand(n[0], max, maxLength, maxDepth, depth + 1, maxRewrites, false).map(embrace);
 	        //XXX is this necessary? Can't seem to hit it in tests.
 	        /* c8 ignore start */
 	        if (n.length === 1) {
@@ -180201,7 +180257,7 @@ function requireBraceExpansion$1 () {
 	      values = [];
 	      var valuesLength = 0;
 	      outer: for (var j = 0; j < n.length; j++) {
-	        var expanded = expand(n[j], max, maxLength, false);
+	        var expanded = expand(n[j], max, maxLength, maxDepth, depth + 1, maxRewrites, false);
 	        for (var k = 0; k < expanded.length; k++) {
 	          var v = expanded[k];
 	          if (dropsEmpties && !v) continue
@@ -202918,6 +202974,26 @@ function requireBraceExpansion () {
 	// characters) so legitimate input is unaffected.
 	var EXPANSION_MAX_LENGTH = 4000000;
 
+	// `expand` recurses once per level of brace *nesting* - both when expanding a
+	// set's comma members and when re-wrapping a set whose body is a single part.
+	// The CVE-2026-14257 fix made the *tail* iterative (recursion on `m.post`, one
+	// level per chained group), which left nesting depth unbounded: about 3,100
+	// levels of `{{{...a,b...}}}` - only ~6KB of input - exhausted the native stack
+	// and crashed the process. `EXPANSION_MAX_DEPTH` bounds how deep the parser
+	// will follow nesting. It sits far above any realistic pattern and well below
+	// the depth at which the stack runs out.
+	var EXPANSION_MAX_DEPTH = 1000;
+
+	// Bash keeps a quirk where a brace group followed by a comma set still expands
+	// (`{a},b}`). The parser implements it by rewriting the string and restarting
+	// the scan, absorbing one `}` per pass. `n` trailing braces therefore cost `n`
+	// full passes over a string that itself grows by one `escClose` sentinel each
+	// time - quadratic in `n`, with a ~26x constant from the sentinel's length.
+	// 128KB of `'{a}' + '}'.repeat(n) + ',z}'` blocked the event loop for 27
+	// seconds to produce two results. `EXPANSION_MAX_REWRITES` bounds how many
+	// times the scan may restart. Real `{a},b}` input needs a handful.
+	var EXPANSION_MAX_REWRITES = 1000;
+
 	function numeric(str) {
 	  return parseInt(str, 10) == str
 	    ? parseInt(str, 10)
@@ -202941,34 +203017,54 @@ function requireBraceExpansion () {
 	}
 
 
+	// Like `target.push(...items)` but doesn't overflow the stack
+	function pushAll(target, items) {
+	  for (var i = 0; i < items.length; i++) {
+	    target.push(items[i]);
+	  }
+	}
+
 	// Basically just str.split(","), but handling cases
 	// where we have nested braced sections, which should be
 	// treated as individual members, like {a,{b,c},d}
 	function parseCommaParts(str) {
-	  if (!str)
-	    return [''];
-
 	  var parts = [];
-	  var m = balanced('{', '}', str);
 
-	  if (!m)
-	    return str.split(',');
+	  // Walk the brace groups iteratively. Recursing on `post` once per group let a
+	  // chain of them exhaust the stack - the parsing-side counterpart to
+	  // the `expand` overflow fixed for CVE-2026-14257, and not something `max` or
+	  // `maxLength` can bound, since it happens before expansion.
+	  //
+	  // The part the next chunk continues
+	  var carry = '';
 
-	  var pre = m.pre;
-	  var body = m.body;
-	  var post = m.post;
-	  var p = pre.split(',');
+	  for (;;) {
+	    var m = balanced('{', '}', str);
 
-	  p[p.length-1] += '{' + body + '}';
-	  var postParts = parseCommaParts(post);
-	  if (post.length) {
-	    p[p.length-1] += postParts.shift();
-	    p.push.apply(p, postParts);
+	    if (!m) {
+	      var tail = str.split(',');
+	      tail[0] = carry + tail[0];
+	      pushAll(parts, tail);
+	      return parts;
+	    }
+
+	    var pre = m.pre;
+	    var body = m.body;
+	    var post = m.post;
+	    var p = pre.split(',');
+
+	    p[0] = carry + p[0];
+	    p[p.length-1] += '{' + body + '}';
+
+	    if (!post.length) {
+	      pushAll(parts, p);
+	      return parts;
+	    }
+
+	    carry = p.pop();
+	    pushAll(parts, p);
+	    str = post;
 	  }
-
-	  parts.push.apply(parts, p);
-
-	  return parts;
 	}
 
 	function expandTop(str, options) {
@@ -202978,6 +203074,8 @@ function requireBraceExpansion () {
 	  options = options || {};
 	  var max = options.max == null ? EXPANSION_MAX : options.max;
 	  var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
+	  var maxDepth = options.maxDepth == null ? EXPANSION_MAX_DEPTH : options.maxDepth;
+	  var maxRewrites = options.maxRewrites == null ? EXPANSION_MAX_REWRITES : options.maxRewrites;
 
 	  // I don't know why Bash 4.3 does this, but it does.
 	  // Anything starting with {} will have the first two bytes preserved
@@ -202989,7 +203087,7 @@ function requireBraceExpansion () {
 	    str = '\\{\\}' + str.substr(2);
 	  }
 
-	  return expand(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
+	  return expand(escapeBraces(str), max, maxLength, maxDepth, 0, maxRewrites, true).map(unescapeBraces);
 	}
 
 	function embrace(str) {
@@ -203101,8 +203199,18 @@ function requireBraceExpansion () {
 	  str,
 	  max,
 	  maxLength,
+	  maxDepth,
+	  depth,
+	  maxRewrites,
 	  isTop
 	) {
+	  // Too deeply nested to keep following: treat the rest as literal, the same
+	  // way a group that cannot expand is already handled. Truncating rather than
+	  // throwing keeps expansion total, matching `max` and `maxLength`.
+	  if (depth > maxDepth) {
+	    return [str];
+	  }
+
 	  // Consume the string's top-level brace groups left to right, threading a
 	  // running set of combined prefixes (`acc`). Expanding the tail iteratively -
 	  // rather than recursing on `m.post` once per group - keeps the native stack
@@ -203115,6 +203223,9 @@ function requireBraceExpansion () {
 	  // comma set - a sequence like `{a..\}` may legitimately yield ''. The drop
 	  // is on the final strings, so it is applied to whichever `combine` produces
 	  // them (the one with no brace set left in the tail).
+	  // How many times the `{a},b}` rewrite below has restarted the scan. Each pass
+	  // re-reads the whole string, so leaving this unbounded is quadratic.
+	  var rewrites = 0;
 	  var dropEmpties = false;
 	  var firstGroup = true;
 
@@ -203150,7 +203261,8 @@ function requireBraceExpansion () {
 	    var isOptions = m.body.indexOf(',') >= 0;
 	    if (!isSequence && !isOptions) {
 	      // {a},b}
-	      if (m.post.match(/,(?!,).*\}/)) {
+	      if (rewrites < maxRewrites && m.post.match(/,(?!,).*\}/)) {
+	        rewrites++;
 	        str = m.pre + '{' + m.body + escClose + m.post;
 	        isTop = true;
 	        continue;
@@ -203178,7 +203290,7 @@ function requireBraceExpansion () {
 	      var n = parseCommaParts(m.body);
 	      if (n.length === 1 && n[0] !== undefined) {
 	        // x{{a,b}}y ==> x{a}y x{b}y
-	        n = expand(n[0], max, maxLength, false).map(embrace);
+	        n = expand(n[0], max, maxLength, maxDepth, depth + 1, maxRewrites, false).map(embrace);
 	        //XXX is this necessary? Can't seem to hit it in tests.
 	        /* c8 ignore start */
 	        if (n.length === 1) {
@@ -203212,7 +203324,7 @@ function requireBraceExpansion () {
 	      values = [];
 	      var valuesLength = 0;
 	      outer: for (var j = 0; j < n.length; j++) {
-	        var expanded = expand(n[j], max, maxLength, false);
+	        var expanded = expand(n[j], max, maxLength, maxDepth, depth + 1, maxRewrites, false);
 	        for (var k = 0; k < expanded.length; k++) {
 	          var v = expanded[k];
 	          if (dropsEmpties && !v) continue
@@ -264687,8 +264799,20 @@ function requireCommon () {
 	 * {@link isInSubnet} when classifying a single address — notably when the
 	 * address came from untrusted input and the result backs a trust-boundary
 	 * decision such as an SSRF allow/deny filter.
+	 *
+	 * An address of one family is never inside a network of the other, so an
+	 * `Address4` against an `Address6` (or the reverse) is `false`. To compare
+	 * across families, convert first: `Address6.fromAddress4()`, `to4()`, or
+	 * `toAddress4Nat64()`.
 	 */
 	function isHostInSubnet(address) {
+	    // mask() is a bit string of the family's width, and the leading bits of a
+	    // 32-bit string can coincide with those of a 128-bit one (a00::1 and
+	    // 10.0.0.0/8 both mask to 00001010), so the widths must agree before the
+	    // strings are compared.
+	    if (this.binaryZeroPad().length !== address.binaryZeroPad().length) {
+	        return false;
+	    }
 	    return this.mask(address.subnetMask) === address.mask();
 	}
 	/**
@@ -264906,7 +265030,9 @@ function requireIpv4 () {
 	         */
 	        this.isCorrect = isCorrect4;
 	        /**
-	         * Returns true if the given address is in the subnet of the current address
+	         * Returns true if the given address is in the subnet of the current address.
+	         * An `Address6` is never in the subnet of an `Address4`; convert with
+	         * `to4()` or `Address6.fromAddress4()` to compare across families.
 	         * @returns {boolean}
 	         */
 	        this.isInSubnet = common.isInSubnet;
@@ -264916,6 +265042,8 @@ function requireIpv4 () {
 	         * when classifying a single address, so the answer doesn't change with the
 	         * CIDR suffix the caller happened to write — notably when the address came
 	         * from untrusted input and the result backs a trust-boundary decision.
+	         * An `Address6` is never in the subnet of an `Address4`; convert with
+	         * `to4()` or `Address6.fromAddress4()` to compare across families.
 	         * @returns {boolean}
 	         */
 	        this.isHostInSubnet = common.isHostInSubnet;
@@ -264929,6 +265057,13 @@ function requireIpv4 () {
 	                throw new address_error_1.AddressError('Invalid subnet mask.');
 	            }
 	            address = address.replace(constants.RE_SUBNET_STRING, '');
+	        }
+	        // Four three-digit octets and three dots: the longest well-formed address
+	        // is 15 characters. Longer input is rejected before parsing, as Address6
+	        // does at its own limit.
+	        const longest = constants.GROUPS * 4 - 1;
+	        if (address.length > longest) {
+	            throw new address_error_1.AddressError(`IPv4 addresses are at most ${longest} characters.`);
 	        }
 	        this.addressMinusSuffix = address;
 	        this.parsedAddress = this.parse(address);
@@ -265071,16 +265206,27 @@ function requireIpv4 () {
 	        return Address4.fromHex(integer.toString(16).padStart(8, '0'));
 	    }
 	    /**
-	     * Return an address from in-addr.arpa form
+	     * Return an address from in-addr.arpa form: the four octets reversed, with
+	     * or without the `.in-addr.arpa` suffix and root dot, in any case. Throws
+	     * `AddressError` unless the reversed labels form a valid IPv4 address, so
+	     * `fromArpa(x.reverseForm())` round-trips {@link reverseForm}.
 	     * @param {string} arpaFormAddress - an 'in-addr.arpa' form ipv4 address
 	     * @returns {Adress4}
 	     * @example
-	     * var address = Address4.fromArpa(42.2.0.192.in-addr.arpa.)
+	     * var address = Address4.fromArpa('42.2.0.192.in-addr.arpa.')
 	     * address.correctForm(); // '192.0.2.42'
 	     */
 	    static fromArpa(arpaFormAddress) {
-	        // remove ending ".in-addr.arpa." or just "."
-	        const leader = arpaFormAddress.replace(/(\.in-addr\.arpa)?\.$/, '');
+	        // A 15-character address, a "/32" prefix length and ".in-addr.arpa.": the
+	        // longest name is 32 characters. Longer input is rejected before its
+	        // labels are split, as the constructor does at its own limit.
+	        const longest = constants.GROUPS * 4 - 1 + '/32'.length + '.in-addr.arpa.'.length;
+	        if (arpaFormAddress.length > longest) {
+	            throw new address_error_1.AddressError(`in-addr.arpa names are at most ${longest} characters.`);
+	        }
+	        // remove an ending ".in-addr.arpa", in any case and with or without the
+	        // root dot, as Address6.fromArpa does for ".ip6.arpa"
+	        const leader = arpaFormAddress.replace(/(\.in-addr\.arpa)?\.?$/i, '');
 	        const address = leader.split('.').reverse().join('.');
 	        return new Address4(address);
 	    }
@@ -265530,6 +265676,9 @@ function requireConstants () {
 	 * A regular expression that matches an IPv6 zone
 	 * @memberof Address6
 	 * @static
+	 * @deprecated Takes quadratic time on input holding many `%` characters
+	 * followed by a line terminator. The library finds the zone by index, as
+	 * `Address6`'s constructor shows, and 11.0.0 removes this export.
 	 */
 	constants.RE_ZONE_STRING = /%.*$/;
 	constants.RE_URL = /^(?:\[([0-9a-f:.]+)\]|([0-9a-f:.]+))(?:[/?#].*)?$/i;
@@ -265843,7 +265992,9 @@ function requireIpv6 () {
 	        this.zone = '';
 	        // #region Attributes
 	        /**
-	         * Returns true if the given address is in the subnet of the current address
+	         * Returns true if the given address is in the subnet of the current address.
+	         * An `Address4` is never in the subnet of an `Address6`; convert with
+	         * `Address6.fromAddress4()` or `to4()` to compare across families.
 	         * @returns {boolean}
 	         */
 	        this.isInSubnet = common.isInSubnet;
@@ -265853,6 +266004,8 @@ function requireIpv6 () {
 	         * when classifying a single address, so the answer doesn't change with the
 	         * CIDR suffix the caller happened to write — notably when the address came
 	         * from untrusted input and the result backs a trust-boundary decision.
+	         * An `Address4` is never in the subnet of an `Address6`; convert with
+	         * `Address6.fromAddress4()` or `to4()` to compare across families.
 	         * @returns {boolean}
 	         */
 	        this.isHostInSubnet = common.isHostInSubnet;
@@ -265886,10 +266039,23 @@ function requireIpv6 () {
 	        if (/\//.test(address)) {
 	            throw new address_error_1.AddressError('Invalid subnet mask.');
 	        }
-	        const zone = constants6.RE_ZONE_STRING.exec(address);
-	        if (zone) {
-	            this.zone = zone[0];
-	            address = address.replace(constants6.RE_ZONE_STRING, '');
+	        // A zone runs from the first `%` to the end of the input and holds no line
+	        // terminator. Finding it by index reads the input once, where matching
+	        // RE_ZONE_STRING retries from every `%` that a line terminator disqualifies.
+	        const zoneStart = address.indexOf('%');
+	        if (zoneStart !== -1 && /^.*$/.test(address.slice(zoneStart))) {
+	            this.zone = address.slice(zoneStart);
+	            address = address.slice(0, zoneStart);
+	        }
+	        // The longest well-formed address is all but the last two groups written
+	        // as four hex digits with their colons, then a 15-character dotted quad:
+	        // 5 * (groups - 2) + 15, which is 45 for eight groups, the same line
+	        // CPython's ipaddress module draws. Rejecting longer input here keeps the
+	        // parse diagnostics, which wrap every offending character in a span,
+	        // proportional to an address rather than to whatever was passed in.
+	        const longest = this.groups * 5 + 5;
+	        if (address.length > longest) {
+	            throw new address_error_1.AddressError(`IPv6 addresses are at most ${longest} characters.`);
 	        }
 	        this.addressMinusSuffix = address;
 	        this.parsedAddress = this.parse(this.addressMinusSuffix);
@@ -266102,8 +266268,9 @@ function requireIpv6 () {
 	     * Address6.fromArpa('8.b.d.0.1.0.0.2.ip6.arpa.').networkForm(); // '2001:db8::/32'
 	     */
 	    static fromArpa(arpaFormAddress) {
-	        // remove an ending ".ip6.arpa", with or without the root dot
-	        const nibbles = arpaFormAddress.replace(/(\.ip6\.arpa)?\.?$/, '');
+	        // remove an ending ".ip6.arpa", in any case and with or without the root
+	        // dot
+	        const nibbles = arpaFormAddress.replace(/(\.ip6\.arpa)?\.?$/i, '');
 	        if (!/^[0-9a-f](\.[0-9a-f]){0,31}$/i.test(nibbles)) {
 	            throw new address_error_1.AddressError("Invalid 'ip6.arpa' form.");
 	        }
