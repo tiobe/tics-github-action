@@ -130215,6 +130215,10 @@ class TicsCli {
     norecalc;
     recalc;
     resultdir;
+    integrationresultdir;
+    systemresultdir;
+    totalresultdir;
+    unitresultdir;
     tmpdir;
     additionalFlags;
     constructor(mode, reponame) {
@@ -130228,6 +130232,10 @@ class TicsCli {
         this.norecalc = getInput('norecalc');
         this.recalc = getInput('recalc');
         this.resultdir = getInput('resultdir');
+        this.integrationresultdir = getInput('integrationresultdir');
+        this.systemresultdir = getInput('systemresultdir');
+        this.totalresultdir = getInput('totalresultdir');
+        this.unitresultdir = getInput('unitresultdir');
         this.tmpdir = getInput('tmpdir');
         this.additionalFlags = getInput('additionalFlags');
         this.validateCliOptions(this, mode);
@@ -130316,6 +130324,22 @@ const CliOptions = [
     },
     {
         action: 'resultdir',
+        modes: [Mode.CLIENT]
+    },
+    {
+        action: 'integrationresultdir',
+        modes: [Mode.CLIENT]
+    },
+    {
+        action: 'systemresultdir',
+        modes: [Mode.CLIENT]
+    },
+    {
+        action: 'totalresultdir',
+        modes: [Mode.CLIENT]
+    },
+    {
+        action: 'unitresultdir',
         modes: [Mode.CLIENT]
     },
     {

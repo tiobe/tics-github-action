@@ -267,6 +267,10 @@ describe('getTicsCommand', () => {
     ticsCliMock.branchname = 'main';
     ticsCliMock.branchdir = '.';
     ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
     ticsCliMock.additionalFlags = '-log 9';
 
@@ -285,6 +289,10 @@ describe('getTicsCommand', () => {
     expect(command).toContain(`-branchname 'main'`);
     expect(command).not.toContain(`-branchdir 'UK,8'`);
     expect(command).toContain(`-resultdir './coverage'`);
+    expect(command).toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });
@@ -302,6 +310,10 @@ describe('getTicsCommand', () => {
     ticsCliMock.branchdir = '.';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
     ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.additionalFlags = '-log 9';
 
     const command = getTicsCommand('./filelist');
@@ -319,6 +331,10 @@ describe('getTicsCommand', () => {
     expect(command).toContain(`-branchname 'main'`);
     expect(command).toContain(`-branchdir '.'`);
     expect(command).not.toContain(`-resultdir './coverage'`);
+    expect(command).not.toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).not.toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).not.toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).not.toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });
@@ -334,6 +350,11 @@ describe('getTicsCommand', () => {
     ticsCliMock.codetype = 'TESTCODE';
     ticsCliMock.branchname = 'main';
     ticsCliMock.branchdir = '.';
+    ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
     ticsCliMock.additionalFlags = '-log 9';
 
@@ -351,6 +372,11 @@ describe('getTicsCommand', () => {
     expect(command).not.toContain('-codetype TESTCODE');
     expect(command).not.toContain('-branchname main');
     expect(command).not.toContain('-branchdir .');
+    expect(command).not.toContain(`-resultdir './coverage'`);
+    expect(command).not.toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).not.toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).not.toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).not.toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });
