@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Integration tests
-        uses: octokit/request-action@v2.x
+        uses: octokit/request-action@v3.0.0
         id: dispatch_client_multiproject_test
         with:
           route: POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches

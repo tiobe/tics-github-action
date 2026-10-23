@@ -5,6 +5,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 import json from '@rollup/plugin-json';
 import license from 'rollup-plugin-license';
+import sbom from 'rollup-plugin-sbom';
 
 const config = {
   input: 'src/main.ts',
@@ -27,7 +28,8 @@ const config = {
           file: 'dist/licenses.txt'
         }
       }
-    })
+    }),
+    sbom({ includeWellKnown: false })
   ]
 };
 

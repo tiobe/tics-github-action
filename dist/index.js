@@ -130125,13 +130125,12 @@ class TicsConfiguration {
      * @throws error if the input is incorrect.
      */
     validateAndGetMode(input) {
-        const mode = input.toLowerCase();
-        if (Object.values(Mode).includes(mode)) {
-            return mode;
+        const normalized = input.toLowerCase();
+        const validModes = Object.values(Mode);
+        if (normalized && validModes.includes(normalized)) {
+            return normalized;
         }
-        else {
-            throw Error(`Parameter 'mode' should be one of 'client', 'qserver' or 'diagnostic'. Input given is '${input}'`);
-        }
+        throw Error(`Parameter 'mode' should be one of 'client', 'qserver' or 'diagnostic'. Input given is '${input}'`);
     }
     /**
      * Validates if the given input is a valid trust strategy and returns it.
@@ -130139,16 +130138,15 @@ class TicsConfiguration {
      * @throws error if the input is incorrect.
      */
     validateAndGetTrustStrategy(input) {
-        const trustStrategy = input.toLowerCase();
-        if (trustStrategy === TrustStrategy.NONE) {
+        if (!input || input === '') {
             return TrustStrategy.STRICT;
         }
-        else if (Object.values(TrustStrategy).includes(trustStrategy)) {
-            return trustStrategy;
+        const normalized = input.toLowerCase();
+        const validStrategies = Object.values(TrustStrategy);
+        if (validStrategies.includes(normalized)) {
+            return normalized;
         }
-        else {
-            throw Error(`Parameter 'trustStrategy' should be one of 'strict', 'self-signed' or 'all'. Input given is '${input}'`);
-        }
+        throw Error(`Parameter 'trustStrategy' should be one of 'strict', 'self-signed' or 'all'. Input given is '${input}'`);
     }
     /**
      * Validates if the given input is valid hostname verification and returns it.
