@@ -67,7 +67,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE"`,
+      `/bin/bash -c "TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -calc 'GATE'"`,
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -84,7 +84,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc GATE}"`,
+      `powershell "$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -calc 'GATE'}"`,
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -106,7 +106,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
+      "/bin/bash -c \"TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default' TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken 'token' -calc 'CS' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -128,7 +128,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
+      "powershell \"$env:TICS='http://base.com/tiobeweb/TICS/api/cfg?name=default'; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken 'token' -calc 'CS' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -154,7 +154,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "/bin/bash -c \"<install command here> && TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
+      "/bin/bash -c \"<install command here> && TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken 'token' -calc 'CS' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -179,7 +179,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken token -calc CS -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
+      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to' -viewer -project 'project' -cdtoken 'token' -calc 'CS' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action' -log 9}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -211,7 +211,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
+      "powershell \"<install command here>; if ($?) {TICS -ide github '@/path/to/file.txt' -viewer -project 'project' -cdtoken 'token' -codetype 'TESTCODE' -calc 'CS' -nocalc 'CW' -norecalc 'CD' -recalc 'CY' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -244,7 +244,7 @@ describe('test multiple types of configuration', () => {
     expect(response.statusCode).toBe(0);
     expect(response.completed).toBe(true);
     expect(execSpy).toHaveBeenCalledWith(
-      "powershell \"<install command here>; if ($?) {TICS -ide github . -viewer -project 'project' -branchname main -cdtoken token -codetype TESTCODE -calc CS -nocalc CW -norecalc CD -recalc CY -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
+      "powershell \"<install command here>; if ($?) {TICS -ide github . -viewer -project 'project' -branchname 'main' -cdtoken 'token' -codetype 'TESTCODE' -calc 'CS' -nocalc 'CW' -norecalc 'CD' -recalc 'CY' -tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'}\"",
       [],
       {
         listeners: { errline: expect.any(Function), stdline: expect.any(Function) },
@@ -266,6 +266,11 @@ describe('getTicsCommand', () => {
     ticsCliMock.codetype = 'TESTCODE';
     ticsCliMock.branchname = 'main';
     ticsCliMock.branchdir = '.';
+    ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
     ticsCliMock.additionalFlags = '-log 9';
 
@@ -275,14 +280,19 @@ describe('getTicsCommand', () => {
     expect(command).toContain(`'@./filelist'`);
     expect(command).toContain(`-viewer`);
     expect(command).toContain(`-project 'project'`);
-    expect(command).toContain('-calc CS');
-    expect(command).toContain('-nocalc CW');
-    expect(command).toContain('-recalc CY');
-    expect(command).toContain('-norecalc CD');
-    expect(command).toContain('-cdtoken token');
-    expect(command).toContain('-codetype TESTCODE');
-    expect(command).toContain('-branchname main');
-    expect(command).not.toContain('-branchdir .');
+    expect(command).toContain(`-calc 'CS'`);
+    expect(command).toContain(`-nocalc 'CW'`);
+    expect(command).toContain(`-recalc 'CY'`);
+    expect(command).toContain(`-norecalc 'CD'`);
+    expect(command).toContain(`-cdtoken 'token'`);
+    expect(command).toContain(`-codetype 'TESTCODE'`);
+    expect(command).toContain(`-branchname 'main'`);
+    expect(command).not.toContain(`-branchdir 'UK,8'`);
+    expect(command).toContain(`-resultdir './coverage'`);
+    expect(command).toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });
@@ -299,6 +309,11 @@ describe('getTicsCommand', () => {
     ticsCliMock.branchname = 'main';
     ticsCliMock.branchdir = '.';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
+    ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.additionalFlags = '-log 9';
 
     const command = getTicsCommand('./filelist');
@@ -307,14 +322,19 @@ describe('getTicsCommand', () => {
     expect(command).not.toContain(`'@./filelist'`);
     expect(command).not.toContain(`-viewer`);
     expect(command).toContain(`-project 'project'`);
-    expect(command).toContain('-calc CS');
-    expect(command).toContain('-nocalc CW');
-    expect(command).toContain('-recalc CY');
-    expect(command).toContain('-norecalc CD');
-    expect(command).not.toContain('-cdtoken token');
-    expect(command).not.toContain('-codetype TESTCODE');
-    expect(command).toContain('-branchname main');
-    expect(command).toContain('-branchdir .');
+    expect(command).toContain(`-calc 'CS'`);
+    expect(command).toContain(`-nocalc 'CW'`);
+    expect(command).toContain(`-recalc 'CY'`);
+    expect(command).toContain(`-norecalc 'CD'`);
+    expect(command).not.toContain(`-cdtoken 'token'`);
+    expect(command).not.toContain(`-codetype 'TESTCODE'`);
+    expect(command).toContain(`-branchname 'main'`);
+    expect(command).toContain(`-branchdir '.'`);
+    expect(command).not.toContain(`-resultdir './coverage'`);
+    expect(command).not.toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).not.toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).not.toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).not.toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });
@@ -330,6 +350,11 @@ describe('getTicsCommand', () => {
     ticsCliMock.codetype = 'TESTCODE';
     ticsCliMock.branchname = 'main';
     ticsCliMock.branchdir = '.';
+    ticsCliMock.resultdir = './coverage';
+    ticsCliMock.integrationresultdir = './integrationcoverage';
+    ticsCliMock.systemresultdir = './systemcoverage';
+    ticsCliMock.totalresultdir = './totalcoverage';
+    ticsCliMock.unitresultdir = './unitcoverage';
     ticsCliMock.tmpdir = '/home/ubuntu/test';
     ticsCliMock.additionalFlags = '-log 9';
 
@@ -347,6 +372,11 @@ describe('getTicsCommand', () => {
     expect(command).not.toContain('-codetype TESTCODE');
     expect(command).not.toContain('-branchname main');
     expect(command).not.toContain('-branchdir .');
+    expect(command).not.toContain(`-resultdir './coverage'`);
+    expect(command).not.toContain(`-integrationresultdir './integrationcoverage'`);
+    expect(command).not.toContain(`-systemresultdir './systemcoverage'`);
+    expect(command).not.toContain(`-totalresultdir './totalcoverage'`);
+    expect(command).not.toContain(`-unitresultdir './unitcoverage'`);
     expect(command).toContain(`-tmpdir '/home/ubuntu/test/123_TICS_1_tics-github-action'`);
     expect(command).toContain('-log 9');
   });

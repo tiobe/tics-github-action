@@ -14,6 +14,11 @@ export class TicsCli {
   readonly nocalc: string;
   readonly norecalc: string;
   readonly recalc: string;
+  readonly resultdir: string;
+  readonly integrationresultdir: string;
+  readonly systemresultdir: string;
+  readonly totalresultdir: string;
+  readonly unitresultdir: string;
   readonly tmpdir: string;
   readonly additionalFlags: string;
 
@@ -27,6 +32,11 @@ export class TicsCli {
     this.nocalc = getInput('nocalc');
     this.norecalc = getInput('norecalc');
     this.recalc = getInput('recalc');
+    this.resultdir = getInput('resultdir');
+    this.integrationresultdir = getInput('integrationresultdir');
+    this.systemresultdir = getInput('systemresultdir');
+    this.totalresultdir = getInput('totalresultdir');
+    this.unitresultdir = getInput('unitresultdir');
     this.tmpdir = getInput('tmpdir');
     this.additionalFlags = getInput('additionalFlags');
 
@@ -116,6 +126,26 @@ export const CliOptions: CliOption[] = [
   {
     action: 'recalc',
     modes: [Mode.CLIENT, Mode.QSERVER]
+  },
+  {
+    action: 'resultdir',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'integrationresultdir',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'systemresultdir',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'totalresultdir',
+    modes: [Mode.CLIENT]
+  },
+  {
+    action: 'unitresultdir',
+    modes: [Mode.CLIENT]
   },
   {
     action: 'tmpdir',

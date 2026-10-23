@@ -161,7 +161,7 @@ function getCliOptionsForCommand() {
     if (option.modes.includes(ticsConfig.mode)) {
       const value = ticsCli[option.action as keyof TicsCli];
       if (value) {
-        command.push(`-${option.action} ${value}`);
+        command.push(`-${option.action} '${value}'`);
       }
     }
   });
