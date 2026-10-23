@@ -19,6 +19,11 @@ describe('cli Configuration', () => {
     nocalc: '',
     norecalc: '',
     recalc: '',
+    resultdir: '',
+    integrationresultdir: '',
+    systemresultdir: '',
+    totalresultdir: '',
+    unitresultdir: '',
     tmpdir: '',
     additionalFlags: ''
   };
@@ -162,6 +167,11 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
@@ -178,13 +188,23 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(2);
+    expect(warningSpy).toHaveBeenCalledTimes(7);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('cdtoken'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('codetype'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('resultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('integrationresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('systemresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('totalresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('unitresultdir'));
   });
 
   it('should throw warnings on QServer-only cli options if used in mode Client', () => {
@@ -198,6 +218,11 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
@@ -214,6 +239,11 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     });
@@ -233,6 +263,11 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     };
@@ -249,11 +284,16 @@ describe('cli Configuration', () => {
       nocalc: 'CW',
       norecalc: 'CY',
       recalc: 'AI',
+      resultdir: './resultdir',
+      integrationresultdir: './integrationresultdir',
+      systemresultdir: './systemresultdir',
+      totalresultdir: './totalresultdir',
+      unitresultdir: './unitresultdir',
       tmpdir: '/tmp',
       additionalFlags: '-log 9'
     });
 
-    expect(warningSpy).toHaveBeenCalledTimes(9);
+    expect(warningSpy).toHaveBeenCalledTimes(14);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchdir'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('project'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('branchname'));
@@ -263,5 +303,10 @@ describe('cli Configuration', () => {
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('nocalc'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('norecalc'));
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('recalc'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('resultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('integrationresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('systemresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('totalresultdir'));
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining('unitresultdir'));
   });
 });

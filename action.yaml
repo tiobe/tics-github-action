@@ -48,6 +48,21 @@ inputs:
   codetype:
     description: Allows you to pick which specific types of code you want to analyze with the (only applies to Client runs).
     required: false
+  resultdir:
+    description: Path to the result directory for code coverage.
+    required: false
+  integrationresultdir:
+    description: Path to the result directory for integration test code coverage.
+    required: false
+  systemresultdir:
+    description: Path to the result directory for system test code coverage.
+    required: false
+  totalresultdir:
+    description: Path to the result directory for total test code coverage.
+    required: false
+  unitresultdir:
+    description: Path to the result directory for unit test code coverage.
+    required: false
   excludeMovedFiles:
     description: Exclude moved files from analysis even if there are modifications in the file.
     required: false

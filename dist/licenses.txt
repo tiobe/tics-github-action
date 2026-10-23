@@ -2319,7 +2319,7 @@ SOFTWARE.
 ---
 
 Name: brace-expansion
-Version: 2.1.4
+Version: 2.1.7
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
@@ -4827,7 +4827,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
 
 Name: ip-address
-Version: 10.7.0
+Version: 10.7.4
 License: MIT
 Private: false
 Description: A library for parsing IPv4 and IPv6 IP addresses in node and the browser.

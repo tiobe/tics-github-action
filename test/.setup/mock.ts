@@ -80,6 +80,11 @@ export const ticsCliMock = {
   nocalc: '',
   norecalc: '',
   recalc: '',
+  resultdir: '',
+  integrationresultdir: '',
+  systemresultdir: '',
+  totalresultdir: '',
+  unitresultdir: '',
   tmpdir: '',
   additionalFlags: ''
 };
