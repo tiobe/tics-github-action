@@ -43,6 +43,21 @@ describe('setFailed checks (TICS Client)', () => {
     expect(spyInfo).toHaveBeenCalledWith(expect.stringContaining('No changed files found to analyze.'));
   });
 
+  it('should run analyzer if there are no changed files but a filelist is passed', async () => {
+    ticsConfigMock.filelist = 'location/changedFiles.txt';
+    spyChangedFiles.mockResolvedValueOnce({ files: [], path: 'location/changedFiles.txt' });
+    spyAnalyzer.mockResolvedValue(analysisNoUrl);
+    spyIncomplete.mockResolvedValueOnce('');
+
+    const verdict = await clientAnalysis();
+
+    expect(verdict).toEqual({
+      passed: true,
+      message: ''
+    });
+    expect(spyAnalyzer).toHaveBeenCalled();
+  });
+
   it('should return failing verdict if there is no Explorer URL and processIncomplete returns a failed message', async () => {
     spyChangedFiles.mockResolvedValueOnce({ files: singleChangedFiles, path: 'location/changedFiles.txt' });
     spyAnalyzer.mockResolvedValue(analysisNoUrl);

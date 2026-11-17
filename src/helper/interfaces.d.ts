@@ -2,7 +2,9 @@ import { ChangedFile } from '../github/interfaces.js';
 import { ExtendedAnnotation, LabelInfo, QualityGate } from '../viewer/interfaces.js';
 
 export interface ChangedFiles {
+  /** Changed files returned by GitHub */
   files: ChangedFile[];
+  /** Path of all changed files to pass to TICS */
   path: string;
 }
 
