@@ -4,7 +4,7 @@ import { ExtendedAnnotation, LabelInfo, QualityGate } from '../viewer/interfaces
 export interface ChangedFiles {
   /** Changed files returned by GitHub */
   files: ChangedFile[];
-  /** Path of all changed files to pass to TICS */
+  /** Path of the filelist to pass to TICS */
   path: string;
 }
 
