@@ -3,6 +3,7 @@ import { logger } from '../helper/logger.js';
 import { runTicsAnalyzer } from '../tics/analyzer.js';
 import { getChangedFiles } from './helper/changed-files.js';
 import { processCompleteAnalysis, processIncompleteAnalysis } from './client/process-analysis.js';
+import { ticsConfig } from '../configuration/config.js';
 
 export async function clientAnalysis(): Promise<Verdict> {
   const changedFiles = await getChangedFiles();
@@ -12,8 +13,8 @@ export async function clientAnalysis(): Promise<Verdict> {
     message: ''
   };
 
-  // if no changed files are found, return early
-  if (changedFiles.files.length === 0) {
+  // if no changed files are found, return early (except when a filelist is given)
+  if (changedFiles.files.length === 0 && ticsConfig.filelist === '') {
     logger.info('No changed files found to analyze.');
     return verdict;
   }

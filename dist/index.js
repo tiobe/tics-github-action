@@ -262675,8 +262675,8 @@ async function clientAnalysis() {
         passed: true,
         message: ''
     };
-    // if no changed files are found, return early
-    if (changedFiles.files.length === 0) {
+    // if no changed files are found, return early (except when a filelist is given)
+    if (changedFiles.files.length === 0 && ticsConfig.filelist === '') {
         logger$5.info('No changed files found to analyze.');
         return verdict;
     }
