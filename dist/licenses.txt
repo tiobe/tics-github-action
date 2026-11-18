@@ -90,7 +90,7 @@ THE SOFTWARE.
 ---
 
 Name: undici
-Version: 6.28.1
+Version: 6.29.1
 License: MIT
 Private: false
 Description: An HTTP/1.1 client, written from scratch for Node.js
@@ -1959,7 +1959,7 @@ SOFTWARE.
 ---
 
 Name: fast-xml-parser
-Version: 5.7.1
+Version: 5.12.0
 License: MIT
 Private: false
 Description: Validate XML, Parse XML, Build XML without C/C++ based libraries
@@ -1993,7 +1993,7 @@ SOFTWARE.
 ---
 
 Name: @nodable/entities
-Version: 2.1.0
+Version: 3.1.0
 License: MIT
 Private: false
 Description: Entity parser for XML, HTML, External entites with security and NCR control
@@ -2002,13 +2002,81 @@ Author: Amit Gupta (https://solothought.com)
 
 ---
 
+Name: xml-naming
+Version: 0.3.0
+License: MIT
+Private: false
+Description: Validates XML name productions — Name, NCName, QName, NMToken, NMTokens — for XML 1.0 and 1.1
+Repository: https://github.com/NaturalIntelligence/xml-naming
+Author: Amit Gupta (https://solothought.com)
+License Text:
+===
+
+MIT License
+
+Copyright (c) 2026 Natural Intelligence
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Name: anynum
+Version: 1.0.1
+License: MIT
+Private: false
+Description: Normalize all Unicode decimal digits (Devanagari, Arabic, Thai, etc.) to ASCII numerals. Zero dependencies, performance-first.
+Repository: https://github.com/NaturalIntelligence/anynum
+Author: Amit Gupta (https://solothought.work/)
+License Text:
+===
+
+MIT License
+
+Copyright (c) 2026 Natural Intelligence
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
 Name: strnum
-Version: 2.2.3
+Version: 2.5.1
 License: MIT
 Private: false
 Description: Parse String to Number based on configuration
 Repository: https://github.com/NaturalIntelligence/strnum
-Author: Amit Gupta (https://amitkumargupta.work/)
+Author: Amit Gupta (https://solothought.work/)
 License Text:
 ===
 
@@ -2037,7 +2105,7 @@ SOFTWARE.
 ---
 
 Name: path-expression-matcher
-Version: 1.5.0
+Version: 1.6.2
 License: MIT
 Private: false
 Description: Efficient path tracking and pattern matching for XML/JSON parsers
@@ -2071,8 +2139,42 @@ SOFTWARE.
 
 ---
 
+Name: is-unsafe
+Version: 2.0.3
+License: MIT
+Private: false
+Description: Zero-dependency, DOM-free, pure predicate for detecting unsafe strings across HTML, XML, SVG, SQL, SHELL, and REGEX contexts
+Repository: https://github.com/NaturalIntelligence/is-unsafe
+Author: Amit Gupta (https://solothought.com/)
+License Text:
+===
+
+MIT License
+
+Copyright (c) 2026 Natural Intelligence
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
 Name: fast-xml-builder
-Version: 1.2.0
+Version: 1.3.1
 License: MIT
 Private: false
 Description: Build XML from JSON without C/C++ based libraries
@@ -2102,16 +2204,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Name: xml-naming
-Version: 0.1.0
-License: MIT
-Private: false
-Description: Validates XML name productions — Name, NCName, QName, NMToken, NMTokens — for XML 1.0 and 1.1
-Repository: https://github.com/NaturalIntelligence/xml-naming
-Author: Amit Gupta (https://solothought.com)
 
 ---
 
