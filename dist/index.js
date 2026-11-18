@@ -53,7 +53,7 @@ import { createRequire } from 'node:module';
 import require$$1$8, { dirname } from 'node:path';
 import { createHmac } from 'node:crypto';
 import fs$1 from 'node:fs';
-import fs$2, { realpath } from 'fs/promises';
+import fs$2, { realpath, readFile } from 'fs/promises';
 import require$$0$e from 'constants';
 import require$$5$4 from 'node:fs/promises';
 import require$$2$1 from 'node:string_decoder';
@@ -266941,10 +266941,10 @@ function requireCommon () {
 	 */
 	function testBit(binaryValue, position) {
 	    const { length } = binaryValue;
-	    if (position > length) {
+	    if (position >= length) {
 	        return false;
 	    }
-	    const positionInString = length - position;
+	    const positionInString = length - position - 1;
 	    return binaryValue.substring(positionInString, positionInString + 1) === '1';
 	}
 	
@@ -268668,7 +268668,7 @@ function requireIpv6 () {
 	        address = this.parse4in6(address);
 	        const badCharacters = address.match(constants6.RE_BAD_CHARACTERS);
 	        if (badCharacters) {
-	            throw new address_error_1.AddressError(`Bad character${badCharacters.length > 1 ? 's' : ''} detected in address: ${badCharacters.join('')}`, address.replace(constants6.RE_BAD_CHARACTERS, '<span class="parse-error">$1</span>'));
+	            throw new address_error_1.AddressError(`Bad character${badCharacters.length > 1 ? 's' : ''} detected in address: ${badCharacters.join('')}`, address.replace(constants6.RE_BAD_CHARACTERS, (character) => `<span class="parse-error">${helpers.escapeHtml(character)}</span>`));
 	        }
 	        const badAddress = address.match(constants6.RE_BAD_ADDRESS);
 	        if (badAddress) {
@@ -271247,6 +271247,7 @@ function requireFtpContext () {
 	Object.defineProperty(FtpContext, "__esModule", { value: true });
 	FtpContext.FTPContext = FtpContext.FTPError = void 0;
 	const net_1 = net__default;
+	const tls_1 = tls__default;
 	const parseControlResponse_1 = requireParseControlResponse();
 	/**
 	 * Describes an FTP server error response including the FTP response code.
@@ -271286,6 +271287,8 @@ function requireFtpContext () {
 	        this.ipFamily = undefined;
 	        /** Options for TLS connections. */
 	        this.tlsOptions = {};
+	        /** Most recent TLS session from the control connection, used to resume the session on data connections. */
+	        this.tlsSessionStore = undefined;
 	        /** A multiline response might be received as multiple chunks. */
 	        this._partialResponse = "";
 	        this._encoding = encoding;
@@ -271351,6 +271354,7 @@ function requireFtpContext () {
 	        this.dataSocket = undefined;
 	        // This being a reset, reset any other state apart from the socket.
 	        this.tlsOptions = {};
+	        this.tlsSessionStore = undefined;
 	        this._partialResponse = "";
 	        if (this._socket) {
 	            const newSocketUpgradesExisting = socket.localPort === this._socket.localPort;
@@ -271378,6 +271382,9 @@ function requireFtpContext () {
 	            socket.on("close", hadError => { if (!hadError)
 	                this.closeWithError(new Error("Server closed connection unexpectedly.")); });
 	            this._setupDefaultErrorHandlers(socket, "control socket");
+	            if (socket instanceof tls_1.TLSSocket) {
+	                socket.on("session", session => { this.tlsSessionStore = session; });
+	            }
 	        }
 	        this._socket = socket;
 	    }
@@ -271422,13 +271429,13 @@ function requireFtpContext () {
 	     * Send an FTP command without waiting for or handling the result.
 	     */
 	    send(command) {
+	        const containsPassword = command.startsWith("PASS");
+	        const description = containsPassword ? "PASS ###" : command;
 	        // Reject control character injection attempts.
 	        if (/[\r\n\0]/.test(command)) {
-	            throw new Error(`Invalid command: Contains control characters. (${command})`);
+	            throw new Error(`Invalid command: Contains control characters. (${description})`);
 	        }
-	        const containsPassword = command.startsWith("PASS");
-	        const message = containsPassword ? "> PASS ###" : `> ${command}`;
-	        this.log(message);
+	        this.log(`> ${description}`);
 	        this._socket.write(command + "\r\n", this.encoding);
 	    }
 	    /**
@@ -271459,16 +271466,27 @@ function requireFtpContext () {
 	            // they called this method by mistake.
 	        }
 	        return new Promise((resolveTask, rejectTask) => {
+	            // A task can only be settled once. A handler can still hold on to its resolver after
+	            // that, for example because a stream reports an error late. By then the next task
+	            // might be running already and stopping to track it would leave it without a response.
+	            let settled = false;
+	            const stopTrackingOnce = () => {
+	                if (settled) {
+	                    return;
+	                }
+	                settled = true;
+	                this._stopTrackingTask();
+	            };
 	            this._task = {
 	                stack: new Error().stack || "Unknown call stack",
 	                responseHandler,
 	                resolver: {
 	                    resolve: arg => {
-	                        this._stopTrackingTask();
+	                        stopTrackingOnce();
 	                        resolveTask(arg);
 	                    },
 	                    reject: err => {
-	                        this._stopTrackingTask();
+	                        stopTrackingOnce();
 	                        rejectTask(err);
 	                    }
 	                }
@@ -271486,7 +271504,13 @@ function requireFtpContext () {
 	            // the default socket behaviour which is not expected by most users.
 	            this.socket.setTimeout(this.timeout);
 	            if (command) {
-	                this.send(command);
+	                // Nothing has been sent if this fails, so the task can be rejected without closing the client.
+	                try {
+	                    this.send(command);
+	                }
+	                catch (err) {
+	                    this._task.resolver.reject(err);
+	                }
 	            }
 	        });
 	    }
@@ -271545,8 +271569,17 @@ function requireFtpContext () {
 	     * @protected
 	     */
 	    _passToHandler(response) {
-	        if (this._task) {
-	            this._task.responseHandler(response, this._task.resolver);
+	        const task = this._task;
+	        if (task) {
+	            // Handlers run during socket events where nobody could catch an error. Report it to the
+	            // task instead and close because the state of the session is unknown at this point.
+	            try {
+	                task.responseHandler(response, task.resolver);
+	            }
+	            catch (err) {
+	                task.resolver.reject(err);
+	                this.closeWithError(err);
+	            }
 	        }
 	        // Errors other than FTPError always close the client. If there isn't an active task to handle the error,
 	        // the next one submitted will receive it using `_closingError`.
@@ -271632,6 +271665,7 @@ function requireNetUtils () {
 	netUtils.describeTLS = describeTLS;
 	netUtils.describeAddress = describeAddress;
 	netUtils.upgradeSocket = upgradeSocket;
+	netUtils.isLoopback = isLoopback;
 	netUtils.ipIsPrivateV4Address = ipIsPrivateV4Address;
 	const tls_1 = tls__default;
 	/**
@@ -271675,6 +271709,12 @@ function requireNetUtils () {
 	            reject(error);
 	        });
 	    });
+	}
+	/**
+	 * Returns true if an IP address is a loopback address.
+	 */
+	function isLoopback(ip) {
+	    return ip === "::1" || ip.startsWith("127.");
 	}
 	/**
 	 * Returns true if an IP is a private address according to https://tools.ietf.org/html/rfc1918#section-3.
@@ -271816,8 +271856,13 @@ function requireParseListDOS () {
 	 * under the Apache 2.0 license. It has been simplified and rewritten to better fit the Javascript language.
 	 *
 	 * https://github.com/apache/commons-net/blob/master/src/main/java/org/apache/commons/net/ftp/parser/NTFTPEntryParser.java
+	 *
+	 * Keep this expression anchored: without it a line that can't be parsed is retried at every position,
+	 * and as the expression starts with `\S+` each attempt is itself linear in the length of the line. A
+	 * single long line without whitespace would cost O(n²), which a server could use to block the event loop.
 	 */
-	const RE_LINE = new RegExp("(\\S+)\\s+(\\S+)\\s+" // MM-dd-yy whitespace hh:mma|kk:mm swallow trailing spaces
+	const RE_LINE = new RegExp("^\\s*" // anchor, `testLine` below is even stricter about this
+	    + "(\\S+)\\s+(\\S+)\\s+" // MM-dd-yy whitespace hh:mma|kk:mm swallow trailing spaces
 	    + "(?:(<DIR>)|([0-9]+))\\s+" // <DIR> or ddddd swallow trailing spaces
 	    + "(\\S.*)" // First non-space followed by rest of line (name)
 	);
@@ -271904,14 +271949,19 @@ function requireParseListUnix () {
 	 *    Note: local listings on MacOSX also use '@'
 	 *    this is not allowed for here as does not appear to be shown by FTP servers
 	 *    {@code @}   file has extended attributes
+	 *
+	 * Keep this expression anchored and both name quantifiers bounded: spaces are allowed in the owner and
+	 * group name, so an unbounded pair of them makes a line that can't be parsed cost O(n²) in its length,
+	 * which a server could use to block the event loop.
 	 */
-	const RE_LINE = new RegExp("([bcdelfmpSs-])" // file type
+	const RE_LINE = new RegExp("^[\\s\\d]*" // anchor, skipping an inode/block count as reported by `ls -i` or `ls -s`
+	    + "([bcdelfmpSs-])" // file type
 	    + "(((r|-)(w|-)([xsStTL-]))((r|-)(w|-)([xsStTL-]))((r|-)(w|-)([xsStTL-]?)))\\+?" // permissions
 	    + "\\s*" // separator TODO why allow it to be omitted??
 	    + "(\\d+)" // link count
 	    + "\\s+" // separator
-	    + "(?:(\\S+(?:\\s\\S+)*?)\\s+)?" // owner name (optional spaces)
-	    + "(?:(\\S+(?:\\s\\S+)*)\\s+)?" // group name (optional spaces)
+	    + "(?:(\\S+(?:\\s\\S+){0,7}?)\\s+)?" // owner name (bounded, may contain spaces)
+	    + "(?:(\\S+(?:\\s\\S+){0,7})\\s+)?" // group name (bounded, may contain spaces)
 	    + "(\\d+(?:,\\s*\\d+)?)" // size or n,m
 	    + "\\s+" // separator
 	    /**
@@ -272144,9 +272194,12 @@ function requireParseListMLSD () {
 	 *
 	 * - Example 1: `size=15227;type=dir;perm=el;modify=20190419065730; test one`
 	 * - Example 2: ` file name` (leading space)
+	 *
+	 * Keep `=` out of the fact name: if both sides of the first `=` could contain it, a long line of `=`
+	 * without `;` would be retried at every split point, costing O(n²) and blocking the event loop.
 	 */
 	function testLine(line) {
-	    return /^\S+=\S+;/.test(line) || line.startsWith(" ");
+	    return /^[^\s=]+=\S+;/.test(line) || line.startsWith(" ");
 	}
 	/**
 	 * Parse single line as MLSD listing, see specification at https://tools.ietf.org/html/rfc3659#section-7.
@@ -272163,11 +272216,12 @@ function requireParseListMLSD () {
 	        if (!factValue) {
 	            continue;
 	        }
-	        const factHandler = factHandlersByName[factName.toLowerCase()];
-	        if (!factHandler) {
+	        // The fact name comes from the server, only accept own keys and not ones like `__proto__`.
+	        const key = factName.toLowerCase();
+	        if (!Object.prototype.hasOwnProperty.call(factHandlersByName, key)) {
 	            continue;
 	        }
-	        const result = factHandler(factValue, info);
+	        const result = factHandlersByName[key](factValue, info);
 	        if (result === 2 /* FactHandlerResult.IgnoreFile */) {
 	            return undefined;
 	        }
@@ -272387,6 +272441,67 @@ function requireProgressTracker () {
 	return ProgressTracker;
 }
 
+var safePathNames = {};
+
+var hasRequiredSafePathNames;
+
+function requireSafePathNames () {
+	if (hasRequiredSafePathNames) return safePathNames;
+	hasRequiredSafePathNames = 1;
+	var __createBinding = (safePathNames && safePathNames.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (safePathNames && safePathNames.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (safePathNames && safePathNames.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
+	Object.defineProperty(safePathNames, "__esModule", { value: true });
+	safePathNames.isSafePathName = isSafePathName;
+	const path = __importStar(path__default);
+	/**
+	 * Returns true if a name from a directory listing can only refer to an entry directly inside a
+	 * local directory when joined with its path.
+	 */
+	function isSafePathName(name, localPath = path) {
+	    if (!name || name === "." || name === ".." || name.includes("/")) {
+	        return false;
+	    }
+	    if (localPath.sep === "\\") {
+	        // Windows also separates with "\", reads ":" as a drive (older Node joins "." and "C:" to
+	        // "C:", see CVE-2025-23084) and ignores trailing dots and spaces, so ".. " acts like "..".
+	        return !/[\\:]/.test(name) && !/^[. ]+$/.test(name);
+	    }
+	    return true;
+	}
+	return safePathNames;
+}
+
 var StringWriter = {};
 
 var hasRequiredStringWriter;
@@ -272427,6 +272542,119 @@ function requireStringWriter () {
 
 var transfer = {};
 
+var TransferWatchdog = {};
+
+var hasRequiredTransferWatchdog;
+
+function requireTransferWatchdog () {
+	if (hasRequiredTransferWatchdog) return TransferWatchdog;
+	hasRequiredTransferWatchdog = 1;
+	Object.defineProperty(TransferWatchdog, "__esModule", { value: true });
+	TransferWatchdog.TransferWatchdog = void 0;
+	/** How long to wait between two checks of a transfer at most, in milliseconds. */
+	const maxCheckIntervalMs = 500;
+	/**
+	 * How many checks a timeout is split into, at least. A transfer is only reported as stalled if
+	 * every single one of them found the connection idle. Deciding on a single check would make brief
+	 * moments where a transfer looks idle without being stalled matter, for example just after a
+	 * destination signalled that it can accept data again but before the first bytes arrived.
+	 *
+	 * Splitting into n checks means such a moment has to last about (n-1)/n of the timeout to be
+	 * mistaken for a stall, so the value matters much less than it being greater than one. It only
+	 * has an effect on timeouts below `minChecksPerTimeout * maxCheckIntervalMs` anyway, longer ones
+	 * are split into more checks by the interval limit alone.
+	 */
+	const minChecksPerTimeout = 4;
+	/**
+	 * Watches a data connection during a transfer and reports it as stalled if the server stopped
+	 * making progress.
+	 *
+	 * This replaces a plain inactivity timeout on the data socket. Such a timeout can't tell apart
+	 * "the server stopped sending" from "our own source or destination isn't ready yet". A slow local
+	 * stream is not an error: A download piped into a decompressor, or an upload fed by a stream that
+	 * computes its data, can legitimately leave the connection idle for minutes. Timing out on that
+	 * kills a healthy transfer and truncates the data the destination already received.
+	 *
+	 * Only time spent waiting for the server counts towards the timeout, see `isWaitingForServer`.
+	 */
+	let TransferWatchdog$1 = class TransferWatchdog {
+	    constructor() {
+	        this.timer = undefined;
+	    }
+	    /**
+	     * Start watching a transfer. Calls `onStall` if the server hasn't made progress for
+	     * `timeout` milliseconds, or for twice that if we made it wait ourselves before that.
+	     * A timeout of 0 disables the watchdog.
+	     */
+	    start(socket, direction, timeout, onStall) {
+	        this.stop();
+	        if (timeout <= 0) {
+	            return;
+	        }
+	        const intervalMs = Math.max(1, Math.min(Math.floor(timeout / minChecksPerTimeout), maxCheckIntervalMs));
+	        let lastBytes = countBytes(socket);
+	        let idleMs = 0;
+	        let graceMs = 0;
+	        this.timer = setInterval(() => {
+	            const bytes = countBytes(socket);
+	            const madeProgress = bytes !== lastBytes;
+	            lastBytes = bytes;
+	            if (!isWaitingForServer(socket, direction)) {
+	                // We're the ones holding up the transfer. The server won't continue the moment
+	                // we're ready again: our backpressure closed the receive window and it only
+	                // learns that it reopened with its next probe, so grant that on top of timeout.
+	                idleMs = 0;
+	                graceMs = timeout;
+	                return;
+	            }
+	            if (madeProgress) {
+	                idleMs = 0;
+	                graceMs = 0;
+	                return;
+	            }
+	            // Count checks instead of measuring elapsed time: a blocked event loop delays our
+	            // checks just as much as it delays reading from the socket, and that's not something
+	            // the server should be blamed for.
+	            idleMs += intervalMs;
+	            if (idleMs >= timeout + graceMs) {
+	                this.stop();
+	                onStall();
+	            }
+	        }, intervalMs);
+	        // Don't keep the process alive just to watch a transfer.
+	        this.timer.unref();
+	    }
+	    /**
+	     * Stop watching. Safe to call at any time, also if no transfer is being watched.
+	     */
+	    stop() {
+	        if (this.timer) {
+	            clearInterval(this.timer);
+	            this.timer = undefined;
+	        }
+	    }
+	};
+	TransferWatchdog.TransferWatchdog = TransferWatchdog$1;
+	function countBytes(socket) {
+	    return socket.bytesRead + socket.bytesWritten;
+	}
+	/**
+	 * Returns true if the transfer can only continue once the server acts. When downloading, that's
+	 * the case as long as we're ready to receive: if the socket is paused, our destination applied
+	 * backpressure and the server may well be waiting for us. When uploading, it's the case if we
+	 * still have data queued that the server isn't accepting: an empty queue means we're waiting for
+	 * our own source instead.
+	 *
+	 * `isPaused()` only reports backpressure for a socket that is being piped, which is what
+	 * `downloadTo` in transfer.ts does. Should that ever change to reading the socket directly, e.g.
+	 * by iterating over it, this would report a transfer as stalled while it's waiting for us.
+	 */
+	function isWaitingForServer(socket, direction) {
+	    return direction === "download" ? !socket.isPaused() : socket.writableLength > 0;
+	}
+	return TransferWatchdog;
+}
+
 var hasRequiredTransfer;
 
 function requireTransfer () {
@@ -272441,9 +272669,10 @@ function requireTransfer () {
 	transfer.connectForPassiveTransfer = connectForPassiveTransfer;
 	transfer.uploadFrom = uploadFrom;
 	transfer.downloadTo = downloadTo;
-	const netUtils_1 = requireNetUtils();
 	const stream_1 = require$$0__default;
 	const tls_1 = tls__default;
+	const TransferWatchdog_1 = requireTransferWatchdog();
+	const netUtils_1 = requireNetUtils();
 	const parseControlResponse_1 = requireParseControlResponse();
 	/**
 	 * Prepare a data socket using passive mode over IPv6.
@@ -272498,9 +272727,11 @@ function requireTransfer () {
 	    return res;
 	}
 	/**
-	 * Prepare a data socket using passive mode over IPv4. Ignore the IP provided by the PASV response,
-	 * and use the control host IP. This is the same behaviour as with the more modern variant EPSV. Use
-	 * this to fix issues around NAT or provide more security by preventing FTP bounce attacks.
+	 * Prepare a data socket using passive mode over IPv4.
+	 *
+	 * Will throw an error if the IP provided by the PASV response doesn't match the one of the control connection.
+	 * The error will contain detailed information. This is done to provide more security by preventing FTP bounce
+	 * attacks.
 	 */
 	async function enterPassiveModeIPv4_forceControlHostIP(ftp) {
 	    const res = await ftp.request("PASV");
@@ -272512,7 +272743,15 @@ function requireTransfer () {
 	    if (controlHost === undefined) {
 	        throw new Error("Control socket is disconnected, can't get remote address.");
 	    }
-	    await connectForPassiveTransfer(controlHost, target.port, ftp);
+	    // Strip IPv4-mapped IPv6 prefix (e.g. "::ffff:1.2.3.4" → "1.2.3.4") so the
+	    // comparison works regardless of whether the OS uses a dual-stack socket.
+	    const normalizedControlHost = controlHost.replace(/^::ffff:/i, "");
+	    const hostsAreCompatible = normalizedControlHost === target.host
+	        || ((0, netUtils_1.isLoopback)(normalizedControlHost) && (0, netUtils_1.isLoopback)(target.host));
+	    if (!hostsAreCompatible) {
+	        throw new Error(`PASV returned another host (${target.host}) for data transfer that you have connected to (${controlHost}). Even though the FTP protocol allows this, basic-ftp disables this feature by default for security reasons. If you do need this feature, instantiate the Client with the optional paramter "allowSeparateTransferHost: true". See the README documentation for more information.`);
+	    }
+	    await connectForPassiveTransfer(normalizedControlHost, target.port, ftp);
 	    return res;
 	}
 	/**
@@ -272520,7 +272759,9 @@ function requireTransfer () {
 	 */
 	function parsePasvResponse(message) {
 	    // Get host and port from PASV response, e.g. "227 Entering Passive Mode (192,168,1,100,10,229)"
-	    const groups = message.match(/([-\d]+,[-\d]+,[-\d]+,[-\d]+),([-\d]+),([-\d]+)/);
+	    // Only start a match at the beginning of a number: retrying at every digit of a long number
+	    // without commas would cost O(n²), which a server could use to block the event loop.
+	    const groups = message.match(/(?<![-\d])([-\d]+,[-\d]+,[-\d]+,[-\d]+),([-\d]+),([-\d]+)/);
 	    if (groups === null || groups.length !== 4) {
 	        throw new Error(`Can't parse response to 'PASV': ${message}`);
 	    }
@@ -272531,7 +272772,8 @@ function requireTransfer () {
 	}
 	function connectForPassiveTransfer(host, port, ftp) {
 	    return new Promise((resolve, reject) => {
-	        let socket = ftp._newSocket();
+	        const rawSocket = ftp._newSocket();
+	        let socket = rawSocket;
 	        const handleConnErr = function (err) {
 	            err.message = "Can't open data connection in passive mode: " + err.message;
 	            reject(err);
@@ -272544,16 +272786,22 @@ function requireTransfer () {
 	        socket.on("error", handleConnErr);
 	        socket.on("timeout", handleTimeout);
 	        socket.connect({ port, host, family: ftp.ipFamily }, () => {
+	            var _a;
 	            if (ftp.socket instanceof tls_1.TLSSocket) {
-	                socket = (0, tls_1.connect)(Object.assign({}, ftp.tlsOptions, {
-	                    socket,
+	                const tlsSocket = (0, tls_1.connect)(Object.assign({}, ftp.tlsOptions, {
+	                    socket: rawSocket,
 	                    // Reuse the TLS session negotiated earlier when the control connection
 	                    // was upgraded. Servers expect this because it provides additional
 	                    // security: If a completely new session would be negotiated, a hacker
 	                    // could guess the port and connect to the new data connection before we do
 	                    // by just starting his/her own TLS session.
-	                    session: ftp.socket.getSession()
+	                    session: (_a = ftp.tlsSessionStore) !== null && _a !== void 0 ? _a : ftp.socket.getSession()
 	                }));
+	                // When the server issues a new session ticket after this data connection's
+	                // TLS handshake (TLS 1.3 single-use tickets), capture it so the next data
+	                // connection can present a fresh ticket and resume successfully.
+	                tlsSocket.on("session", session => { ftp.tlsSessionStore = session; });
+	                socket = tlsSocket;
 	                // It's the responsibility of the transfer task to wait until the
 	                // TLS socket issued the event 'secureConnect'. We can't do this
 	                // here because some servers will start upgrading after the
@@ -272562,6 +272810,11 @@ function requireTransfer () {
 	                // is ready. But for upload this has to be taken into account,
 	                // see the details in the upload() function below.
 	            }
+	            // Disable the timeout that was guarding the connection attempt. This has to happen on
+	            // the socket it was set on: when using TLS, `socket` is by now a wrapper around that
+	            // socket, and a timeout left running underneath would destroy the data connection
+	            // during a transfer that is idle for a legitimate reason.
+	            rawSocket.setTimeout(0);
 	            // Let the FTPContext listen to errors from now on, remove local handler.
 	            socket.removeListener("error", handleConnErr);
 	            socket.removeListener("timeout", handleTimeout);
@@ -272587,6 +272840,8 @@ function requireTransfer () {
 	        this.progress = progress;
 	        this.response = undefined;
 	        this.dataTransferDone = false;
+	        this.taskSettled = false;
+	        this.watchdog = new TransferWatchdog_1.TransferWatchdog();
 	    }
 	    /**
 	     * Mark the beginning of a transfer.
@@ -272595,7 +272850,7 @@ function requireTransfer () {
 	     * @param type - Type of transfer, usually "upload" or "download".
 	     */
 	    onDataStart(name, type) {
-	        // Let the data socket be in charge of tracking timeouts during transfer.
+	        // Let the data connection be in charge of tracking timeouts during transfer.
 	        // The control socket sits idle during this time anyway and might provoke
 	        // a timeout unnecessarily. The control connection will take care
 	        // of timeouts again once data transfer is complete or failed.
@@ -272603,22 +272858,28 @@ function requireTransfer () {
 	            throw new Error("Data transfer should start but there is no data connection.");
 	        }
 	        this.ftp.socket.setTimeout(0);
-	        this.ftp.dataSocket.setTimeout(this.ftp.timeout);
+	        // An inactivity timeout on the data socket would also fire while a slow local source or
+	        // destination is holding up an otherwise healthy transfer. Watch the transfer instead.
+	        this.ftp.dataSocket.setTimeout(0);
+	        this.watchdog.start(this.ftp.dataSocket, type === "upload" ? "upload" : "download", this.ftp.timeout, () => {
+	            this.ftp.closeWithError(new Error("Timeout (data socket)"));
+	        });
 	        this.progress.start(this.ftp.dataSocket, name, type);
 	    }
 	    /**
 	     * The data connection has finished the transfer.
 	     */
 	    onDataDone(task) {
+	        if (this.taskSettled) {
+	            return;
+	        }
+	        this.watchdog.stop();
 	        this.progress.updateAndStop();
 	        // Hand-over timeout tracking back to the control connection. It's possible that
 	        // we don't receive the response over the control connection that the transfer is
 	        // done. In this case, we want to correctly associate the resulting timeout with
 	        // the control connection.
 	        this.ftp.socket.setTimeout(this.ftp.timeout);
-	        if (this.ftp.dataSocket) {
-	            this.ftp.dataSocket.setTimeout(0);
-	        }
 	        this.dataTransferDone = true;
 	        this.tryResolve(task);
 	    }
@@ -272633,6 +272894,15 @@ function requireTransfer () {
 	     * An error has been reported and the task should be rejected.
 	     */
 	    onError(task, err) {
+	        // A transfer can report a problem more than once, e.g. when the server sends an error
+	        // response and the stream of the data connection reports the resulting shutdown as an
+	        // error as well. Only the first one decides the outcome, acting on a later one would
+	        // interfere with whatever the client is doing by then.
+	        if (this.taskSettled) {
+	            return;
+	        }
+	        this.taskSettled = true;
+	        this.watchdog.stop();
 	        this.progress.updateAndStop();
 	        this.ftp.socket.setTimeout(this.ftp.timeout);
 	        this.ftp.dataSocket = undefined;
@@ -272651,6 +272921,7 @@ function requireTransfer () {
 	        // To resolve, we need both control and data connection to report that the transfer is done.
 	        const canResolve = this.dataTransferDone && this.response !== undefined;
 	        if (canResolve) {
+	            this.taskSettled = true;
 	            this.ftp.dataSocket = undefined;
 	            task.resolve(this.response);
 	        }
@@ -272659,11 +272930,21 @@ function requireTransfer () {
 	function uploadFrom(source, config) {
 	    const resolver = new TransferResolver(config.ftp, config.tracker);
 	    const fullCommand = `${config.command} ${config.remotePath}`;
+	    // This handler runs for every reply that arrives while the task is active. RFC 959 lists
+	    // "125" and "150" as alternatives, so a well-behaved server sends exactly one of them, but
+	    // nothing here enforces that. Let only the first one start the transfer: piping the source
+	    // into the data connection a second time writes parts of it twice and would silently
+	    // corrupt the remote file.
+	    let transferStarted = false;
 	    return config.ftp.handle(fullCommand, (res, task) => {
 	        if (res instanceof Error) {
 	            resolver.onError(task, res);
 	        }
 	        else if (res.code === 150 || res.code === 125) { // Ready to upload
+	            if (transferStarted) {
+	                return;
+	            }
+	            transferStarted = true;
 	            const dataSocket = config.ftp.dataSocket;
 	            if (!dataSocket) {
 	                resolver.onError(task, new Error("Upload should begin but no data connection is available."));
@@ -272699,11 +272980,17 @@ function requireTransfer () {
 	        throw new Error("Download will be initiated but no data connection is available.");
 	    }
 	    const resolver = new TransferResolver(config.ftp, config.tracker);
+	    // See the comment in uploadFrom(): only the first preliminary reply may start the transfer.
+	    let transferStarted = false;
 	    return config.ftp.handle(config.command, (res, task) => {
 	        if (res instanceof Error) {
 	            resolver.onError(task, res);
 	        }
 	        else if (res.code === 150 || res.code === 125) { // Ready to download
+	            if (transferStarted) {
+	                return;
+	            }
+	            transferStarted = true;
 	            const dataSocket = config.ftp.dataSocket;
 	            if (!dataSocket) {
 	                resolver.onError(task, new Error("Download should begin but no data connection is available."));
@@ -272711,6 +272998,10 @@ function requireTransfer () {
 	            }
 	            config.ftp.log(`Downloading from ${(0, netUtils_1.describeAddress)(dataSocket)} (${(0, netUtils_1.describeTLS)(dataSocket)})`);
 	            resolver.onDataStart(config.remotePath, config.type);
+	            // Keep piping the data connection: TransferWatchdog recognizes a destination that
+	            // can't keep up by the socket being paused, and only piping does that. Consuming the
+	            // socket in another way, e.g. by iterating over it, makes the watchdog report a
+	            // transfer as stalled while it's in fact waiting for us.
 	            (0, stream_1.pipeline)(dataSocket, destination, err => {
 	                if (err) {
 	                    resolver.onError(task, err);
@@ -272769,17 +273060,20 @@ function requireClient () {
 	const parseList_1 = requireParseList();
 	const parseListMLSD_1 = requireParseListMLSD();
 	const ProgressTracker_1 = requireProgressTracker();
+	const safePathNames_1 = requireSafePathNames();
 	const StringWriter_1 = requireStringWriter();
 	const transfer_1 = requireTransfer();
 	// Use promisify to keep the library compatible with Node 8.
 	const fsReadDir = (0, util_1.promisify)(fs_1.readdir);
 	const fsMkDir = (0, util_1.promisify)(fs_1.mkdir);
 	const fsStat = (0, util_1.promisify)(fs_1.stat);
+	const fsFStat = (0, util_1.promisify)(fs_1.fstat);
 	const fsOpen = (0, util_1.promisify)(fs_1.open);
 	const fsClose = (0, util_1.promisify)(fs_1.close);
 	const fsUnlink = (0, util_1.promisify)(fs_1.unlink);
 	const defaultClientOptions = {
-	    allowSeparateTransferHost: true,
+	    /** For security reasons this library should not allow separate transfer hosts by default. */
+	    allowSeparateTransferHost: false,
 	    maxListingBytes: 40 * 1024 * 1024
 	};
 	const LIST_COMMANDS_DEFAULT = () => ["LIST -a", "LIST"];
@@ -272847,7 +273141,17 @@ function requireClient () {
 	     * explicit TLS. There are still FTP servers that support only implicit TLS, though.
 	     */
 	    connectImplicitTLS(host = "localhost", port = 21, tlsOptions = {}) {
+	        var _a;
 	        this.ftp.reset();
+	        // Remember the host identity so future data connections can resume this TLS
+	        // session. Since Node.js v24.17.0 (CVE-2026-48934) a reusable TLS session is
+	        // bound to the host it was authenticated for, and resumption is refused when
+	        // the resuming connection's identity (servername ?? host ?? socket._host)
+	        // differs. Data connections connect to the PASV/EPSV target, so without an
+	        // explicit host they'd resume under a different (or missing) identity and the
+	        // server would report the session as not resumed. This mirrors what `access`
+	        // already does for explicit TLS, see https://github.com/patrickjuchli/basic-ftp/issues/166.
+	        tlsOptions.host = (_a = tlsOptions.host) !== null && _a !== void 0 ? _a : host;
 	        this.ftp.socket = (0, tls_1.connect)(port, host, tlsOptions, () => this.ftp.log(`Connected to ${(0, netUtils_1.describeAddress)(this.ftp.socket)} (${(0, netUtils_1.describeTLS)(this.ftp.socket)})`));
 	        this.ftp.tlsOptions = tlsOptions;
 	        return this._handleConnectResponse();
@@ -273144,7 +273448,16 @@ function requireClient () {
 	            autoClose: false
 	        });
 	        try {
-	            return await this._uploadFromStream(source, remotePath, command);
+	            const expectedBytes = await expectedBytesFromLocalFile(fd, options);
+	            const response = await this._uploadFromStream(source, remotePath, command);
+	            // A local file that is modified while it is being read results in an incomplete
+	            // upload. Neither the FTP server nor the data connection can detect this, the
+	            // transfer just ends early and is reported as successful. Compare what we read
+	            // with what we expected to read to turn this into an error instead.
+	            if (expectedBytes !== undefined && source.bytesRead !== expectedBytes) {
+	                throw new Error(`Local file "${localPath}" changed while it was being uploaded to "${remotePath}": expected to send ${expectedBytes} bytes but sent ${source.bytesRead}. The remote file is incomplete.`);
+	            }
+	            return response;
 	        }
 	        finally {
 	            await ignoreError(() => fsClose(fd));
@@ -273384,8 +273697,7 @@ function requireClient () {
 	    async _downloadFromWorkingDir(localDirPath) {
 	        await ensureLocalDirectory(localDirPath);
 	        for (const file of await this.list()) {
-	            const hasInvalidName = !file.name || (0, path_1.basename)(file.name) !== file.name;
-	            if (hasInvalidName) {
+	            if (!(0, safePathNames_1.isSafePathName)(file.name)) {
 	                const safeName = JSON.stringify(file.name);
 	                this.ftp.log(`Invalid filename from server listing, will skip file. (${safeName})`);
 	                continue;
@@ -273531,6 +273843,24 @@ function requireClient () {
 	    catch (_a) {
 	        await fsMkDir(path, { recursive: true });
 	    }
+	}
+	/**
+	 * Return how many bytes an upload should read from an open local file, taking the optional
+	 * range described by `options` into account. Returns `undefined` if the size can't be known
+	 * upfront, for example because the source is a pipe or another non-regular file.
+	 */
+	async function expectedBytesFromLocalFile(fd, options) {
+	    var _a;
+	    const stats = await fsFStat(fd);
+	    if (!stats.isFile()) {
+	        return undefined;
+	    }
+	    const start = (_a = options.localStart) !== null && _a !== void 0 ? _a : 0;
+	    // `localEndInclusive` beyond the end of the file just means "read until the end".
+	    const endExclusive = options.localEndInclusive !== undefined
+	        ? Math.min(options.localEndInclusive + 1, stats.size)
+	        : stats.size;
+	    return Math.max(0, endExclusive - start);
 	}
 	async function ignoreError(func) {
 	    try {
@@ -294536,7 +294866,7 @@ async function restoreExtensions(descriptors, extensionMeta, mainExports, wasiBu
 }
 
 // Auto-synced with package.json version. Do not edit manually.
-const VERSION = "2.2.0";
+const VERSION = "3.7.0";
 
 /**
  * QuickJS WASM - A snapshotable JavaScript runtime via WebAssembly.
@@ -294598,6 +294928,14 @@ var __disposeResources = (undefined && undefined.__disposeResources) || (functio
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 });
+// ---- Public types ----
+/**
+ * Largest supported QuickJS native stack limit for the shipped WASM binary.
+ *
+ * The binary has a 1 MiB linker-defined stack; reserving half of it leaves
+ * headroom for native frames and stack-overflow exception handling.
+ */
+const MAX_STACK_SIZE = 512 * 1024;
 // ---- Snapshot serialization ----
 /** Magic bytes: "QJSS" (QuickJS Snapshot) */
 const SNAPSHOT_MAGIC = 0x514A5353;
@@ -294628,6 +294966,9 @@ class QuickJS {
     encoder = new TextEncoder();
     decoder = new TextDecoder();
     disposed = false;
+    asyncFailure;
+    hostSettlementDepth = 0;
+    promiseWaiters = new Set();
     /** Registry of host callbacks, keyed by function name */
     hostCallbacks = new Map();
     /** Counter for internal-only callbacks (e.g. promise settle handlers) */
@@ -294646,6 +294987,12 @@ class QuickJS {
     _false = null;
     // Handles that must be freed on dispose (e.g. unresolved promise resolve/reject functions)
     _ownedHandles = new Set();
+    /**
+     * The innermost active `withScope()` batch, if any. New non-singleton
+     * handles register themselves here so they can be freed together.
+     * @internal
+     */
+    _activeScope = null;
     /** Loaded extensions in deterministic order */
     loadedExtensions = [];
     constructor(module) {
@@ -294680,38 +295027,38 @@ class QuickJS {
         }
         return this._versions;
     }
-    /** The global object. Cached — do not dispose. */
+    /** The global object. Cached; do not dispose. */
     get global() {
         if (!this._global) {
-            this._global = new JSValueHandle(this, this.exports.qjs_get_global());
+            this._global = new JSValueHandle(this, this.exports.qjs_get_global(), true);
         }
         return this._global;
     }
-    /** The undefined value. Cached — do not dispose. */
+    /** The undefined value. Cached; do not dispose. */
     get undefined() {
         if (!this._undefined) {
-            this._undefined = new JSValueHandle(this, this.exports.qjs_get_undefined());
+            this._undefined = new JSValueHandle(this, this.exports.qjs_get_undefined(), true);
         }
         return this._undefined;
     }
-    /** The null value. Cached — do not dispose. */
+    /** The null value. Cached; do not dispose. */
     get null() {
         if (!this._null) {
-            this._null = new JSValueHandle(this, this.exports.qjs_get_null());
+            this._null = new JSValueHandle(this, this.exports.qjs_get_null(), true);
         }
         return this._null;
     }
-    /** The true value. Cached — do not dispose. */
+    /** The true value. Cached; do not dispose. */
     get true() {
         if (!this._true) {
-            this._true = new JSValueHandle(this, this.exports.qjs_get_true());
+            this._true = new JSValueHandle(this, this.exports.qjs_get_true(), true);
         }
         return this._true;
     }
-    /** The false value. Cached — do not dispose. */
+    /** The false value. Cached; do not dispose. */
     get false() {
         if (!this._false) {
-            this._false = new JSValueHandle(this, this.exports.qjs_get_false());
+            this._false = new JSValueHandle(this, this.exports.qjs_get_false(), true);
         }
         return this._false;
     }
@@ -294764,7 +295111,7 @@ class QuickJS {
         vm.setInstance(instance);
         const mainExports = instance.exports;
         const exportedMemory = vm.exports.memory;
-        // Grow memory FIRST — extensions need the memory to be large enough
+        // Grow memory FIRST: extensions need the memory to be large enough
         // for their __memory_base offsets (which were allocated in the original
         // larger memory during create()).
         const currentPages = exportedMemory.buffer.byteLength / 65536;
@@ -294782,7 +295129,7 @@ class QuickJS {
             vm.loadedExtensions = await restoreExtensions(descriptors, snapshot.extensions, mainExports, wasiBuiltins, wasiUserOverrides, memoryProxy);
         }
         // Copy snapshot data into the module's own memory.
-        // This overwrites EVERYTHING — including the regions that extensions
+        // This overwrites EVERYTHING, including the regions that extensions
         // just initialized. That's correct because the snapshot already contains
         // the complete state including extension data.
         const dst = new Uint8Array(exportedMemory.buffer);
@@ -294801,7 +295148,7 @@ class QuickJS {
      *
      * The format includes a versioned header followed by the raw memory.
      * Apply your own compression (gzip, zstd, etc.) on top for smaller
-     * storage — the memory compresses very well due to large zero regions.
+     * storage. The memory compresses well due to its large zero regions.
      *
      * Format (version 1):
      * ```
@@ -294922,18 +295269,31 @@ class QuickJS {
     }
     // ---- Internal instantiation helpers ----
     static normalizeOptions(options) {
-        if (!options)
-            return {};
+        if (!options) {
+            // resolveModule() will throw a helpful error.
+            return { wasm: undefined };
+        }
         if (options instanceof WebAssembly.Module)
             return { wasm: options };
-        if (typeof options === 'object' && ('wasm' in options || 'wasi' in options || 'memoryLimit' in options || 'interruptHandler' in options || 'onUnhandledRejection' in options || 'moduleLoader' in options || 'intrinsics' in options || 'extensions' in options || 'timezoneOffset' in options))
-            return options;
+        if (typeof options === 'object' && ('wasm' in options || 'wasi' in options || 'memoryLimit' in options || 'maxStackSize' in options || 'interruptHandler' in options || 'onUnhandledRejection' in options || 'moduleLoader' in options || 'intrinsics' in options || 'extensions' in options || 'timezoneOffset' in options)) {
+            const opts = options;
+            if (opts.maxStackSize !== undefined &&
+                (!Number.isInteger(opts.maxStackSize) ||
+                    opts.maxStackSize < 0 ||
+                    opts.maxStackSize > MAX_STACK_SIZE)) {
+                throw new RangeError(`maxStackSize must be an integer between 0 and ${MAX_STACK_SIZE}`);
+            }
+            return opts;
+        }
         // BufferSource (ArrayBuffer or ArrayBufferView)
         return { wasm: options };
     }
     static applyLimits(vm, opts) {
         if (opts.memoryLimit !== undefined) {
             vm.exports.qjs_set_memory_limit(opts.memoryLimit);
+        }
+        if (opts.maxStackSize !== undefined) {
+            vm.exports.qjs_set_max_stack_size(opts.maxStackSize);
         }
         if (opts.interruptHandler) {
             vm.interruptHandler = opts.interruptHandler;
@@ -294973,14 +295333,13 @@ class QuickJS {
         if (wasmInput instanceof WebAssembly.Module) {
             return wasmInput;
         }
-        else if (wasmInput) {
+        if (wasmInput) {
             return WebAssembly.compile(wasmInput);
         }
-        else {
-            const { readFile } = await import('node:fs/promises');
-            const buf = await readFile(new URL('../quickjs.wasm', import.meta.url));
-            return WebAssembly.compile(buf);
-        }
+        throw new TypeError('QuickJS: `wasm` option is required. Provide WASM bytes or a compiled ' +
+            '`WebAssembly.Module`. The binary is shipped at `quickjs-wasi/quickjs.wasm` ' +
+            'and can be loaded via your environment\'s preferred mechanism (e.g. ' +
+            "`fetch()`, `node:fs/promises`, or a bundler import like Vite's `?url`).");
     }
     static async instantiate(module, vm, wasiOptions) {
         let memory = null;
@@ -295006,7 +295365,7 @@ class QuickJS {
         };
         const hostPromiseRejection = (promisePtr, reasonPtr, isHandled) => {
             if (!vm.unhandledRejectionHandler) {
-                // No handler registered — free the heap-allocated values
+                // No handler registered; free the heap-allocated values
                 vm.exports.qjs_free_value(promisePtr);
                 vm.exports.qjs_free_value(reasonPtr);
                 return;
@@ -295021,22 +295380,36 @@ class QuickJS {
                 reason.dispose();
             }
         };
+        // Guard against async (or otherwise non-string-returning) module loader
+        // callbacks. The WASM boundary is synchronous (a Promise cannot be
+        // awaited here), so fail with a clear error instead of coercing the
+        // Promise to source text.
+        const assertSyncString = (value, callbackName) => {
+            if (typeof value === 'string')
+                return value;
+            const got = value !== null && typeof value === 'object' && typeof value.then === 'function'
+                ? 'a Promise'
+                : `type ${typeof value}`;
+            throw new TypeError(`moduleLoader.${callbackName} must synchronously return a string (got ${got}). ` +
+                `Async module loading is not supported. Pre-fetch module sources instead ` +
+                `(see the "ES Modules" section of the quickjs-wasi README).`);
+        };
         // Module normalizer: resolve a specifier relative to a base name.
         // Returns a malloc'd null-terminated string in WASM memory, or 0 (NULL) on error.
         const hostModuleNormalize = (baseNamePtr, namePtr) => {
             if (!vm.moduleNormalizeHandler) {
-                // No normalize handler — return a copy of the specifier as-is
+                // No normalize handler; return a copy of the specifier as-is
                 const name = vm.readCString(namePtr);
                 return vm.writeString(name).ptr;
             }
             const baseName = vm.readCString(baseNamePtr);
             const specifier = vm.readCString(namePtr);
             try {
-                const normalized = vm.moduleNormalizeHandler(baseName, specifier);
+                const normalized = assertSyncString(vm.moduleNormalizeHandler(baseName, specifier), 'normalize');
                 return vm.writeString(normalized).ptr;
             }
-            catch {
-                return 0;
+            catch (err) {
+                return vm.throwHostException(err);
             }
         };
         // Module loader: return source code for a module.
@@ -295046,13 +295419,13 @@ class QuickJS {
                 return 0;
             const name = vm.readCString(namePtr);
             try {
-                const source = vm.moduleLoadHandler(name);
+                const source = assertSyncString(vm.moduleLoadHandler(name), 'load');
                 const { ptr, len } = vm.writeString(source);
                 new Uint32Array(vm.exports.memory.buffer, outLenPtr, 1)[0] = len;
                 return ptr;
             }
-            catch {
-                return 0;
+            catch (err) {
+                return vm.throwHostException(err);
             }
         };
         // host_get_timezone_offset receives time as split i32 (hi, lo) and
@@ -295082,15 +295455,36 @@ class QuickJS {
         const name = this.decoder.decode(new Uint8Array(this.exports.memory.buffer, namePtr, nameLen));
         const callback = this.hostCallbacks.get(name);
         if (!callback) {
-            return this.exports.qjs_get_undefined();
+            // Throw inside the guest, as the docs promise: `newEphemeralFunction`
+            // ("calling it after the handle is disposed throws, because the
+            // callback is gone") and `unregisterHostCallback` ("any QuickJS
+            // function still referencing the name will throw when called").
+            // Silently returning `undefined` here masked real bugs, e.g. a
+            // snapshot-restored VM calling a host function that was never
+            // re-registered would corrupt results instead of failing loud.
+            // Guest code can catch this like any other error.
+            // A string (not a host Error object): newError copies an Error's
+            // host .stack into the guest, which would leak host file paths into
+            // guest-observable space and shadow any guest backtrace. This error
+            // is library-generated; there is no host stack worth preserving.
+            return this.throwHostException(`Host callback "${name}" is not registered: it was unregistered, ` +
+                'its ephemeral function handle was disposed, or it was never ' +
+                're-registered after a snapshot restore.');
         }
-        const thisHandle = new JSValueHandle(this, thisPtr);
+        // `thisPtr` and the argv entries are OWNED BY THE C TRAMPOLINE, which
+        // frees them after this call returns. Wrap them as borrowed handles:
+        // dispose() is a no-op and they are exempt from `withScope()`
+        // tracking: a scope active around guest execution (e.g. a host
+        // serializer driving a `forEach` visitor) must not free them at its
+        // boundary, which would double-free the guest values and corrupt the
+        // heap. Callbacks retain arguments past their invocation via `dup()`.
+        const thisHandle = new JSValueHandle(this, thisPtr, false, true);
         const args = [];
         if (argc > 0 && argvPtr !== 0) {
             const view = new DataView(this.exports.memory.buffer);
             for (let i = 0; i < argc; i++) {
                 const argPtr = view.getUint32(argvPtr + i * 4, true);
-                args.push(new JSValueHandle(this, argPtr));
+                args.push(new JSValueHandle(this, argPtr, false, true));
             }
         }
         try {
@@ -295098,18 +295492,52 @@ class QuickJS {
             return this.exports.qjs_dup_value(result.ptr);
         }
         catch (err) {
-            // Throw an exception inside QuickJS and return NULL to signal
-            // to the C trampoline that an exception was thrown.
-            const errHandle = this.newError(err instanceof Error ? err : String(err));
-            this.exports.qjs_throw(errHandle.ptr);
-            errHandle.dispose();
-            return 0;
+            return this.throwHostException(err);
+        }
+    }
+    exceptionToHandle(err) {
+        if (err instanceof JSException && err.handle.vm === this && !err.handle.disposed) {
+            // Our duplicate keeps the caller's live value reusable. Disposed errors
+            // still have cached Error fields and use ordinary host-error conversion.
+            return err.handle.dup();
+        }
+        try {
+            return this.newError(err instanceof Error ? err : String(err));
+        }
+        catch (conversionError) {
+            // Translating a host error may itself exhaust the guest limit. Forward
+            // that native exception instead of allocating another Error recursively.
+            if (!(conversionError instanceof JSException) || conversionError.handle.vm !== this)
+                throw conversionError;
+            return conversionError.handle;
+        }
+    }
+    isInterrupt(err) {
+        return err instanceof JSException && err.handle.vm === this && !err.handle.disposed &&
+            this.exports.qjs_is_uncatchable_error(err.handle.ptr) !== 0;
+    }
+    throwHostException(err) {
+        const env_1 = { stack: [], error: void 0, hasError: false };
+        try {
+            const handle = __addDisposableResource(env_1, this.exceptionToHandle(err), false);
+            const result = __addDisposableResource(env_1, new JSValueHandle(this, this.exports.qjs_throw(handle.ptr)), false);
+            return 0; // The C trampoline returns JS_EXCEPTION to the guest.
+        }
+        catch (e_1) {
+            env_1.error = e_1;
+            env_1.hasError = true;
+        }
+        finally {
+            __disposeResources(env_1);
         }
     }
     // ---- String helpers ----
     /** Write a JS string into WASM memory, returning the pointer. Caller must free. */
     writeString(str) {
-        const encoded = this.encoder.encode(str);
+        // WTF-8 (not plain TextEncoder): lone surrogates in the input must
+        // reach the guest intact: quickjs's decoder accepts the 3-byte
+        // surrogate sequences, so a JS string round-trips exactly.
+        const encoded = encodeWtf8(str);
         const ptr = this.exports.wasm_malloc(encoded.length + 1);
         if (ptr === 0)
             throw new Error('wasm_malloc failed');
@@ -295129,29 +295557,35 @@ class QuickJS {
     // ---- Public API ----
     /**
      * Check if a result handle is an exception and throw a JSException if so.
-     * Used internally by evalCode and callFunction.
+     * Used for evaluation, calls, and host value construction.
      */
     throwIfException(result) {
         if (this.exports.qjs_is_exception(result.ptr) !== 0) {
-            const exc = this.getException();
             result.dispose();
-            // Track the handle so it gets cleaned up if the VM is disposed
-            // before the caller disposes the exception.
-            this._ownedHandles.add(exc);
-            throw new JSException(exc);
+            this.throwPendingException();
         }
         return result;
+    }
+    throwPendingException() {
+        const exc = this.getException();
+        // An exception outlives a scope that unwinds while propagating it.
+        this._activeScope?.delete(exc);
+        this._ownedHandles.add(exc);
+        exc._onDispose = () => this._ownedHandles.delete(exc);
+        throw new JSException(exc);
     }
     /**
      * Evaluate JavaScript code and return the result as a handle.
      * If the code throws, a `JSException` (which extends `Error`) is thrown
-     * on the host side — matching standard JavaScript semantics.
+     * on the host side, matching standard JavaScript semantics.
      *
      * @param code - The JavaScript source code to evaluate.
      * @param filename - Optional filename for error stack traces (default `'<eval>'`).
      * @param flags - Optional bitwise OR of `EvalFlags.*` constants.
-     *   For example, pass `EvalFlags.ASYNC` to allow top-level `await` — the
+     *   For example, pass `EvalFlags.ASYNC` to allow top-level `await`; the
      *   returned handle will be a Promise that resolves to the completion value.
+     *   With `EvalFlags.TYPE_MODULE` the returned handle is a Promise that
+     *   resolves to the module's namespace object (its exports).
      */
     evalCode(code, filename = '<eval>', flags = 0) {
         this.assertNotDisposed();
@@ -295186,7 +295620,7 @@ class QuickJS {
         this.exports.wasm_free(fnStr.ptr);
         if (bufPtr === 0) {
             this.exports.wasm_free(outLenPtr);
-            // Compilation failed — throw the QuickJS exception
+            // Compilation failed; throw the QuickJS exception
             const exc = this.getException();
             throw new Error(`Compilation error: ${exc.toString()}`);
         }
@@ -295200,6 +295634,10 @@ class QuickJS {
     /**
      * Execute previously compiled bytecode (from `compile()`).
      * Returns the evaluation result as a handle.
+     *
+     * For module bytecode (compiled with `EvalFlags.TYPE_MODULE`), the
+     * returned handle is a Promise that resolves to the module's namespace
+     * object (its exports).
      *
      * @param bytecode - The bytecode `Uint8Array` from `compile()`.
      */
@@ -295220,10 +295658,8 @@ class QuickJS {
         let count = 0;
         while (this.exports.qjs_is_job_pending()) {
             const result = this.exports.qjs_execute_pending_job();
-            if (result < 0) {
-                const exc = this.getException();
-                throw new Error(`Job execution error: ${exc.toString()}`);
-            }
+            if (result < 0)
+                this.throwPendingException();
             count++;
         }
         return count;
@@ -295256,10 +295692,10 @@ class QuickJS {
      */
     getMemoryUsage() {
         this.assertNotDisposed();
-        // Allocate a buffer for 26 int64 fields (26 * 8 = 208 bytes)
-        const bufPtr = this.exports.wasm_malloc(26 * 8);
+        // Allocate a buffer for 27 int64 fields (27 * 8 = 216 bytes)
+        const bufPtr = this.exports.wasm_malloc(27 * 8);
         this.exports.qjs_compute_memory_usage(bufPtr);
-        const view = new BigInt64Array(this.exports.memory.buffer, bufPtr, 26);
+        const view = new BigInt64Array(this.exports.memory.buffer, bufPtr, 27);
         const result = {
             mallocSize: Number(view[0]),
             mallocLimit: Number(view[1]),
@@ -295287,9 +295723,29 @@ class QuickJS {
             fastArrayElements: Number(view[23]),
             binaryObjectCount: Number(view[24]),
             binaryObjectSize: Number(view[25]),
+            allocatedSize: Number(view[26]),
         };
         this.exports.wasm_free(bufPtr);
         return result;
+    }
+    /**
+     * Bytes currently allocated from WASM linear memory by the QuickJS
+     * runtime: the value `memoryLimit` is enforced against.
+     *
+     * Constant-time: it reads a counter updated on every allocation and
+     * free. Use it for frequent sampling (for example, on every host call).
+     * `getMemoryUsage()` walks the whole heap to build its breakdown, so its
+     * cost grows with heap size.
+     *
+     * This is not the same number as `getMemoryUsage().mallocSize`, which
+     * counts the bytes QuickJS hands out. This value also counts allocator
+     * rounding and partially filled small-object arenas, so the two differ
+     * slightly (typically by a few percent on a large heap).
+     */
+    getAllocatedSize() {
+        this.assertNotDisposed();
+        // size_t is u32 on wasm32; read it unsigned so values above 2 GiB stay positive.
+        return this.exports.qjs_get_allocated_size() >>> 0;
     }
     /**
      * Get the global object. Prefer the cached `vm.global` property.
@@ -295304,9 +295760,12 @@ class QuickJS {
     newString(str) {
         this.assertNotDisposed();
         const { ptr, len } = this.writeString(str);
-        const resultPtr = this.exports.qjs_new_string(ptr, len);
-        this.exports.wasm_free(ptr);
-        return new JSValueHandle(this, resultPtr);
+        try {
+            return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_string(ptr, len)));
+        }
+        finally {
+            this.exports.wasm_free(ptr);
+        }
     }
     /**
      * Create a new QuickJS number value.
@@ -295323,21 +295782,21 @@ class QuickJS {
         // Split the bigint into lo/hi 32-bit halves
         const lo = Number(val & 0xffffffffn);
         const hi = Number((val >> 32n) & 0xffffffffn);
-        return new JSValueHandle(this, this.exports.qjs_new_big_int64(lo, hi));
+        return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_big_int64(lo, hi)));
     }
     /**
      * Create a new QuickJS object value.
      */
     newObject() {
         this.assertNotDisposed();
-        return new JSValueHandle(this, this.exports.qjs_new_object());
+        return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_object()));
     }
     /**
      * Create a new QuickJS array value.
      */
     newArray() {
         this.assertNotDisposed();
-        return new JSValueHandle(this, this.exports.qjs_new_array());
+        return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_array()));
     }
     /**
      * Create a global symbol (`Symbol.for(description)`).
@@ -295347,9 +295806,12 @@ class QuickJS {
     newSymbolFor(description) {
         this.assertNotDisposed();
         const { ptr, len } = this.writeString(description);
-        const result = new JSValueHandle(this, this.exports.qjs_new_symbol(ptr, len, 1));
-        this.exports.wasm_free(ptr);
-        return result;
+        try {
+            return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_symbol(ptr, len, 1)));
+        }
+        finally {
+            this.exports.wasm_free(ptr);
+        }
     }
     /**
      * Create a new QuickJS ArrayBuffer by copying data from a host buffer.
@@ -295360,10 +295822,13 @@ class QuickJS {
         const ptr = this.exports.wasm_malloc(bytes.length);
         if (ptr === 0)
             throw new Error('wasm_malloc failed');
-        new Uint8Array(this.exports.memory.buffer).set(bytes, ptr);
-        const result = new JSValueHandle(this, this.exports.qjs_new_array_buffer(ptr, bytes.length));
-        this.exports.wasm_free(ptr);
-        return result;
+        try {
+            new Uint8Array(this.exports.memory.buffer).set(bytes, ptr);
+            return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_array_buffer(ptr, bytes.length)));
+        }
+        finally {
+            this.exports.wasm_free(ptr);
+        }
     }
     /**
      * Create a new QuickJS Uint8Array by copying data from a host buffer.
@@ -295373,10 +295838,13 @@ class QuickJS {
         const ptr = this.exports.wasm_malloc(data.length);
         if (ptr === 0)
             throw new Error('wasm_malloc failed');
-        new Uint8Array(this.exports.memory.buffer).set(data, ptr);
-        const result = new JSValueHandle(this, this.exports.qjs_new_uint8_array(ptr, data.length));
-        this.exports.wasm_free(ptr);
-        return result;
+        try {
+            new Uint8Array(this.exports.memory.buffer).set(data, ptr);
+            return this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_uint8_array(ptr, data.length)));
+        }
+        finally {
+            this.exports.wasm_free(ptr);
+        }
     }
     /**
      * Get undefined. Prefer the cached `vm.undefined` property.
@@ -295417,23 +295885,177 @@ class QuickJS {
         if (this.hostCallbacks.has(name)) {
             throw new Error(`Host callback with name "${name}" is already registered`);
         }
-        this.hostCallbacks.set(name, fn);
-        const { ptr: namePtr, len: nameLen } = this.writeString(name);
-        const resultPtr = this.exports.qjs_new_host_function(namePtr, nameLen, 0);
-        this.exports.wasm_free(namePtr);
-        return new JSValueHandle(this, resultPtr);
+        return this.newInternalFunction(name, fn);
     }
     /**
-     * Create an internal host function that bypasses the duplicate-name check.
-     * Used for ephemeral callbacks (promise settle handlers, resolvePromise, etc.)
-     * that are not intended to survive snapshot/restore.
+     * Run `fn` with a handle scope: every handle created during the call is
+     * disposed when it returns, except those passed to `scope.escape()`.
+     *
+     * This is the bulk alternative to disposing handles individually, for code
+     * that creates many intermediates, such as walking a large value:
+     *
+     * ```ts
+     * const name = vm.withScope((scope) => {
+     *   const user = root.getProp('user');       // freed automatically
+     *   const profile = user.getProp('profile'); // freed automatically
+     *   return scope.escape(profile.getProp('name'));
+     * });
+     * ```
+     *
+     * Scopes nest: `escape()` transfers the handle to the enclosing scope when
+     * there is one, so it is still cleaned up at the outer boundary.
+     *
+     * `fn` must be synchronous. Handles created after an `await` are outside
+     * the scope, because it closes as soon as `fn` returns.
+     *
+     * Host callbacks are safe to trigger inside a scope: the `this`/argument
+     * handles the trampoline passes to a callback wrap C-owned pointers and
+     * are exempt from scope tracking (see `handleHostCall`), so the scope
+     * frees only handles the host actually owns. Handles a callback CREATES
+     * (including `dup()`s of its arguments) are tracked normally.
+     */
+    withScope(fn) {
+        this.assertNotDisposed();
+        const enclosing = this._activeScope;
+        const tracked = new Set();
+        this._activeScope = tracked;
+        const scope = {
+            escape: (handle) => {
+                tracked.delete(handle);
+                enclosing?.add(handle);
+                return handle;
+            },
+        };
+        try {
+            return fn(scope);
+        }
+        finally {
+            this._activeScope = enclosing;
+            for (const handle of tracked)
+                handle.dispose();
+        }
+    }
+    /**
+     * Export a handle as a snapshot-portable token.
+     *
+     * A handle's heap box lives in the VM's linear memory, so a
+     * `snapshot()` taken while the handle is alive carries it, and a VM
+     * restored from that snapshot has the identical box at the identical
+     * offset. `importHandle(token)` on the restored VM (or on this VM)
+     * re-materializes an owned handle for the same guest value without
+     * evaluating any guest code.
+     *
+     * Contract:
+     * - the handle must stay undisposed until after `snapshot()`; its
+     *   box (and the reference it holds) must be part of the memory image;
+     * - the token is only meaningful to THIS VM and VMs restored from a
+     *   snapshot of it taken while the handle was alive;
+     * - `importHandle` duplicates the underlying value (fresh reference,
+     *   fresh box), so it can be called any number of times and each
+     *   returned handle is independently owned and disposable. The
+     *   exported box's own reference is intentionally never released on
+     *   restored VMs (one retained reference per VM image, reclaimed
+     *   with the VM).
+     *
+     * The intended use is boot-time capture: snapshot a VM after capturing
+     * references to pristine intrinsics but BEFORE evaluating untrusted or
+     * user code, then restore per task and import the captured handles,
+     * guaranteeing the references predate anything user code patched,
+     * without re-running capture code in the restored VM (where user-
+     * patched globals could observe it). See vercel/workflow's host-side
+     * serde for a worked example.
+     */
+    exportHandle(handle) {
+        this.assertNotDisposed();
+        if (handle.vm !== this) {
+            throw new Error('exportHandle: handle belongs to a different VM');
+        }
+        if (handle.disposed) {
+            throw new Error('exportHandle: handle is disposed');
+        }
+        if (handle._isBorrowed) {
+            // Host-callback this/argument handles wrap boxes OWNED BY THE C
+            // TRAMPOLINE, freed when the callback returns; a token minted
+            // from one would point at freed memory in every restored VM.
+            // Callbacks that need to persist an argument must dup() it first
+            // (the duplicate is an owned box) and export the duplicate.
+            throw new Error('exportHandle: cannot export a borrowed handle (host-callback ' +
+                'this/argument); its box is freed when the callback returns. ' +
+                'dup() it and export the duplicate.');
+        }
+        return handle.ptr;
+    }
+    /**
+     * Re-materialize a handle from a token produced by `exportHandle`,
+     * on this VM, or on a VM restored from a snapshot taken while the
+     * exported handle was alive. Returns a NEW owned handle (the
+     * underlying value's refcount is incremented); dispose it like any
+     * other handle. See `exportHandle` for the full contract.
+     */
+    importHandle(token) {
+        this.assertNotDisposed();
+        // Best-effort validation before handing the value to qjs_dup_value,
+        // which dereferences it as a raw JSValue* inside the WASM instance.
+        // A malformed token (0, negative, fractional, out of address range)
+        // would otherwise read arbitrary memory. A well-formed but FORGED
+        // token remains undefined behavior: like any raw pointer, tokens
+        // are only meaningful under the exportHandle contract.
+        if (!Number.isInteger(token) ||
+            token <= 0 ||
+            token >= this.exports.memory.buffer.byteLength) {
+            throw new Error(`importHandle: invalid token ${token}`);
+        }
+        return new JSValueHandle(this, this.exports.qjs_dup_value(token));
+    }
+    /**
+     * Create a QuickJS function backed by a host callback whose registration is
+     * tied to the returned handle: disposing the handle unregisters the
+     * callback.
+     *
+     * Use this for short-lived callbacks (e.g. a visitor passed to
+     * `Map.prototype.forEach`) where the name is an implementation detail.
+     * `newFunction()` keeps its callback registered for the lifetime of the VM
+     * (by design, so that names can be re-registered after a snapshot is
+     * restored), which makes it unsuitable for callbacks created in a loop.
+     *
+     * The guest must not retain the function past disposal: calling it after
+     * the handle is disposed throws, because the callback is gone. Ephemeral
+     * functions do not survive snapshot/restore.
+     */
+    newEphemeralFunction(fn) {
+        this.assertNotDisposed();
+        const name = `__ephemeral:${this.nextInternalId++}`;
+        const handle = this.newInternalFunction(name, fn);
+        handle._onDispose = () => {
+            this.hostCallbacks.delete(name);
+        };
+        return handle;
+    }
+    /**
+     * Remove a host callback registered with `newFunction()` or
+     * `registerHostCallback()`. Returns true if a callback was removed.
+     *
+     * Any QuickJS function still referencing the name will throw when called,
+     * so only unregister once the guest can no longer reach it.
+     */
+    unregisterHostCallback(name) {
+        return this.hostCallbacks.delete(name);
+    }
+    /**
+     * Construct and register a host function only after native success.
+     * Callers own duplicate-name checks and callback registration lifetimes.
      */
     newInternalFunction(name, fn) {
-        this.hostCallbacks.set(name, fn);
         const { ptr: namePtr, len: nameLen } = this.writeString(name);
-        const resultPtr = this.exports.qjs_new_host_function(namePtr, nameLen, 0);
-        this.exports.wasm_free(namePtr);
-        return new JSValueHandle(this, resultPtr);
+        try {
+            const handle = this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_host_function(namePtr, nameLen, 0)));
+            // Failed construction must not retain a callback or reserve its name.
+            this.hostCallbacks.set(name, fn);
+            return handle;
+        }
+        finally {
+            this.exports.wasm_free(namePtr);
+        }
     }
     /**
      * Create a new promise.
@@ -295446,56 +296068,88 @@ class QuickJS {
      */
     newPromise() {
         this.assertNotDisposed();
-        const resolveOutPtr = this.exports.wasm_malloc(4);
-        const rejectOutPtr = this.exports.wasm_malloc(4);
-        const promisePtr = this.exports.qjs_new_promise(resolveOutPtr, rejectOutPtr);
-        const view = new DataView(this.exports.memory.buffer);
-        const resolvePtr = view.getUint32(resolveOutPtr, true);
-        const rejectPtr = view.getUint32(rejectOutPtr, true);
-        this.exports.wasm_free(resolveOutPtr);
-        this.exports.wasm_free(rejectOutPtr);
-        const promiseHandle = new JSValueHandle(this, promisePtr);
+        const outPtr = this.exports.wasm_malloc(8);
+        if (!outPtr)
+            throw new Error('Failed to allocate promise output buffer');
+        let promiseHandle;
+        let resolvePtr;
+        let rejectPtr;
+        try {
+            // Failed native creation must throw before reading or tracking resolver outputs.
+            promiseHandle = this.throwIfException(new JSValueHandle(this, this.exports.qjs_new_promise(outPtr, outPtr + 4)));
+            const view = new DataView(this.exports.memory.buffer);
+            resolvePtr = view.getUint32(outPtr, true);
+            rejectPtr = view.getUint32(outPtr + 4, true);
+        }
+        finally {
+            this.exports.wasm_free(outPtr);
+        }
         const resolveHandle = new JSValueHandle(this, resolvePtr);
         const rejectHandle = new JSValueHandle(this, rejectPtr);
         const vm = this;
         // Track resolve/reject handles so they can be freed on VM dispose
         // if the promise is never resolved/rejected
+        // Private resolvers outlive the caller's scope; only the public Promise
+        // handle remains scoped. Otherwise late settlement reads freed values.
+        vm._activeScope?.delete(resolveHandle);
+        vm._activeScope?.delete(rejectHandle);
         vm._ownedHandles.add(resolveHandle);
         vm._ownedHandles.add(rejectHandle);
-        // Lazily-created settled promise — only attaches .then() handler when accessed
+        let resolved = false;
+        const settle = (resolver, value) => {
+            if (resolved)
+                return;
+            // Mark as settled before calling the resolver: resolving with an object
+            // synchronously reads its `then` property, which can re-enter host code
+            // that calls resolve()/reject() again. Those nested calls must be no-ops
+            // so they don't free the resolver that is still executing.
+            resolved = true;
+            try {
+                vm.callFunction(resolver, vm.undefined, value).dispose();
+            }
+            finally {
+                // Both functions retain the promise. Release them even when invocation
+                // fails; the one-shot transition still forbids retrying this pair.
+                vm._ownedHandles.delete(resolveHandle);
+                vm._ownedHandles.delete(rejectHandle);
+                resolveHandle.dispose();
+                rejectHandle.dispose();
+            }
+        };
+        // Lazily-created settled promise: only attaches .then() handler when accessed
         let _settled = null;
         return {
             handle: promiseHandle,
             get settled() {
                 if (!_settled) {
-                    let settledResolve;
-                    _settled = new Promise((res) => {
-                        settledResolve = res;
-                    });
+                    vm.assertNotDisposed();
                     const settleName = `__settle:${vm.nextInternalId++}`;
-                    const onSettleFn = vm.newInternalFunction(settleName, () => {
-                        settledResolve();
-                        vm.hostCallbacks.delete(settleName);
-                        return vm.undefined;
-                    });
-                    const thenFn = promiseHandle.getProp('then');
-                    const onSettleDup = onSettleFn.dup();
-                    vm.callFunctionRaw(thenFn, promiseHandle, onSettleFn, onSettleDup).dispose();
-                    thenFn.dispose();
-                    onSettleFn.dispose();
-                    onSettleDup.dispose();
+                    const settled = vm.observePromise((resolve) => {
+                        const env_2 = { stack: [], error: void 0, hasError: false };
+                        try {
+                            const onSettleFn = __addDisposableResource(env_2, vm.newInternalFunction(settleName, () => {
+                                resolve();
+                                return vm.undefined;
+                            }), false);
+                            vm.promiseThenRaw(promiseHandle, onSettleFn, onSettleFn).dispose();
+                        }
+                        catch (e_2) {
+                            env_2.error = e_2;
+                            env_2.hasError = true;
+                        }
+                        finally {
+                            __disposeResources(env_2);
+                        }
+                    }, () => vm.hostCallbacks.delete(settleName));
+                    _settled = settled;
                 }
                 return _settled;
             },
             resolve(value) {
-                vm.callFunctionRaw(resolveHandle, vm.undefined, value).dispose();
-                vm._ownedHandles.delete(resolveHandle);
-                resolveHandle.dispose();
+                settle(resolveHandle, value);
             },
             reject(value) {
-                vm.callFunctionRaw(rejectHandle, vm.undefined, value).dispose();
-                vm._ownedHandles.delete(rejectHandle);
-                rejectHandle.dispose();
+                settle(rejectHandle, value);
             },
         };
     }
@@ -295506,49 +296160,130 @@ class QuickJS {
      * If the handle is not a promise, it is treated as an already-fulfilled value.
      *
      * The returned host Promise resolves to `{ value: JSValueHandle }` on
-     * fulfillment or `{ error: JSValueHandle }` on rejection.
+     * fulfillment or `{ error: JSValueHandle }` on guest rejection. It rejects
+     * if the VM is disposed or its automatic host-Promise bridge fails.
      */
     resolvePromise(promiseHandle) {
         this.assertNotDisposed();
-        // If the handle is not a promise, treat it as a fulfilled value
-        if (!this.exports.qjs_is_promise(promiseHandle.ptr)) {
-            return Promise.resolve({ value: promiseHandle.dup() });
+        const isPromise = this.exports.qjs_is_promise(promiseHandle.ptr);
+        const state = isPromise ? this.exports.qjs_promise_state(promiseHandle.ptr) : 1;
+        if (state !== 0) {
+            const value = isPromise
+                ? new JSValueHandle(this, this.exports.qjs_promise_result(promiseHandle.ptr))
+                : promiseHandle.dup();
+            this._activeScope?.delete(value);
+            const result = state === 2 ? { error: value } : { value };
+            return this.hostSettlementDepth
+                ? this.observePromise(resolve => resolve(result), undefined, result => ('value' in result ? result.value : result.error).dispose())
+                : Promise.resolve(result);
         }
-        // Check if already settled
-        const state = this.exports.qjs_promise_state(promiseHandle.ptr);
-        if (state === 1) {
-            // fulfilled
-            return Promise.resolve({ value: new JSValueHandle(this, this.exports.qjs_promise_result(promiseHandle.ptr)) });
+        // Pending: attach a .then/.catch to get notified.
+        const id = this.nextInternalId++;
+        const fulfilledName = `__onFulfilled:${id}`;
+        const rejectedName = `__onRejected:${id}`;
+        const cleanup = () => {
+            this.hostCallbacks.delete(fulfilledName);
+            this.hostCallbacks.delete(rejectedName);
+        };
+        try {
+            return this.observePromise((resolve) => {
+                let onFulfilled;
+                let onRejected;
+                try {
+                    onFulfilled = this.newInternalFunction(fulfilledName, (...args) => {
+                        const value = args[0]?.dup() ?? this.undefined;
+                        this._activeScope?.delete(value);
+                        resolve({ value });
+                        return this.undefined;
+                    });
+                    onRejected = this.newInternalFunction(rejectedName, (...args) => {
+                        const error = args[0]?.dup() ?? this.undefined;
+                        this._activeScope?.delete(error);
+                        resolve({ error });
+                        return this.undefined;
+                    });
+                    // Native subscription cannot be intercepted by guest then/species.
+                    this.promiseThenRaw(promiseHandle, onFulfilled, onRejected).dispose();
+                }
+                finally {
+                    onFulfilled?.dispose();
+                    onRejected?.dispose();
+                }
+            }, cleanup, result => ('value' in result ? result.value : result.error).dispose());
         }
-        else if (state === 2) {
-            // rejected
-            return Promise.resolve({ error: new JSValueHandle(this, this.exports.qjs_promise_result(promiseHandle.ptr)) });
+        catch (error) {
+            return Promise.reject(error);
         }
-        // Pending — attach a .then/.catch to get notified
-        return new Promise((hostResolve) => {
-            const id = this.nextInternalId++;
-            const fulfilledName = `__onFulfilled:${id}`;
-            const rejectedName = `__onRejected:${id}`;
-            const onFulfilled = this.newInternalFunction(fulfilledName, (...args) => {
-                const val = args[0]?.dup() ?? this.undefined;
-                this.hostCallbacks.delete(fulfilledName);
-                this.hostCallbacks.delete(rejectedName);
-                hostResolve({ value: val });
-                return this.undefined;
+    }
+    /** Stage host observations until the synchronous drain has finished. */
+    observePromise(subscribe, cleanup = () => { }, release) {
+        let resolve;
+        let reject;
+        let staged;
+        const promise = new Promise((ok, fail) => { resolve = ok; reject = fail; });
+        const cancel = (error) => {
+            this.promiseWaiters.delete(cancel);
+            cleanup();
+            if (staged)
+                release?.(staged.value);
+            staged = undefined;
+            // Teardown owns cancellation even when an observer was abandoned.
+            // Awaiters still reject without creating another detached host failure.
+            void promise.catch(() => { });
+            reject(error);
+        };
+        this.promiseWaiters.add(cancel);
+        try {
+            subscribe(value => {
+                staged = { value };
+                // A later job in this drain may fail after a guest callback succeeds.
+                // Keep ownership until this commit so terminal failure wins safely.
+                const commit = () => {
+                    if (!this.promiseWaiters.delete(cancel))
+                        return;
+                    cleanup();
+                    staged = undefined;
+                    resolve(value);
+                };
+                if (this.hostSettlementDepth)
+                    queueMicrotask(commit);
+                else
+                    commit();
             });
-            const onRejected = this.newInternalFunction(rejectedName, (...args) => {
-                const val = args[0]?.dup() ?? this.undefined;
-                this.hostCallbacks.delete(fulfilledName);
-                this.hostCallbacks.delete(rejectedName);
-                hostResolve({ error: val });
-                return this.undefined;
-            });
-            const thenFn = promiseHandle.getProp('then');
-            this.callFunctionRaw(thenFn, promiseHandle, onFulfilled, onRejected).dispose();
-            thenFn.dispose();
-            onFulfilled.dispose();
-            onRejected.dispose();
-        });
+        }
+        catch (error) {
+            this.promiseWaiters.delete(cancel);
+            cleanup();
+            const pending = staged;
+            if (pending)
+                release?.(pending.value);
+            // No Promise escapes a failed subscription; preserve the getter's
+            // synchronous throw without leaving a detached rejected Promise.
+            throw error;
+        }
+        return promise;
+    }
+    /**
+     * Subscribe to a promise without executing guest code, via quickjs-ng's
+     * JS_PromiseThen: no Promise.prototype.then lookup, no Symbol.species.
+     * Returns the chained promise. Handler handles are borrowed (caller
+     * still owns and disposes them).
+     * @internal
+     */
+    promiseThenRaw(promise, onFulfilled, onRejected) {
+        return this.throwIfException(new JSValueHandle(this, this.exports.qjs_promise_then(promise.ptr, onFulfilled.ptr, onRejected.ptr)));
+    }
+    /**
+     * Mark a promise as handled: an eventual (or already-recorded) rejection
+     * will not be reported to `onUnhandledRejection`. Useful when the host
+     * observes a rejection through other means (e.g. `resolvePromise()`) and
+     * wants to suppress the unhandled-rejection callback for it.
+     *
+     * No-op if the handle is not a promise.
+     */
+    markPromiseHandled(promise) {
+        this.assertNotDisposed();
+        this.exports.qjs_promise_mark_as_handled(promise.ptr);
     }
     /**
      * Call a QuickJS function. If the function throws, a `JSException`
@@ -295556,6 +296291,31 @@ class QuickJS {
      */
     callFunction(func, thisVal, ...args) {
         return this.throwIfException(this.callFunctionRaw(func, thisVal, ...args));
+    }
+    /**
+     * Invoke a QuickJS constructor with `new`, i.e. `new ctor(...args)`.
+     * If the constructor throws (including when `ctor` is not a constructor),
+     * a `JSException` is thrown on the host side.
+     *
+     * This is the counterpart to `callFunction` for building values inside
+     * the VM from the host, e.g. `new Date(iso)` on a constructor captured
+     * before any user code ran.
+     */
+    construct(ctor, ...args) {
+        this.assertNotDisposed();
+        const argc = args.length;
+        let argvPtr = 0;
+        if (argc > 0) {
+            argvPtr = this.exports.wasm_malloc(argc * 4);
+            const view = new DataView(this.exports.memory.buffer);
+            for (let i = 0; i < argc; i++) {
+                view.setUint32(argvPtr + i * 4, args[i].ptr, true);
+            }
+        }
+        const resultPtr = this.exports.qjs_call_constructor(ctor.ptr, argc, argvPtr);
+        if (argvPtr)
+            this.exports.wasm_free(argvPtr);
+        return this.throwIfException(new JSValueHandle(this, resultPtr));
     }
     /**
      * Internal: call a QuickJS function without throwing on exception.
@@ -295583,14 +296343,36 @@ class QuickJS {
      */
     setProp(obj, key, value) {
         this.assertNotDisposed();
+        let status;
         if (typeof key === 'string') {
+            if (stringKeyNeedsValuePath(key)) {
+                const env_3 = { stack: [], error: void 0, hasError: false };
+                try {
+                    const keyHandle = __addDisposableResource(env_3, this.newString(key), false);
+                    this.setProp(obj, keyHandle, value);
+                    return;
+                }
+                catch (e_3) {
+                    env_3.error = e_3;
+                    env_3.hasError = true;
+                }
+                finally {
+                    __disposeResources(env_3);
+                }
+            }
             const { ptr: namePtr } = this.writeString(key);
-            this.exports.qjs_set_prop_string(obj.ptr, namePtr, value.ptr);
-            this.exports.wasm_free(namePtr);
+            try {
+                status = this.exports.qjs_set_prop_string(obj.ptr, namePtr, value.ptr);
+            }
+            finally {
+                this.exports.wasm_free(namePtr);
+            }
         }
         else {
-            this.exports.qjs_set_prop_value(obj.ptr, key.ptr, value.ptr);
+            status = this.exports.qjs_set_prop_value(obj.ptr, key.ptr, value.ptr);
         }
+        if (status < 0)
+            this.throwPendingException();
     }
     /**
      * Define a property on an object with explicit property descriptor flags.
@@ -295609,14 +296391,36 @@ class QuickJS {
             flags |= 2; // JS_PROP_WRITABLE
         if (descriptor?.enumerable)
             flags |= 4; // JS_PROP_ENUMERABLE
+        let status;
         if (typeof key === 'string') {
+            if (stringKeyNeedsValuePath(key)) {
+                const env_4 = { stack: [], error: void 0, hasError: false };
+                try {
+                    const keyHandle = __addDisposableResource(env_4, this.newString(key), false);
+                    this.defineProp(obj, keyHandle, value, descriptor);
+                    return;
+                }
+                catch (e_4) {
+                    env_4.error = e_4;
+                    env_4.hasError = true;
+                }
+                finally {
+                    __disposeResources(env_4);
+                }
+            }
             const { ptr: namePtr } = this.writeString(key);
-            this.exports.qjs_define_prop_string(obj.ptr, namePtr, value.ptr, flags);
-            this.exports.wasm_free(namePtr);
+            try {
+                status = this.exports.qjs_define_prop_string(obj.ptr, namePtr, value.ptr, flags);
+            }
+            finally {
+                this.exports.wasm_free(namePtr);
+            }
         }
         else {
-            this.exports.qjs_define_prop_value(obj.ptr, key.ptr, value.ptr, flags);
+            status = this.exports.qjs_define_prop_value(obj.ptr, key.ptr, value.ptr, flags);
         }
+        if (status < 0)
+            this.throwPendingException();
     }
     /**
      * Get a property from an object using a JSValueHandle key.
@@ -295640,28 +296444,54 @@ class QuickJS {
     newError(messageOrError) {
         this.assertNotDisposed();
         const errPtr = this.exports.qjs_new_error();
-        const errHandle = new JSValueHandle(this, errPtr);
-        if (typeof messageOrError === 'string') {
-            const msgHandle = this.newString(messageOrError);
-            errHandle.setProp('message', msgHandle);
-            msgHandle.dispose();
-        }
-        else {
-            const msgHandle = this.newString(messageOrError.message);
-            errHandle.setProp('message', msgHandle);
-            msgHandle.dispose();
-            if (messageOrError.name) {
-                const nameHandle = this.newString(messageOrError.name);
-                errHandle.setProp('name', nameHandle);
-                nameHandle.dispose();
+        const errHandle = this.throwIfException(new JSValueHandle(this, errPtr));
+        try {
+            const env_5 = { stack: [], error: void 0, hasError: false };
+            try {
+                const msgHandle = __addDisposableResource(env_5, this.newString(typeof messageOrError === 'string' ? messageOrError : messageOrError.message), false);
+                errHandle.setProp('message', msgHandle);
+                if (typeof messageOrError !== 'string' && messageOrError.name) {
+                    const env_6 = { stack: [], error: void 0, hasError: false };
+                    try {
+                        const nameHandle = __addDisposableResource(env_6, this.newString(messageOrError.name), false);
+                        errHandle.setProp('name', nameHandle);
+                    }
+                    catch (e_5) {
+                        env_6.error = e_5;
+                        env_6.hasError = true;
+                    }
+                    finally {
+                        __disposeResources(env_6);
+                    }
+                }
+                if (typeof messageOrError !== 'string' && messageOrError.stack) {
+                    const env_7 = { stack: [], error: void 0, hasError: false };
+                    try {
+                        const stackHandle = __addDisposableResource(env_7, this.newString(messageOrError.stack), false);
+                        errHandle.setProp('stack', stackHandle);
+                    }
+                    catch (e_6) {
+                        env_7.error = e_6;
+                        env_7.hasError = true;
+                    }
+                    finally {
+                        __disposeResources(env_7);
+                    }
+                }
+                return errHandle;
             }
-            if (messageOrError.stack) {
-                const stackHandle = this.newString(messageOrError.stack);
-                errHandle.setProp('stack', stackHandle);
-                stackHandle.dispose();
+            catch (e_7) {
+                env_5.error = e_7;
+                env_5.hasError = true;
+            }
+            finally {
+                __disposeResources(env_5);
             }
         }
-        return errHandle;
+        catch (err) {
+            errHandle.dispose();
+            throw err;
+        }
     }
     /**
      * Get the typeof a handle as a string.
@@ -295720,14 +296550,14 @@ class QuickJS {
             const descPtr = view.getUint32(descOutPtr, true);
             e.wasm_free(descOutPtr);
             if (kind === 1) {
-                // Global symbol — reconstruct as Symbol.for(description)
+                // Global symbol: reconstruct as Symbol.for(description)
                 const descHandle = new JSValueHandle(this, descPtr);
                 const description = descHandle.toString();
                 descHandle.dispose();
                 return Symbol.for(description);
             }
             else if (kind === 2) {
-                // Local (anonymous) symbol — can't be reconstructed on host
+                // Local (anonymous) symbol: can't be reconstructed on host
                 const descHandle = new JSValueHandle(this, descPtr);
                 descHandle.dispose();
                 return undefined;
@@ -295756,7 +296586,7 @@ class QuickJS {
                     return existing;
             }
         }
-        // Check for typed arrays (before regular array check — typed arrays are not Array.isArray)
+        // Check for typed arrays (before the regular array check; typed arrays are not Array.isArray)
         if (e.qjs_is_object(handle.ptr)) {
             const byteOffsetPtr = e.wasm_malloc(4);
             const byteLengthPtr = e.wasm_malloc(4);
@@ -295860,6 +296690,8 @@ class QuickJS {
     }
     /**
      * Convert a host JavaScript value to a QuickJS handle.
+     * A failure escaping asynchronous Promise settlement terminates this VM
+     * and rejects its host observers. Create a fresh VM after that failure.
      */
     hostToHandle(value) {
         this.assertNotDisposed();
@@ -295887,13 +296719,69 @@ class QuickJS {
         }
         if (value instanceof Promise) {
             const deferred = this.newPromise();
-            value.then((r) => {
-                deferred.resolve(this.hostToHandle(r));
-                this.executePendingJobs();
-            }, (err) => {
-                deferred.reject(this.hostToHandle(err));
-                this.executePendingJobs();
-            });
+            const settle = (result, reject) => {
+                if (this.disposed)
+                    return;
+                this.hostSettlementDepth++;
+                try {
+                    const env_8 = { stack: [], error: void 0, hasError: false };
+                    try {
+                        let handle;
+                        try {
+                            handle = this.hostToHandle(result);
+                        }
+                        catch (err) {
+                            const env_9 = { stack: [], error: void 0, hasError: false };
+                            try {
+                                if (this.disposed)
+                                    return;
+                                const error = __addDisposableResource(env_9, this.exceptionToHandle(err), false);
+                                deferred.reject(error);
+                                this.executePendingJobs();
+                                return;
+                            }
+                            catch (e_8) {
+                                env_9.error = e_8;
+                                env_9.hasError = true;
+                            }
+                            finally {
+                                __disposeResources(env_9);
+                            }
+                        }
+                        const converted = __addDisposableResource(env_8, handle, false);
+                        if (reject)
+                            deferred.reject(converted);
+                        else
+                            deferred.resolve(converted);
+                        this.executePendingJobs();
+                    }
+                    catch (e_9) {
+                        env_8.error = e_9;
+                        env_8.hasError = true;
+                    }
+                    finally {
+                        __disposeResources(env_8);
+                    }
+                }
+                catch (error) {
+                    if (this.disposed)
+                        return;
+                    if (this.isInterrupt(error)) {
+                        // The host's interruptHandler requested this stop. As after a
+                        // synchronous interrupt, the VM stays usable and later jobs stay queued.
+                        error.dispose();
+                        return;
+                    }
+                    // The resolver is one-shot and the drain is VM-wide. Retrying
+                    // rejection cannot repair this failure; end its host observers.
+                    this.asyncFailure = { error };
+                    this.dispose();
+                }
+                finally {
+                    this.hostSettlementDepth--;
+                }
+            };
+            value.then((r) => settle(r, false), (err) => settle(err, true));
             return deferred.handle;
         }
         if (value instanceof Error) {
@@ -295906,26 +296794,47 @@ class QuickJS {
             return this.newUint8Array(value);
         }
         if (ArrayBuffer.isView(value)) {
-            // Other typed arrays — convert via Uint8Array view of the underlying buffer
+            // Other typed arrays: convert via Uint8Array view of the underlying buffer
             return this.newArrayBuffer(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
         }
         if (Array.isArray(value)) {
             const arr = this.newArray();
-            for (let i = 0; i < value.length; i++) {
-                const elemHandle = this.hostToHandle(value[i]);
-                this.exports.qjs_set_prop_uint32(arr.ptr, i, elemHandle.ptr);
-                elemHandle.dispose();
+            try {
+                for (let i = 0; i < value.length; i++) {
+                    const elemHandle = this.hostToHandle(value[i]);
+                    try {
+                        if (this.exports.qjs_set_prop_uint32(arr.ptr, i, elemHandle.ptr) < 0)
+                            this.throwPendingException();
+                    }
+                    finally {
+                        elemHandle.dispose();
+                    }
+                }
+                return arr;
             }
-            return arr;
+            catch (err) {
+                arr.dispose();
+                throw err;
+            }
         }
         if (typeof value === 'object' && value !== null) {
             const obj = this.newObject();
-            for (const [key, val] of Object.entries(value)) {
-                const valHandle = this.hostToHandle(val);
-                obj.setProp(key, valHandle);
-                valHandle.dispose();
+            try {
+                for (const [key, val] of Object.entries(value)) {
+                    const valHandle = this.hostToHandle(val);
+                    try {
+                        obj.setProp(key, valHandle);
+                    }
+                    finally {
+                        valHandle.dispose();
+                    }
+                }
+                return obj;
             }
-            return obj;
+            catch (err) {
+                obj.dispose();
+                throw err;
+            }
         }
         return this.undefined;
     }
@@ -295966,6 +296875,12 @@ class QuickJS {
     dispose() {
         if (!this.disposed) {
             this.disposed = true;
+            if (this.promiseWaiters.size) {
+                const error = this.asyncFailure ? this.asyncFailure.error : new Error('QuickJS instance has been disposed');
+                for (const cancel of this.promiseWaiters)
+                    cancel(error);
+                this.promiseWaiters.clear();
+            }
             // Release references so the WASM instance and its linear memory
             // can be garbage collected even if someone holds onto this QuickJS object.
             this._global = null;
@@ -295975,6 +296890,7 @@ class QuickJS {
             this._false = null;
             this._ownedHandles.clear();
             this.hostCallbacks.clear();
+            this._activeScope = null;
             this.exports = null;
             this.instance = null;
             this.module = null;
@@ -295995,6 +296911,8 @@ class QuickJS {
     }
     assertNotDisposed() {
         if (this.disposed) {
+            if (this.asyncFailure)
+                throw this.asyncFailure.error;
             throw new Error('QuickJS instance has been disposed');
         }
     }
@@ -296016,11 +296934,113 @@ class QuickJS {
         return this.readCString(ptr);
     }
 }
+// ---- lossless string helpers ----
+/**
+ * Whether a string-typed property key survives the NUL-terminated
+ * C-string key APIs: embedded U+0000 truncates the key, and an UNPAIRED
+ * surrogate cannot be UTF-8 encoded (paired surrogates, such as those
+ * that encode emoji, are fine). Keys that don't survive are routed through length-aware
+ * guest string values instead.
+ */
+function stringKeyNeedsValuePath(key) {
+    return key.includes('\u0000') || LONE_SURROGATE_RE.test(key);
+}
+const wtf8Decoder = new TextDecoder();
+const wtf8Encoder = new TextEncoder();
+const LONE_SURROGATE_RE = /(?:[\uD800-\uDBFF](?![\uDC00-\uDFFF]))|(?:(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])/;
+/**
+ * Encode a JS string to WTF-8 bytes. Well-formed strings (including
+ * paired surrogates, such as emoji) take the native TextEncoder; strings with
+ * LONE surrogates take a manual encode that writes each unpaired
+ * surrogate as the 3-byte sequence quickjs's tolerant UTF-8 decoder
+ * accepts; TextEncoder would replace them with U+FFFD, silently
+ * corrupting every host→guest string (sources, property keys,
+ * newString values).
+ */
+function encodeWtf8(str) {
+    if (!LONE_SURROGATE_RE.test(str))
+        return wtf8Encoder.encode(str);
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+        if (code < 0x80) {
+            bytes.push(code);
+        }
+        else if (code < 0x800) {
+            bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+        }
+        else if (code >= 0xd800 && code <= 0xdbff && i + 1 < str.length) {
+            const next = str.charCodeAt(i + 1);
+            if (next >= 0xdc00 && next <= 0xdfff) {
+                // Well-formed pair: 4-byte UTF-8.
+                const cp = 0x10000 + ((code - 0xd800) << 10) + (next - 0xdc00);
+                bytes.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
+                i++;
+                continue;
+            }
+            // Lone high surrogate: 3-byte WTF-8.
+            bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+        }
+        else {
+            // BMP char or lone (low / trailing high) surrogate: 3-byte form.
+            bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+        }
+    }
+    return new Uint8Array(bytes);
+}
+/**
+ * Decode WTF-8 bytes to a JS string. WTF-8 is UTF-8 extended with 3-byte
+ * sequences for surrogate code points (0xED 0xA0-0xBF 0x80-0xBF), which
+ * is how quickjs's JS_ToCStringLen2 encodes lone surrogates ("keep
+ * unmatched surrogate code points"). TextDecoder replaces those
+ * sequences with U+FFFD, so they are detected first and the rare strings
+ * containing them take a manual decode; everything else (the
+ * overwhelming majority) uses the native decoder.
+ */
+function decodeWtf8(bytes) {
+    let hasSurrogateSequence = false;
+    for (let i = 0; i < bytes.length - 1; i++) {
+        if (bytes[i] === 0xed && bytes[i + 1] >= 0xa0 && bytes[i + 1] <= 0xbf) {
+            hasSurrogateSequence = true;
+            break;
+        }
+    }
+    if (!hasSurrogateSequence)
+        return wtf8Decoder.decode(bytes);
+    let out = '';
+    let i = 0;
+    while (i < bytes.length) {
+        const b0 = bytes[i];
+        if (b0 < 0x80) {
+            out += String.fromCharCode(b0);
+            i += 1;
+        }
+        else if (b0 < 0xe0) {
+            out += String.fromCharCode(((b0 & 0x1f) << 6) | (bytes[i + 1] & 0x3f));
+            i += 2;
+        }
+        else if (b0 < 0xf0) {
+            // 3-byte sequence: may decode into the surrogate range, which is
+            // exactly the WTF-8 extension: emit the code unit as-is.
+            out += String.fromCharCode(((b0 & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f));
+            i += 3;
+        }
+        else {
+            const cp = ((b0 & 0x07) << 18) |
+                ((bytes[i + 1] & 0x3f) << 12) |
+                ((bytes[i + 2] & 0x3f) << 6) |
+                (bytes[i + 3] & 0x3f);
+            out += String.fromCodePoint(cp);
+            i += 4;
+        }
+    }
+    return out;
+}
 // ---- JSException ----
 /**
  * An exception thrown from QuickJS code. Extends `Error` so it works with
  * standard error handling (`instanceof Error`, `.message`, `.stack`), and
- * also exposes a `handle` property — a live `JSValueHandle` to the QuickJS
+ * also exposes a `handle` property, a live `JSValueHandle` to the QuickJS
  * exception value, allowing direct inspection of custom properties.
  *
  * The `handle` must be disposed when you're done with it (or use `using`).
@@ -296040,7 +297060,7 @@ class JSException extends Error {
     #stack;
     /** @internal */
     constructor(handle) {
-        const env_1 = { stack: [], error: void 0, hasError: false };
+        const env_10 = { stack: [], error: void 0, hasError: false };
         try {
             super();
             this.handle = handle;
@@ -296048,17 +297068,17 @@ class JSException extends Error {
             // our prototype getter. Delete it so our getter takes effect.
             delete this.stack;
             // Read error properties eagerly and cache them.
-            const msgHandle = __addDisposableResource(env_1, handle.getProp('message'), false);
+            const msgHandle = __addDisposableResource(env_10, handle.getProp('message'), false);
             this.#name = handle.getProp('name').consume(h => h.isUndefined ? 'Error' : h.toString());
             this.#message = msgHandle.isUndefined ? handle.toString() : msgHandle.toString();
             this.#stack = handle.getProp('stack').consume(h => h.isUndefined ? undefined : h.toString());
         }
-        catch (e_1) {
-            env_1.error = e_1;
-            env_1.hasError = true;
+        catch (e_10) {
+            env_10.error = e_10;
+            env_10.hasError = true;
         }
         finally {
-            __disposeResources(env_1);
+            __disposeResources(env_10);
         }
     }
     get name() {
@@ -296095,10 +297115,63 @@ class JSValueHandle {
     vm;
     /** @internal */
     ptr;
-    disposed = false;
-    constructor(vm, ptr) {
+    disposed_ = false;
+    /**
+     * When true, this handle is a cached singleton (e.g. `undefined`, `null`,
+     * `true`, `false`, the global object) and `dispose()` is a no-op. This
+     * prevents code that routinely disposes handles (such as the object/array
+     * branches of `hostToHandle`) from freeing the shared heap `JSValue*` that
+     * the cached singleton still references, which would corrupt later reads.
+     * @internal
+     */
+    singleton;
+    /**
+     * When true, this handle wraps a `JSValue*` OWNED BY THE C CALLER: the
+     * `this`/argument handles the host-call trampoline passes to a host
+     * callback (`handleHostCall`). The C side frees those values after the
+     * call returns, so `dispose()` is a no-op and the handle is never
+     * registered with an active `withScope()` (either would double-free
+     * the guest value and corrupt the heap). A callback that needs to
+     * retain an argument past its own invocation must `dup()` it; the
+     * duplicate takes a fresh reference and behaves like any owned handle.
+     * @internal
+     */
+    borrowed;
+    /**
+     * Extra cleanup to run when this handle is disposed. Used by
+     * `newEphemeralFunction()` to unregister its host callback.
+     * @internal
+     */
+    _onDispose;
+    constructor(vm, ptr, singleton = false, borrowed = false) {
         this.vm = vm;
         this.ptr = ptr;
+        this.singleton = singleton;
+        this.borrowed = borrowed;
+        // Singletons are shared and outlive any scope; borrowed handles wrap
+        // C-owned pointers that a scope must never free.
+        if (!singleton && !borrowed)
+            vm._activeScope?.add(this);
+    }
+    /**
+     * Whether this handle wraps a C-owned pointer (host-callback
+     * `this`/arguments). Borrowed handles must never be exported as
+     * snapshot tokens: the trampoline frees their boxes after the
+     * callback returns. @internal
+     */
+    get _isBorrowed() {
+        return this.borrowed;
+    }
+    /**
+     * Whether `dispose()` has been called on this handle.
+     *
+     * Note that handle methods do not currently guard against use after
+     * disposal: reading from a disposed handle reads freed memory. Check this
+     * when a handle's lifetime is managed elsewhere (e.g. by `withScope()`).
+     */
+    get disposed() {
+        // singletons are never freed, so they are never "disposed"
+        return this.disposed_;
     }
     get isUndefined() {
         return this.vm._getExports().qjs_is_undefined(this.ptr) !== 0;
@@ -296141,6 +297214,130 @@ class JSValueHandle {
     }
     get isArrayBuffer() {
         return this.vm._getExports().qjs_is_array_buffer(this.ptr) !== 0;
+    }
+    /**
+     * Whether this value is a Proxy exotic object.
+     *
+     * This is an engine-level check: it never fires proxy traps and cannot
+     * be determined (or spoofed) from within guest JavaScript. Use
+     * {@link getProxyTarget} / {@link getProxyHandler} to introspect a
+     * detected proxy without executing guest code.
+     */
+    get isProxy() {
+        return this.vm._getExports().qjs_is_proxy(this.ptr) !== 0;
+    }
+    /**
+     * Whether this value is a Map (engine brand check: trap-free,
+     * spoof-proof, and unaffected by prototype/constructor mutation).
+     * A Proxy wrapping a Map returns false.
+     */
+    get isMap() {
+        return this.vm._getExports().qjs_is_map(this.ptr) !== 0;
+    }
+    /**
+     * Whether this value is a Set (engine brand check: trap-free,
+     * spoof-proof, and unaffected by prototype/constructor mutation).
+     * A Proxy wrapping a Set returns false.
+     */
+    get isSet() {
+        return this.vm._getExports().qjs_is_set(this.ptr) !== 0;
+    }
+    /**
+     * Whether this value is a Date (engine brand check: trap-free,
+     * spoof-proof, and unaffected by prototype/constructor mutation).
+     * A Proxy wrapping a Date returns false.
+     */
+    get isDate() {
+        return this.vm._getExports().qjs_is_date(this.ptr) !== 0;
+    }
+    /**
+     * Whether this value is a RegExp (engine brand check: trap-free,
+     * spoof-proof, and unaffected by prototype/constructor mutation).
+     * A Proxy wrapping a RegExp returns false.
+     */
+    get isRegExp() {
+        return this.vm._getExports().qjs_is_regexp(this.ptr) !== 0;
+    }
+    /** Whether this value is a WeakRef (engine brand check). */
+    get isWeakRef() {
+        return this.vm._getExports().qjs_is_weak_ref(this.ptr) !== 0;
+    }
+    /** Whether this value is a WeakMap (engine brand check). */
+    get isWeakMap() {
+        return this.vm._getExports().qjs_is_weak_map(this.ptr) !== 0;
+    }
+    /** Whether this value is a WeakSet (engine brand check). */
+    get isWeakSet() {
+        return this.vm._getExports().qjs_is_weak_set(this.ptr) !== 0;
+    }
+    /** Whether this value is a DataView (engine brand check). */
+    get isDataView() {
+        return this.vm._getExports().qjs_is_data_view(this.ptr) !== 0;
+    }
+    /**
+     * A numeric identity for the underlying heap value, or 0 for values that
+     * are not heap-allocated (numbers, booleans, `null`, `undefined`).
+     *
+     * Two handles to the same underlying object always report the same
+     * identity, and two live handles to different objects always report
+     * different identities, so this is the value to key a `Map` on when
+     * deduplicating or detecting cycles across handles (`dump()` uses it for
+     * exactly that).
+     *
+     * The identity is only meaningful while the value is alive; it is an
+     * address, so it may be reused after every handle to the value has been
+     * disposed. Do not persist it, and do not treat it as unforgeable: a
+     * number read out of the guest can trivially collide with one.
+     */
+    get identity() {
+        return this.vm._getExports().qjs_get_value_ptr(this.ptr);
+    }
+    /**
+     * Extract the value as a boolean, applying JavaScript truthiness
+     * (equivalent to `!!value` inside the VM).
+     */
+    toBoolean() {
+        return this.vm._getExports().qjs_get_bool(this.ptr) !== 0;
+    }
+    /**
+     * The internal QuickJS class ID of this value, or 0 for non-objects.
+     * Useful as a generic engine-level brand when no dedicated `is*`
+     * getter exists. Class IDs are stable within a VM instance but are an
+     * engine implementation detail, so prefer the dedicated getters.
+     */
+    get classId() {
+        return this.vm._getExports().qjs_get_class_id(this.ptr);
+    }
+    /**
+     * The engine-level class name of this value, e.g. `"Object"`, `"Map"`,
+     * `"Date"`, `"RegExp"`, or the registered name of an extension-defined
+     * class like `"URL"`, or `undefined` for non-objects and unnamed
+     * internal classes.
+     *
+     * Unlike `constructorName` (which reads the `constructor` and `name`
+     * properties and can therefore fire getters/proxy traps and be spoofed),
+     * this is trap-free: it reads the engine's class table directly, never
+     * executes guest code, and cannot be forged by reassigning prototypes or
+     * constructors. Note that the engine registers the Proxy class under the
+     * name `"Object"` (mirroring `Object.prototype.toString`), so use `isProxy`
+     * to detect proxies and `getProxyTarget()` to read the target's brand.
+     */
+    get className() {
+        const h = new JSValueHandle(this.vm, this.vm._getExports().qjs_get_class_name(this.ptr));
+        // qjs_get_class_name can return JS_EXCEPTION (e.g. OOM while
+        // materializing the name atom as a string); surface it instead of
+        // stringifying the exception sentinel and leaving the real error
+        // pending on the context.
+        if (this.vm._getExports().qjs_is_exception(h.ptr) !== 0) {
+            h.dispose();
+            throw new JSException(this.vm.getException());
+        }
+        try {
+            return h.isUndefined ? undefined : h.toString();
+        }
+        finally {
+            h.dispose();
+        }
     }
     get promiseState() {
         return this.vm._getExports().qjs_promise_state(this.ptr);
@@ -296230,9 +297427,121 @@ class JSValueHandle {
         return result;
     }
     /**
+     * Get ALL own property keys (strings and symbols), including
+     * non-enumerable (equivalent to Reflect.ownKeys()).
+     *
+     * String keys are returned as strings; symbol keys are returned as
+     * JSValueHandles which the caller must dispose.
+     *
+     * Trap-free for ordinary objects; fires the `ownKeys` trap for a
+     * Proxy (check {@link isProxy} first if that matters).
+     */
+    getOwnPropertyKeys() {
+        const e = this.vm._getExports();
+        const keysPtr = e.qjs_get_own_property_keys(this.ptr);
+        const keysHandle = new JSValueHandle(this.vm, keysPtr);
+        if (e.qjs_is_exception(keysHandle.ptr) !== 0) {
+            keysHandle.dispose();
+            return [];
+        }
+        const lenHandle = keysHandle.getProp('length');
+        const len = e.qjs_get_float64(lenHandle.ptr);
+        lenHandle.dispose();
+        const result = [];
+        for (let i = 0; i < len; i++) {
+            const keyPtr = e.qjs_get_prop_uint32(keysHandle.ptr, i);
+            const keyHandle = new JSValueHandle(this.vm, keyPtr);
+            if (keyHandle.isSymbol) {
+                result.push(keyHandle);
+            }
+            else {
+                result.push(keyHandle.toString());
+                keyHandle.dispose();
+            }
+        }
+        keysHandle.dispose();
+        return result;
+    }
+    /**
+     * Get the own property descriptor for a key WITHOUT invoking getters
+     * (equivalent to Object.getOwnPropertyDescriptor()).
+     *
+     * This is the safe way to inspect a property that may be an accessor:
+     * a data property yields `{ value, writable, enumerable, configurable }`,
+     * an accessor property yields `{ get, set, enumerable, configurable }`
+     * where `get`/`set` are handles to the accessor functions themselves
+     * (never invoked). Returns undefined if there is no such own property.
+     *
+     * The `value`/`get`/`set` handles are owned by the caller and must be
+     * disposed.
+     *
+     * Trap-free for ordinary objects; fires the `getOwnPropertyDescriptor`
+     * trap for a Proxy (check {@link isProxy} first if that matters).
+     */
+    getOwnPropertyDescriptor(key) {
+        const env_11 = { stack: [], error: void 0, hasError: false };
+        try {
+            const e = this.vm._getExports();
+            let keyHandle;
+            let keyPtr;
+            if (typeof key === 'string') {
+                keyHandle = this.vm.newString(key);
+                keyPtr = keyHandle.ptr;
+            }
+            else {
+                keyPtr = key.ptr;
+            }
+            const descPtr = e.qjs_get_own_property_descriptor(this.ptr, keyPtr);
+            keyHandle?.dispose();
+            if (descPtr === 0)
+                return undefined; /* no such own property */
+            const descHandle = __addDisposableResource(env_11, new JSValueHandle(this.vm, descPtr), false);
+            if (e.qjs_is_exception(descHandle.ptr) !== 0) {
+                throw new JSException(this.vm.getException());
+            }
+            const enumerable = descHandle.getProp('enumerable').consume(h => e.qjs_get_bool(h.ptr) !== 0);
+            const configurable = descHandle.getProp('configurable').consume(h => e.qjs_get_bool(h.ptr) !== 0);
+            if (descHandle.hasOwnProperty('value')) {
+                return {
+                    value: descHandle.getProp('value'),
+                    writable: descHandle.getProp('writable').consume(h => e.qjs_get_bool(h.ptr) !== 0),
+                    enumerable,
+                    configurable,
+                };
+            }
+            return {
+                get: descHandle.getProp('get'),
+                set: descHandle.getProp('set'),
+                enumerable,
+                configurable,
+            };
+        }
+        catch (e_11) {
+            env_11.error = e_11;
+            env_11.hasError = true;
+        }
+        finally {
+            __disposeResources(env_11);
+        }
+    }
+    /**
      * Check if a property is an own property (equivalent to Object.prototype.hasOwnProperty).
      */
     hasOwnProperty(name) {
+        if (stringKeyNeedsValuePath(name)) {
+            const env_12 = { stack: [], error: void 0, hasError: false };
+            try {
+                const keyHandle = __addDisposableResource(env_12, this.vm.newString(name), false);
+                return (this.vm._getExports().qjs_has_own_property_value(this.ptr, keyHandle.ptr) === 1);
+            }
+            catch (e_12) {
+                env_12.error = e_12;
+                env_12.hasError = true;
+            }
+            finally {
+                __disposeResources(env_12);
+            }
+        }
         const { ptr: namePtr } = this.vm._writeString(name);
         const result = this.vm._getExports().qjs_has_own_property(this.ptr, namePtr);
         this.vm._getExports().wasm_free(namePtr);
@@ -296242,6 +297551,20 @@ class JSValueHandle {
      * Check if a property is enumerable (equivalent to Object.prototype.propertyIsEnumerable).
      */
     propertyIsEnumerable(name) {
+        if (stringKeyNeedsValuePath(name)) {
+            const env_13 = { stack: [], error: void 0, hasError: false };
+            try {
+                const keyHandle = __addDisposableResource(env_13, this.vm.newString(name), false);
+                return (this.vm._getExports().qjs_property_is_enumerable_value(this.ptr, keyHandle.ptr) === 1);
+            }
+            catch (e_13) {
+                env_13.error = e_13;
+                env_13.hasError = true;
+            }
+            finally {
+                __disposeResources(env_13);
+            }
+        }
         const { ptr: namePtr } = this.vm._writeString(name);
         const result = this.vm._getExports().qjs_property_is_enumerable(this.ptr, namePtr);
         this.vm._getExports().wasm_free(namePtr);
@@ -296255,9 +297578,53 @@ class JSValueHandle {
         return new JSValueHandle(this.vm, protoPtr);
     }
     /**
+     * Get the `[[ProxyTarget]]` of this Proxy without firing any traps.
+     * Throws {@link JSException} if this value is not a Proxy; check
+     * {@link isProxy} first. Note the target may itself be a Proxy.
+     */
+    getProxyTarget() {
+        const ptr = this.vm._getExports().qjs_get_proxy_target(this.ptr);
+        const handle = new JSValueHandle(this.vm, ptr);
+        if (this.vm._getExports().qjs_is_exception(handle.ptr) !== 0) {
+            handle.dispose();
+            throw new JSException(this.vm.getException());
+        }
+        return handle;
+    }
+    /**
+     * Get the `[[ProxyHandler]]` of this Proxy without firing any traps.
+     * Throws {@link JSException} if this value is not a Proxy; check
+     * {@link isProxy} first.
+     */
+    getProxyHandler() {
+        const ptr = this.vm._getExports().qjs_get_proxy_handler(this.ptr);
+        const handle = new JSValueHandle(this.vm, ptr);
+        if (this.vm._getExports().qjs_is_exception(handle.ptr) !== 0) {
+            handle.dispose();
+            throw new JSException(this.vm.getException());
+        }
+        return handle;
+    }
+    /**
      * Get a property by name.
      */
     getProp(name) {
+        if (stringKeyNeedsValuePath(name)) {
+            const env_14 = { stack: [], error: void 0, hasError: false };
+            try {
+                // A NUL or lone surrogate in the key cannot cross the C-string
+                // API; go through a length-aware guest string key instead.
+                const keyHandle = __addDisposableResource(env_14, this.vm.newString(name), false);
+                return this.vm.getProp(this, keyHandle);
+            }
+            catch (e_14) {
+                env_14.error = e_14;
+                env_14.hasError = true;
+            }
+            finally {
+                __disposeResources(env_14);
+            }
+        }
         const { ptr: namePtr } = this.vm._writeString(name);
         const resultPtr = this.vm._getExports().qjs_get_prop_string(this.ptr, namePtr);
         this.vm._getExports().wasm_free(namePtr);
@@ -296267,9 +297634,7 @@ class JSValueHandle {
      * Set a property by name.
      */
     setProp(name, value) {
-        const { ptr: namePtr } = this.vm._writeString(name);
-        this.vm._getExports().qjs_set_prop_string(this.ptr, namePtr, value.ptr);
-        this.vm._getExports().wasm_free(namePtr);
+        this.vm.setProp(this, name, value);
     }
     /**
      * Define a property with explicit property descriptor flags.
@@ -296280,21 +297645,7 @@ class JSValueHandle {
      * All flags default to `false` when not specified.
      */
     defineProp(key, value, descriptor) {
-        let flags = 0;
-        if (descriptor?.configurable)
-            flags |= 1; // JS_PROP_CONFIGURABLE
-        if (descriptor?.writable)
-            flags |= 2; // JS_PROP_WRITABLE
-        if (descriptor?.enumerable)
-            flags |= 4; // JS_PROP_ENUMERABLE
-        if (typeof key === 'string') {
-            const { ptr: namePtr } = this.vm._writeString(key);
-            this.vm._getExports().qjs_define_prop_string(this.ptr, namePtr, value.ptr, flags);
-            this.vm._getExports().wasm_free(namePtr);
-        }
-        else {
-            this.vm._getExports().qjs_define_prop_value(this.ptr, key.ptr, value.ptr, flags);
-        }
+        this.vm.defineProp(this, key, value, descriptor);
     }
     /**
      * Extract the value as a number.
@@ -296380,15 +297731,44 @@ class JSValueHandle {
         return new Uint8Array(this.toArrayBuffer());
     }
     /**
-     * Extract the value as a string (calls JS_ToCString - works on any value).
+     * Extract the value as a string. Works on any value.
+     *
+     * For values that are not already strings this performs a JavaScript
+     * string conversion, which **executes guest code**: `toString()` /
+     * `valueOf()` / `Symbol.toPrimitive` on the value or its prototype chain,
+     * and proxy traps. Guard with `isString` when the caller must not run guest
+     * code, and call a captured intrinsic (e.g. `URL.prototype.toString` via
+     * `vm.callFunction`) when a specific conversion is wanted.
      */
     toString() {
-        const cstrPtr = this.vm._getExports().qjs_get_string(this.ptr);
-        if (cstrPtr === 0)
-            return '<null>';
-        const str = this.vm._readCString(cstrPtr);
-        this.vm._getExports().qjs_free_cstring(cstrPtr);
-        return str;
+        // Length-aware + WTF-8 (qjs_get_string_len): embedded U+0000 code
+        // units survive (the byte length is explicit, not NUL-scanned) and
+        // lone surrogates survive (quickjs encodes unmatched surrogate code
+        // points as 3-byte WTF-8 sequences, decoded back to their original
+        // code units). The previous JS_ToCString/NUL-terminated read
+        // silently truncated at the first NUL and replaced lone surrogates
+        // with U+FFFD, and the two corruptions could cancel each other's
+        // length changes, defeating length-based detection downstream.
+        const e = this.vm._getExports();
+        const lenPtr = e.wasm_malloc(4);
+        // Same failure check as writeString(): a 0 return would make
+        // qjs_get_string_len write the length to address 0 and the DataView
+        // read below read from it: silent corruption instead of an error.
+        if (lenPtr === 0)
+            throw new Error('wasm_malloc failed');
+        try {
+            const cstrPtr = e.qjs_get_string_len(this.ptr, lenPtr);
+            if (cstrPtr === 0)
+                return '<null>';
+            const len = new DataView(e.memory.buffer).getUint32(lenPtr, true);
+            const bytes = new Uint8Array(e.memory.buffer, cstrPtr, len);
+            const str = decodeWtf8(bytes);
+            e.qjs_free_cstring(cstrPtr);
+            return str;
+        }
+        finally {
+            e.wasm_free(lenPtr);
+        }
     }
     /**
      * Use this handle, then dispose it. Returns the callback's return value.
@@ -296412,9 +297792,19 @@ class JSValueHandle {
      * Safe to call after the VM has been disposed (becomes a no-op).
      */
     dispose() {
-        if (!this.disposed) {
-            this.disposed = true;
-            // If the VM is already disposed, the WASM instance is gone —
+        // Cached singleton handles (undefined/null/true/false/global) share a
+        // single heap-allocated JSValue that the VM keeps referencing. Freeing it
+        // here would leave the cached handle pointing at freed memory, so disposing
+        // a singleton is intentionally a no-op. Borrowed handles (host-callback
+        // `this`/arguments) wrap pointers owned by the C caller, which frees them
+        // itself after the call returns; freeing here would double-free.
+        if (this.singleton || this.borrowed)
+            return;
+        if (!this.disposed_) {
+            this.disposed_ = true;
+            this._onDispose?.();
+            this._onDispose = undefined;
+            // If the VM is already disposed, the WASM instance is gone;
             // no need to (and we can't) call qjs_free_value.
             const exports = this.vm._getExports();
             if (exports) {
@@ -296437,6 +297827,7 @@ class JSValueHandle {
     }
 }
 
+const quickjsWasm = readFile(new URL$3(import.meta.resolve('quickjs-wasi/quickjs.wasm')));
 const debug$3 = createDebug('pac-proxy-agent');
 /**
  * Sanitizes PAC proxy result strings by replacing any embedded
@@ -296510,7 +297901,7 @@ class PacProxyAgent extends Agent {
         try {
             // (Re)load the contents of the PAC file URI
             const [qjs, code] = await Promise.all([
-                QuickJS.create(),
+                QuickJS.create({ wasm: await quickjsWasm }),
                 this.loadPacFile(),
             ]);
             // Create a sha1 hash of the JS code

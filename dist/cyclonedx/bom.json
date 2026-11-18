@@ -4,7 +4,7 @@
 	"specVersion": "1.7",
 	"version": 1,
 	"metadata": {
-		"timestamp": "2026-11-18T11:52:57.595Z",
+		"timestamp": "2026-11-18T12:01:53.777Z",
 		"lifecycles": [
 			{
 				"phase": "build"
@@ -4757,8 +4757,8 @@
 		{
 			"type": "library",
 			"name": "proxy-agent",
-			"version": "8.0.2",
-			"bom-ref": "pkg:npm/proxy-agent@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
+			"version": "8.0.3",
+			"bom-ref": "pkg:npm/proxy-agent@8.0.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
 			"author": "Nathan Rajlich",
 			"description": "Maps proxy protocols to `http.Agent` implementations",
 			"licenses": [
@@ -4769,7 +4769,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/proxy-agent@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
+			"purl": "pkg:npm/proxy-agent@8.0.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/TooTallNate/proxy-agents.git#packages/proxy-agent",
@@ -4917,8 +4917,8 @@
 		{
 			"type": "library",
 			"name": "pac-proxy-agent",
-			"version": "9.1.0",
-			"bom-ref": "pkg:npm/pac-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
+			"version": "9.1.1",
+			"bom-ref": "pkg:npm/pac-proxy-agent@9.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
 			"author": "Nathan Rajlich",
 			"description": "A PAC file proxy `http.Agent` implementation for HTTP",
 			"licenses": [
@@ -4929,7 +4929,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/pac-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
+			"purl": "pkg:npm/pac-proxy-agent@9.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/TooTallNate/proxy-agents.git#packages/pac-proxy-agent",
@@ -5118,8 +5118,8 @@
 		{
 			"type": "library",
 			"name": "ip-address",
-			"version": "10.7.4",
-			"bom-ref": "pkg:npm/ip-address@10.7.4?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
+			"version": "10.7.6",
+			"bom-ref": "pkg:npm/ip-address@10.7.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
 			"author": "Beau Gunderson",
 			"description": "A library for parsing IPv4 and IPv6 IP addresses in node and the browser.",
 			"licenses": [
@@ -5130,7 +5130,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/ip-address@10.7.4?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
+			"purl": "pkg:npm/ip-address@10.7.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/beaugunderson/ip-address.git",
@@ -5198,8 +5198,8 @@
 		{
 			"type": "library",
 			"name": "get-uri",
-			"version": "8.0.1",
-			"bom-ref": "pkg:npm/get-uri@8.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
+			"version": "8.0.2",
+			"bom-ref": "pkg:npm/get-uri@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
 			"author": "Nathan Rajlich",
 			"description": "Returns a `stream.Readable` from a URI string",
 			"licenses": [
@@ -5210,7 +5210,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/get-uri@8.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
+			"purl": "pkg:npm/get-uri@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/TooTallNate/proxy-agents.git#packages/get-uri",
@@ -5238,8 +5238,8 @@
 		{
 			"type": "library",
 			"name": "basic-ftp",
-			"version": "5.3.1",
-			"bom-ref": "pkg:npm/basic-ftp@5.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git",
+			"version": "6.2.6",
+			"bom-ref": "pkg:npm/basic-ftp@6.2.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git",
 			"author": "Patrick Juchli",
 			"description": "FTP client for Node.js, supports FTPS over TLS, IPv6, Async/Await, and Typescript.",
 			"licenses": [
@@ -5250,7 +5250,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/basic-ftp@5.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git",
+			"purl": "pkg:npm/basic-ftp@6.2.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/patrickjuchli/basic-ftp.git",
@@ -5549,8 +5549,8 @@
 		{
 			"type": "library",
 			"name": "degenerator",
-			"version": "7.0.1",
-			"bom-ref": "pkg:npm/degenerator@7.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator",
+			"version": "7.0.2",
+			"bom-ref": "pkg:npm/degenerator@7.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator",
 			"author": "Nathan Rajlich",
 			"description": "Compiles sync functions into async generator functions",
 			"licenses": [
@@ -5561,7 +5561,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/degenerator@7.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator",
+			"purl": "pkg:npm/degenerator@7.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/TooTallNate/proxy-agents.git#packages/degenerator",
@@ -5589,8 +5589,8 @@
 		{
 			"type": "library",
 			"name": "pac-resolver",
-			"version": "9.0.1",
-			"bom-ref": "pkg:npm/pac-resolver@9.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
+			"version": "9.0.2",
+			"bom-ref": "pkg:npm/pac-resolver@9.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
 			"author": "Nathan Rajlich",
 			"description": "Generates an asynchronous resolver function from a PAC file",
 			"licenses": [
@@ -5601,7 +5601,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/pac-resolver@9.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
+			"purl": "pkg:npm/pac-resolver@9.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/TooTallNate/proxy-agents.git#packages/pac-resolver",
@@ -5669,8 +5669,8 @@
 		{
 			"type": "library",
 			"name": "quickjs-wasi",
-			"version": "2.2.0",
-			"bom-ref": "pkg:npm/quickjs-wasi@2.2.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
+			"version": "3.7.0",
+			"bom-ref": "pkg:npm/quickjs-wasi@3.7.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
 			"description": "Snapshotable JavaScript runtime via WebAssembly. QuickJS-NG compiled to WASM with snapshot/restore support.",
 			"licenses": [
 				{
@@ -5680,7 +5680,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/quickjs-wasi@2.2.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
+			"purl": "pkg:npm/quickjs-wasi@3.7.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
 			"externalReferences": [
 				{
 					"url": "git://github.com/vercel-labs/quickjs-wasi.git",
@@ -5723,7 +5723,7 @@
 				"pkg:npm/%40octokit/plugin-paginate-graphql@6.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-paginate-graphql.js.git",
 				"pkg:npm/%40octokit/plugin-paginate-rest@16.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-paginate-rest.js.git",
 				"pkg:npm/%40octokit/plugin-rest-endpoint-methods@18.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-rest-endpoint-methods.js.git",
-				"pkg:npm/proxy-agent@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
+				"pkg:npm/proxy-agent@8.0.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
 				"pkg:npm/date-fns@4.4.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fdate-fns%2Fdate-fns.git"
 			]
 		},
@@ -6356,7 +6356,7 @@
 			"ref": "pkg:npm/proxy-from-env@2.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FRob--W%2Fproxy-from-env.git"
 		},
 		{
-			"ref": "pkg:npm/proxy-agent@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
+			"ref": "pkg:npm/proxy-agent@8.0.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fproxy-agent",
 			"dependsOn": [
 				"pkg:npm/lru-cache@7.18.3?vcs_url=git%3A%2F%2Fgithub.com%2Fisaacs%2Fnode-lru-cache.git",
 				"pkg:npm/agent-base@9.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fagent-base",
@@ -6364,7 +6364,7 @@
 				"pkg:npm/http-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fhttp-proxy-agent",
 				"pkg:npm/https-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fhttps-proxy-agent",
 				"pkg:npm/socks-proxy-agent@10.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fsocks-proxy-agent",
-				"pkg:npm/pac-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent"
+				"pkg:npm/pac-proxy-agent@9.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent"
 			]
 		},
 		{
@@ -6388,12 +6388,12 @@
 			]
 		},
 		{
-			"ref": "pkg:npm/pac-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
+			"ref": "pkg:npm/pac-proxy-agent@9.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-proxy-agent",
 			"dependsOn": [
 				"pkg:npm/agent-base@9.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fagent-base",
-				"pkg:npm/get-uri@8.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
-				"pkg:npm/pac-resolver@9.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
-				"pkg:npm/quickjs-wasi@2.2.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
+				"pkg:npm/get-uri@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
+				"pkg:npm/pac-resolver@9.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
+				"pkg:npm/quickjs-wasi@3.7.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git",
 				"pkg:npm/socks-proxy-agent@10.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fsocks-proxy-agent",
 				"pkg:npm/https-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fhttps-proxy-agent",
 				"pkg:npm/http-proxy-agent@9.1.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fhttp-proxy-agent"
@@ -6411,24 +6411,24 @@
 		{
 			"ref": "pkg:npm/socks@2.8.10?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FJoshGlazebrook%2Fsocks.git",
 			"dependsOn": [
-				"pkg:npm/ip-address@10.7.4?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
+				"pkg:npm/ip-address@10.7.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git",
 				"pkg:npm/smart-buffer@4.2.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FJoshGlazebrook%2Fsmart-buffer.git"
 			]
 		},
 		{
-			"ref": "pkg:npm/ip-address@10.7.4?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git"
+			"ref": "pkg:npm/ip-address@10.7.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fbeaugunderson%2Fip-address.git"
 		},
 		{
 			"ref": "pkg:npm/data-uri-to-buffer@8.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdata-uri-to-buffer"
 		},
 		{
-			"ref": "pkg:npm/get-uri@8.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
+			"ref": "pkg:npm/get-uri@8.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fget-uri",
 			"dependsOn": [
 				"pkg:npm/data-uri-to-buffer@8.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdata-uri-to-buffer"
 			]
 		},
 		{
-			"ref": "pkg:npm/basic-ftp@5.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git"
+			"ref": "pkg:npm/basic-ftp@6.2.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fpatrickjuchli%2Fbasic-ftp.git"
 		},
 		{
 			"ref": "pkg:npm/estraverse@5.3.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2Festools%2Festraverse.git"
@@ -6457,19 +6457,19 @@
 			"ref": "pkg:npm/ast-types@0.13.4?vcs_url=git%3A%2F%2Fgithub.com%2Fbenjamn%2Fast-types.git"
 		},
 		{
-			"ref": "pkg:npm/degenerator@7.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator"
+			"ref": "pkg:npm/degenerator@7.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator"
 		},
 		{
-			"ref": "pkg:npm/pac-resolver@9.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
+			"ref": "pkg:npm/pac-resolver@9.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fpac-resolver",
 			"dependsOn": [
-				"pkg:npm/degenerator@7.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator"
+				"pkg:npm/degenerator@7.0.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FTooTallNate%2Fproxy-agents.git%23packages%2Fdegenerator"
 			]
 		},
 		{
 			"ref": "pkg:npm/netmask@2.1.1?vcs_url=git%3A%2F%2Fgithub.com%2Frs%2Fnode-netmask.git"
 		},
 		{
-			"ref": "pkg:npm/quickjs-wasi@2.2.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git"
+			"ref": "pkg:npm/quickjs-wasi@3.7.0?vcs_url=git%3A%2F%2Fgithub.com%2Fvercel-labs%2Fquickjs-wasi.git"
 		}
 	]
 }
