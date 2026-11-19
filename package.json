@@ -1,6 +1,5 @@
 {
   "name": "tics-github-action",
-  "version": "2.8.0",
   "description": "The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
   "main": "lib/main.js",
   "type": "module",
@@ -11,7 +10,8 @@
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
-    "package": "rimraf ./dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "docker-yaml": "node ./scripts/generate-docker-action-yaml.ts",
+    "package": "rimraf ./dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript && npm run docker-yaml",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
@@ -71,7 +71,8 @@
     "rollup-plugin-license": "^3.7.1",
     "rollup-plugin-sbom": "^4.0.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.72.0",
-    "vitest": "^5.0.5"
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
   }
 }
