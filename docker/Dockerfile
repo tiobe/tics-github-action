@@ -9,6 +9,6 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ../dist/* .
+COPY dist/* .
 
 ENTRYPOINT ["node", "/app/index.js"]
