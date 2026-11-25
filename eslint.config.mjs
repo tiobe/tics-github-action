@@ -8,7 +8,7 @@ export default defineConfig(
     ignores: ['coverage/**', 'dist/**', 'lib/**', 'vitest.config.ts', 'eslint.config.mjs']
   },
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'scripts/**/*.ts'],
     extends: [eslint.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked, prettier],
     languageOptions: {
       parserOptions: {

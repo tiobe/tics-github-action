@@ -29,7 +29,7 @@ const config = {
         }
       }
     }),
-    sbom({ includeWellKnown: false })
+    sbom({ includeWellKnown: false, saveTimestamp: false })
   ]
 };
 

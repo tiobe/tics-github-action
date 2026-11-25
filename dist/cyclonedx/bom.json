@@ -4,7 +4,6 @@
 	"specVersion": "1.7",
 	"version": 1,
 	"metadata": {
-		"timestamp": "2026-11-18T12:01:53.777Z",
 		"lifecycles": [
 			{
 				"phase": "build"
@@ -99,8 +98,7 @@
 		"component": {
 			"type": "application",
 			"name": "tics-github-action",
-			"version": "2.8.0",
-			"bom-ref": "pkg:npm/tics-github-action@2.8.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
+			"bom-ref": "pkg:npm/tics-github-action?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
 			"author": "TIOBE",
 			"description": "The TICS Github action integrates TICS Client analysis to measure your code quality. The incorporated Quality gating feature enables you to analyze and decorate pull requests.",
 			"licenses": [
@@ -110,7 +108,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/tics-github-action@2.8.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
+			"purl": "pkg:npm/tics-github-action?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/tiobe/tics-github-action.git",
@@ -175,8 +173,8 @@
 			"type": "library",
 			"name": "http-client",
 			"group": "@actions",
-			"version": "4.0.0",
-			"bom-ref": "pkg:npm/%40actions/http-client@4.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+			"version": "4.0.1",
+			"bom-ref": "pkg:npm/%40actions/http-client@4.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 			"description": "Actions Http Client",
 			"licenses": [
 				{
@@ -186,7 +184,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/%40actions/http-client@4.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+			"purl": "pkg:npm/%40actions/http-client@4.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/actions/toolkit.git#packages/http-client",
@@ -1133,8 +1131,8 @@
 			"type": "library",
 			"name": "artifact",
 			"group": "@actions",
-			"version": "6.2.1",
-			"bom-ref": "pkg:npm/%40actions/artifact@6.2.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
+			"version": "6.3.1",
+			"bom-ref": "pkg:npm/%40actions/artifact@6.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
 			"description": "Actions artifact lib",
 			"licenses": [
 				{
@@ -1144,7 +1142,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/%40actions/artifact@6.2.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
+			"purl": "pkg:npm/%40actions/artifact@6.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/actions/toolkit.git#packages/artifact",
@@ -3194,6 +3192,40 @@
 		},
 		{
 			"type": "library",
+			"name": "brace-expansion",
+			"version": "2.1.8",
+			"bom-ref": "pkg:npm/brace-expansion@2.1.8?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbrace-expansion.git",
+			"author": "Julian Gruber",
+			"description": "Brace expansion as known from sh/bash",
+			"licenses": [
+				{
+					"license": {
+						"id": "MIT",
+						"acknowledgement": "declared"
+					}
+				}
+			],
+			"purl": "pkg:npm/brace-expansion@2.1.8?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbrace-expansion.git",
+			"externalReferences": [
+				{
+					"url": "git://github.com/juliangruber/brace-expansion.git",
+					"type": "vcs",
+					"comment": "as detected from PackageJson property \"repository.url\""
+				},
+				{
+					"url": "https://github.com/juliangruber/brace-expansion",
+					"type": "website",
+					"comment": "as detected from PackageJson property \"homepage\""
+				},
+				{
+					"url": "https://github.com/juliangruber/brace-expansion/issues",
+					"type": "issue-tracker",
+					"comment": "as detected from PackageJson property \"bugs.url\""
+				}
+			]
+		},
+		{
+			"type": "library",
 			"name": "minimatch",
 			"version": "9.0.9",
 			"bom-ref": "pkg:npm/minimatch@9.0.9?vcs_url=git%3A%2F%2Fgithub.com%2Fisaacs%2Fminimatch.git",
@@ -4193,8 +4225,8 @@
 			"type": "library",
 			"name": "http-client",
 			"group": "@actions",
-			"version": "2.2.3",
-			"bom-ref": "pkg:npm/%40actions/http-client@2.2.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+			"version": "2.1.1",
+			"bom-ref": "pkg:npm/%40actions/http-client@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 			"description": "Actions Http Client",
 			"licenses": [
 				{
@@ -4204,7 +4236,7 @@
 					}
 				}
 			],
-			"purl": "pkg:npm/%40actions/http-client@2.2.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+			"purl": "pkg:npm/%40actions/http-client@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 			"externalReferences": [
 				{
 					"url": "git+https://github.com/actions/toolkit.git#packages/http-client",
@@ -4220,86 +4252,6 @@
 					"url": "https://github.com/actions/toolkit/issues",
 					"type": "issue-tracker",
 					"comment": "as detected from PackageJson property \"bugs.url\""
-				}
-			]
-		},
-		{
-			"type": "library",
-			"name": "undici",
-			"version": "5.29.0",
-			"bom-ref": "pkg:npm/undici@5.29.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fnodejs%2Fundici.git",
-			"description": "An HTTP/1.1 client, written from scratch for Node.js",
-			"licenses": [
-				{
-					"license": {
-						"id": "MIT",
-						"acknowledgement": "declared"
-					}
-				}
-			],
-			"purl": "pkg:npm/undici@5.29.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fnodejs%2Fundici.git",
-			"externalReferences": [
-				{
-					"url": "git+https://github.com/nodejs/undici.git",
-					"type": "vcs",
-					"comment": "as detected from PackageJson property \"repository.url\""
-				},
-				{
-					"url": "https://undici.nodejs.org",
-					"type": "website",
-					"comment": "as detected from PackageJson property \"homepage\""
-				},
-				{
-					"url": "https://github.com/nodejs/undici/issues",
-					"type": "issue-tracker",
-					"comment": "as detected from PackageJson property \"bugs.url\""
-				}
-			],
-			"properties": [
-				{
-					"name": "cdx:npm:package:constraint:engine:node",
-					"value": ">=14.0"
-				}
-			]
-		},
-		{
-			"type": "library",
-			"name": "busboy",
-			"group": "@fastify",
-			"version": "2.1.1",
-			"bom-ref": "pkg:npm/%40fastify/busboy@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ffastify%2Fbusboy.git",
-			"author": "Brian White",
-			"description": "A streaming parser for HTML form data for node.js",
-			"licenses": [
-				{
-					"license": {
-						"id": "MIT",
-						"acknowledgement": "declared"
-					}
-				}
-			],
-			"purl": "pkg:npm/%40fastify/busboy@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ffastify%2Fbusboy.git",
-			"externalReferences": [
-				{
-					"url": "git+https://github.com/fastify/busboy.git",
-					"type": "vcs",
-					"comment": "as detected from PackageJson property \"repository.url\""
-				},
-				{
-					"url": "https://github.com/fastify/busboy#readme",
-					"type": "website",
-					"comment": "as detected from PackageJson property \"homepage\""
-				},
-				{
-					"url": "https://github.com/fastify/busboy/issues",
-					"type": "issue-tracker",
-					"comment": "as detected from PackageJson property \"bugs.url\""
-				}
-			],
-			"properties": [
-				{
-					"name": "cdx:npm:package:constraint:engine:node",
-					"value": ">=14"
 				}
 			]
 		},
@@ -5702,7 +5654,7 @@
 	],
 	"dependencies": [
 		{
-			"ref": "pkg:npm/tics-github-action@2.8.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
+			"ref": "pkg:npm/tics-github-action?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftiobe%2Ftics-github-action.git",
 			"dependsOn": [
 				"pkg:npm/%40actions/core@3.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
 				"pkg:npm/%40actions/exec@3.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fexec",
@@ -5714,7 +5666,7 @@
 				"pkg:npm/%40octokit/request-error@7.1.2?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Frequest-error.js.git",
 				"pkg:npm/%40octokit/plugin-rest-endpoint-methods@17.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-rest-endpoint-methods.js.git",
 				"pkg:npm/%40octokit/plugin-paginate-rest@14.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-paginate-rest.js.git",
-				"pkg:npm/%40actions/artifact@6.2.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
+				"pkg:npm/%40actions/artifact@6.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
 				"pkg:npm/%40octokit/plugin-retry@8.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-retry.js.git",
 				"pkg:npm/%40actions/core@1.11.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
 				"pkg:npm/%40actions/exec@1.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fexec",
@@ -5730,12 +5682,12 @@
 		{
 			"ref": "pkg:npm/%40actions/core@3.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
 			"dependsOn": [
-				"pkg:npm/%40actions/http-client@4.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+				"pkg:npm/%40actions/http-client@4.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 				"pkg:npm/%40actions/exec@3.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fexec"
 			]
 		},
 		{
-			"ref": "pkg:npm/%40actions/http-client@4.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client"
+			"ref": "pkg:npm/%40actions/http-client@4.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client"
 		},
 		{
 			"ref": "pkg:npm/tunnel@0.0.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fkoichik%2Fnode-tunnel.git"
@@ -5852,13 +5804,13 @@
 			"ref": "pkg:npm/%40octokit/plugin-paginate-rest@14.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-paginate-rest.js.git"
 		},
 		{
-			"ref": "pkg:npm/%40actions/artifact@6.2.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
+			"ref": "pkg:npm/%40actions/artifact@6.3.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
 			"dependsOn": [
 				"pkg:npm/%40actions/core@3.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
 				"pkg:npm/%40protobuf-ts/runtime@2.11.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftimostamm%2Fprotobuf-ts.git%23packages%2Fruntime",
 				"pkg:npm/%40protobuf-ts/runtime-rpc@2.11.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ftimostamm%2Fprotobuf-ts.git%23packages%2Fruntime-rpc",
 				"pkg:npm/jwt-decode@4.0.0?vcs_url=git%3A%2F%2Fgithub.com%2Fauth0%2Fjwt-decode.git",
-				"pkg:npm/%40actions/http-client@4.0.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+				"pkg:npm/%40actions/http-client@4.0.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 				"pkg:npm/%40azure/storage-blob@12.31.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FAzure%2Fazure-sdk-for-js.git",
 				"pkg:npm/%40actions/github@9.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fgithub",
 				"pkg:npm/%40octokit/plugin-retry@8.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Foctokit%2Fplugin-retry.js.git",
@@ -6138,9 +6090,15 @@
 			]
 		},
 		{
+			"ref": "pkg:npm/brace-expansion@2.1.8?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbrace-expansion.git",
+			"dependsOn": [
+				"pkg:npm/balanced-match@1.0.2?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbalanced-match.git"
+			]
+		},
+		{
 			"ref": "pkg:npm/minimatch@9.0.9?vcs_url=git%3A%2F%2Fgithub.com%2Fisaacs%2Fminimatch.git",
 			"dependsOn": [
-				"pkg:npm/brace-expansion@2.1.7?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbrace-expansion.git"
+				"pkg:npm/brace-expansion@2.1.8?vcs_url=git%3A%2F%2Fgithub.com%2Fjuliangruber%2Fbrace-expansion.git"
 			]
 		},
 		{
@@ -6288,25 +6246,15 @@
 		{
 			"ref": "pkg:npm/%40actions/core@1.11.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
 			"dependsOn": [
-				"pkg:npm/%40actions/http-client@2.2.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+				"pkg:npm/%40actions/http-client@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 				"pkg:npm/%40actions/exec@1.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fexec"
 			]
 		},
 		{
-			"ref": "pkg:npm/%40actions/http-client@2.2.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+			"ref": "pkg:npm/%40actions/http-client@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 			"dependsOn": [
-				"pkg:npm/tunnel@0.0.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fkoichik%2Fnode-tunnel.git",
-				"pkg:npm/undici@5.29.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fnodejs%2Fundici.git"
+				"pkg:npm/tunnel@0.0.6?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fkoichik%2Fnode-tunnel.git"
 			]
-		},
-		{
-			"ref": "pkg:npm/undici@5.29.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Fnodejs%2Fundici.git",
-			"dependsOn": [
-				"pkg:npm/%40fastify/busboy@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ffastify%2Fbusboy.git"
-			]
-		},
-		{
-			"ref": "pkg:npm/%40fastify/busboy@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Ffastify%2Fbusboy.git"
 		},
 		{
 			"ref": "pkg:npm/%40actions/io@1.1.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fio"
@@ -6321,7 +6269,7 @@
 			"ref": "pkg:npm/%40actions/artifact@1.1.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fartifact",
 			"dependsOn": [
 				"pkg:npm/%40actions/core@1.11.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fcore",
-				"pkg:npm/%40actions/http-client@2.2.3?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
+				"pkg:npm/%40actions/http-client@2.1.1?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2Factions%2Ftoolkit.git%23packages%2Fhttp-client",
 				"pkg:npm/tmp-promise@3.0.3?vcs_url=git%3A%2F%2Fgithub.com%2Fbenjamingr%2Ftmp-promise.git"
 			]
 		},
