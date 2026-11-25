@@ -41,7 +41,7 @@ interface NodeYaml extends ActionYaml {
 interface DockerRuns {
   using: 'docker';
   image: string;
-  env: Record<string, string>;
+  env?: Record<string, string>;
 }
 
 interface DockerYaml extends ActionYaml {
@@ -55,9 +55,13 @@ function main() {
   const rawYaml = readFileSync(sourcePath, 'utf8');
   const nodeYaml = parse(rawYaml) as NodeYaml;
 
-  const dockerRuns = generateDockerRuns(nodeYaml.inputs);
-
-  const dockerYaml: DockerYaml = { ...nodeYaml, runs: dockerRuns };
+  const dockerYaml: DockerYaml = {
+    ...nodeYaml,
+    runs: {
+      using: 'docker',
+      image: 'Dockerfile'
+    }
+  };
 
   const body = stringify(dockerYaml, {
     lineWidth: 0,
@@ -72,22 +76,6 @@ function main() {
 
   writeFileSync(targetPath, document, 'utf-8');
   console.log(`Generated ${targetPath} from ${sourcePath}`);
-}
-
-function generateDockerRuns(inputs: Record<string, ActionInput>): DockerRuns {
-  const env: Record<string, string> = {};
-  for (const input of Object.keys(inputs)) {
-    env[toInputEnvKey(input)] = `\${{ inputs.${input} }}`;
-  }
-  return {
-    using: 'docker',
-    image: 'Dockerfile',
-    env
-  };
-}
-
-function toInputEnvKey(inputName: string): string {
-  return `INPUT_${inputName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
 }
 
 main();
